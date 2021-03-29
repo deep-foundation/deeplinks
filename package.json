@@ -1,6 +1,6 @@
 {
   "name": "@deepcase/deepgraph",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "package:build": "npx tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:unbuild": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
@@ -22,6 +22,12 @@
     "graphql": "^15.5.0",
     "graphql-tag": "^2.11.0",
     "uniqid": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.3"
+  },
+  "peerDependencies": {
+    "react": "*"
   },
   "engines": {
     "node": "^14.15.0"

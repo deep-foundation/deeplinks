@@ -1,3 +1,4 @@
+import React from 'react';
 import uniqid from 'uniqid';
 import { TokenContext } from '@deepcase/react-hasura/token-context';
 import { useLocalStore } from '@deepcase/store/local';
