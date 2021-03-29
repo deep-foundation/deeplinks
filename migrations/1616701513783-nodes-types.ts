@@ -14,7 +14,7 @@ const TYPES_TABLE = 'dc_dg_types';
 
 export const up = async () => {
   await api.sql(sql`
-    CREATE TABLE ${SCHEMA}."${TYPES_TABLE}" (id integer, node_id integer, name text, version text);
+    CREATE TABLE ${SCHEMA}."${TYPES_TABLE}" (id integer, node_id integer, package text, name text, version text);
     CREATE SEQUENCE ${TYPES_TABLE}_id_seq
     AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
     ALTER SEQUENCE ${TYPES_TABLE}_id_seq OWNED BY ${SCHEMA}."${TYPES_TABLE}".id;
@@ -68,12 +68,29 @@ export const up = async () => {
 
 export const down = async () => {
   await api.query({
+    type: 'drop_relationship',
+    args: {
+      table: GRAPH_TABLE,
+      relationship: '_type',
+    },
+  });
+  await api.query({
+    type: 'drop_relationship',
+    args: {
+      table: TYPES_TABLE,
+      relationship: '_node',
+    },
+  });
+  await api.query({
     type: 'untrack_table',
     args: {
       table: {
         schema: SCHEMA,
-        name: GRAPH_TABLE,
+        name: TYPES_TABLE,
       },
     },
   });
+  await api.sql(sql`
+    DROP TABLE ${SCHEMA}."${TYPES_TABLE}";
+  `);
 };
