@@ -7,7 +7,7 @@
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "dev": "export HASURA_PATH=$(echo $(gp url 8080) | awk -F[/:] '{print $4}'); export HASURA_SSL=1; export PORT=3002; export $(grep -v '^#' .env | xargs); npx next unsafe-dev -p $PORT"
+    "dev": "npm run unsafe-dev"
   },
   "dependencies": {
     "@deepcase/deepgraph": "^0.0.4",
