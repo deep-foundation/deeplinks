@@ -109,7 +109,7 @@ export function PageContent() {
         link: node.link,
       });
     } else {
-      setSelectedLinks([ ...selectedLinks, node.link.id ]);
+      if (!selectedLinks.find(i => i === node.link.id)) setSelectedLinks([ ...selectedLinks, node.link.id ]);
     }
   };
 
