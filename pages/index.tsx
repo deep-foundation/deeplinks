@@ -8,9 +8,12 @@ import ReactResizeDetector from 'react-resize-detector';
 import { useSubscription, useMutation } from '@apollo/react-hooks';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LINKS } from '../imports/gql';
+import { Paper, ButtonGroup, Button } from '@material-ui/core';
 
 export function PageContent() {
   const [drawerSize, setDrawerSize] = useState({ width: 800, height: 500 });
+
+  const [showTypes, setShowTypes] = useState(true);
 
   const s = useSubscription(LINKS, {
     variables: {},
@@ -24,7 +27,7 @@ export function PageContent() {
     for (let l = 0; l < _links.length; l++) {
       const link = _links[l];
       nodes.push({ id: link.id, link: link });
-      links.push({ source: link.id, target: link.type_id, color: '#000000' });
+      if (showTypes) links.push({ source: link.id, target: link.type_id, color: '#000000' });
     }
     for (let l = 0; l < _links.length; l++) {
       const link = _links[l];
@@ -36,6 +39,13 @@ export function PageContent() {
   }, [s]);
 
   return <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+    <div style={{ zIndex: 1, position: 'absolute', top: 0, left: 0, width: '100%' }}>
+      <Paper style={{ margin: 16, padding: 6 }}>
+        <ButtonGroup variant="outlined">
+          <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
+        </ButtonGroup>
+      </Paper>
+    </div>
     <ReactResizeDetector
       handleWidth handleHeight
       onResize={(width, height) => setDrawerSize({ width, height })}
@@ -55,6 +65,7 @@ export function PageContent() {
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {
         const label = [node.id];
+        if (!showTypes && node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
         if (node?.link?.string?.value) label.push(`string: ${node?.link?.string?.value}`);
         const _l = label;
         const fontSize = 12/globalScale;
