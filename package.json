@@ -3,12 +3,11 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "next dev -p $PORT",
+    "unsafe-dev": "next dev -p $PORT",
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "gitpod": "export HASURA_PATH=$(echo $(gp url 8080) | awk -F[/:] '{print $4}'); export HASURA_SSL=1; export PORT=3002; export $(grep -v '^#' .env | xargs); npx next dev -p $PORT",
-    "local": "export HASURA_PATH=localhost:8080; export HASURA_SSL=0; export PORT=3002; export $(grep -v '^#' .env | xargs); npx next dev -p $PORT"
+    "dev": "export HASURA_PATH=$(echo $(gp url 8080) | awk -F[/:] '{print $4}'); export HASURA_SSL=1; export PORT=3002; export $(grep -v '^#' .env | xargs); npx next unsafe-dev -p $PORT"
   },
   "dependencies": {
     "@deepcase/deepgraph": "^0.0.4",
