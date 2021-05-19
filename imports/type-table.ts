@@ -1,6 +1,7 @@
 import { HasuraApi } from '@deepcase/hasura/api';
 import { generateApolloClient } from '@deepcase/hasura/client';
 import { sql } from '@deepcase/hasura/sql';
+import { permissions } from './permission';
 
 export interface ITypeTableStringOptions {
   schemaName: string;
@@ -28,6 +29,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       name: tableName,
     },
   });
+  await permissions(api, tableName);
   await api.query({
     type: 'create_object_relationship',
     args: {

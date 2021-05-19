@@ -12,7 +12,7 @@ const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
 
 export interface IGenerateQueryOptions {
   tableName: string;
-  operation: 'query';
+  operation: 'query' | 'subscription';
   queryName: string;
   returning?: string;
   variables: any; // TODO

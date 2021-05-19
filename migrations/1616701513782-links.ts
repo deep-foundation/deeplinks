@@ -1,6 +1,7 @@
 import Debug from 'debug';
 import { HasuraApi } from '@deepcase/hasura/api';
 import { sql } from '@deepcase/hasura/sql';
+import { permissions } from '../imports/permission';
 
 const debug = Debug('deepcase:deepgraph:migrations:links');
 
@@ -12,55 +13,6 @@ export const api = new HasuraApi({
 
 export const SCHEMA = 'public';
 export const TABLE_NAME = 'dc_dg_links';
-
-export const permissions = async (table) => {
-  await api.query({
-    type: 'create_select_permission',
-    args: {
-      table: table,
-      role: 'guest',
-      permission: {
-        columns: '*',
-        filter: {},
-        limit: 999,
-        allow_aggregations: true
-      }
-    }
-  });
-  await api.query({
-    type: 'create_insert_permission',
-    args: {
-      table: table,
-      role: 'guest',
-      permission: {
-        check: {},
-        columns: '*',
-      }
-    }
-  });
-  await api.query({
-    type: 'create_update_permission',
-    args: {
-      table: table,
-      role: 'guest',
-      permission: {
-        columns: '*',
-        filter: {},
-        check: {},
-      }
-    }
-  });
-  await api.query({
-    type: 'create_delete_permission',
-    args: {
-      table: table,
-      role: 'guest',
-      permission: {
-        filter: {},
-      }
-    }
-  });
-};
 
 export const up = async () => {
   debug('up');
@@ -78,7 +30,7 @@ export const up = async () => {
       name: TABLE_NAME,
     },
   });
-  await permissions(TABLE_NAME);
+  await permissions(api, TABLE_NAME);
   await api.query({
     type: 'create_object_relationship',
     args: {
