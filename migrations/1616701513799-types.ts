@@ -17,9 +17,9 @@ export const up = async () => {
   debug('up');
   const mutateResult = await client.mutate(generateSerial({
     actions: [
-      generateMutation({ // type type
+      generateMutation({ // 1 type type
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 1, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 1,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -27,7 +27,7 @@ export const up = async () => {
       }),
       generateMutation({ // type string
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 2, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 2,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -35,7 +35,7 @@ export const up = async () => {
       }),
       generateMutation({ // type name
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 3, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 3,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -43,7 +43,7 @@ export const up = async () => {
       }),
       generateMutation({ // type number
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 4, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 4,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -51,7 +51,7 @@ export const up = async () => {
       }),
       generateMutation({ // type boolean
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 5, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 5,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -59,7 +59,7 @@ export const up = async () => {
       }),
       generateMutation({ // type any
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 6, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 6,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -67,7 +67,7 @@ export const up = async () => {
       }),
       generateMutation({ // type selector
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 7, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 7,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -75,7 +75,7 @@ export const up = async () => {
       }),
       generateMutation({ // type selection
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 8, type_id: 1, from_id: 7, to_id: 6 } },
+        variables: { objects: { /*id: 8,*/ type_id: 1, from_id: 7, to_id: 6 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -83,7 +83,7 @@ export const up = async () => {
       }),
       generateMutation({ // type rule
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 9, type_id: 1, from_id: 0, to_id: 0 } },
+        variables: { objects: { /*id: 9,*/ type_id: 1, from_id: 0, to_id: 0 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -91,7 +91,7 @@ export const up = async () => {
       }),
       generateMutation({ // type subject
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 10, type_id: 1, from_id: 9, to_id: 7 } },
+        variables: { objects: { /*id: 10,*/ type_id: 1, from_id: 9, to_id: 7 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -99,7 +99,7 @@ export const up = async () => {
       }),
       generateMutation({ // type object
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 11, type_id: 1, from_id: 9, to_id: 7 } },
+        variables: { objects: { /*id: 11,*/ type_id: 1, from_id: 9, to_id: 7 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -107,7 +107,7 @@ export const up = async () => {
       }),
       generateMutation({ // type action
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 12, type_id: 1, from_id: 9, to_id: 7 } },
+        variables: { objects: { /*id: 12,*/ type_id: 1, from_id: 9, to_id: 7 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
@@ -115,7 +115,7 @@ export const up = async () => {
       }),
       generateMutation({ // type contain
         tableName: LINKS_TABLE_NAME, operation: 'insert',
-        variables: { objects: { id: 13, type_id: 1, from_id: 6, to_id: 6 } },
+        variables: { objects: { /*id: 13,*/ type_id: 1, from_id: 6, to_id: 6 } },
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
