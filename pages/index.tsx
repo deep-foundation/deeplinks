@@ -1,17 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
-import { isEqual } from 'lodash';
+import { isEqual, isNull } from 'lodash';
 import { TokenProvider, useTokenController } from '@deepcase/deepgraph/imports/react-token';
 import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-client-tokenized-provider';
 import { LocalStoreProvider } from '@deepcase/store/local';
 import { QueryStoreProvider, useQueryStore } from '@deepcase/store/query';
 import { generateQuery, generateSerial } from '@deepcase/deepgraph/imports/gql';
+import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import ReactResizeDetector from 'react-resize-detector';
 import { useSubscription, useMutation } from '@apollo/react-hooks';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
-import { LINKS } from '../imports/gql';
+import { LINKS, INSERT_LINKS } from '../imports/gql';
 import { Paper, ButtonGroup, Button, makeStyles, Grid, Card, CardActions, CardContent, IconButton, Typography, Popover } from '@material-ui/core';
 import { Clear, Add } from '@material-ui/icons';
+import { useDebounceCallback } from '@react-hook/debounce';
 import { useImmutableData } from '../imports/use-immutable-data';
 import { LinkCard } from '../imports/link-card';
 
@@ -73,7 +75,10 @@ export function PageContent() {
   const [showTypes, setShowTypes] = useState(true);
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useQueryStore('dc-dg-sl', []);
+  const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
+  const [operation, setOperation] = useState('');
 
+  const [insert] = useMutation(INSERT_LINKS);
   const s = useSubscription(LINKS, {
     variables: {},
   });
@@ -101,8 +106,20 @@ export function PageContent() {
   
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
-  onNodeClickRef.current = (node) => {
-    if (clickSelect) {
+  const onNodeClick = useDebounceCallback((node) => {
+    if (operation === 'delete') {
+      console.log('del', node)
+      setOperation('');
+    } else if (operation === 'from') {
+      setInserting({ ...inserting, from: node.link.id });
+      setOperation('');
+    } else if (operation === 'to') {
+      setInserting({ ...inserting, to: node.link.id });
+      setOperation('');
+    } else if (operation === 'type') {
+      setInserting({ ...inserting, type: node.link.id });
+      setOperation('');
+    } else if (clickSelect) {
       setFlyPanel({
         top: (mouseMove?.current?.clientY),
         left: (mouseMove?.current?.clientX),
@@ -111,7 +128,8 @@ export function PageContent() {
     } else {
       if (!selectedLinks.find(i => i === node.link.id)) setSelectedLinks([ ...selectedLinks, node.link.id ]);
     }
-  };
+  }, 500);
+  onNodeClickRef.current = onNodeClick;
 
   return <div
     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
@@ -131,8 +149,42 @@ export function PageContent() {
             </Grid>
             <Grid item>
               <ButtonGroup variant="contained">
-                <Button disabled>insert</Button>
-                <Button disabled>delete</Button>
+                <Button
+                  onClick={async () => {
+                    await insert({ variables: { objects: {
+                      from_id: inserting.from || 0,
+                      to_id: inserting.to || 0,
+                      type_id: inserting.type || 0,
+                    } } });
+                  }}
+                ><Add/></Button>
+                <Button
+                  color={operation === 'from' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'from' ? '' : 'from')}
+                >
+                  from: {inserting?.from}
+                </Button>
+                <Button
+                  color={operation === 'to' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'to' ? '' : 'to')}
+                >
+                  to: {inserting?.to}
+                </Button>
+                <Button
+                  color={operation === 'type' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'type' ? '' : 'type')}
+                >
+                  type: {inserting?.type}
+                </Button>
+                <Button onClick={() => setInserting({})}><Clear/></Button>
+              </ButtonGroup>
+            </Grid>
+            <Grid item>
+              <ButtonGroup variant="contained">
+                <Button
+                  color={operation === 'delete' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
+                >delete</Button>
               </ButtonGroup>
             </Grid>
           </Grid>
@@ -201,7 +253,7 @@ export function PageContent() {
         const isSelected = selectedLinks?.find(id => id === node?.link?.id);
 
         const label = [node.id];
-        if (!showTypes && node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
+        if (node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
         if (node?.link?.string?.value) label.push(`string: ${node?.link?.string?.value}`);
         const _l = label;
         const fontSize = 12/globalScale;
@@ -239,12 +291,17 @@ export function PageContent() {
 
 export function PageConnected() {
   const [token, setToken] = useTokenController();
+  const client = useApolloClient();
   useEffect(() => {
-    if (!token) setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsiZ3Vlc3QiXSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoiZ3Vlc3QiLCJ4LWhhc3VyYS11c2VyLWlkIjoiZ3Vlc3QifSwiaWF0IjoxNjIxMzg2MDk2fQ.jwukXmInG4-w_4nObzqvMJZRCd4a1AXnW4cHrNF2xKY');
+    setTimeout(() => {
+      if (!token) setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsiZ3Vlc3QiXSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoiZ3Vlc3QiLCJ4LWhhc3VyYS11c2VyLWlkIjoiZ3Vlc3QifSwiaWF0IjoxNjIxMzg2MDk2fQ.jwukXmInG4-w_4nObzqvMJZRCd4a1AXnW4cHrNF2xKY');
+    }, 0);
   }, [token]);
 
+  console.log(client);
+
   return <>
-    {!!token && <PageContent/>}
+    {!!token && !!client.jwt_token && [<PageContent key={token}/>]}
   </>
 }
 
