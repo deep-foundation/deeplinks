@@ -10,12 +10,13 @@ import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import ReactResizeDetector from 'react-resize-detector';
 import { useSubscription, useMutation } from '@apollo/react-hooks';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
-import { LINKS, INSERT_LINKS } from '../imports/gql';
-import { Paper, ButtonGroup, Button, makeStyles, Grid, Card, CardActions, CardContent, IconButton, Typography, Popover } from '@material-ui/core';
+import { LINKS, INSERT_LINKS, insertLink, deleteLink } from '../imports/gql';
+import { Paper, ButtonGroup, Button, makeStyles, Grid, Card, CardActions, CardContent, IconButton, Typography, Popover } from '../imports/ui';
 import { Clear, Add } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { useImmutableData } from '../imports/use-immutable-data';
 import { LinkCard } from '../imports/link-card';
+import { Provider } from '../imports/provider';
 
 const transitionHoverScale = {
   transition: 'all 0.5s ease',
@@ -78,7 +79,14 @@ export function PageContent() {
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
   const [operation, setOperation] = useState('');
 
-  const [insert] = useMutation(INSERT_LINKS);
+  const client = useApolloClient();
+  const insertLinkD = useCallback(async (link) => (
+    await client.mutate(insertLink(link))
+  ), []);
+  const deleteLinkD = useCallback(async (id) => (
+    await client.mutate(deleteLink(id))
+  ), []);
+
   const s = useSubscription(LINKS, {
     variables: {},
   });
@@ -108,7 +116,7 @@ export function PageContent() {
   const onNodeClickRef = useRef<any>();
   const onNodeClick = useDebounceCallback((node) => {
     if (operation === 'delete') {
-      console.log('del', node)
+      deleteLinkD(node.link.id);
       setOperation('');
     } else if (operation === 'from') {
       setInserting({ ...inserting, from: node.link.id });
@@ -142,16 +150,16 @@ export function PageContent() {
         <PaperPanel className={classes.topPaper}>
           <Grid container spacing={1}>
             <Grid item>
-              <ButtonGroup variant="contained">
+              <ButtonGroup variant="outlined">
                 <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
                 <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
               </ButtonGroup>
             </Grid>
             <Grid item>
-              <ButtonGroup variant="contained">
+              <ButtonGroup variant="outlined">
                 <Button
                   onClick={async () => {
-                    await insert({ variables: { objects: {
+                    await insertLinkD({ variables: { objects: {
                       from_id: inserting.from || 0,
                       to_id: inserting.to || 0,
                       type_id: inserting.type || 0,
@@ -180,7 +188,7 @@ export function PageContent() {
               </ButtonGroup>
             </Grid>
             <Grid item>
-              <ButtonGroup variant="contained">
+              <ButtonGroup variant="outlined">
                 <Button
                   color={operation === 'delete' ? 'primary' : 'default'}
                   onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
@@ -193,6 +201,11 @@ export function PageContent() {
       <div className={classes.right}>
         <PaperPanel className={classes.rightPaper}>
           <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Button variant="outlined" fullWidth onClick={() => setSelectedLinks([])}>
+                clear
+              </Button>
+            </Grid>
             {selectedLinks.map((id) => {
               const link = (s?.data?.links || []).find(l => l.id === id);
               return <Grid key={id} item xs={12}><Paper style={{ position: 'relative' }}>
@@ -255,6 +268,7 @@ export function PageContent() {
         const label = [node.id];
         if (node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
         if (node?.link?.string?.value) label.push(`string: ${node?.link?.string?.value}`);
+        if (node?.link?.number?.value) label.push(`number: ${node?.link?.number?.value}`);
         const _l = label;
         const fontSize = 12/globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;
@@ -292,14 +306,6 @@ export function PageContent() {
 export function PageConnected() {
   const [token, setToken] = useTokenController();
   const client = useApolloClient();
-  useEffect(() => {
-    setTimeout(() => {
-      if (!token) setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsiZ3Vlc3QiXSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoiZ3Vlc3QiLCJ4LWhhc3VyYS11c2VyLWlkIjoiZ3Vlc3QifSwiaWF0IjoxNjIxMzg2MDk2fQ.jwukXmInG4-w_4nObzqvMJZRCd4a1AXnW4cHrNF2xKY');
-    }, 0);
-  }, [token]);
-
-  console.log(client);
-
   return <>
     {!!token && !!client.jwt_token && [<PageContent key={token}/>]}
   </>
@@ -307,14 +313,8 @@ export function PageConnected() {
 
 export default function Page() {
   return (
-    <QueryStoreProvider>
-      <LocalStoreProvider>
-        <TokenProvider>
-          <ApolloClientTokenizedProvider options={{ client: 'deepgraph-app', path: `${process.env.NEXT_PUBLIC_HASURA_PATH}/v1/graphql`, ssl: !!+process.env.NEXT_PUBLIC_HASURA_SSL, ws: !!process?.browser }}>
-            <PageConnected/>
-          </ApolloClientTokenizedProvider>
-        </TokenProvider>
-      </LocalStoreProvider>
-    </QueryStoreProvider>
+    <Provider>
+      <PageConnected/>
+    </Provider>
   );
 }
