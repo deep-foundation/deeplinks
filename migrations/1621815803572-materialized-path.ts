@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deepcase/hasura/client';
 import Debug from 'debug';
 import { up as upTable, down as downTable } from '@deepcase/materialized-path/table';
-import { up as upRels, down as downRels } from '@deepcase/materialized-path/table';
+import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
 import { Trigger } from '@deepcase/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
@@ -18,15 +18,18 @@ export const MP_TABLE_NAME = 'dc_dg_mp';
 const trigger = Trigger({
   mpTableName: MP_TABLE_NAME,
   graphTableName: LINKS_TABLE_NAME,
+  id_type: 'bigint',
 });
 
 export const up = async () => {
   debug('up');
   await upTable({
     MP_TABLE: MP_TABLE_NAME,
+
   });
   await upRels({
     MP_TABLE: MP_TABLE_NAME,
+    GRAPH_TABLE: LINKS_TABLE_NAME,
   });
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
@@ -49,6 +52,7 @@ export const down = async () => {
   });
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
+    GRAPH_TABLE: LINKS_TABLE_NAME,
   });
   
 };
