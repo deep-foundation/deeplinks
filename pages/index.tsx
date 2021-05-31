@@ -74,6 +74,7 @@ export function PageContent() {
   const [flyPanel, setFlyPanel] = useState<any>();
 
   const [showTypes, setShowTypes] = useState(true);
+  const [showByItem, setShowByItem] = useState(false);
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useQueryStore('dc-dg-sl', []);
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
@@ -99,7 +100,11 @@ export function PageContent() {
     for (let l = 0; l < _links.length; l++) {
       const link = _links[l];
       nodes.push({ id: link.id, link });
-      if (showTypes) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#000000' });
+      if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#000000' });
+      if (showByItem) for (let i = 0; i < link._by_item.length; i++) {
+        const pos = link._by_item[i];
+        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, type: 'by-item', color: '#000000' });
+      }
     }
     for (let l = 0; l < _links.length; l++) {
       const link = _links[l];
@@ -152,6 +157,7 @@ export function PageContent() {
             <Grid item>
               <ButtonGroup variant="outlined">
                 <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
+                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>by_item</Button>
                 <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
               </ButtonGroup>
             </Grid>
@@ -159,11 +165,11 @@ export function PageContent() {
               <ButtonGroup variant="outlined">
                 <Button
                   onClick={async () => {
-                    await insertLinkD({ variables: { objects: {
+                    await insertLinkD({
                       from_id: inserting.from || 0,
                       to_id: inserting.to || 0,
                       type_id: inserting.type || 0,
-                    } } });
+                    });
                   }}
                 ><Add/></Button>
                 <Button
@@ -259,7 +265,18 @@ export function PageContent() {
       linkWidth={0.5}
       linkDirectionalArrowLength={3.5}
       linkDirectionalArrowRelPos={1}
-      linkCurvature={l => l.type === 'from' ? 0.25 : l.type === 'to' ? -0.25 : 0}
+      linkCurvature={l => (
+        l.type === 'from'
+        ? 0.25
+        : l.type === 'to'
+        ? -0.25
+        : 0
+      )}
+      linkLineDash={l => (
+        l.type === 'by-item'
+        ? [5, 5]
+        : false
+      )}
       width={drawerSize.width}
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {

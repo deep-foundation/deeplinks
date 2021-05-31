@@ -3,14 +3,61 @@ import { useMutation } from '@apollo/react-hooks';
 import { useCallback } from 'react';
 import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deepgraph/imports/gql';
 
-export const LINKS = gql`subscription LINKS { links: dc_dg_links {
-  id
-  type_id type { string { value } }
-  from_id from { string { value } }
-  to_id to { string { value } }
-  string { id value }
-  number { id value }
-} }`;
+export const LINKS = gql`subscription LINKS {
+  links: dc_dg_links {
+    id
+    type_id
+    type {
+      string {
+        value
+      }
+    }
+    from_id
+    from {
+      string {
+        value
+      }
+    }
+    to_id
+    to {
+      string {
+        value
+      }
+    }
+    string {
+      id
+      value
+    }
+    number {
+      id
+      value
+    }
+    _by_root {
+      id
+      item_id
+      path_item_depth
+      path_item_id
+      position_id
+      root_id
+    }
+    _by_path_item {
+      id
+      item_id
+      path_item_depth
+      path_item_id
+      position_id
+      root_id
+    }
+    _by_item {
+      id
+      item_id
+      path_item_depth
+      path_item_id
+      position_id
+      root_id
+    }
+  }
+}`;
 export const INSERT_LINKS = gql`mutation INSERT_LINKS($objects: [dc_dg_links_insert_input!]!) { insert_links: insert_dc_dg_links(objects: $objects) { returning { id } } }`;
 export const UPDATE_LINKS = gql`mutation UPDATE_LINKS($set: dc_dg_links_set_input, $where: dc_dg_links_bool_exp!) { update_links: update_dc_dg_links(_set: $set, where: $where) { returning { id } } }`;
 export const DELETE_LINKS = gql`mutation DELETE_LINKS($where: dc_dg_links_bool_exp!) { delete_links: delete_dc_dg_links(where: $where) { returning { id } } }`;
