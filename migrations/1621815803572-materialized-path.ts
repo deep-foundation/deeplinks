@@ -25,7 +25,6 @@ export const up = async () => {
   debug('up');
   await upTable({
     MP_TABLE: MP_TABLE_NAME,
-
   });
   await upRels({
     MP_TABLE: MP_TABLE_NAME,
