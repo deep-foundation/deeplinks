@@ -1,4 +1,7 @@
 import { HasuraApi } from '@deepcase/hasura/api';
+import Debug from 'debug';
+
+const debug = Debug('deepcase:deepgraph:migrations:jwt');
 
 const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -7,6 +10,7 @@ const api = new HasuraApi({
 });
 
 export const up = async () => {
+  debug('up');
   await api.query({
     type: 'add_remote_schema',
     args: {
@@ -22,6 +26,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
+  debug('down');
   await api.query({
     type: 'remove_remote_schema',
     args: {

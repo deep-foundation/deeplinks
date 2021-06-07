@@ -5,7 +5,7 @@ import { generateMutation, generateSerial } from '../imports/gql';
 import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { TABLE_NAME as STRING_TABLE_NAME } from './1616701513783-type-table-string';
 
-const debug = Debug('deepcase:deepgraph:migrations:type-type');
+const debug = Debug('deepcase:deepgraph:migrations:types');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
