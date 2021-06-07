@@ -3,6 +3,14 @@ import { useMutation } from '@apollo/react-hooks';
 import { useCallback } from 'react';
 import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deepgraph/imports/gql';
 
+export const JWT = gql`query JWT($nodeId: bigint) {
+  dc_dg_jwt(input: {role: "link", nodeId: nodeId}) {
+    nodeId
+    token
+    role
+  }
+}`;
+
 export const LINKS = gql`subscription LINKS {
   links: dc_dg_links {
     id

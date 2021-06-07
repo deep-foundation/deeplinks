@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { isEqual, isNull } from 'lodash';
 import { TokenProvider, useTokenController } from '@deepcase/deepgraph/imports/react-token';
 import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-client-tokenized-provider';
-import { LocalStoreProvider } from '@deepcase/store/local';
+import { useLocalStore, LocalStoreProvider } from '@deepcase/store/local';
 import { QueryStoreProvider, useQueryStore } from '@deepcase/store/query';
 import { generateQuery, generateSerial } from '@deepcase/deepgraph/imports/gql';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
@@ -17,6 +17,7 @@ import { useDebounceCallback } from '@react-hook/debounce';
 import { useImmutableData } from '../imports/use-immutable-data';
 import { LinkCard } from '../imports/link-card';
 import { Provider } from '../imports/provider';
+import { useAuth } from '../imports/auth';
 
 const transitionHoverScale = {
   transition: 'all 0.5s ease',
@@ -68,7 +69,25 @@ export function PaperPanel(props: any) {
   return <Paper onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} elevation={hover ? 3 : 1} {...props}/>;
 }
 
+export function useOperation() {
+  return useLocalStore('dc-dg-operation', '');
+}
+
+export function AuthPanel() {
+  const auth = useAuth();
+  const [operation, setOperation] = useOperation();
+
+  return <>
+    <ButtonGroup variant="outlined">
+      <Button disabled>{auth.nodeId}</Button>
+      <Button color={operation === 'auth' ? 'primary' : 'default'} onClick={() => setOperation(operation === 'auth' ? '' : 'auth')}>login</Button>
+      <Button onClick={() => auth.setNodeId(0)}>logout</Button>
+    </ButtonGroup>
+  </>;
+}
+
 export function PageContent() {
+  const auth = useAuth();
   const classes = useStyles();
   const [drawerSize, setDrawerSize] = useState({ width: 800, height: 500 });
   const [flyPanel, setFlyPanel] = useState<any>();
@@ -78,7 +97,7 @@ export function PageContent() {
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useQueryStore('dc-dg-sl', []);
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
-  const [operation, setOperation] = useState('');
+  const [operation, setOperation] = useOperation();
 
   const client = useApolloClient();
   const insertLinkD = useCallback(async (link) => (
@@ -92,6 +111,8 @@ export function PageContent() {
     variables: {},
   });
 
+  console.log(s);
+
   const inD = useMemo(() => {
     const nodes = [];
     const links = [];
@@ -103,7 +124,7 @@ export function PageContent() {
       if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#000000' });
       if (showByItem) for (let i = 0; i < link._by_item.length; i++) {
         const pos = link._by_item[i];
-        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, type: 'by-item', color: '#000000' });
+        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#000000' });
       }
     }
     for (let l = 0; l < _links.length; l++) {
@@ -120,7 +141,10 @@ export function PageContent() {
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
   const onNodeClick = useDebounceCallback((node) => {
-    if (operation === 'delete') {
+    if (operation === 'auth') {
+      auth.setNodeId(+node.link.id);
+      setOperation('');
+    } else if (operation === 'delete') {
       deleteLinkD(node.link.id);
       setOperation('');
     } else if (operation === 'from') {
@@ -201,6 +225,9 @@ export function PageContent() {
                 >delete</Button>
               </ButtonGroup>
             </Grid>
+            <Grid item>
+              <AuthPanel/>
+            </Grid>
           </Grid>
         </PaperPanel>
       </div>
@@ -265,6 +292,11 @@ export function PageContent() {
       linkWidth={0.5}
       linkDirectionalArrowLength={3.5}
       linkDirectionalArrowRelPos={1}
+      linkLabel={l => (
+        l.type === 'by-item'
+        ? `${l?.pos?.item_id}/${l?.pos?.path_item_id}/${l?.pos?.path_item_depth}(${l?.pos?.root_id})`
+        : ''
+      )}
       linkCurvature={l => (
         l.type === 'from'
         ? 0.25

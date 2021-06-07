@@ -5,6 +5,7 @@ import { LocalStoreProvider } from '@deepcase/store/local';
 import { QueryStoreProvider } from '@deepcase/store/query';
 import { colors, createMuiTheme, ThemeProvider } from './ui';
 import React, { useEffect } from 'react';
+import { AuthProvider } from './auth';
 
 const temp = createMuiTheme({});
 const { breakpoints } = temp;
@@ -39,7 +40,7 @@ export function ProviderConnected({
     }, 0);
   }, [token]);
 
-  return children;
+  return <AuthProvider>{children}</AuthProvider>;
 }
 
 export function Provider({
