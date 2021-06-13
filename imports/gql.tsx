@@ -64,6 +64,7 @@ export const LINKS = gql`subscription LINKS {
       position_id
       root_id
     }
+    in { from_id id to_id type_id } out { from_id id to_id type_id }
   }
 }`;
 export const INSERT_LINKS = gql`mutation INSERT_LINKS($objects: [dc_dg_links_insert_input!]!) { insert_links: insert_dc_dg_links(objects: $objects) { returning { id } } }`;

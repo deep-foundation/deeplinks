@@ -1,23 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Head from 'next/head';
-import { isEqual, isNull } from 'lodash';
-import { TokenProvider, useTokenController } from '@deepcase/deepgraph/imports/react-token';
-import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-client-tokenized-provider';
-import { useLocalStore, LocalStoreProvider } from '@deepcase/store/local';
-import { QueryStoreProvider, useQueryStore } from '@deepcase/store/query';
-import { generateQuery, generateSerial } from '@deepcase/deepgraph/imports/gql';
+import { useSubscription } from '@apollo/client';
+import { useTokenController } from '@deepcase/deepgraph/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
-import ReactResizeDetector from 'react-resize-detector';
-import { useSubscription, useMutation } from '@apollo/react-hooks';
-import { ForceGraph, ForceGraph2D } from '../imports/graph';
-import { LINKS, INSERT_LINKS, insertLink, deleteLink } from '../imports/gql';
-import { Paper, ButtonGroup, Button, makeStyles, Grid, Card, CardActions, CardContent, IconButton, Typography, Popover } from '../imports/ui';
-import { Clear, Add } from '@material-ui/icons';
+import { useLocalStore } from '@deepcase/store/local';
+import { useQueryStore } from '@deepcase/store/query';
+import { Add, Clear } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
-import { useImmutableData } from '../imports/use-immutable-data';
+import { isEqual } from 'lodash';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import ReactResizeDetector from 'react-resize-detector';
+import { useAuth } from '../imports/auth';
+import { check } from '../imports/check';
+import { deleteLink, insertLink, LINKS } from '../imports/gql';
+import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card';
 import { Provider } from '../imports/provider';
-import { useAuth } from '../imports/auth';
+import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover } from '../imports/ui';
+import { useImmutableData } from '../imports/use-immutable-data';
 
 const transitionHoverScale = {
   transition: 'all 0.5s ease',
@@ -100,6 +98,12 @@ export function PageContent() {
   const [operation, setOperation] = useOperation();
 
   const client = useApolloClient();
+
+  // @ts-ignore
+  global.CHECKIT = async () => {
+    console.log(await check({}, client));
+  }
+
   const insertLinkD = useCallback(async (link) => (
     await client.mutate(insertLink(link))
   ), []);
