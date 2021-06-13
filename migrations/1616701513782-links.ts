@@ -30,7 +30,13 @@ export const up = async () => {
       name: TABLE_NAME,
     },
   });
-  await permissions(api, TABLE_NAME);
+  await permissions(api, TABLE_NAME, { "_or": [
+    { "id": { "_eq": "X-Hasura-User-Id" } },
+    { "type_id": { "_eq": 14 } },
+    { "type_id": { "_eq": 1 } },
+    { "_by_item": { "by_path_item": { "item": { "type_id": { "_eq": 11 } } } } },
+    { "_by_item": { "by_path_item": { "item_id": { "_eq": "X-Hasura-User-Id" } } } },
+  ] });
   await api.query({
     type: 'create_object_relationship',
     args: {

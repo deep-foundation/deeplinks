@@ -95,7 +95,7 @@ export const up = async () => {
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
-        variables: { objects: { link_id: 10, value: 'subject' } },
+        variables: { objects: { link_id: 10, value: 'rule_subject' } },
       }),
       generateMutation({ // type object
         tableName: LINKS_TABLE_NAME, operation: 'insert',
@@ -103,7 +103,7 @@ export const up = async () => {
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
-        variables: { objects: { link_id: 11, value: 'object' } },
+        variables: { objects: { link_id: 11, value: 'rule_object' } },
       }),
       generateMutation({ // type action
         tableName: LINKS_TABLE_NAME, operation: 'insert',
@@ -111,7 +111,7 @@ export const up = async () => {
       }),
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
-        variables: { objects: { link_id: 12, value: 'action' } },
+        variables: { objects: { link_id: 12, value: 'rule_action' } },
       }),
       generateMutation({ // type contain
         tableName: LINKS_TABLE_NAME, operation: 'insert',
@@ -120,6 +120,14 @@ export const up = async () => {
       generateMutation({
         tableName: STRING_TABLE_NAME, operation: 'insert',
         variables: { objects: { link_id: 13, value: 'contain' } },
+      }),
+      generateMutation({ // type subject
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 14,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 14, value: 'subject' } },
       }),
     ],
     name: 'INSERT_TYPE_TYPE',
@@ -132,7 +140,7 @@ export const down = async () => {
     actions: [
       generateMutation({
         tableName: LINKS_TABLE_NAME, operation: 'delete',
-        variables: { where: { id: { _in: [1,2,3,4,5,6,7] } } },
+        variables: { where: { id: { _in: [1,2,3,4,5,6,7,8,9,10,11,12,13,14] } } },
       }),
     ],
     name: 'DELETE_TYPE_TYPE'

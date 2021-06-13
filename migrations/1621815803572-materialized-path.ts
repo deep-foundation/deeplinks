@@ -4,6 +4,7 @@ import { up as upTable, down as downTable } from '@deepcase/materialized-path/ta
 import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
 import { Trigger } from '@deepcase/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { permissions } from '../imports/permission';
 
 const debug = Debug('deepcase:deepgraph:migrations:materialized-path');
 
@@ -30,6 +31,7 @@ export const up = async () => {
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
   });
+  await permissions(api, MP_TABLE_NAME);
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
