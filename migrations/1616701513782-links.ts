@@ -30,13 +30,7 @@ export const up = async () => {
       name: TABLE_NAME,
     },
   });
-  await permissions(api, TABLE_NAME, { "_or": [
-    { "id": { "_eq": "X-Hasura-User-Id" } },
-    { "type_id": { "_eq": 14 } },
-    { "type_id": { "_eq": 1 } },
-    { "_by_item": { "by_path_item": { "item": { "type_id": { "_eq": 11 } } } } },
-    { "_by_item": { "by_path_item": { "item_id": { "_eq": "X-Hasura-User-Id" } } } },
-  ] });
+  await permissions(api, TABLE_NAME, {"_or":[{"type_id":{"_eq":"14"}},{"type_id":{"_eq":"1"}},{"_by_item":{"_and":[{"path_item":{"_and":[{"type_id":{"_eq":11}},{"from":{"_and":[{"out":{"_and":[{"type_id":{"_eq":10}},{"_by_path_item":{"item_id":{"_eq":"X-Hasura-User-Id"}}}]}},{"type_id":{"_eq":9}}]}}]}}]}},{"_by_item":{"path_item_id":{"_eq":"X-Hasura-User-Id"}}}]});
   await api.query({
     type: 'create_object_relationship',
     args: {
