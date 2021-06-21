@@ -129,6 +129,38 @@ export const up = async () => {
         tableName: STRING_TABLE_NAME, operation: 'insert',
         variables: { objects: { link_id: 14, value: 'subject' } },
       }),
+      generateMutation({ // type select
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 15,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 15, value: 'select' } },
+      }),
+      generateMutation({ // type insert
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 16,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 16, value: 'insert' } },
+      }),
+      generateMutation({ // type update
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 17,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 17, value: 'update' } },
+      }),
+      generateMutation({ // type delete
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 18,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 18, value: 'delete' } },
+      }),
     ],
     name: 'INSERT_TYPE_TYPE',
   }));
@@ -140,7 +172,7 @@ export const down = async () => {
     actions: [
       generateMutation({
         tableName: LINKS_TABLE_NAME, operation: 'delete',
-        variables: { where: { id: { _in: [1,2,3,4,5,6,7,8,9,10,11,12,13,14] } } },
+        variables: { where: { id: { _in: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18] } } },
       }),
     ],
     name: 'DELETE_TYPE_TYPE'
