@@ -32,6 +32,7 @@ export const up = async () => {
     GRAPH_TABLE: LINKS_TABLE_NAME,
   });
   await permissions(api, MP_TABLE_NAME);
+  await permissions(api, LINKS_TABLE_NAME, {"_or":[{"type_id":{"_eq":"14"}},{"type_id":{"_eq":"1"}},{"_by_item":{"_and":[{"path_item":{"_and":[{"type_id":{"_eq":11}},{"from":{"_and":[{"out":{"_and":[{"type_id":{"_eq":10}},{"_by_path_item":{"item_id":{"_eq":"X-Hasura-User-Id"}}}]}},{"type_id":{"_eq":9}}]}}]}}]}},{"_by_item":{"path_item_id":{"_eq":"X-Hasura-User-Id"}}}]});
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
@@ -48,12 +49,11 @@ export const down = async () => {
   await api.sql(trigger.downFunctionDeleteNode());
   await api.sql(trigger.downFunctionIsRoot());
   await api.sql(trigger.downFunctionWillRoot());
-  await downTable({
-    MP_TABLE: MP_TABLE_NAME,
-  });
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
   });
-  
+  await downTable({
+    MP_TABLE: MP_TABLE_NAME,
+  });
 };
