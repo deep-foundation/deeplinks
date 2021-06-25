@@ -1,4 +1,4 @@
-import { useSubscription, useMutation } from '@apollo/react-hooks';
+import { useSubscription } from '@apollo/react-hooks';
 import { useTokenController } from '@deepcase/deepgraph/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
