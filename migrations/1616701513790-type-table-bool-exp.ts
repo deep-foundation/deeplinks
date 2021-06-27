@@ -16,6 +16,26 @@ export const up = async () => {
     linksTableName: LINKS_TABLE_NAME,
     api,
   })());
+  await api.query({
+    type: 'create_event_trigger',
+    args: {
+      name: 'dc_dg_bool_exp',
+      table: TABLE_NAME,
+      webhook: `${process.env.MIGRATIONS_DEEPGRAPH_APP_URL}/api/eh/bool_exp`,
+      insert: {
+        columns: "*",
+        payload: '*',
+      },
+      update: {
+        columns: '*',
+        payload: '*',
+      },
+      delete: {
+        columns: '*'
+      },
+      replace: false,
+    },
+  });
 };
 
 export const down = async () => {
@@ -28,4 +48,10 @@ export const down = async () => {
     linksTableName: LINKS_TABLE_NAME,
     api,
   })());
+  await api.query({
+    type: 'delete_event_trigger',
+    args: {
+      name: 'dc_dg_bool_exp',
+    },
+  });
 };
