@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { JWT } from './gql';
 
 export function useAuthNode() {
-  return useLocalStore('dc_dg_use_auth_node_id', 0);
+  return useLocalStore('dc_dg_use_auth_link_id', '');
 }
 
 export function AuthProvider({
@@ -14,25 +14,25 @@ export function AuthProvider({
 }: {
   children: JSX.Element;
 }) {
-  const [nodeId] = useAuthNode();
+  const [linkId] = useAuthNode();
   const [token, setToken] = useTokenController();
 
   return children;
 }
 
 export function useAuth() {
-  const [nodeId, setNodeId] = useAuthNode();
+  const [linkId, setLinkId] = useAuthNode();
   const [token, setToken] = useTokenController();
-  const gql = useQuery(JWT, { variables: { nodeId, role: 'link' }, skip: true });
+  const gql = useQuery(JWT, { variables: {}, skip: true });
 
   return {
     token,
-    nodeId,
-    setNodeId: async (nodeId) => {
-      const result = await gql.refetch({ nodeId, role: 'link' });
-      console.log({ nodeId, result, gql });
+    linkId,
+    setLinkId: async (linkId) => {
+      const result = await gql.refetch({ linkId: linkId, role: 'link' });
+      console.log({ linkId, result, gql });
       if (result?.data?.dc_dg_jwt?.token) {
-        setNodeId(nodeId);
+        setLinkId(linkId);
         setToken(result?.data?.dc_dg_jwt?.token);
       }
     },

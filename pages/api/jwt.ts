@@ -28,7 +28,7 @@ const resolvers = {
         "https://hasura.io/jwt/claims": {
           "x-hasura-allowed-roles": [role],
           "x-hasura-default-role": role,
-          "x-hasura-user-id": linkId,
+          "x-hasura-user-id": linkId.toString(),
         }
       }, JWT_SECRET);
       return { token, linkId, role: role };

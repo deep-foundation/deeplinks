@@ -79,7 +79,7 @@ export function AuthPanel() {
     <ButtonGroup variant="outlined">
       <Button disabled>{auth.nodeId}</Button>
       <Button color={operation === 'auth' ? 'primary' : 'default'} onClick={() => setOperation(operation === 'auth' ? '' : 'auth')}>login</Button>
-      <Button onClick={() => auth.setNodeId(0)}>logout</Button>
+      <Button onClick={() => auth.setLinkId(0)}>logout</Button>
     </ButtonGroup>
   </>;
 }
@@ -146,7 +146,7 @@ export function PageContent() {
   const onNodeClickRef = useRef<any>();
   const onNodeClick = useDebounceCallback((node) => {
     if (operation === 'auth') {
-      auth.setNodeId(+node.link.id);
+      auth.setLinkId(+node.link.id);
       setOperation('');
     } else if (operation === 'delete') {
       deleteLinkD(node.link.id);
