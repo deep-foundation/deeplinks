@@ -6,21 +6,24 @@ import { permissions } from './permission';
 export interface ITypeTableStringOptions {
   schemaName: string;
   tableName: string;
-  valueType: string;
+  valueType?: string;
+  customColumnsSql?: string;
+  customAfterSql?: string;
   linkRelation: string;
   linksTableName: string;
   api: HasuraApi;
 }
 
 export const generateUp = (options: ITypeTableStringOptions) => async () => {
-  const { schemaName, tableName, valueType, linkRelation, linksTableName, api } = options;
+  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api } = options;
 
   await api.sql(sql`
-    CREATE TABLE ${schemaName}."${tableName}" (id bigint, link_id bigint, value ${valueType});
+    CREATE TABLE ${schemaName}."${tableName}" (id bigint, link_id bigint, ${customColumnsSql ? customColumnsSql : `value ${valueType}`});
     CREATE SEQUENCE ${tableName}_id_seq
     AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
     ALTER SEQUENCE ${tableName}_id_seq OWNED BY ${schemaName}."${tableName}".id;
     ALTER TABLE ONLY ${schemaName}."${tableName}" ALTER COLUMN id SET DEFAULT nextval('${tableName}_id_seq'::regclass);
+    ${customAfterSql}
   `);
   await api.query({
     type: 'track_table',
