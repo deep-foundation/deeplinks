@@ -10,12 +10,12 @@ const typeDefs = gql`
     dc_dg_jwt(input: DC_DG_JWTInput): DC_DG_JWTOutput
   }
   input DC_DG_JWTInput {
-    nodeId: Int
+    linkId: Int
     role: String
   }
   type DC_DG_JWTOutput {
     token: String
-    nodeId: Int
+    linkId: Int
     role: String
   }
 `;
@@ -23,15 +23,15 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     dc_dg_jwt: async (source, args, context, info) => {
-      const { nodeId, role } = args.input;
+      const { linkId, role } = args.input;
       const token = jwt.sign({
         "https://hasura.io/jwt/claims": {
           "x-hasura-allowed-roles": [role],
           "x-hasura-default-role": role,
-          "x-hasura-user-id": nodeId,
+          "x-hasura-user-id": linkId,
         }
       }, JWT_SECRET);
-      return { token, nodeId, role: role };
+      return { token, linkId, role: role };
     },
   }
 };

@@ -16,14 +16,6 @@ export function AuthProvider({
 }) {
   const [nodeId] = useAuthNode();
   const [token, setToken] = useTokenController();
-  const client = useApolloClient();
-  console.log(token);
-
-  useEffect(() => { (async () => {
-    const result = await client.query({ query: JWT, variables: { nodeId, role: 'link' } });
-    console.log({ result, client });
-    if (result?.data?.dc_dg_result?.token) setToken(result?.data?.dc_dg_jwt?.token);
-  })(); }, [nodeId]);
 
   return children;
 }
@@ -31,10 +23,18 @@ export function AuthProvider({
 export function useAuth() {
   const [nodeId, setNodeId] = useAuthNode();
   const [token, setToken] = useTokenController();
+  const gql = useQuery(JWT, { variables: { nodeId, role: 'link' }, skip: true });
 
   return {
     token,
     nodeId,
-    setNodeId,
+    setNodeId: async (nodeId) => {
+      const result = await gql.refetch({ nodeId, role: 'link' });
+      console.log({ nodeId, result, gql });
+      if (result?.data?.dc_dg_result?.token) {
+        setNodeId(nodeId);
+        setToken(result?.data?.dc_dg_jwt?.token);
+      }
+    },
   };
 }
