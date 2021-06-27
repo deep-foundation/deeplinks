@@ -29,6 +29,9 @@ export function useAuth() {
     token,
     linkId,
     setLinkId: async (linkId) => {
+      if (!+linkId) {
+        return setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsiZ3Vlc3QiXSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoiZ3Vlc3QiLCJ4LWhhc3VyYS11c2VyLWlkIjoiZ3Vlc3QifSwiaWF0IjoxNjIxMzg2MDk2fQ.jwukXmInG4-w_4nObzqvMJZRCd4a1AXnW4cHrNF2xKY');
+      }
       const result = await gql.refetch({ linkId: linkId, role: 'link' });
       console.log({ linkId, result, gql });
       if (result?.data?.dc_dg_jwt?.token) {
