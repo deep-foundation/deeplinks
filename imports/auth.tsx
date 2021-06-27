@@ -31,7 +31,7 @@ export function useAuth() {
     setNodeId: async (nodeId) => {
       const result = await gql.refetch({ nodeId, role: 'link' });
       console.log({ nodeId, result, gql });
-      if (result?.data?.dc_dg_result?.token) {
+      if (result?.data?.dc_dg_jwt?.token) {
         setNodeId(nodeId);
         setToken(result?.data?.dc_dg_jwt?.token);
       }
