@@ -18,7 +18,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
   const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api } = options;
 
   await api.sql(sql`
-    CREATE TABLE ${schemaName}."${tableName}" (id bigint, link_id bigint, ${customColumnsSql ? customColumnsSql : `value ${valueType}`});
+    CREATE TABLE ${schemaName}."${tableName}" (id bigint PRIMARY KEY, link_id bigint, ${customColumnsSql ? customColumnsSql : `value ${valueType}`});
     CREATE SEQUENCE ${tableName}_id_seq
     AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
     ALTER SEQUENCE ${tableName}_id_seq OWNED BY ${schemaName}."${tableName}".id;

@@ -17,7 +17,7 @@ export const TABLE_NAME = 'dc_dg_links';
 export const up = async () => {
   debug('up');
   await api.sql(sql`
-    CREATE TABLE ${SCHEMA}."${TABLE_NAME}" (id bigint, from_id bigint NOT NULL, to_id bigint NOT NULL, type_id bigint NOT NULL);
+    CREATE TABLE ${SCHEMA}."${TABLE_NAME}" (id bigint PRIMARY KEY, from_id bigint NOT NULL, to_id bigint NOT NULL, type_id bigint NOT NULL);
     CREATE SEQUENCE ${TABLE_NAME}_id_seq
     AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
     ALTER SEQUENCE ${TABLE_NAME}_id_seq OWNED BY ${SCHEMA}."${TABLE_NAME}".id;
