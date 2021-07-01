@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid } from './ui';
 import { Delete } from './icons';
 import { useMutation } from '@apollo/react-hooks';
-import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber } from './gql';
+import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from './gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 
@@ -12,24 +12,33 @@ export function LinkCard({
   link: any;
 }) {
   const client = useApolloClient();
-  const updateStringD = useDebouncedCallback(async (value) => (
-    await client.mutate(updateString(link.string.id, value))
-  ), 1000);
   const insertStringD = useCallback(async () => (
     await client.mutate(insertString(link.id, ''))
   ), [link]);
+  const updateStringD = useDebouncedCallback(async (value) => (
+    await client.mutate(updateString(link.string.id, value))
+  ), 1000);
   const deleteStringD = useCallback(async () => (
     await client.mutate(deleteString(link.string.id))
   ), [link?.string?.id]);
-  const updateNumberD = useDebouncedCallback(async (value: number) => (
-    await client.mutate(updateNumber(link.number.id, value))
-  ), 1000);
   const insertNumberD = useCallback(async () => (
     await client.mutate(insertNumber(link.id, 0))
   ), [link]);
+  const updateNumberD = useDebouncedCallback(async (value: number) => (
+    await client.mutate(updateNumber(link.number.id, value))
+  ), 1000);
   const deleteNumberD = useCallback(async () => (
     await client.mutate(deleteNumber(link.number.id))
   ), [link?.number?.id]);
+  const insertBoolExpD = useCallback(async () => (
+    await client.mutate(insertBoolExp(link.id, ''))
+  ), [link]);
+  const updateBoolExpD = useDebouncedCallback(async (value) => (
+    await client.mutate(updateBoolExp(link.bool_exp.id, value))
+  ), 1000);
+  const deleteBoolExpD = useCallback(async () => (
+    await client.mutate(deleteBoolExp(link.bool_exp.id))
+  ), [link?.bool_exp?.id]);
 
   return <Card>
     <CardContent>
@@ -37,6 +46,30 @@ export function LinkCard({
     </CardContent>
     <CardActions>
       <Grid container spacing={1}>
+        <Grid item xs={12}>
+          {!!link?.bool_exp ? <>
+            <TextField
+              label={'bool_exp'}
+              variant="outlined" size="small" fullWidth
+              defaultValue={link.bool_exp.gql || ''}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">
+                  <IconButton onClick={() => deleteBoolExpD()}><Delete/></IconButton>
+                </InputAdornment>,
+              }}
+              onChange={!!link.bool_exp.id ? async (e) => {
+                updateBoolExpD(e.target.value);
+              } : null}
+            />
+          </> : <>
+            <Button
+              size="small" variant="outlined" fullWidth
+              onClick={() => insertBoolExpD()}
+            >
+              + bool_exp
+            </Button>
+          </>}
+        </Grid>
         <Grid item xs={12}>
           {!!link?.string ? <>
             <TextField

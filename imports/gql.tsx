@@ -40,6 +40,10 @@ export const LINKS = gql`subscription LINKS {
       id
       value
     }
+    bool_exp {
+      id
+      gql
+    }
     _by_root {
       id
       item_id
@@ -96,17 +100,6 @@ export const deleteLink = (id: number) => {
     name: 'DELETE_LINK',
   });
 }
-export const updateString = (id: number, value: string) => {
-  return generateSerial({
-    actions: [
-      generateMutation({
-        tableName: 'dc_dg_string', operation: 'update',
-        variables: { where: { id: { _eq: id } }, _set: { value: value } },
-      }),
-    ],
-    name: 'UPDATE_STRING',
-  });
-}
 export const insertString = (link_id: number, value: string) => {
   return generateSerial({
     actions: [
@@ -116,6 +109,17 @@ export const insertString = (link_id: number, value: string) => {
       }),
     ],
     name: 'INSERT_STRING',
+  });
+}
+export const updateString = (id: number, value: string) => {
+  return generateSerial({
+    actions: [
+      generateMutation({
+        tableName: 'dc_dg_string', operation: 'update',
+        variables: { where: { id: { _eq: id } }, _set: { value: value } },
+      }),
+    ],
+    name: 'UPDATE_STRING',
   });
 }
 export const deleteString = (id: number) => {
@@ -129,17 +133,6 @@ export const deleteString = (id: number) => {
     name: 'DELETE_STRING',
   });
 }
-export const updateNumber = (id: number, value: number) => {
-  return generateSerial({
-    actions: [
-      generateMutation({
-        tableName: 'dc_dg_number', operation: 'update',
-        variables: { where: { id: { _eq: id } }, _set: { value: value } },
-      }),
-    ],
-    name: 'UPDATE_NUMBER',
-  });
-}
 export const insertNumber = (link_id: number, value: number) => {
   return generateSerial({
     actions: [
@@ -151,6 +144,17 @@ export const insertNumber = (link_id: number, value: number) => {
     name: 'INSERT_NUMBER',
   });
 }
+export const updateNumber = (id: number, value: number) => {
+  return generateSerial({
+    actions: [
+      generateMutation({
+        tableName: 'dc_dg_number', operation: 'update',
+        variables: { where: { id: { _eq: id } }, _set: { value: value } },
+      }),
+    ],
+    name: 'UPDATE_NUMBER',
+  });
+}
 export const deleteNumber = (id: number) => {
   return generateSerial({
     actions: [
@@ -160,5 +164,39 @@ export const deleteNumber = (id: number) => {
       }),
     ],
     name: 'DELETE_NUMBER',
+  });
+}
+
+export const insertBoolExp = (link_id: number, value: string) => {
+  return generateSerial({
+    actions: [
+      generateMutation({
+        tableName: 'dc_dg_bool_exp', operation: 'insert',
+        variables: { objects: { link_id, gql: value } },
+      }),
+    ],
+    name: 'INSERT_BOOL_EXP',
+  });
+}
+export const updateBoolExp = (id: number, value: string) => {
+  return generateSerial({
+    actions: [
+      generateMutation({
+        tableName: 'dc_dg_bool_exp', operation: 'update',
+        variables: { where: { id: { _eq: id } }, _set: { gql: value } },
+      }),
+    ],
+    name: 'UPDATE_BOOL_EXP',
+  });
+}
+export const deleteBoolExp = (id: number) => {
+  return generateSerial({
+    actions: [
+      generateMutation({
+        tableName: 'dc_dg_bool_exp', operation: 'delete',
+        variables: { where: { id: { _eq: id } } },
+      }),
+    ],
+    name: 'DELETE_BOOL_EXP',
   });
 }

@@ -25,14 +25,15 @@ export default async (req, res) => {
     const oldRow = event?.data?.old;
     const newRow = event?.data?.new;
     if (operation === 'INSERT' || operation === 'UPDATE') {
-      const explained = await api.explain(newRow.gql);
+      const explained = await api.explain(`{ dc_dg_links(where: { _and: [{ id: { _eq: 777777777777 } }, ${newRow.gql}] }, limit: 1) { id } }`);
       const sql = explained?.data?.[0]?.sql;
       if (sql) {
+        const convertedSql = `SELECT json_array_length("root") as "root" FROM (${sql}) as "root"`
         const mutateResult = await client.mutate(generateSerial({
           actions: [
             generateMutation({
               tableName: 'dc_dg_bool_exp', operation: 'update',
-              variables: { where: { id: { _eq: newRow.id } }, _set: { sql } },
+              variables: { where: { id: { _eq: newRow.id } }, _set: { sql: convertedSql } },
             }),
           ],
           name: 'INSERT_TYPE_TYPE',
@@ -42,6 +43,8 @@ export default async (req, res) => {
         }
         return res.json({ result: 'exaplained' });
       }
+      console.log(explained);
+      console.log(`{ dc_dg_links(where: { _and: [{ id: { _eq: 777777777777 } }, ${newRow.gql}] }, limit: 1) { id } }`);
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
