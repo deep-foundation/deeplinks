@@ -72,18 +72,6 @@ export const permissions = async (api: HasuraApi, table: string, where: any = {}
     }
   });
   await api.query({
-    type: 'create_update_permission',
-    args: {
-      table: table,
-      role: 'link',
-      permission: {
-        columns: '*',
-        filter: where,
-        check: {},
-      }
-    }
-  });
-  await api.query({
     type: 'create_delete_permission',
     args: {
       table: table,
