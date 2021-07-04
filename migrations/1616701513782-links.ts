@@ -31,6 +31,26 @@ export const up = async () => {
     },
   });
   await api.query({
+    type: 'create_event_trigger',
+    args: {
+      name: TABLE_NAME,
+      table: TABLE_NAME,
+      webhook: `${process.env.MIGRATIONS_DEEPGRAPH_APP_URL}/api/eh/links`,
+      insert: {
+        columns: "*",
+        payload: '*',
+      },
+      update: {
+        columns: '*',
+        payload: '*',
+      },
+      delete: {
+        columns: '*'
+      },
+      replace: false,
+    },
+  });
+  await api.query({
     type: 'create_object_relationship',
     args: {
       table: TABLE_NAME,
@@ -131,6 +151,12 @@ export const down = async () => {
         schema: SCHEMA,
         name: TABLE_NAME,
       },
+    },
+  });
+  await api.query({
+    type: 'delete_event_trigger',
+    args: {
+      name: 'dc_dg_links',
     },
   });
   await api.sql(sql`

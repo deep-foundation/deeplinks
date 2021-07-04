@@ -169,6 +169,14 @@ export const up = async () => {
         tableName: STRING_TABLE_NAME, operation: 'insert',
         variables: { objects: { link_id: 19, value: 'allow' } },
       }),
+      generateMutation({ // type handle
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 20,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 20, value: 'handle' } },
+      }),
     ],
     name: 'INSERT_TYPE_TYPE',
   }));
