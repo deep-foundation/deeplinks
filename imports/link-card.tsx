@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
-import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid } from './ui';
+import React, { useCallback, useState } from 'react';
+import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog } from './ui';
 import { Delete } from './icons';
 import { useMutation } from '@apollo/react-hooks';
 import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from './gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
+import MonacoEditor from 'react-monaco-editor';
 
 export function LinkCard({
   link,
@@ -39,6 +40,8 @@ export function LinkCard({
   const deleteBoolExpD = useCallback(async () => (
     await client.mutate(deleteBoolExp(link.bool_exp.id))
   ), [link?.bool_exp?.id]);
+
+  const [dialog, setDialog] = useState(false);
 
   return <Card>
     <CardContent>
