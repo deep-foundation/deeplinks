@@ -21,7 +21,9 @@ export const up = async () => {
         boolExp RECORD;
         sqlResult INT;
       BEGIN
-        SELECT * into boolExp from "${BOOL_EXP_TABLE_NAME}" where link_id = NEW.type_id;
+        SELECT be.* into boolExp
+        FROM "${TABLE_NAME}" as allow, "${BOOL_EXP_TABLE_NAME}" as be
+        WHERE allow.type_id=19 AND allow.from_id=NEW.type_id AND allow.to_id=16 AND be.link_id=allow.id;
         IF boolExp IS NOT NULL THEN
           EXECUTE (SELECT REPLACE(boolExp.sql, '${REPLACE_PATTERN_ID}', NEW.id::text)) INTO sqlResult;
           IF sqlResult = 0 THEN
@@ -43,9 +45,11 @@ export const up = async () => {
         boolExp RECORD;
         sqlResult INT;
       BEGIN
-        SELECT * into boolExp from "${BOOL_EXP_TABLE_NAME}" where link_id = NEW.type_id;
+        SELECT be.* into boolExp
+        FROM "${TABLE_NAME}" as allow, "${BOOL_EXP_TABLE_NAME}" as be
+        WHERE allow.type_id=19 AND allow.from_id=OLD.type_id AND allow.to_id=18 AND be.link_id=allow.id;
         IF boolExp IS NOT NULL THEN
-          EXECUTE (SELECT REPLACE(boolExp.sql, '${REPLACE_PATTERN_ID}', NEW.id::text)) INTO sqlResult;
+          EXECUTE (SELECT REPLACE(boolExp.sql, '${REPLACE_PATTERN_ID}', OLD.id::text)) INTO sqlResult;
           IF sqlResult = 0 THEN
             RAISE EXCEPTION 'dc dg mp reject delete because bool_exp: % gql: %', boolExp.id, boolExp.gql;
           END IF;
