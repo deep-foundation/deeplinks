@@ -66,9 +66,7 @@ export const up = async () => {
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
-  trigger.upFunctionInsertNode();
   await api.sql(trigger.upFunctionDeleteNode());
-  trigger.upFunctionDeleteNode();
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
 };
