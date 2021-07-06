@@ -20,6 +20,36 @@ const trigger = Trigger({
   mpTableName: MP_TABLE_NAME,
   graphTableName: LINKS_TABLE_NAME,
   id_type: 'bigint',
+  iteratorInsertDeclare: 'groupRow RECORD;',
+  iteratorInsertBegin: `FOR groupRow IN (
+    SELECT
+    mpGroup.*
+    FROM
+    ${LINKS_TABLE_NAME} as mpGroup,
+    ${LINKS_TABLE_NAME} as mpInclude
+    WHERE
+    mpInclude."type_id" = 22 AND
+    mpInclude."to_id" = NEW.type_id AND
+    mpInclude."from_id" = mpGroup."id" AND
+    mpGroup."type_id" = 21
+    ) LOOP`,
+    iteratorInsertEnd: 'END LOOP;',
+    groupInsert: 'groupRow."id"',
+    iteratorDeleteDeclare: 'groupRow RECORD;',
+    iteratorDeleteBegin: `FOR groupRow IN (
+    SELECT
+    mpGroup.*
+    FROM
+    ${LINKS_TABLE_NAME} as mpGroup,
+    ${LINKS_TABLE_NAME} as mpInclude
+    WHERE
+    mpInclude."type_id" = 22 AND
+    mpInclude."to_id" = OLD.type_id AND
+    mpInclude."from_id" = mpGroup."id" AND
+    mpGroup."type_id" = 21
+  ) LOOP`,
+  iteratorDeleteEnd: 'END LOOP;',
+  groupDelete: 'groupRow."id"',
 });
 
 export const up = async () => {
@@ -36,7 +66,9 @@ export const up = async () => {
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
+  trigger.upFunctionInsertNode();
   await api.sql(trigger.upFunctionDeleteNode());
+  trigger.upFunctionDeleteNode();
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
 };

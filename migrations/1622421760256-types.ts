@@ -177,6 +177,22 @@ export const up = async () => {
         tableName: STRING_TABLE_NAME, operation: 'insert',
         variables: { objects: { link_id: 20, value: 'handle' } },
       }),
+      generateMutation({ // type mp_group
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 21,*/ type_id: 1, from_id: 0, to_id: 0 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 21, value: 'mp_group' } },
+      }),
+      generateMutation({ // type mp_include
+        tableName: LINKS_TABLE_NAME, operation: 'insert',
+        variables: { objects: { /*id: 22,*/ type_id: 1, from_id: 1, to_id: 21 } },
+      }),
+      generateMutation({
+        tableName: STRING_TABLE_NAME, operation: 'insert',
+        variables: { objects: { link_id: 22, value: 'mp_include' } },
+      }),
     ],
     name: 'INSERT_TYPE_TYPE',
   }));
