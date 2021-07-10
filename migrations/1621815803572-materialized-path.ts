@@ -79,7 +79,7 @@ export const up = async () => {
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
-  console.log((await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__mp_group_include__delete() RETURNS TRIGGER AS $trigger$
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__mp_group_include__delete() RETURNS TRIGGER AS $trigger$
   DECLARE groupRow RECORD;
   BEGIN
     IF (OLD."type_id" = 22) THEN
@@ -88,7 +88,7 @@ export const up = async () => {
       FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
     END IF;
     RETURN OLD;
-  END; $trigger$ LANGUAGE plpgsql;`))?.data?.internal?.error);
+  END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__mp_group_include__insert AFTER INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__mp_group_include__insert();`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__mp_group_include__delete AFTER DELETE ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__mp_group_include__delete();`);
 };
