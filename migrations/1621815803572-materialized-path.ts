@@ -5,6 +5,7 @@ import { up as upRels, down as downRels } from '@deepcase/materialized-path/rela
 import { Trigger } from '@deepcase/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { permissions } from '../imports/permission';
+import { sql } from '@deepcase/hasura/sql';
 
 const debug = Debug('deepcase:deepgraph:migrations:materialized-path');
 
@@ -21,6 +22,8 @@ const trigger = Trigger({
   graphTableName: LINKS_TABLE_NAME,
   id_type: 'bigint',
   iteratorInsertDeclare: 'groupRow RECORD;',
+  iteratorDeleteArgumentSend: 'groupRow',
+  iteratorDeleteArgumentGet: 'groupRow RECORD',
   iteratorInsertBegin: `FOR groupRow IN (
     SELECT
     mpGroup.*
@@ -69,10 +72,33 @@ export const up = async () => {
   await api.sql(trigger.upFunctionDeleteNode());
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__mp_group_include__insert() RETURNS TRIGGER AS $trigger$ BEGIN
+    IF (NEW."type_id" = 22) THEN
+      PERFORM ${MP_TABLE_NAME}__insert_node__function_core(${LINKS_TABLE_NAME}.*)
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
+    END IF;
+    RETURN NEW;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  console.log((await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__mp_group_include__delete() RETURNS TRIGGER AS $trigger$
+  DECLARE groupRow RECORD;
+  BEGIN
+    IF (OLD."type_id" = 22) THEN
+      SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id";
+      PERFORM ${MP_TABLE_NAME}__delete_node__function_core(${LINKS_TABLE_NAME}.*, groupRow)
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
+    END IF;
+    RETURN OLD;
+  END; $trigger$ LANGUAGE plpgsql;`))?.data?.internal?.error);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__mp_group_include__insert AFTER INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__mp_group_include__insert();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__mp_group_include__delete AFTER DELETE ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__mp_group_include__delete();`);
 };
 
 export const down = async () => {
   debug('down');
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__mp_group_include__insert;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__mp_group_include__delete;`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__mp_group_include__insert ON "${LINKS_TABLE_NAME}";`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__mp_group_include__delete ON "${LINKS_TABLE_NAME}";`);
   await api.sql(trigger.downTriggerDelete());
   await api.sql(trigger.downTriggerInsert());
   await api.sql(trigger.downFunctionInsertNode());

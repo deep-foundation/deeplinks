@@ -95,3 +95,21 @@ export const generateMutation = ({
     return result;
   };
 };
+
+export const insertMutation = (tableName: string, variables: any, options?: IGenerateMutationOptions) => {
+  return generateMutation({
+    tableName, operation: 'insert', variables, ...options,
+  });
+}
+
+export const updateMutation = (tableName: string, variables: any, options?: IGenerateMutationOptions) => {
+  return generateMutation({
+    tableName, operation: 'update', variables, ...options,
+  });
+}
+
+export const deleteMutation = (tableName: string, variables: any, options?: IGenerateMutationOptions) => {
+  return generateMutation({
+    tableName, operation: 'delete', variables, ...options,
+  });
+}
