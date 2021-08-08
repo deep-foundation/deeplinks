@@ -1,4 +1,4 @@
-import { TokenProvider, useTokenController } from '@deepcase/deepgraph/imports/react-token';
+import { TokenProvider, useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-client-tokenized-provider';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { LocalStoreProvider } from '@deepcase/store/local';
@@ -53,7 +53,7 @@ export function Provider({
       <QueryStoreProvider>
         <LocalStoreProvider>
           <TokenProvider>
-            <ApolloClientTokenizedProvider options={{ client: 'deepgraph-app', path: `${process.env.NEXT_PUBLIC_HASURA_PATH}/v1/graphql`, ssl: !!+process.env.NEXT_PUBLIC_HASURA_SSL, ws: !!process?.browser }}>
+            <ApolloClientTokenizedProvider options={{ client: 'deeplinks-app', path: `${process.env.NEXT_PUBLIC_HASURA_PATH}/v1/graphql`, ssl: !!+process.env.NEXT_PUBLIC_HASURA_SSL, ws: !!process?.browser }}>
               <ProviderConnected>
                 {children}
               </ProviderConnected>

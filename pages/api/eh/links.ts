@@ -2,7 +2,7 @@ import Cors from 'cors';
 import { generateApolloClient } from '@deepcase/hasura/client';
 import { corsMiddleware } from '@deepcase/hasura/cors-middleware';
 import { HasuraApi } from "@deepcase/hasura/api";
-import { generateMutation, generateQuery, generateSerial } from '@deepcase/deepgraph/imports/gql';
+import { generateMutation, generateQuery, generateSerial } from '@deepcase/deeplinks/imports/gql';
 import { gql } from 'apollo-boost';
 import vm from 'vm';
 

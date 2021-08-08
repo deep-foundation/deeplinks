@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 import { useCallback } from 'react';
-import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deepgraph/imports/gql';
+import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deeplinks/imports/gql';
 
 export const JWT = gql`query JWT($linkId: Int) {
   dc_dg_jwt(input: {role: "link", linkId: $linkId}) {
