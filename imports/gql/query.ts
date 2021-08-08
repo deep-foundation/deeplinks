@@ -1,6 +1,6 @@
 import Debug from 'debug';
 
-const debug = Debug('deepcase:deepgraph:gql:query');
+const debug = Debug('deepcase:deeplinks:gql:query');
 
 const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,

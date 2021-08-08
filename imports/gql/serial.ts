@@ -1,7 +1,7 @@
 import Debug from 'debug';
 import gql from 'graphql-tag';
 
-const debug = Debug('deepcase:deepgraph:gql:serial');
+const debug = Debug('deepcase:deeplinks:gql:serial');
 
 export interface ISerialOptions {
   actions: any[];

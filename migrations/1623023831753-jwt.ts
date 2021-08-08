@@ -1,7 +1,7 @@
 import { HasuraApi } from '@deepcase/hasura/api';
 import Debug from 'debug';
 
-const debug = Debug('deepcase:deepgraph:migrations:jwt');
+const debug = Debug('deepcase:deeplinks:migrations:jwt');
 
 const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -16,8 +16,8 @@ export const up = async () => {
     args: {
       name: 'dc_dg_jwt',
       definition: {
-        url: `${process.env.MIGRATIONS_DEEPGRAPH_APP_URL}/api/jwt`,
-        headers: [{ name: 'x-hasura-client', value: 'deepgraph-jwt' }],
+        url: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/jwt`,
+        headers: [{ name: 'x-hasura-client', value: 'deeplinks-jwt' }],
         forward_client_headers: true,
         timeout_seconds: 60
       },

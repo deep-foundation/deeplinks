@@ -7,7 +7,7 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 import { permissions } from '../imports/permission';
 import { sql } from '@deepcase/hasura/sql';
 
-const debug = Debug('deepcase:deepgraph:migrations:materialized-path');
+const debug = Debug('deepcase:deeplinks:migrations:materialized-path');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,

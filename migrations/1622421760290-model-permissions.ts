@@ -4,7 +4,7 @@ import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bool-exp';
 
-const debug = Debug('deepcase:deepgraph:migrations:model-permissions');
+const debug = Debug('deepcase:deeplinks:migrations:model-permissions');
 
 export const TABLE_NAME = 'dc_dg_links';
 export const REPLACE_PATTERN_ID = '777777777777';

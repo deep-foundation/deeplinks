@@ -9,7 +9,7 @@ export interface IImportTypeOptions {
   version: string;
 }
 
-export const DeepgraphApi = () => {
+export const DeeplinksPackerApi = () => {
   return {
     register: () => {},
     exportType: (option: IExportTypeOptions): Promise<any> | any => {},

@@ -2,7 +2,7 @@ import Debug from 'debug';
 import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
-const debug = Debug('deepcase:deepgraph:migrations:type-table-number');
+const debug = Debug('deepcase:deeplinks:migrations:type-table-number');
 
 export const TABLE_NAME = 'dc_dg_number';
 

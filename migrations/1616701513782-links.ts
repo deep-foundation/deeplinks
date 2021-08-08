@@ -3,7 +3,7 @@ import { HasuraApi } from '@deepcase/hasura/api';
 import { sql } from '@deepcase/hasura/sql';
 import { permissions } from '../imports/permission';
 
-const debug = Debug('deepcase:deepgraph:migrations:links');
+const debug = Debug('deepcase:deeplinks:migrations:links');
 
 export const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -35,7 +35,7 @@ export const up = async () => {
     args: {
       name: TABLE_NAME,
       table: TABLE_NAME,
-      webhook: `${process.env.MIGRATIONS_DEEPGRAPH_APP_URL}/api/eh/links`,
+      webhook: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/eh/links`,
       insert: {
         columns: "*",
         payload: '*',
