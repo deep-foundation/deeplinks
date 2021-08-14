@@ -65,11 +65,12 @@ export const up = async () => {
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 23,*/ type_id: 21, to_id: 0, from_id: 0 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 24,*/ type_id: 22, to_id: 6, from_id: 23 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 25,*/ type_id: 22, to_id: 13, from_id: 23 } }),
+      insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 26,*/ type_id: 22, to_id: 13, from_id: 14 } }),
 
-      insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 26,*/ type_id: 6, to_id: 0, from_id: 0 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 27,*/ type_id: 6, to_id: 0, from_id: 0 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 28,*/ type_id: 6, to_id: 0, from_id: 0 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 29,*/ type_id: 6, to_id: 0, from_id: 0 } }),
+      insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 20,*/ type_id: 6, to_id: 0, from_id: 0 } }),
     ],
     name: 'INSERT_TYPE_TYPE',
   }));
