@@ -1,5 +1,5 @@
 FROM node:15.10-alpine
-RUN /bin/bash -c 'ls'
+RUN /bin/sh -c 'ls'
 COPY .docker.env ./.env
 COPY . .
 EXPOSE 3007
