@@ -1,4 +1,4 @@
-name: Deploy inspector
+name: Deploy deeplinks app
 on:
   push:
     branches: [ docker-hub-menzorg-deepcase ]
