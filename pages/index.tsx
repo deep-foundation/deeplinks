@@ -6,13 +6,13 @@ import { useQueryStore } from '@deepcase/store/query';
 import { Add, Clear } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { isEqual } from 'lodash';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { useAuth } from '../imports/auth';
 import { check } from '../imports/check';
 import { LINKS, insertLink, deleteLink } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
-import { LinkCard } from '../imports/link-card';
+import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
 import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
@@ -81,7 +81,12 @@ export function AuthPanel() {
       <Button color={operation === 'auth' ? 'primary' : 'default'} onClick={() => setOperation(operation === 'auth' ? '' : 'auth')}>login</Button>
       <Button onClick={() => auth.setLinkId(0)}>logout</Button>
     </ButtonGroup>
+    <Button disabled>in this example logout = guest = admin</Button>
   </>;
+}
+
+export function useSelectedLinks() {
+  return useQueryStore('dc-dg-sl', []);
 }
 
 export function PageContent() {
@@ -93,7 +98,7 @@ export function PageContent() {
   const [showTypes, setShowTypes] = useState(true);
   const [showByItem, setShowByItem] = useState(false);
   const [clickSelect, setClickSelect] = useState(false);
-  const [selectedLinks, setSelectedLinks] = useQueryStore('dc-dg-sl', []);
+  const [selectedLinks, setSelectedLinks] = useSelectedLinks();
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
   const [operation, setOperation] = useOperation();
 
@@ -111,9 +116,7 @@ export function PageContent() {
     await client.mutate(deleteLink(id))
   ), []);
 
-  const s = useSubscription(LINKS, {
-    variables: {},
-  });
+  const s = useSubscription(LINKS);
 
   console.log(s);
 
@@ -243,6 +246,9 @@ export function PageContent() {
                 clear
               </Button>
             </Grid>
+            <Grid item xs={12}><Paper style={{ position: 'relative' }}>
+              <LinkCard link={{ id: 1, type: 1 }}/>
+            </Paper></Grid>
             {selectedLinks.map((id) => {
               const link = (s?.data?.links || []).find(l => l.id === id);
               return <Grid key={id} item xs={12}><Paper style={{ position: 'relative' }}>
