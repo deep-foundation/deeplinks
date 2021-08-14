@@ -2,8 +2,6 @@ name: Deploy deeplinks app
 on:
   push:
     branches: [ docker-hub-menzorg-deepcase ]
-    paths:
-    - 'imports/**'
   pull_request:
     branches: [ docker-hub-menzorg-deepcase ]
   workflow_dispatch:
