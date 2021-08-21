@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@deepcase/hasura": "^0.0.9",
-    "@deepcase/materialized-path": "^0.0.9",
+    "@deepcase/materialized-path": "^0.0.10",
     "@deepcase/react-hasura": "^0.0.2",
     "@deepcase/store": "^0.0.32",
     "apollo-boost": "^0.4.9",
