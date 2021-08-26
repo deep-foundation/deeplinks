@@ -7,11 +7,12 @@
     "package:publish": "npm run package:build; npm publish --access public; npm run package:unbuild",
     "migrate": "export $(grep -v '^#' .env | xargs); npx migrate up --compiler='ts:@deepcase/hasura/compiler/index.js'",
     "unmigrate": "export $(grep -v '^#' .env | xargs); npx migrate down --compiler='ts:@deepcase/hasura/compiler/index.js'",
-    "hasura-docker": "(export JWT_SECRET='{\"type\":\"HS256\", \"key\": \"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\"}'; export $(grep -v '^#' .env | xargs); (export DOCKERHOST=$(ifconfig | grep -E \"([0-9]{1,3}\\.){3}[0-9]{1,3}\" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1); cd ./node_modules/@deepcase/hasura/local; docker-compose up -d))"
+    "hasura-docker": "(export JWT_SECRET='{\"type\":\"HS256\", \"key\": \"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\"}'; export $(grep -v '^#' .env | xargs); (export DOCKERHOST=$(ifconfig | grep -E \"([0-9]{1,3}\\.){3}[0-9]{1,3rep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1); cd ./node_modules/@deepcase/hasura/local; docker-compose up -d))"
   },
   "dependencies": {
+    "@apollo/client": "^3.4.9",
     "@deepcase/hasura": "^0.0.9",
-    "@deepcase/materialized-path": "0.0.11",
+    "@deepcase/materialized-path": "0.0.12",
     "@deepcase/react-hasura": "^0.0.2",
     "@deepcase/store": "^0.0.32",
     "apollo-boost": "^0.4.9",
