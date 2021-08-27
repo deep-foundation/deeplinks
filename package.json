@@ -1,8 +1,9 @@
 {
   "name": "@deepcase/deeplinks-app",
   "private": true,
-  "version": "0.0.1",  "scripts": {
-    "pwd-start": "screen -S deeplinks-app -d -m bash -c 'PORT=3007 npm run dev'; cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate; screen -r deeplinks-app",
+  "version": "0.0.1",
+  "scripts": {
+    "pwd-start": "screen -S deeplinks-app -d -m bash -c 'PORT=3007 npm run dev'; cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate; scren -r deeplinks-app",
     "unsafe-dev": "next dev -p $PORT",
     "build": "next build",
     "export": "next export",
