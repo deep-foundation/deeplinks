@@ -4,4 +4,4 @@ COPY .docker.env ./.env
 COPY . .
 EXPOSE 3007
 ENV PORT 3007
-CMD [ "npm", "dev" ]
+CMD [ "npm", "run", "pwd-start" ]
