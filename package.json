@@ -2,7 +2,7 @@
   "name": "@deepcase/deeplinks",
   "version": "0.0.2",
   "scripts": {
-    "pwd-start": "npm run unmigrate; npm run migrate; while : true do sleep 60; done",
+    "pwd-start": "npm run unmigrate; npm run migrate; while : true do sleep 60 done",
     "package:build": "npx tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:unbuild": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports/gql && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:publish": "npm run package:build; npm publish --access public; npm run package:unbuild",
