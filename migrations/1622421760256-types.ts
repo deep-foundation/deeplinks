@@ -1,4 +1,3 @@
-import { gql } from '@apollo/client';
 import { generateApolloClient } from '@deepcase/hasura/client';
 import Debug from 'debug';
 import { generateMutation, generateSerial, insertMutation } from '../imports/gql';
