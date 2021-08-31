@@ -97,11 +97,11 @@ export function AuthPanel() {
 
   return <>
     <ButtonGroup variant="outlined">
-      <Button disabled>{auth.linkId}</Button>
+      <Button disabled>{auth.linkId || 'admin'}</Button>
       <Button color={operation === 'auth' ? 'primary' : 'default'} onClick={() => setOperation(operation === 'auth' ? '' : 'auth')}>login</Button>
       <Button onClick={() => auth.setLinkId(0)}>logout</Button>
     </ButtonGroup>
-    <Button disabled>in this example logout = guest = admin</Button>
+    {/* <Button disabled>in this example logout = guest = admin</Button> */}
   </>;
 }
 
