@@ -6,6 +6,7 @@ import { QueryStoreProvider } from '@deepcase/store/query';
 import { colors, createMuiTheme, ThemeProvider } from './ui';
 import React, { useEffect } from 'react';
 import { AuthProvider } from './auth';
+import { Analitics } from './analitics';
 
 const temp = createMuiTheme({});
 const { breakpoints } = temp;
@@ -52,18 +53,23 @@ export function Provider({
   children: JSX.Element;
 }) {
   return (
-    <ThemeProvider theme={theme}>
-      <QueryStoreProvider>
-        <LocalStoreProvider>
-          <TokenProvider>
-            <ApolloClientTokenizedProvider options={{ client: 'deeplinks-app', path: GRAPHQL_PATH, ssl: GRAPHQL_SSL, ws: !!process?.browser }}>
-              <ProviderConnected>
-                {children}
-              </ProviderConnected>
-            </ApolloClientTokenizedProvider>
-          </TokenProvider>
-        </LocalStoreProvider>
-      </QueryStoreProvider>
-    </ThemeProvider>
+    <Analitics
+      yandexMetrikaAccounts={[84726091]}
+      googleAnalyticsAccounts={['G-DC5RRWLRNV']}
+    >
+      <ThemeProvider theme={theme}>
+        <QueryStoreProvider>
+          <LocalStoreProvider>
+            <TokenProvider>
+              <ApolloClientTokenizedProvider options={{ client: 'deeplinks-app', path: GRAPHQL_PATH, ssl: GRAPHQL_SSL, ws: !!process?.browser }}>
+                <ProviderConnected>
+                  {children}
+                </ProviderConnected>
+              </ApolloClientTokenizedProvider>
+            </TokenProvider>
+          </LocalStoreProvider>
+        </QueryStoreProvider>
+      </ThemeProvider>
+    </Analitics>
   )
 };
