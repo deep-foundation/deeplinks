@@ -43,6 +43,9 @@ export function ProviderConnected({
   return <AuthProvider>{children}</AuthProvider>;
 }
 
+export const GRAPHQL_PATH = `${process.env.NEXT_PUBLIC_HASURA_PATH}/v1/graphql`;
+export const GRAPHQL_SSL = !!+process.env.NEXT_PUBLIC_HASURA_SSL;
+
 export function Provider({
   children,
 }: {
@@ -53,7 +56,7 @@ export function Provider({
       <QueryStoreProvider>
         <LocalStoreProvider>
           <TokenProvider>
-            <ApolloClientTokenizedProvider options={{ client: 'deeplinks-app', path: `${process.env.NEXT_PUBLIC_HASURA_PATH}/v1/graphql`, ssl: !!+process.env.NEXT_PUBLIC_HASURA_SSL, ws: !!process?.browser }}>
+            <ApolloClientTokenizedProvider options={{ client: 'deeplinks-app', path: GRAPHQL_PATH, ssl: GRAPHQL_SSL, ws: !!process?.browser }}>
               <ProviderConnected>
                 {children}
               </ProviderConnected>

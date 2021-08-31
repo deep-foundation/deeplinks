@@ -10,12 +10,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactResizeDetector from 'react-resize-detector';
 import { useAuth } from '../imports/auth';
 import { check } from '../imports/check';
-import { LINKS, insertLink, deleteLink } from '../imports/gql';
+import { LINKS, LINKS_string, insertLink, deleteLink } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
 import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
+import gql from 'graphql-tag';
+
+import dynamic from 'next/dynamic';
+const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
 
 const transitionHoverScale = {
   transition: 'all 0.5s ease',
@@ -30,7 +34,7 @@ const useStyles = makeStyles({
     zIndex: 1, position: 'absolute', top: 0, left: 0,
     width: '100%', height: '100%',
     display: 'grid',
-    gridTemplateRows: 'max-content auto',
+    gridTemplateRows: 'max-content auto max-content',
     pointerEvents: 'none',
   },
   top: {
@@ -49,14 +53,26 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
   },
   rightPaper: {
-    height: '100%',
     width: 300,
+    height: '100%',
     padding: 6,
     pointerEvents: 'all',
     float: 'right',
     overflow: 'auto',
     boxSizing: 'border-box',
     ...transitionHoverScale,
+  },
+  bottom: {
+    height: 300,
+    width: '100%',
+  },
+  bottomPaper: {
+    width: '100%',
+    height: '100%',
+    padding: 6,
+    pointerEvents: 'all',
+    overflow: 'auto',
+    boxSizing: 'border-box',
   },
 });
 
@@ -116,9 +132,8 @@ export function PageContent() {
     await client.mutate(deleteLink(id))
   ), []);
 
-  const s = useSubscription(LINKS);
-
-  console.log(s);
+  const [query, setQuery] = useState(LINKS);
+  const s = useSubscription(query);
 
   const inD = useMemo(() => {
     const nodes = [];
@@ -181,88 +196,6 @@ export function PageContent() {
       mouseMove.current = { clientX: e.clientX, clientY: e.clientY };
     }}
   >
-    <div className={classes.overlay}>
-      <div className={classes.top}>
-        <PaperPanel className={classes.topPaper}>
-          <Grid container spacing={1}>
-            <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
-                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>by_item</Button>
-                <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
-              </ButtonGroup>
-            </Grid>
-            <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button
-                  onClick={async () => {
-                    await insertLinkD({
-                      from_id: inserting.from || 0,
-                      to_id: inserting.to || 0,
-                      type_id: inserting.type || 0,
-                    });
-                  }}
-                ><Add/></Button>
-                <Button
-                  color={operation === 'from' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'from' ? '' : 'from')}
-                >
-                  from: {inserting?.from}
-                </Button>
-                <Button
-                  color={operation === 'to' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'to' ? '' : 'to')}
-                >
-                  to: {inserting?.to}
-                </Button>
-                <Button
-                  color={operation === 'type' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'type' ? '' : 'type')}
-                >
-                  type: {inserting?.type}
-                </Button>
-                <Button onClick={() => setInserting({})}><Clear/></Button>
-              </ButtonGroup>
-            </Grid>
-            <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button
-                  color={operation === 'delete' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
-                >delete</Button>
-              </ButtonGroup>
-            </Grid>
-            <Grid item>
-              <AuthPanel/>
-            </Grid>
-          </Grid>
-        </PaperPanel>
-      </div>
-      <div className={classes.right}>
-        <PaperPanel className={classes.rightPaper}>
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Button variant="outlined" fullWidth onClick={() => setSelectedLinks([])}>
-                clear
-              </Button>
-            </Grid>
-            <Grid item xs={12}><Paper style={{ position: 'relative' }}>
-              <LinkCard link={{ id: 1, type: 1 }}/>
-            </Paper></Grid>
-            {selectedLinks.map((id) => {
-              const link = (s?.data?.links || []).find(l => l.id === id);
-              return <Grid key={id} item xs={12}><Paper style={{ position: 'relative' }}>
-                <LinkCard link={link}/>
-                <IconButton
-                  size="small" style={{ position: 'absolute', top: 6, right: 6 }}
-                  onClick={() => setSelectedLinks(selectedLinks.filter(link => link !== id))}
-                ><Clear/></IconButton>
-              </Paper></Grid>;
-            })}
-          </Grid>
-        </PaperPanel>
-      </div>
-    </div>
     <ReactResizeDetector
       handleWidth handleHeight
       onResize={(width, height) => setDrawerSize({ width, height })}
@@ -359,6 +292,95 @@ export function PageContent() {
         
       }}
     />
+    <div className={classes.overlay}>
+      <div className={classes.top}>
+        <PaperPanel className={classes.topPaper}>
+          <Grid container spacing={1}>
+            <Grid item>
+              <ButtonGroup variant="outlined">
+                <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
+                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>by_item</Button>
+                <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
+              </ButtonGroup>
+            </Grid>
+            <Grid item>
+              <ButtonGroup variant="outlined">
+                <Button
+                  onClick={async () => {
+                    await insertLinkD({
+                      from_id: inserting.from || 0,
+                      to_id: inserting.to || 0,
+                      type_id: inserting.type || 0,
+                    });
+                  }}
+                ><Add/></Button>
+                <Button
+                  color={operation === 'from' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'from' ? '' : 'from')}
+                >
+                  from: {inserting?.from}
+                </Button>
+                <Button
+                  color={operation === 'to' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'to' ? '' : 'to')}
+                >
+                  to: {inserting?.to}
+                </Button>
+                <Button
+                  color={operation === 'type' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'type' ? '' : 'type')}
+                >
+                  type: {inserting?.type}
+                </Button>
+                <Button onClick={() => setInserting({})}><Clear/></Button>
+              </ButtonGroup>
+            </Grid>
+            <Grid item>
+              <ButtonGroup variant="outlined">
+                <Button
+                  color={operation === 'delete' ? 'primary' : 'default'}
+                  onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
+                >delete</Button>
+              </ButtonGroup>
+            </Grid>
+            <Grid item>
+              <AuthPanel/>
+            </Grid>
+          </Grid>
+        </PaperPanel>
+      </div>
+      <div className={classes.right}>
+        <PaperPanel className={classes.rightPaper}>
+          <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Button variant="outlined" fullWidth onClick={() => setSelectedLinks([])}>
+                clear
+              </Button>
+            </Grid>
+            <Grid item xs={12}><Paper style={{ position: 'relative' }}>
+              <LinkCard link={{ id: 1, type: 1 }}/>
+            </Paper></Grid>
+            {selectedLinks.map((id) => {
+              const link = (s?.data?.links || []).find(l => l.id === id);
+              return <Grid key={id} item xs={12}><Paper style={{ position: 'relative' }}>
+                <LinkCard link={link}/>
+                <IconButton
+                  size="small" style={{ position: 'absolute', top: 6, right: 6 }}
+                  onClick={() => setSelectedLinks(selectedLinks.filter(link => link !== id))}
+                ><Clear/></IconButton>
+              </Paper></Grid>;
+            })}
+          </Grid>
+        </PaperPanel>
+      </div>
+      <div className={classes.bottom}>
+        <PaperPanel className={classes.bottomPaper} elevation={0}>
+          <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string) => {
+            setQuery(gql`${query}`);
+          }}/>
+        </PaperPanel>
+      </div>
+    </div>
   </div>
 }
 
