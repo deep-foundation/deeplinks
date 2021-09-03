@@ -1,17 +1,17 @@
 {
   "name": "@deepcase/deeplinks-app",
-  "private": true,
-  "version": "0.0.1",
+  "version": "0.0.4",
   "scripts": {
     "unsafe-dev": "next dev -p $PORT",
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "dev": "npm run unsafe-dev"
+    "dev": "npm run unsafe-dev",
+    "package:publish": "npm run build; npm publish --access public;"
   },
   "dependencies": {
     "@apollo/client": "^3.3.19",
-    "@deepcase/deeplinks": "^0.0.3",
+    "@deepcase/deeplinks": "^0.0.4",
     "@deepcase/materialized-path": "0.0.11",
     "@graphiql/toolkit": "^0.2.2",
     "@material-ui/core": "^4.11.4",

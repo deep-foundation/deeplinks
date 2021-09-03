@@ -19,6 +19,7 @@ import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 
 import dynamic from 'next/dynamic';
+// @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
 
 const transitionHoverScale = {
@@ -379,6 +380,7 @@ export function PageContent() {
       </div>
       <div className={classes.bottom}>
         <PaperPanel className={classes.bottomPaper} elevation={0}>
+          {/* @ts-ignore */}
           <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string) => {
             setQuery(gql`${query}`);
           }}/>
