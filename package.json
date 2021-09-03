@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.9",
-    "@deepcase/materialized-path": "0.0.12",
+    "@deepcase/materialized-path": "^0.0.14",
     "@deepcase/react-hasura": "^0.0.2",
     "@deepcase/store": "^0.0.32",
     "@types/node": "^14.14.37",
