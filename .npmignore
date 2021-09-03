@@ -118,6 +118,3 @@ projects/app/electron/app
 
 # migrations
 .migrate
-
-# deepcase
-/app
