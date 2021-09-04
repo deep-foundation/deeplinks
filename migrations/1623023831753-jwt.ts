@@ -14,7 +14,7 @@ export const up = async () => {
   await api.query({
     type: 'add_remote_schema',
     args: {
-      name: 'dc_dg_jwt',
+      name: 'jwt',
       definition: {
         url: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/jwt`,
         headers: [{ name: 'x-hasura-client', value: 'deeplinks-jwt' }],
@@ -30,7 +30,7 @@ export const down = async () => {
   await api.query({
     type: 'remove_remote_schema',
     args: {
-      name: 'dc_dg_jwt',
+      name: 'jwt',
     },
   });
 };

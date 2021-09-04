@@ -4,7 +4,7 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 
 const debug = Debug('deepcase:deeplinks:migrations:type-table-bool-exp');
 
-export const TABLE_NAME = 'dc_dg_bool_exp';
+export const TABLE_NAME = 'bool_exp';
 
 export const up = async () => {
   debug('up');
@@ -19,7 +19,7 @@ export const up = async () => {
   await api.query({
     type: 'create_event_trigger',
     args: {
-      name: 'dc_dg_bool_exp',
+      name: 'bool_exp',
       table: TABLE_NAME,
       webhook: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/eh/bool_exp`,
       insert: {
@@ -51,7 +51,7 @@ export const down = async () => {
   await api.query({
     type: 'delete_event_trigger',
     args: {
-      name: 'dc_dg_bool_exp',
+      name: 'bool_exp',
     },
   });
 };

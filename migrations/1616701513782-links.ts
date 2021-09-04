@@ -12,7 +12,7 @@ export const api = new HasuraApi({
 });
 
 export const SCHEMA = 'public';
-export const TABLE_NAME = 'dc_dg_links';
+export const TABLE_NAME = 'links';
 
 export const up = async () => {
   debug('up');
@@ -163,7 +163,7 @@ export const down = async () => {
   await api.query({
     type: 'delete_event_trigger',
     args: {
-      name: 'dc_dg_links',
+      name: 'links',
     },
   });
   await api.sql(sql`

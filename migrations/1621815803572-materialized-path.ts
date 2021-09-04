@@ -15,7 +15,7 @@ const client = generateApolloClient({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-export const MP_TABLE_NAME = 'dc_dg_mp';
+export const MP_TABLE_NAME = 'mp';
 
 const trigger = Trigger({
   mpTableName: MP_TABLE_NAME,

@@ -6,7 +6,7 @@ import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bo
 
 const debug = Debug('deepcase:deeplinks:migrations:model-permissions');
 
-export const TABLE_NAME = 'dc_dg_links';
+export const TABLE_NAME = 'links';
 export const REPLACE_PATTERN_ID = '777777777777';
 
 export const up = async () => {

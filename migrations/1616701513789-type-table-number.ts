@@ -4,7 +4,7 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 
 const debug = Debug('deepcase:deeplinks:migrations:type-table-number');
 
-export const TABLE_NAME = 'dc_dg_number';
+export const TABLE_NAME = 'number';
 
 export const up = async () => {
   debug('up');
