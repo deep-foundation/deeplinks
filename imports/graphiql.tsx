@@ -26,6 +26,7 @@ export function Graphiql({
       <GraphiQL
         query={defaultQuery}
         fetcher={fetcher}
+        defaultVariableEditorOpen={false}
         editorTheme={'dracula'}
         headers={JSON.stringify(generateHeaders({
           token: token,
