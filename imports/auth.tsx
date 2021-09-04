@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { JWT } from './gql';
 
 export function useAuthNode() {
-  return useLocalStore('dc_dg_use_auth_link_id', '');
+  return useLocalStore('use_auth_link_id', '');
 }
 
 export function AuthProvider({
@@ -36,9 +36,9 @@ export function useAuth() {
       }
       const result = await gql.refetch({ linkId: linkId, role: 'link' });
       console.log({ linkId, result, gql });
-      if (result?.data?.dc_dg_jwt?.token) {
+      if (result?.data?.jwt?.token) {
         setLinkId(linkId);
-        setToken(result?.data?.dc_dg_jwt?.token);
+        setToken(result?.data?.jwt?.token);
       }
     },
   };

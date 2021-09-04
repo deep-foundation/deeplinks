@@ -23,7 +23,7 @@ export function LinkCardType({
       onClick={async () => {
         // NeedReservedLinks
         const result = await client.mutate(generateSerial({
-          actions: [insertMutation('dc_dg_links', { objects: { type_id: 14, from_id: 0, to_id: 0 } })],
+          actions: [insertMutation('links', { objects: { type_id: 14, from_id: 0, to_id: 0 } })],
           name: 'INSERT_SUBJECT',
         }));
         const userId = result?.data?.m0?.returning?.[0]?.id;

@@ -15,8 +15,8 @@ interface Marker {
 export const check = async (hash: { [name:string]: number }, client) => {
   const fetch = async () => {
     const result = await client.query({ query: gql`query FETCH_FOR_CHECK {
-      mp: dc_dg_mp { id item_id path_item_depth path_item_id root_id position_id by_position(order_by: { path_item_depth: asc }) { id item_id path_item_depth path_item_id root_id position_id } }
-      nodes: dc_dg_links { from_id id to_id type_id in { from_id id to_id type_id } out { from_id id to_id type_id } }
+      mp: mp { id item_id path_item_depth path_item_id root_id position_id by_position(order_by: { path_item_depth: asc }) { id item_id path_item_depth path_item_id root_id position_id } }
+      nodes: links { from_id id to_id type_id in { from_id id to_id type_id } out { from_id id to_id type_id } }
     }` });
     return { nodes: result?.data?.nodes || [], mp: result?.data?.mp || [] };
   };

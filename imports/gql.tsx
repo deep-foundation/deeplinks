@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deeplinks/imports/gql';
 
 export const JWT = gql`query JWT($linkId: Int) {
-  dc_dg_jwt(input: {role: "link", linkId: $linkId}) {
+  jwt(input: {role: "link", linkId: $linkId}) {
     linkId
     token
     role
@@ -12,7 +12,7 @@ export const JWT = gql`query JWT($linkId: Int) {
 }`;
 
 export const LINKS_string = `{
-  links: dc_dg_links {
+  links: links {
     id
     type_id
     type {
@@ -73,18 +73,18 @@ export const LINKS_string = `{
 }`;
 export const LINKS = gql`${LINKS_string}`;
 
-export const INSERT_LINKS = gql`mutation INSERT_LINKS($objects: [dc_dg_links_insert_input!]!) { insert_links: insert_dc_dg_links(objects: $objects) { returning { id } } }`;
-export const UPDATE_LINKS = gql`mutation UPDATE_LINKS($set: dc_dg_links_set_input, $where: dc_dg_links_bool_exp!) { update_links: update_dc_dg_links(_set: $set, where: $where) { returning { id } } }`;
-export const DELETE_LINKS = gql`mutation DELETE_LINKS($where: dc_dg_links_bool_exp!) { delete_links: delete_dc_dg_links(where: $where) { returning { id } } }`;
+export const INSERT_LINKS = gql`mutation INSERT_LINKS($objects: [links_insert_input!]!) { insert_links: insert_links(objects: $objects) { returning { id } } }`;
+export const UPDATE_LINKS = gql`mutation UPDATE_LINKS($set: links_set_input, $where: links_bool_exp!) { update_links: update_links(_set: $set, where: $where) { returning { id } } }`;
+export const DELETE_LINKS = gql`mutation DELETE_LINKS($where: links_bool_exp!) { delete_links: delete_links(where: $where) { returning { id } } }`;
 
-export const INSERT_STRING = gql`mutation INSERT_STRING($objects: [dc_dg_string_insert_input!]!) { insert_string: insert_dc_dg_string(objects: $objects) { returning { id } } }`;
-export const UPDATE_STRING = gql`mutation UPDATE_STRING($set: dc_dg_string_set_input, $where: dc_dg_string_bool_exp!) { update_string: update_dc_dg_string(_set: $set, where: $where) { returning { id } } }`;
+export const INSERT_STRING = gql`mutation INSERT_STRING($objects: [string_insert_input!]!) { insert_string: insert_string(objects: $objects) { returning { id } } }`;
+export const UPDATE_STRING = gql`mutation UPDATE_STRING($set: string_set_input, $where: string_bool_exp!) { update_string: update_string(_set: $set, where: $where) { returning { id } } }`;
 
 export const insertLink = (link: { from_id?: number; to_id?: number; type_id: number; }) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_links', operation: 'insert',
+        tableName: 'links', operation: 'insert',
         variables: { objects: link },
       }),
     ],
@@ -95,7 +95,7 @@ export const deleteLink = (id: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_links', operation: 'delete',
+        tableName: 'links', operation: 'delete',
         variables: { where: { id: { _eq: id } } },
       }),
     ],
@@ -106,7 +106,7 @@ export const insertString = (link_id: number, value: string) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_string', operation: 'insert',
+        tableName: 'string', operation: 'insert',
         variables: { objects: { link_id, value } },
       }),
     ],
@@ -117,7 +117,7 @@ export const updateString = (id: number, value: string) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_string', operation: 'update',
+        tableName: 'string', operation: 'update',
         variables: { where: { id: { _eq: id } }, _set: { value: value } },
       }),
     ],
@@ -128,7 +128,7 @@ export const deleteString = (id: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_string', operation: 'delete',
+        tableName: 'string', operation: 'delete',
         variables: { where: { id: { _eq: id } } },
       }),
     ],
@@ -139,7 +139,7 @@ export const insertNumber = (link_id: number, value: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_number', operation: 'insert',
+        tableName: 'number', operation: 'insert',
         variables: { objects: { link_id, value } },
       }),
     ],
@@ -150,7 +150,7 @@ export const updateNumber = (id: number, value: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_number', operation: 'update',
+        tableName: 'number', operation: 'update',
         variables: { where: { id: { _eq: id } }, _set: { value: value } },
       }),
     ],
@@ -161,7 +161,7 @@ export const deleteNumber = (id: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_number', operation: 'delete',
+        tableName: 'number', operation: 'delete',
         variables: { where: { id: { _eq: id } } },
       }),
     ],
@@ -173,7 +173,7 @@ export const insertBoolExp = (link_id: number, value: string) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_bool_exp', operation: 'insert',
+        tableName: 'bool_exp', operation: 'insert',
         variables: { objects: { link_id, gql: value } },
       }),
     ],
@@ -184,7 +184,7 @@ export const updateBoolExp = (id: number, value: string) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_bool_exp', operation: 'update',
+        tableName: 'bool_exp', operation: 'update',
         variables: { where: { id: { _eq: id } }, _set: { gql: value } },
       }),
     ],
@@ -195,7 +195,7 @@ export const deleteBoolExp = (id: number) => {
   return generateSerial({
     actions: [
       generateMutation({
-        tableName: 'dc_dg_bool_exp', operation: 'delete',
+        tableName: 'bool_exp', operation: 'delete',
         variables: { where: { id: { _eq: id } } },
       }),
     ],

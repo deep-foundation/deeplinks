@@ -38,12 +38,12 @@ export function LinkCardSubject({
           onClick={async () => {
             // NeedReservedLinks
             const anys = await client.mutate(generateSerial({
-              actions: [insertMutation('dc_dg_links', { objects: _.times(6, () => ({ type_id: 6, from_id: 0, to_id: 0 })) })],
+              actions: [insertMutation('links', { objects: _.times(6, () => ({ type_id: 6, from_id: 0, to_id: 0 })) })],
               name: 'INSERT_ANYS',
             }));
             const anyIds = (anys?.data?.m0?.returning || [])?.map(r => r?.id);
             await client.mutate(generateSerial({
-              actions: [insertMutation('dc_dg_links', { objects: [
+              actions: [insertMutation('links', { objects: [
                 { type_id: 13, from_id: link?.id, to_id: anyIds?.[0] },
                 { type_id: 13, from_id: link?.id, to_id: anyIds?.[1] },
                 { type_id: 13, from_id: anyIds?.[0], to_id: anyIds?.[2] },
