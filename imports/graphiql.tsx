@@ -12,7 +12,7 @@ export function Graphiql({
   onVisualize,
 }: {
   defaultQuery: string;
-  onVisualize: (query: string) => any;
+  onVisualize: (query: string, variables: any) => any;
 }) {
   const token: string = useToken() || '';
   const fetcher = useMemo(() => {
@@ -21,6 +21,7 @@ export function Graphiql({
     });
   }, []);
   const [query, setQuery] = useState('');
+  const [variables, setVariables] = useState({});
   return <>
     {!!fetcher && <>
       <GraphiQL
@@ -34,10 +35,15 @@ export function Graphiql({
         }))}
         toolbar={{
           additionalContent: <>
-            <GraphiQL.Button title="Deep.Visualize" label="Deep.Vizualize" onClick={() => onVisualize(query)}></GraphiQL.Button>
+            <GraphiQL.Button title="Deep.Visualize" label="Deep.Vizualize" onClick={() => onVisualize(query, variables)}></GraphiQL.Button>
           </>
         }}
         onEditQuery={(query) => setQuery(query)}
+        onEditVariables={(variables) => {
+          try {
+            setVariables(JSON.parse(variables));
+          } catch(error) {}
+        }}
       />
     </>}
   </>;

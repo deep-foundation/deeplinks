@@ -138,7 +138,9 @@ export function PageContent() {
   ), []);
 
   const [query, setQuery] = useState(LINKS);
-  const s = useSubscription(query);
+  const [variables, setVariables] = useState({});
+  console.log(query, variables);
+  const s = useSubscription(query, { variables });
 
   const inD = useMemo(() => {
     const nodes = [];
@@ -381,8 +383,9 @@ export function PageContent() {
       <div className={classes.bottom}>
         <PaperPanel className={classes.bottomPaper} elevation={0}>
           {/* @ts-ignore */}
-          <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string) => {
+          <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string, variables: any) => {
             setQuery(gql`${query}`);
+            setVariables(variables);
           }}/>
         </PaperPanel>
       </div>
