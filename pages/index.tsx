@@ -19,6 +19,8 @@ import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 
 import dynamic from 'next/dynamic';
+import Draggable from 'react-draggable';
+
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
 
@@ -68,13 +70,11 @@ const useStyles = makeStyles({
     ...transitionHoverScale,
   },
   bottom: {
-    height: 300,
     width: '100%',
   },
   bottomPaper: {
     width: '100%',
     height: '100%',
-    padding: 6,
     pointerEvents: 'all',
     overflow: 'auto',
     boxSizing: 'border-box',
@@ -110,10 +110,13 @@ export function useSelectedLinks() {
   return useQueryStore('dc-dg-sl', []);
 }
 
+const defaultGraphiqlHeight = 300;
+
 export function PageContent() {
   const auth = useAuth();
   const classes = useStyles();
   const [drawerSize, setDrawerSize] = useState({ width: 800, height: 500 });
+  const [graphiqlHeight, setGraphiqlHeight] = useState(defaultGraphiqlHeight);
   const [flyPanel, setFlyPanel] = useState<any>();
 
   const [showTypes, setShowTypes] = useState(true);
@@ -380,7 +383,7 @@ export function PageContent() {
           </Grid>
         </PaperPanel>
       </div>
-      <div className={classes.bottom}>
+      <div className={classes.bottom} style={{ height: graphiqlHeight }}>
         <PaperPanel className={classes.bottomPaper} elevation={0}>
           {/* @ts-ignore */}
           <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string, variables: any) => {
@@ -390,6 +393,42 @@ export function PageContent() {
         </PaperPanel>
       </div>
     </div>
+    <Draggable
+      axis="y"
+      handle=".handle"
+      defaultPosition={{x: 0, y: 0}}
+      position={null}
+      scale={1}
+      onStart={(data) => {
+      }}
+      onDrag={(data) => {
+      }}
+      onStop={(data) => {
+        setGraphiqlHeight((window.innerHeight - data.pageY) - 10);
+      }}
+    >
+      {/* <Paper style={{
+        position: 'fixed', zIndex: 10, bottom: defaultGraphiqlHeight, left: 0,
+        width: '100%', height: 10,
+        userSelect: 'none',
+      }}>
+        <div className="handle" style={{ height: '100%', width: '100%' }}></div>
+      </Paper> */}
+      <div style={{
+        position: 'fixed', zIndex: 10, bottom: defaultGraphiqlHeight, left: 0,
+        width: '100%', height: 10,
+        userSelect: 'none',
+      }}>
+        <div className="handle" style={{
+          height: '100%', width: '100%', position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', left: 'calc(50% - 30px)', top: 'calc(50% - 3px)', 
+            width: 60, height: 6, backgroundColor: 'grey', borderRadius: 7,
+          }}></div>
+        </div>
+      </div>
+    </Draggable>
   </div>
 }
 
