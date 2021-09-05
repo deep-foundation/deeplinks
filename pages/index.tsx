@@ -5,7 +5,7 @@ import { useLocalStore } from '@deepcase/store/local';
 import { useQueryStore } from '@deepcase/store/query';
 import { Add, Clear } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
-import { isEqual } from 'lodash';
+import { isEqual, random } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { useAuth } from '../imports/auth';
@@ -140,7 +140,7 @@ export function PageContent() {
     await client.mutate(deleteLink(id))
   ), []);
 
-  const [query, setQuery] = useState(LINKS);
+  const [query, setQuery] = useState(gql`subscription ${LINKS_string}`);
   const [variables, setVariables] = useState({});
   console.log(query, variables);
   const s = useSubscription(query, { variables });
@@ -387,7 +387,10 @@ export function PageContent() {
         <PaperPanel className={classes.bottomPaper} elevation={0}>
           {/* @ts-ignore */}
           <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string, variables: any) => {
-            setQuery(gql`${query}`);
+            setQuery(gql`
+              #${random(0, 9999)}
+              ${query}
+            `);
             setVariables(variables);
           }}/>
         </PaperPanel>
