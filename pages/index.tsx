@@ -168,7 +168,8 @@ export function PageContent() {
     return { nodes, links };
   }, [s]);
 
-  const outD = useImmutableData(inD, (a, b) => isEqual(a.link, b.link));
+  // const outD = useImmutableData(inD, (a, b) => isEqual(a.link, b.link));
+  const outD = inD;
   
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
@@ -235,7 +236,8 @@ export function PageContent() {
         ><Add/></IconButton>
       </div>}
     </Popover>
-    <ForceGraph
+    {[<ForceGraph
+      key={JSON.stringify(outD)}
       Component={ForceGraph2D}
       graphData={outD}
       backgroundColor={'#fff'}
@@ -301,7 +303,7 @@ export function PageContent() {
       onNodeHover={(node) => {
         
       }}
-    />
+    />]}
     <div className={classes.overlay}>
       <div className={classes.top}>
         <PaperPanel className={classes.topPaper}>
