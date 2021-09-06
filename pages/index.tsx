@@ -311,7 +311,7 @@ export function PageContent() {
             <Grid item>
               <ButtonGroup variant="outlined">
                 <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
-                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>by_item</Button>
+                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>mp</Button>
                 <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
               </ButtonGroup>
             </Grid>
