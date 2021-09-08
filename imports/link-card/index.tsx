@@ -6,9 +6,11 @@ import { updateString, insertString, deleteString, updateNumber, insertNumber, d
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import MonacoEditor from 'react-monaco-editor';
-import { LinkCardType } from './types/type';
 import { Divider } from '@material-ui/core';
+
+import { LinkCardType } from './types/type';
 import { LinkCardSubject } from './types/subject';
+import { LinkCardRule } from './types/rule';
 
 export function LinkCard({
   link,
@@ -59,6 +61,9 @@ export function LinkCard({
         </Grid>}
         {link?.type_id === 14 && <Grid item xs={12}>
           <LinkCardSubject link={link}/>
+        </Grid>}
+        {link?.type_id === 9 && <Grid item xs={12}>
+          <LinkCardRule link={link}/>
         </Grid>}
         <Grid item xs={12}>
           <Divider/>

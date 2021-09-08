@@ -20,6 +20,7 @@ import gql from 'graphql-tag';
 
 import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
+import { useClickEmitter } from '../imports/click-emitter';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -142,7 +143,7 @@ export function PageContent() {
 
   const [query, setQuery] = useState(gql`subscription ${LINKS_string}`);
   const [variables, setVariables] = useState({});
-  console.log(query, variables);
+
   const s = useSubscription(query, { variables });
 
   const inD = useMemo(() => {
@@ -173,6 +174,7 @@ export function PageContent() {
   
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
+  const clickEventEmitter = useClickEmitter();
   const onNodeClick = useDebounceCallback((node) => {
     if (operation === 'auth') {
       auth.setLinkId(+node.link.id);
@@ -195,6 +197,8 @@ export function PageContent() {
         left: (mouseMove?.current?.clientX),
         link: node.link,
       });
+    } else if (operation) {
+      clickEventEmitter.emit(operation, node.link);
     } else {
       if (!selectedLinks.find(i => i === node.link.id)) setSelectedLinks([ ...selectedLinks, node.link.id ]);
     }

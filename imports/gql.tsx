@@ -11,67 +11,77 @@ export const JWT = gql`query JWT($linkId: Int) {
   }
 }`;
 
+export const LINKS_BODY_string = `
+id
+type_id
+type {
+  string {
+    value
+  }
+}
+from_id
+from {
+  string {
+    value
+  }
+}
+to_id
+to {
+  string {
+    value
+  }
+}
+string {
+  id
+  value
+}
+number {
+  id
+  value
+}
+bool_exp {
+  id
+  gql
+}
+_by_root {
+  id
+  item_id
+  path_item_depth
+  path_item_id
+  position_id
+  root_id
+}
+_by_path_item {
+  id
+  item_id
+  path_item_depth
+  path_item_id
+  position_id
+  root_id
+}
+_by_item {
+  id
+  item_id
+  path_item_depth
+  path_item_id
+  position_id
+  root_id
+}
+in { from_id id to_id type_id } out { from_id id to_id type_id }`;
+
 export const LINKS_string = `{
-  links: links {
-    id
-    type_id
-    type {
-      string {
-        value
-      }
-    }
-    from_id
-    from {
-      string {
-        value
-      }
-    }
-    to_id
-    to {
-      string {
-        value
-      }
-    }
-    string {
-      id
-      value
-    }
-    number {
-      id
-      value
-    }
-    bool_exp {
-      id
-      gql
-    }
-    _by_root {
-      id
-      item_id
-      path_item_depth
-      path_item_id
-      position_id
-      root_id
-    }
-    _by_path_item {
-      id
-      item_id
-      path_item_depth
-      path_item_id
-      position_id
-      root_id
-    }
-    _by_item {
-      id
-      item_id
-      path_item_depth
-      path_item_id
-      position_id
-      root_id
-    }
-    in { from_id id to_id type_id } out { from_id id to_id type_id }
+  links {
+    ${LINKS_BODY_string}
   }
 }`;
 export const LINKS = gql`${LINKS_string}`;
+
+export const LINKS_WHERE_string = `subscription ($where: links_bool_exp){
+  links(where: $where) {
+    ${LINKS_BODY_string}
+  }
+}`;
+export const LINKS_WHERE = gql`${LINKS_WHERE_string}`;
 
 export const INSERT_LINKS = gql`mutation INSERT_LINKS($objects: [links_insert_input!]!) { insert_links: insert_links(objects: $objects) { returning { id } } }`;
 export const UPDATE_LINKS = gql`mutation UPDATE_LINKS($set: links_set_input, $where: links_bool_exp!) { update_links: update_links(_set: $set, where: $where) { returning { id } } }`;

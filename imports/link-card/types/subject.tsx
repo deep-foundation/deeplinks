@@ -5,6 +5,7 @@ import { Grid } from '@material-ui/core';
 import React from 'react';
 import { useAuth } from '../../auth';
 import { Button } from '../../ui';
+import { useSelectedLinks } from '../../../pages';
 
 export function LinkCardSubject({
   link,
@@ -13,6 +14,7 @@ export function LinkCardSubject({
 }) {
   const auth = useAuth();
   const client = useApolloClient();
+  const [selectedLinks, setSelectedLinks] = useSelectedLinks();
 
   return <>
     <Grid container spacing={1}>
@@ -55,7 +57,37 @@ export function LinkCardSubject({
             }));
           }}
         >
-          create demo any subtree
+          + demo subtree
+        </Button>
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          size="small" variant="outlined" fullWidth
+          onClick={async () => {
+            // NeedReservedLinks
+            const nodes = await client.mutate(generateSerial({
+              actions: [insertMutation('links', { objects: [
+                { type_id: 9, from_id: 0, to_id: 0 },
+                { type_id: 7, from_id: 0, to_id: 0 },
+                { type_id: 7, from_id: 0, to_id: 0 },
+                { type_id: 7, from_id: 0, to_id: 0 },
+              ] })],
+              name: 'INSERT_RULE',
+            }));
+            const nodeIds = (nodes?.data?.m0?.returning || [])?.map(r => r?.id);
+            const links = await client.mutate(generateSerial({
+              actions: [insertMutation('links', { objects: [
+                { type_id: 10, from_id: nodeIds?.[0], to_id: nodeIds?.[1] },
+                { type_id: 11, from_id: nodeIds?.[0], to_id: nodeIds?.[2] },
+                { type_id: 12, from_id: nodeIds?.[0], to_id: nodeIds?.[3] },
+                { type_id: 13, from_id: link.id, to_id: nodeIds?.[0] },
+              ] })],
+              name: 'INSERT_RULE_LINKS',
+            }));
+            setSelectedLinks([...selectedLinks, nodeIds[0]]);
+          }}
+        >
+          + rule
         </Button>
       </Grid>
     </Grid>
