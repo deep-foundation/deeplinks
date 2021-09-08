@@ -4,7 +4,7 @@ import { up as upTable, down as downTable } from '@deepcase/materialized-path/ta
 import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
 import { Trigger } from '@deepcase/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { permissions } from '../imports/permission';
+import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deepcase/hasura/sql';
 
 const debug = Debug('deepcase:deeplinks:migrations:materialized-path');
@@ -65,12 +65,12 @@ export const up = async () => {
     GRAPH_TABLE: LINKS_TABLE_NAME,
   });
   await permissions(api, MP_TABLE_NAME);
-  await permissions(api, LINKS_TABLE_NAME, {"_or":[
-    {"type_id":{"_eq":"14"}},
-    {"type_id":{"_eq":"1"}},
-    {"_by_item":{"_and":[{"path_item":{"_and":[{"type_id":{"_eq":11}},{"from":{"_and":[{"out":{"_and":[{"type_id":{"_eq":10}},{"_by_path_item":{"item_id":{"_eq":"X-Hasura-User-Id"}}}]}},{"type_id":{"_eq":9}}]}}]}}]}},
-    {"_by_item":{"path_item_id":{"_eq":"X-Hasura-User-Id"}}},
-  ]});
+  await permissions(api, LINKS_TABLE_NAME, {
+    select: generatePermissionWhere(15),
+    insert: {}, // generatePermissionWhere(16),
+    update: {}, // generatePermissionWhere(17),
+    delete: generatePermissionWhere(18),
+  });
   await api.sql(trigger.upFunctionIsRoot());
   await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
