@@ -412,8 +412,8 @@ export function PageContent() {
       }}
       onDrag={(data) => {
       }}
-      onStop={(data) => {
-        setGraphiqlHeight((window.innerHeight - data.pageY) - 10);
+      onStop={(data: any) => {
+        setGraphiqlHeight((window.innerHeight - data?.pageY) - 10);
       }}
     >
       {/* <Paper style={{
