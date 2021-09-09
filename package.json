@@ -1,6 +1,6 @@
 {
   "name": "@deepcase/deeplinks",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "scripts": {
     "package:build": "npx tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:unbuild": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports/gql && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",

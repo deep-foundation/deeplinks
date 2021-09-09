@@ -71,15 +71,13 @@ export const up = async () => {
     update: {}, // generatePermissionWhere(17),
     delete: generatePermissionWhere(18),
   });
-  await api.sql(trigger.upFunctionIsRoot());
-  await api.sql(trigger.upFunctionWillRoot());
   await api.sql(trigger.upFunctionInsertNode());
   await api.sql(trigger.upFunctionDeleteNode());
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__mp_group_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
     IF (NEW."type_id" = 22) THEN
-      PERFORM ${MP_TABLE_NAME}__insert_node__function_core(${LINKS_TABLE_NAME}.*)
+      PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
     END IF;
     RETURN NEW;
@@ -89,7 +87,7 @@ export const up = async () => {
   BEGIN
     IF (OLD."type_id" = 22) THEN
       SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id";
-      PERFORM ${MP_TABLE_NAME}__delete_node__function_core(${LINKS_TABLE_NAME}.*, groupRow)
+      PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
     END IF;
     RETURN OLD;
@@ -108,8 +106,6 @@ export const down = async () => {
   await api.sql(trigger.downTriggerInsert());
   await api.sql(trigger.downFunctionInsertNode());
   await api.sql(trigger.downFunctionDeleteNode());
-  await api.sql(trigger.downFunctionIsRoot());
-  await api.sql(trigger.downFunctionWillRoot());
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
