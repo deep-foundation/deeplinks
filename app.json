@@ -24,9 +24,6 @@
   "image": "menzorg/deeplinks-app:docker-hub-menzorg-deepcase ",
   "buildpacks": [
     {
-      "url": "https://github.com/johnpryan/heroku-buildpack-submodules.git"
-    },
-    {
       "url": "heroku/nodejs"
     }],
   "addons": [
