@@ -1,5 +1,5 @@
 const { spawn, exec } = require('child_process');
-exec("export HASURA_GRAPHQL_DATABASE_URL=$DATABASE_URL; export MIGRATIONS_HASURA_PATH=8080-$GITPOD_WORKSPACE_ID.$GITPOD_WORKSPACE_CLUSTER_HOST; NEXT_PUBLIC_HASURA_PATH=8080-$GITPOD_WORKSPACE_ID.$GITPOD_WORKSPACE_CLUSTER_HOST;");
+exec('export HASURA_GRAPHQL_DATABASE_URL=$DATABASE_URL;');
 const gql = spawn('graphql-engine', ['serve']);
 const deeplinksApp = spawn('npm', ['run', 'deeplinks-app']);
 let migrations;

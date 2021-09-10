@@ -19,6 +19,7 @@ COPY ./heroku/start.js .
 COPY ./package.json .
 COPY ./package-lock.json .
 COPY ./tsconfig.json .
+COPY ./.docker.env ./.env
 
 RUN . "$NVM_DIR/nvm.sh" && npm ci
 
