@@ -21,7 +21,7 @@
       "size": "free"
     }
   }],
-  "image": "menzorg/deepcase:docker-hub-menzorg-deepcase ",
+  "image": "menzorg/deeplinks-app:docker-hub-menzorg-deepcase ",
   "buildpacks": [
     {
       "url": "https://github.com/johnpryan/heroku-buildpack-submodules.git"
