@@ -28,7 +28,7 @@ export default async (req, res) => {
       const oldRow = event?.data?.old;
       const newRow = event?.data?.new;
       const typeId = operation === 'DELETE' ? oldRow.type_id : newRow.type_id;
-      const handleStringResult = await client.query({ query: gql`query SELECT_STRING_HANDLE($typeId: bigint) { dc_dg_string(where: {
+      const handleStringResult = await client.query({ query: gql`query SELECT_STRING_HANDLE($typeId: bigint) { string(where: {
         link: {
           type_id: { _eq: 20 },
           to_id: { _eq: 16 },
@@ -40,7 +40,7 @@ export default async (req, res) => {
       } }`, variables: {
         typeId,
       }});
-      const handleStringValue = handleStringResult?.data?.dc_dg_string?.[0]?.value;
+      const handleStringValue = handleStringResult?.data?.string?.[0]?.value;
       try { 
         vm.runInNewContext(handleStringValue, { console, Error, oldRow, newRow });
       } catch(error) {

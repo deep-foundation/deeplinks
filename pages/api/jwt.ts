@@ -7,13 +7,13 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const typeDefs = gql`
   type Query {
-    dc_dg_jwt(input: DC_DG_JWTInput): DC_DG_JWTOutput
+    jwt(input: JWTInput): JWTOutput
   }
-  input DC_DG_JWTInput {
+  input JWTInput {
     linkId: Int
     role: String
   }
-  type DC_DG_JWTOutput {
+  type JWTOutput {
     token: String
     linkId: Int
     role: String
@@ -22,7 +22,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    dc_dg_jwt: async (source, args, context, info) => {
+    jwt: async (source, args, context, info) => {
       const { linkId, role } = args.input;
       const token = jwt.sign({
         "https://hasura.io/jwt/claims": {

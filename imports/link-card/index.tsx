@@ -1,11 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog } from './ui';
-import { Delete } from './icons';
+import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog } from '../ui';
+import { Delete } from '../icons';
 import { useMutation } from '@apollo/react-hooks';
-import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from './gql';
+import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from '../gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import MonacoEditor from 'react-monaco-editor';
+import { Divider } from '@material-ui/core';
+
+import { LinkCardType } from './types/type';
+import { LinkCardSubject } from './types/subject';
+import { LinkCardRule } from './types/rule';
 
 export function LinkCard({
   link,
@@ -43,12 +48,26 @@ export function LinkCard({
 
   const [dialog, setDialog] = useState(false);
 
+  // NeedPackerTypeNaming
+
   return <Card>
     <CardContent>
       <Typography>{link?.id} {link?.type?.string?.value}</Typography>
     </CardContent>
     <CardActions>
       <Grid container spacing={1}>
+        {link?.id === 1 && <Grid item xs={12}>
+          <LinkCardType link={link}/>
+        </Grid>}
+        {link?.type_id === 14 && <Grid item xs={12}>
+          <LinkCardSubject link={link}/>
+        </Grid>}
+        {link?.type_id === 9 && <Grid item xs={12}>
+          <LinkCardRule link={link}/>
+        </Grid>}
+        <Grid item xs={12}>
+          <Divider/>
+        </Grid>
         <Grid item xs={12}>
           {!!link?.bool_exp ? <>
             <TextField
