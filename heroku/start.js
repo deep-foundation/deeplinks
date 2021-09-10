@@ -29,7 +29,7 @@ deeplinksApp.on('close', (code) => {
 });
 
 setTimeout(()=>{
-  migrations = = spawn('npm', ['run', 'deeplinks']});
+  migrations = = spawn('npm', ['run', 'migrate']});
   migrations.stdout.on('data', (data) => {
    console.log(`{ "logtype": "migrations", "log": "${data}""`);
   });
