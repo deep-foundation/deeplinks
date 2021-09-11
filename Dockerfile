@@ -21,8 +21,6 @@ COPY ./package-lock.json .
 COPY ./tsconfig.json .
 COPY ./.docker.env ./.env
 
-RUN . "$NVM_DIR/nvm.sh" && npm ci
-
 ENV MIGRATIONS_HASURA_SSL 0
 ENV HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 ENV MIGRATIONS_HASURA_SECRET: myadminsecretkey

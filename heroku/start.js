@@ -2,7 +2,7 @@ const { spawn, execSync } = require('child_process');
 const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' }); 
 console.log('url = ',url);
 
-const gql = spawn('graphql-engine', ['serve'], {
+const gql = spawn('./graphql-engine', ['serve'], {
   env: {
     HASURA_GRAPHQL_DATABASE_URL: url
   }
