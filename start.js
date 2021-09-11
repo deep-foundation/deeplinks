@@ -7,7 +7,11 @@ const gql = spawn('./graphql-engine', ['serve'], {
     HASURA_GRAPHQL_DATABASE_URL: url
   }
 });
-const deeplinksApp = spawn('npm', ['run', 'deeplinks-app']);
+const deeplinksApp = spawn('npm', ['run', 'start'], {
+  env: {
+    PORT: 3007
+  }
+});
 let migrations;
 console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
 gql.stdout.on('data', (data) => {
