@@ -120,8 +120,8 @@ export function PageContent() {
   const [graphiqlHeight, setGraphiqlHeight] = useState(defaultGraphiqlHeight);
   const [flyPanel, setFlyPanel] = useState<any>();
 
-  const [showTypes, setShowTypes] = useState(true);
-  const [showByItem, setShowByItem] = useState(false);
+  const [showTypes, setShowTypes] = useQueryStore('show-types', false);
+  const [showMP, setShowMP] = useQueryStore('show-mp', false);
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useSelectedLinks();
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
@@ -155,7 +155,7 @@ export function PageContent() {
       const link = _links[l];
       nodes.push({ id: link.id, link });
       if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#000000' });
-      if (showByItem) for (let i = 0; i < link._by_item.length; i++) {
+      if (showMP) for (let i = 0; i < link._by_item.length; i++) {
         const pos = link._by_item[i];
         links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#000000' });
       }
@@ -315,7 +315,7 @@ export function PageContent() {
             <Grid item>
               <ButtonGroup variant="outlined">
                 <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
-                <Button color={showByItem ? 'primary' : 'default'} onClick={() => setShowByItem(!showByItem)}>mp</Button>
+                <Button color={showMP ? 'primary' : 'default'} onClick={() => setShowMP(!showMP)}>mp</Button>
                 <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
               </ButtonGroup>
             </Grid>
@@ -331,12 +331,14 @@ export function PageContent() {
                   }}
                 ><Add/></Button>
                 <Button
+                  style={{ color: '#a83232' }}
                   color={operation === 'from' ? 'primary' : 'default'}
                   onClick={() => setOperation(operation === 'from' ? '' : 'from')}
-                >
+                  >
                   from: {inserting?.from}
                 </Button>
                 <Button
+                  style={{ color: '#32a848' }}
                   color={operation === 'to' ? 'primary' : 'default'}
                   onClick={() => setOperation(operation === 'to' ? '' : 'to')}
                 >
