@@ -1,6 +1,12 @@
-const { spawn, exec } = require('child_process');
-exec('export HASURA_GRAPHQL_DATABASE_URL=$DATABASE_URL;');
-const gql = spawn('graphql-engine', ['serve']);
+const { spawn, execSync } = require('child_process');
+const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' }); 
+console.log('url = ',url);
+
+const gql = spawn('graphql-engine', ['serve'], {
+  env: {
+    HASURA_GRAPHQL_DATABASE_URL: url
+  }
+});
 const deeplinksApp = spawn('npm', ['run', 'deeplinks-app']);
 let migrations;
 console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
@@ -29,7 +35,7 @@ deeplinksApp.on('close', (code) => {
 });
 
 setTimeout(()=>{
-  migrations = = spawn('npm', ['run', 'migrate']});
+  migrations = spawn('npm', ['run', 'migrate']);
   migrations.stdout.on('data', (data) => {
    console.log(`{ "logtype": "migrations", "log": "${data}""`);
   });

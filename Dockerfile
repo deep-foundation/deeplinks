@@ -15,7 +15,7 @@ RUN cp /var/local/.nvm/versions/node/v${NODE_VERSION}/bin/node /bin/node
 RUN cp /var/local/.nvm/versions/node/v${NODE_VERSION}/bin/npx /bin/npx
 RUN cp /var/local/.nvm/versions/node/v${NODE_VERSION}/bin/npm /bin/npm
 
-COPY ./heroku/start.js .
+COPY ./heroku/start.js ./start.js
 COPY ./package.json .
 COPY ./package-lock.json .
 COPY ./tsconfig.json .
