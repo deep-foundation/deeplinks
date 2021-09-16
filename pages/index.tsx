@@ -398,7 +398,7 @@ export function PageContent() {
         </PaperPanel>
       </div>
       <div className={classes.bottom} style={{ height: graphiqlHeight }}>
-        <PaperPanel className={classes.bottomPaper} elevation={0}>
+        <PaperPanel className={classes.bottomPaper} elevation={1}>
           {/* @ts-ignore */}
           <Graphiql defaultQuery={LINKS_string} onVisualize={(query: string, variables: any) => {
             setQuery(gql`
