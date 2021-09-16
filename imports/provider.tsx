@@ -16,8 +16,16 @@ export const theme = createMuiTheme({
     fontFamily: ['Comfortaa', 'sans-serif'].join(','),
   },
   palette: {
+    type: 'dark',
+    background: {
+      default: '#111720',
+      paper: '#00000030',
+    },
     primary: colors.lightBlue,
     secondary: colors.lightGreen,
+  },
+  shape: {
+    borderRadius: 0,
   },
   overrides: {
     MuiButton: {
@@ -25,7 +33,22 @@ export const theme = createMuiTheme({
         textTransform: 'none',
       },
     },
+    MuiPaper: {
+      elevation1: {
+        border: '1px dashed #ffffff40',
+      },
+      elevation2: {
+        border: '1px dashed #ffffff60',
+      },
+      elevation3: {
+        border: '1px dashed #ffffff80',
+      },
+      elevation4: {
+        border: '1px dashed #ffffff100',
+      },
+    },
   },
+  shadows: ['none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none'],
 });
 
 export function ProviderConnected({

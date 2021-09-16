@@ -21,6 +21,7 @@ import gql from 'graphql-tag';
 import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
 import { useClickEmitter } from '../imports/click-emitter';
+import { useTheme } from '@material-ui/styles';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -33,7 +34,15 @@ const transitionHoverScale = {
   },
 };
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
+  root: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: theme?.palette?.background?.default,
+  },
   overlay: {
     zIndex: 1, position: 'absolute', top: 0, left: 0,
     width: '100%', height: '100%',
@@ -44,17 +53,16 @@ const useStyles = makeStyles({
   },
   top: {
     margin: `16px 16px 0 16px`,
-    padding: 6,
     boxSizing: 'border-box',
   },
   topPaper: {
     pointerEvents: 'all',
     boxSizing: 'border-box',
+    padding: theme.spacing(1),
     ...transitionHoverScale,
   },
   right: {
-    margin: 16,
-    padding: 6,
+    margin: `16px 0 16px 16px`,
     boxSizing: 'border-box',
     position: 'relative',
   },
@@ -64,7 +72,7 @@ const useStyles = makeStyles({
     overflow: 'scroll',
     width: 300,
     height: '100%',
-    padding: 6,
+    padding: theme.spacing(1),
     pointerEvents: 'all',
     float: 'right',
     boxSizing: 'border-box',
@@ -80,7 +88,7 @@ const useStyles = makeStyles({
     overflow: 'auto',
     boxSizing: 'border-box',
   },
-});
+}));
 
 export function PaperPanel(props: any) {
   const classes = useStyles();
@@ -115,6 +123,7 @@ const defaultGraphiqlHeight = 300;
 
 export function PageContent() {
   const auth = useAuth();
+  const theme = useTheme();
   const classes = useStyles();
   const [drawerSize, setDrawerSize] = useState({ width: 800, height: 500 });
   const [graphiqlHeight, setGraphiqlHeight] = useState(defaultGraphiqlHeight);
@@ -154,10 +163,10 @@ export function PageContent() {
     for (let l = 0; l < _links.length; l++) {
       const link = _links[l];
       nodes.push({ id: link.id, link });
-      if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#000000' });
+      if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#ffffff' });
       if (showMP) for (let i = 0; i < link._by_item.length; i++) {
         const pos = link._by_item[i];
-        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#000000' });
+        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#ffffff' });
       }
     }
     for (let l = 0; l < _links.length; l++) {
@@ -206,7 +215,7 @@ export function PageContent() {
   onNodeClickRef.current = onNodeClick;
 
   return <div
-    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+    className={classes.root}
     onMouseMove={(e) => {
       mouseMove.current = { clientX: e.clientX, clientY: e.clientY };
     }}
@@ -244,9 +253,8 @@ export function PageContent() {
       key={JSON.stringify(outD)}
       Component={ForceGraph2D}
       graphData={outD}
-      backgroundColor={'#fff'}
-      // linkColor={'#000000'}
-      linkAutoColorBy={(l) => l.color || '#000000'}
+      // backgroundColor={theme?.palette?.background?.default}
+      linkAutoColorBy={(l) => l.color || '#fff'}
       linkOpacity={1}
       linkWidth={0.5}
       linkDirectionalArrowLength={3.5}
@@ -290,14 +298,14 @@ export function PageContent() {
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = isSelected ? '#000' : '#707070';
+        ctx.fillStyle = isSelected ? '#fff' : '#707070';
 
         for (var i = 0; i < _l.length; i++)
           ctx.fillText(_l[i], node.x, node.y + (i * 12/globalScale) );
       }}
       // nodeThreeObject={node => {
       //   const sprite = new SpriteText(node?.n?.key);
-      //   sprite.color = '#000';
+      //   sprite.color = '#fff';
       //   sprite.textHeight = 8;
       //   return sprite;
       // }}
@@ -311,7 +319,7 @@ export function PageContent() {
     <div className={classes.overlay}>
       <div className={classes.top}>
         <PaperPanel className={classes.topPaper}>
-          <Grid container spacing={1}>
+          <Grid container spacing={1} style={{ boxSizing: 'border-box' }}>
             <Grid item>
               <ButtonGroup variant="outlined">
                 <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
@@ -375,18 +383,16 @@ export function PageContent() {
                 clear
               </Button>
             </Grid>
-            <Grid item xs={12}><Paper style={{ position: 'relative' }}>
-              <LinkCard link={{ id: 1, type: 1 }}/>
-            </Paper></Grid>
+            <Grid item xs={12}><LinkCard link={{ id: 1, type: 1 }}/></Grid>
             {selectedLinks.map((id) => {
               const link = (s?.data?.links || []).find(l => l.id === id);
-              return <Grid key={id} item xs={12}><Paper style={{ position: 'relative' }}>
+              return <Grid key={id} item xs={12} style={{ position: 'relative' }}>
                 <LinkCard link={link}/>
                 <IconButton
                   size="small" style={{ position: 'absolute', top: 6, right: 6 }}
                   onClick={() => setSelectedLinks(selectedLinks.filter(link => link !== id))}
                 ><Clear/></IconButton>
-              </Paper></Grid>;
+              </Grid>;
             })}
           </Grid>
         </PaperPanel>
