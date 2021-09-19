@@ -14,7 +14,7 @@ import { LINKS, LINKS_string, insertLink, deleteLink } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
-import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover } from '../imports/ui';
+import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 import axios from 'axios';
@@ -25,6 +25,7 @@ import { useClickEmitter } from '../imports/click-emitter';
 import { useTheme } from '@material-ui/styles';
 
 import { Capacitor } from '@capacitor/core';
+import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -36,6 +37,13 @@ const transitionHoverScale = {
     transform: 'scale(1.01)',
   },
 };
+
+type StyleProps = { connected: boolean; };
+const connectedPosition = (style: any) => ({
+  position: 'relative',
+  transition: 'all 1s ease',
+  ...style,
+});
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -60,18 +68,19 @@ const useStyles = makeStyles((theme) => ({
     margin: `16px 16px 0 16px`,
     boxSizing: 'border-box',
   },
-  topPaper: {
+  topPaper: ({ connected }: StyleProps) => ({
     pointerEvents: 'all',
     boxSizing: 'border-box',
     padding: theme.spacing(1),
+    ...connectedPosition({ top: connected ? 0 : -100 }),
     ...transitionHoverScale,
-  },
+  }),
   right: {
     margin: `16px 0 16px 16px`,
     boxSizing: 'border-box',
     position: 'relative',
   },
-  rightPaper: {
+  rightPaper: ({ connected }: StyleProps) => ({
     position: 'absolute',
     top: 0, right: 0,
     overflow: 'scroll',
@@ -81,22 +90,26 @@ const useStyles = makeStyles((theme) => ({
     pointerEvents: 'all',
     float: 'right',
     boxSizing: 'border-box',
+    ...connectedPosition({ right: connected ? 0 : -1000 }),
     ...transitionHoverScale,
-  },
+  }),
   bottom: {
     width: '100%',
   },
-  bottomPaper: {
+  bottomPaper: ({ connected }: StyleProps) => ({
     width: '100%',
     height: '100%',
     pointerEvents: 'all',
     overflow: 'auto',
     boxSizing: 'border-box',
+    ...connectedPosition({ bottom: connected ? 0 : -1000 }),
+  }),
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
   },
 }));
 
 export function PaperPanel(props: any) {
-  const classes = useStyles();
   const [hover, setHover] = useState(false);
   
   return <Paper onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} elevation={hover ? 3 : 1} {...props}/>;
@@ -129,7 +142,6 @@ const defaultGraphiqlHeight = 300;
 export function PageContent() {
   const auth = useAuth();
   const theme = useTheme();
-  const classes = useStyles();
   const [drawerSize, setDrawerSize] = useState({ width: 800, height: 500 });
   const [graphiqlHeight, setGraphiqlHeight] = useState(defaultGraphiqlHeight);
   const [flyPanel, setFlyPanel] = useState<any>();
@@ -140,6 +152,9 @@ export function PageContent() {
   const [selectedLinks, setSelectedLinks] = useSelectedLinks();
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
   const [operation, setOperation] = useOperation();
+  const [connected, setConnected] = useEngineConnected();
+
+  const classes = useStyles({ connected });
 
   const client = useApolloClient();
 
@@ -192,7 +207,7 @@ export function PageContent() {
   }, [s]);
 
   // const outD = useImmutableData(inD, (a, b) => isEqual(a.link, b.link));
-  const outD = inD;
+  const outD = connected ? inD : { nodes: [], links: [] };
   
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
@@ -343,58 +358,69 @@ export function PageContent() {
     <div className={classes.overlay}>
       <div className={classes.top}>
         <PaperPanel className={classes.topPaper}>
-          <Grid container spacing={1} style={{ boxSizing: 'border-box' }}>
+          <Grid container justify="space-between">
             <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
-                <Button color={showMP ? 'primary' : 'default'} onClick={() => setShowMP(!showMP)}>mp</Button>
-                <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
-              </ButtonGroup>
+              <Grid container spacing={1}>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
+                    <Button color={showMP ? 'primary' : 'default'} onClick={() => setShowMP(!showMP)}>mp</Button>
+                    <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button
+                      onClick={async () => {
+                        await insertLinkD({
+                          from_id: inserting.from || 0,
+                          to_id: inserting.to || 0,
+                          type_id: inserting.type || 0,
+                        });
+                      }}
+                    ><Add/></Button>
+                    <Button
+                      style={{ color: '#a83232' }}
+                      color={operation === 'from' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'from' ? '' : 'from')}
+                      >
+                      from: {inserting?.from}
+                    </Button>
+                    <Button
+                      style={{ color: '#32a848' }}
+                      color={operation === 'to' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'to' ? '' : 'to')}
+                    >
+                      to: {inserting?.to}
+                    </Button>
+                    <Button
+                      color={operation === 'type' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'type' ? '' : 'type')}
+                    >
+                      type: {inserting?.type}
+                    </Button>
+                    <Button onClick={() => setInserting({})}><Clear/></Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button
+                      color={operation === 'delete' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
+                    >delete</Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <AuthPanel/>
+                </Grid>
+              </Grid>
             </Grid>
             <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button
-                  onClick={async () => {
-                    await insertLinkD({
-                      from_id: inserting.from || 0,
-                      to_id: inserting.to || 0,
-                      type_id: inserting.type || 0,
-                    });
-                  }}
-                ><Add/></Button>
-                <Button
-                  style={{ color: '#a83232' }}
-                  color={operation === 'from' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'from' ? '' : 'from')}
-                  >
-                  from: {inserting?.from}
-                </Button>
-                <Button
-                  style={{ color: '#32a848' }}
-                  color={operation === 'to' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'to' ? '' : 'to')}
-                >
-                  to: {inserting?.to}
-                </Button>
-                <Button
-                  color={operation === 'type' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'type' ? '' : 'type')}
-                >
-                  type: {inserting?.type}
-                </Button>
-                <Button onClick={() => setInserting({})}><Clear/></Button>
-              </ButtonGroup>
-            </Grid>
-            <Grid item>
-              <ButtonGroup variant="outlined">
-                <Button
-                  color={operation === 'delete' ? 'primary' : 'default'}
-                  onClick={() => setOperation(operation === 'delete' ? '' : 'delete')}
-                >delete</Button>
-              </ButtonGroup>
-            </Grid>
-            <Grid item>
-              <AuthPanel/>
+              <Grid container spacing={1}>
+                <Grid item>
+                  <EnginePanel/>
+                </Grid>
+              </Grid>
             </Grid>
           </Grid>
         </PaperPanel>
@@ -434,7 +460,7 @@ export function PageContent() {
         </PaperPanel>
       </div>
     </div>
-    <Draggable
+    {!!connected && <Draggable
       axis="y"
       handle=".handle"
       defaultPosition={{x: 0, y: 0}}
@@ -448,13 +474,6 @@ export function PageContent() {
         setGraphiqlHeight((window.innerHeight - data?.pageY) - 10);
       }}
     >
-      {/* <Paper style={{
-        position: 'fixed', zIndex: 10, bottom: defaultGraphiqlHeight, left: 0,
-        width: '100%', height: 10,
-        userSelect: 'none',
-      }}>
-        <div className="handle" style={{ height: '100%', width: '100%' }}></div>
-      </Paper> */}
       <div style={{
         position: 'fixed', zIndex: 10, bottom: defaultGraphiqlHeight, left: 0,
         width: '100%', height: 10,
@@ -469,7 +488,12 @@ export function PageContent() {
           }}></div>
         </div>
       </div>
-    </Draggable>
+    </Draggable>}
+    <Backdrop className={classes.backdrop} open={!connected}>
+      <PaperPanel>
+        <EngineWindow/>
+      </PaperPanel>
+    </Backdrop>
   </div>
 }
 
