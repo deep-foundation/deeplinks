@@ -7,6 +7,7 @@
     "export": "next export",
     "start": "eval \"fkill --silent :$PORT\"; next start",
     "dev": "eval \"fkill --silent :$PORT\"; npm run unsafe-dev",
+    "electron": "(cd electron; npx electron-packager . --overwrite)",
     "package:publish": "npm run build; npm publish --access public;"
   },
   "dependencies": {
