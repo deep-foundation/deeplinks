@@ -6,7 +6,7 @@ import { useQueryStore } from '@deepcase/store/query';
 import { Add, Clear } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { isEqual, random } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { DOMElement, ElementRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { useAuth } from '../imports/auth';
 import { check } from '../imports/check';
@@ -17,11 +17,14 @@ import { Provider } from '../imports/provider';
 import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
+import axios from 'axios';
 
 import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
 import { useClickEmitter } from '../imports/click-emitter';
 import { useTheme } from '@material-ui/styles';
+
+import { Capacitor } from '@capacitor/core';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -42,6 +45,8 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: '100%',
     backgroundColor: theme?.palette?.background?.default,
+    backgroundImage: `linear-gradient(#202a38 .1em, transparent .1em), linear-gradient(90deg, #202a38 .1em, transparent .1em)`,
+    backgroundSize: '3em 3em',
   },
   overlay: {
     zIndex: 1, position: 'absolute', top: 0, left: 0,
@@ -101,7 +106,7 @@ export function useOperation() {
   return useLocalStore('dc-dg-operation', '');
 }
 
-export function AuthPanel() {
+export const AuthPanel = React.memo<any>(function AuthPanel() {
   const auth = useAuth();
   const [operation, setOperation] = useOperation();
 
@@ -113,7 +118,7 @@ export function AuthPanel() {
     </ButtonGroup>
     {/* <Button disabled>in this example logout = guest = admin</Button> */}
   </>;
-}
+});
 
 export function useSelectedLinks() {
   return useQueryStore('dc-dg-sl', []);
@@ -138,10 +143,18 @@ export function PageContent() {
 
   const client = useApolloClient();
 
-  // @ts-ignore
-  global.CHECKIT = async () => {
-    console.log(await check({}, client));
-  }
+  useEffect(() => {
+    const pl = Capacitor.getPlatform();
+    if (pl === 'web') {
+      console.log(`platform is web, connection to server to ${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`);
+      axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, { abc: 123 }).then(console.log, console.log);
+    } else if (pl === 'electron') {
+      console.log(`platform is electron, connection to server to ${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`);
+      axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, { def: 234 }).then(console.log, console.log);
+    } else {
+      console.log(`platform is not detected, connection to server lost`);
+    }
+  }, []);
 
   const insertLinkD = useCallback(async (link) => (
     await client.mutate(insertLink(link))
@@ -214,7 +227,17 @@ export function PageContent() {
   }, 500);
   onNodeClickRef.current = onNodeClick;
 
+  const rootRef = useRef<any>();
+  const handleZoom = useCallback(({ k, x, y }) => {
+    if (rootRef.current) {
+      const size = k * 3;
+      rootRef.current.style['background-position'] = `${x}px ${y}px`;
+      rootRef.current.style['background-size'] = `${size}em ${size}em`;
+    }
+  }, []);
+
   return <div
+    ref={rootRef}
     className={classes.root}
     onMouseMove={(e) => {
       mouseMove.current = { clientX: e.clientX, clientY: e.clientY };
@@ -315,6 +338,7 @@ export function PageContent() {
       onNodeHover={(node) => {
         
       }}
+      onZoom={handleZoom}
     />]}
     <div className={classes.overlay}>
       <div className={classes.top}>

@@ -2,20 +2,26 @@
   "name": "@deepcase/deeplinks-app",
   "version": "0.0.17",
   "scripts": {
-    "unsafe-dev": "next dev -p $PORT",
+    "unsafe-dev": "next dev -p ${PORT}",
     "build": "next build",
     "export": "next export",
-    "start": "next start",
-    "dev": "npm run unsafe-dev",
+    "start": "eval \"fkill --silent :$PORT\"; next start",
+    "dev": "eval \"fkill --silent :$PORT\"; npm run unsafe-dev",
     "package:publish": "npm run build; npm publish --access public;"
   },
   "dependencies": {
     "@apollo/client": "^3.3.19",
-    "@deepcase/deeplinks": "^0.0.18",
+    "@capacitor-community/electron": "^4.0.3",
+    "@capacitor/core": "^3.2.3",
+    "@deepcase/deeplinks": "0.0.21",
+    "@deepcase/hasura": "0.0.20",
     "@graphiql/toolkit": "^0.2.2",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@react-hook/debounce": "^3.0.0",
+    "@types/electron": "^1.6.10",
+    "Deep.Case": "file:electron",
+    "axios": "^0.21.4",
     "dotenv": "^8.2.0",
     "dotenv-load": "^2.0.0",
     "graphiql": "^1.4.2",
@@ -38,9 +44,11 @@
     "node": "^14.15.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^3.2.3",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
     "dotenv-webpack": "^7.0.2",
+    "fkill-cli": "^6.2.0",
     "webpack": "^5.28.0"
   }
 }

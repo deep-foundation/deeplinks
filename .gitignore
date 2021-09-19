@@ -121,3 +121,5 @@ projects/app/electron/app
 
 # deepcase
 /app
+/out
+/electron

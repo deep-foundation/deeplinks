@@ -12,7 +12,6 @@ class MyDocument extends Document {
         <Head>
           <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet" />
-          <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.23.0/theme/material-darker.css" rel="stylesheet" />
           <script
             async
             src="https://www.googletagmanager.com/gtag/js?id=G-DC5RRWLRNV"
@@ -20,11 +19,11 @@ class MyDocument extends Document {
           <script
             dangerouslySetInnerHTML={{
               __html: `
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'G-DC5RRWLRNV');
-                `,
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-DC5RRWLRNV');
+              `,
             }}
           />
         </Head>
