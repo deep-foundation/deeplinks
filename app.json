@@ -14,13 +14,13 @@
       "description": "Use devDependencies.",
       "value": "false"
     },
-    "NEXT-PORT": {
+    "NEXTPORT": {
       "description": "App port.",
-      "value": 3007
+      "value": "3007"
     },
     "CHECK": {
       "description": "check cached or not heroku",
-      "value": "asd2"
+      "value": "asd3"
     }
   },
   "buildpacks": [

@@ -1,6 +1,15 @@
 const { spawn, execSync } = require('child_process');
-const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' });  
+const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' });
+var express = require('express');
+var app = express();
+// respond with "hello world" when a GET request is made to the homepage
 
+app.get('/hasura', function(req, res) {
+  res.send('hello hasura');
+});
+app.get('/', function(req, res) {
+  res.send('hello world');
+});
 console.log(1);
 
 const gql = spawn('./graphql-engine', ['serve'], {
@@ -15,7 +24,7 @@ console.log(2);
 const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
   env: {
     ...process.env,
-    NEXT-PORT: "3007"
+    NEXTPORT: "3007"
   }
 });
 

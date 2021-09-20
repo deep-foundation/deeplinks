@@ -4,7 +4,7 @@
   "scripts": {
     "migrate": "export MIGRATIONS_HASURA_PATH=localhost:8080; export MIGRATIONS_HASURA_SSL=0; export MIGRATIONS_HASURA_SECRET=myadminsecretkey; (cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate;)",
     "heroku-start": "node start.js",
-    "heroku-next-start": "next start -p $NEXT-PORT",
+    "heroku-next-start": "next start -p $NEXTPORT",
     "unsafe-dev": "next dev -p $PORT",
     "build": "echo 'build'",
     "export": "next export",
@@ -45,6 +45,7 @@
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
     "dotenv-webpack": "^7.0.2",
+    "express": "^4.16.4",
     "webpack": "^5.28.0"
   }
 }
