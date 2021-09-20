@@ -1,6 +1,5 @@
 const { spawn, execSync } = require('child_process');
-const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' }); 
-const url = execSync('npm -v', { encoding: 'utf-8' }); 
+const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' });  
 
 console.log(1);
 

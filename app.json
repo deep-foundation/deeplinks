@@ -17,6 +17,10 @@
     "NEXT-PORT": {
       "description": "App port.",
       "value": 3007
+    },
+    "CHECK": {
+      "description": "check cached or not heroku",
+      "value": "asd"
     }
   },
   "buildpacks": [
