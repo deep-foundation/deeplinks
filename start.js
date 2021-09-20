@@ -15,7 +15,7 @@ console.log(2);
 const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
   env: {
     ...process.env,
-    PORT: 3007
+    NEXT-PORT: "3007"
   }
 });
 
@@ -57,4 +57,4 @@ setTimeout(()=>{
   migrations.on('close', (code) => {
     console.log(`migrations exited with code ${code}`);
   });
-}, 10000);
+}, 20000);
