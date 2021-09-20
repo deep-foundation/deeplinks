@@ -13,6 +13,10 @@
     "NPM_CONFIG_PRODUCTION": {
       "description": "Use devDependencies.",
       "value": "false"
+    },
+    "PORT": {
+      "description": "App port.",
+      "value": 3007
     }
   },
   "buildpacks": [

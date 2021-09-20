@@ -1,14 +1,17 @@
 const { spawn, execSync } = require('child_process');
 const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' }); 
+execSync('npm -v', { encoding: 'utf-8' }); 
 console.log('url = ',url);
-
 const gql = spawn('./graphql-engine', ['serve'], {
   env: {
+    ...process.env,
     HASURA_GRAPHQL_DATABASE_URL: url
   }
 });
-const deeplinksApp = spawn('npm', ['run', 'start'], {
+
+const deeplinksApp = spawn('npm', ['run', 'heroku-start'], {
   env: {
+    ...process.env,
     PORT: 3007
   }
 });
@@ -19,7 +22,7 @@ gql.stdout.on('data', (data) => {
 });
 
 gql.stderr.on('data', (data) => {
-  console.error(`stderr: ${data}`);
+  console.log(`{ "logtype": "hasura", "error": ${data}`);
 });
 
 gql.on('close', (code) => {
@@ -31,7 +34,7 @@ deeplinksApp.stdout.on('data', (data) => {
 });
 
 deeplinksApp.stderr.on('data', (data) => {
-  console.error(`stderr: ${data}`);
+  console.log(`{ "logtype": "app", "error": ${data}`);
 });
 
 deeplinksApp.on('close', (code) => {
@@ -40,6 +43,9 @@ deeplinksApp.on('close', (code) => {
 
 setTimeout(()=>{
   migrations = spawn('npm', ['run', 'migrate']);
+  deeplinksApp.stderr.on('data', (data) => {
+    console.log(`{ "logtype": "migrations", "error": ${data}`);
+  });
   migrations.stdout.on('data', (data) => {
    console.log(`{ "logtype": "migrations", "log": "${data}""`);
   });

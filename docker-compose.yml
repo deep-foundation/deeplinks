@@ -27,26 +27,5 @@ services:
       HASURA_GRAPHQL_JWT_SECRET: "{\"type\":\"HS256\", \"key\": \"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\"}"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_DEV_MODE: "true"
-  deeplinks-app:
-    image: menzorg/deeplinks-app:docker-hub-menzorg-deepcase
-    depends_on:
-    - "graphql-engine"
-    ports:
-    - "3007:3007"
-    environment:
-      MIGRATIONS_HASURA_PATH: graphql-engine:8080
-      MIGRATIONS_HASURA_SSL: 0
-      MIGRATIONS_HASURA_SECRET: myadminsecretkey
-      NEXT_PUBLIC_HASURA_SSL: 0
-      NEXT_PUBLIC_HASURA_PATH: graphql-engine:8080
-      JWT_SECRET: "3EK6D+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxFQu4nF7EdAh8s3TwpHwrdWT6R"
-  deeplinks:
-    image: menzorg/deeplinks:docker-hub-menzorg-deepcase-main
-    depends_on:
-    - "deeplinks-app"
-    environment:
-      MIGRATIONS_HASURA_PATH: graphql-engine:8080
-      MIGRATIONS_HASURA_SSL: 0
-      MIGRATIONS_HASURA_SECRET: myadminsecretkey
 volumes:
   db_data:
