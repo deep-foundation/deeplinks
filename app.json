@@ -20,7 +20,7 @@
     },
     "CHECK": {
       "description": "check cached or not heroku",
-      "value": "asd"
+      "value": "asd2"
     }
   },
   "buildpacks": [
