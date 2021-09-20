@@ -14,7 +14,7 @@
       "description": "Use devDependencies.",
       "value": "false"
     },
-    "PORT": {
+    "NEXT-PORT": {
       "description": "App port.",
       "value": 3007
     }

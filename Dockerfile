@@ -15,17 +15,11 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
 COPY ./package.json .
 COPY ./package-lock.json .
-RUN . "$NVM_DIR/nvm.sh" && npm ci
 COPY ./pages ./pages
 COPY ./imports ./imports
 COPY ./tsconfig.json .
 COPY ./.docker.env ./.env
 COPY ./next* ./
-ENV MIGRATIONS_HASURA_SSL 0
-ENV HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
-ENV MIGRATIONS_HASURA_SECRET: myadminsecretkey
-ENV NEXT_PUBLIC_HASURA_SSL: 0
-RUN . "$NVM_DIR/nvm.sh" && npm run build
 
 COPY ./start.js ./start.js
 COPY --from=base /bin/graphql-engine ./graphql-engine

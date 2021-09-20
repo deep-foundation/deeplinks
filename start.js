@@ -1,7 +1,9 @@
 const { spawn, execSync } = require('child_process');
 const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' }); 
-execSync('npm -v', { encoding: 'utf-8' }); 
-console.log('url = ',url);
+const url = execSync('npm -v', { encoding: 'utf-8' }); 
+
+console.log(1);
+
 const gql = spawn('./graphql-engine', ['serve'], {
   env: {
     ...process.env,
@@ -9,12 +11,15 @@ const gql = spawn('./graphql-engine', ['serve'], {
   }
 });
 
-const deeplinksApp = spawn('npm', ['run', 'heroku-start'], {
+console.log(2);
+
+const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
   env: {
     ...process.env,
     PORT: 3007
   }
 });
+
 let migrations;
 console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
 gql.stdout.on('data', (data) => {
@@ -43,6 +48,7 @@ deeplinksApp.on('close', (code) => {
 
 setTimeout(()=>{
   migrations = spawn('npm', ['run', 'migrate']);
+  console.log(3);
   deeplinksApp.stderr.on('data', (data) => {
     console.log(`{ "logtype": "migrations", "error": ${data}`);
   });
