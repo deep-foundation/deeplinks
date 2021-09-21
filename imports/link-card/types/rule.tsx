@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Typography, Chip, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog } from '../../ui';
 import { Delete, Insert } from '../../icons';
-import { useMutation, useSubscription } from '@apollo/react-hooks';
+import { useMutation, useSubscription } from '@apollo/client';
 import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp, LINKS_WHERE, insertLink, deleteLink } from '../../gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';

@@ -1,4 +1,4 @@
-import { useSubscription } from '@apollo/react-hooks';
+import { useSubscription } from '@apollo/client';
 import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
@@ -46,6 +46,19 @@ const connectedPosition = (style: any) => ({
 });
 
 const useStyles = makeStyles((theme) => ({
+  "@global": {
+    body: {
+      backgroundColor: theme?.palette?.background?.default,
+    },
+  },
+  '@keyframes deeplinksBackground': {
+    from: {
+      backgroundSize: '0.5em 0.5em',
+    },
+    to: {
+      backgroundSize: '3em 3em',
+    },
+  },
   root: {
     position: 'absolute',
     top: 0,
@@ -53,8 +66,9 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: '100%',
     backgroundColor: theme?.palette?.background?.default,
-    backgroundImage: `linear-gradient(#202a38 .1em, transparent .1em), linear-gradient(90deg, #202a38 .1em, transparent .1em)`,
-    backgroundSize: '3em 3em',
+    backgroundImage: 'linear-gradient(#202a38 .1em, transparent .1em), linear-gradient(90deg, #202a38 .1em, transparent .1em)',
+    overflow: 'hidden',
+    animation: '5s $deeplinksBackground ease'
   },
   overlay: {
     zIndex: 1, position: 'absolute', top: 0, left: 0,
@@ -72,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
     pointerEvents: 'all',
     boxSizing: 'border-box',
     padding: theme.spacing(1),
-    ...connectedPosition({ top: connected ? 0 : -100 }),
+    ...connectedPosition({ top: connected ? 0 : -500 }),
     ...transitionHoverScale,
   }),
   right: {
@@ -159,6 +173,8 @@ export function PageContent() {
   const client = useApolloClient();
 
   useEffect(() => {
+    // @ts-ignore
+    global.axios = axios;
     const pl = Capacitor.getPlatform();
     if (pl === 'web') {
       console.log(`platform is web, connection to server to ${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`);

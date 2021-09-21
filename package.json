@@ -7,14 +7,16 @@
     "export": "next export",
     "start": "eval \"fkill --silent :$PORT\"; next start",
     "dev": "eval \"fkill --silent :$PORT\"; npm run unsafe-dev",
-    "electron": "(cd electron; npx electron-packager . --overwrite)",
-    "package:publish": "npm run build; npm publish --access public;"
+    "electron": "((cd electron; npx electron-packager . --overwrite --platform=mas); npm run copy-bins-prod)",
+    "package:publish": "npm run build; npm publish --access public;",
+    "copy-bins-dev": "(cd electron; mkdir resources/bin; (export A=$(type node); export B=${A#\"node is\"}; cp $B ./resources/bin/node); (export A=$(type npm); export B=${A#\"npm is\"}; cp $B ./resources/bin/npm))",
+    "copy-bins-prod": "(cd electron; mkdir Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin; (export A=$(type node); export B=${A#\"node is\"}; cp $B ./Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin/node); (export A=$(type npm); export B=${A#\"npm is\"}; cp $B ./Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin/npm))"
   },
   "dependencies": {
     "@apollo/client": "^3.3.19",
     "@capacitor-community/electron": "^4.0.3",
     "@capacitor/core": "^3.2.3",
-    "@deepcase/deeplinks": "0.0.21",
+    "@deepcase/deeplinks": "0.0.26",
     "@deepcase/hasura": "0.0.20",
     "@graphiql/toolkit": "^0.2.2",
     "@material-ui/core": "^4.11.4",
@@ -30,6 +32,7 @@
     "next": "^10.2.3",
     "next-env": "^1.1.1",
     "normalize.css": "^8.0.1",
+    "promisify-child-process": "^4.1.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-draggable": "^4.4.4",
@@ -38,6 +41,7 @@
     "react-monaco-editor": "^0.43.0",
     "react-resize-detector": "^6.7.1",
     "react-yandex-metrika": "^2.6.0",
+    "three-bmfont-text": "^3.0.1",
     "three-spritetext": "^1.6.2",
     "use-debounce": "^6.0.1"
   },

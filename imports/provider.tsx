@@ -3,15 +3,15 @@ import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-cli
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { LocalStoreProvider } from '@deepcase/store/local';
 import { QueryStoreProvider } from '@deepcase/store/query';
-import { colors, createMuiTheme, ThemeProvider } from './ui';
+import { colors, createTheme, ThemeProvider } from './ui';
 import React, { useEffect } from 'react';
 import { AuthProvider } from './auth';
 import { Analitics } from './analitics';
 
-const temp = createMuiTheme({});
+const temp = createTheme({});
 const { breakpoints } = temp;
 
-export const theme = createMuiTheme({
+export const theme = createTheme({
   typography: {
     fontFamily: ['Comfortaa', 'sans-serif'].join(','),
   },

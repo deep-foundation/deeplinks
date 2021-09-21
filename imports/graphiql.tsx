@@ -1,6 +1,6 @@
 import GraphiQL from 'graphiql';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useApolloClient } from '@apollo/client';
 import { GRAPHQL_PATH, GRAPHQL_SSL } from './provider';
 import 'graphiql/graphiql.css';
 import { useMemo, useState } from 'react';
