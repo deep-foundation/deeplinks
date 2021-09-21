@@ -1,6 +1,6 @@
 {
   "name": "@deepcase/deeplinks",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "scripts": {
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:unbuild": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports/gql && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@apollo/client": "^3.4.9",
     "@deepcase/materialized-path": "0.0.19",
-    "@deepcase/react-hasura": "^0.0.2",
+    "@deepcase/react-hasura": "0.0.4",
     "@deepcase/store": "^0.0.32",
     "@types/node": "^14.17.14",
     "@types/react": "^17.0.19",
