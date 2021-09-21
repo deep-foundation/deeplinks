@@ -1,8 +1,8 @@
 {
   "name": "@deepcase/deeplinks",
-  "version": "0.0.22",
+  "version": "0.0.24",
   "scripts": {
-    "package:build": "npx tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
+    "package:build": "tsc --project tsconfig.json && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:unbuild": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && (cd ./migrations && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports/gql && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts)",
     "package:publish": "npm run package:build; npm publish --access public; npm run package:unbuild",
     "migrate": "export $(grep -v '^#' .env | xargs); npx migrate up --compiler='ts:./compiler/index.js'",
@@ -28,5 +28,8 @@
   },
   "engines": {
     "node": "^14.15.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.3"
   }
 }
