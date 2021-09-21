@@ -7,10 +7,8 @@
     "export": "next export",
     "start": "eval \"fkill --silent :$PORT\"; next start",
     "dev": "eval \"fkill --silent :$PORT\"; npm run unsafe-dev",
-    "electron": "((cd electron; npx electron-packager . --overwrite --platform=mas); npm run copy-bins-prod)",
-    "package:publish": "npm run build; npm publish --access public;",
-    "copy-bins-dev": "(cd electron; mkdir resources/bin; (export A=$(type node); export B=${A#\"node is\"}; cp $B ./resources/bin/node); (export A=$(type npm); export B=${A#\"npm is\"}; cp $B ./resources/bin/npm))",
-    "copy-bins-prod": "(cd electron; mkdir Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin; (export A=$(type node); export B=${A#\"node is\"}; cp $B ./Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin/node); (export A=$(type npm); export B=${A#\"npm is\"}; cp $B ./Deep.Case-darwin-x64/Deep.Case.app/Contents/Resources/app/resources/bin/npm))"
+    "electron": "(cd electron; npx electron-packager . --overwrite --platform=mas)",
+    "package:publish": "npm run build; npm publish --access public;"
   },
   "dependencies": {
     "@apollo/client": "^3.3.19",
