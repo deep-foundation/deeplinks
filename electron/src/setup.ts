@@ -67,7 +67,7 @@ export class ElectronCapacitorApp {
   private TrayIcon: Tray | null = null;
   private CapacitorFileConfig: CapacitorElectronConfig;
   private TrayMenuTemplate: (MenuItem | MenuItemConstructorOptions)[] = [
-    new MenuItem({ label: 'Quit App', role: 'quit' }),
+    // new MenuItem({ label: 'Quit App', role: 'quit' }),
   ];
   private AppMenuBarMenuTemplate: (MenuItem | MenuItemConstructorOptions)[] = [
     { role: process.platform === 'darwin' ? 'appMenu' : 'fileMenu' },
@@ -199,6 +199,10 @@ export class ElectronCapacitorApp {
       Menu.buildFromTemplate(this.AppMenuBarMenuTemplate),
     );
 
+    app.on("window-all-closed", function(){
+      app.quit();
+    });
+
     // If the splashscreen is enabled, show it first while the main window loads then dwitch it out for the main window, or just load the main window from the start.
     if (this.CapacitorFileConfig.electron?.splashScreenEnabled) {
       this.SplashScreen = new CapacitorSplashScreen({
@@ -241,6 +245,28 @@ export class ElectronCapacitorApp {
       if (!this.CapacitorFileConfig.electron?.hideMainWindowOnLaunch) {
         this.MainWindow.show();
       }
+      this.MainWindow.webContents.executeJavaScript(`
+        window.addEventListener('keydown', function (e) {
+          if (e.keyCode === 88 && e.metaKey) {
+            document.execCommand('cut');
+          }
+          else if (e.keyCode === 67 && e.metaKey) {
+            document.execCommand('copy');
+          }
+          else if (e.keyCode === 86 && e.metaKey) {
+            document.execCommand('paste');
+          }
+          else if (e.keyCode === 65 && e.metaKey) {
+            document.execCommand('selectAll');
+          }
+          else if (e.keyCode === 90 && e.metaKey) {
+            document.execCommand('undo');
+          }
+          else if (e.keyCode === 89 && e.metaKey) {
+            document.execCommand('redo');
+          }
+        });
+      `);
       setTimeout(() => {
         if (electronIsDev) {
           this.MainWindow.webContents.openDevTools();

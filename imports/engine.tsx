@@ -35,7 +35,6 @@ export function useEngine() {
       setConnected(true);
     }
     setOperation('');
-    client.refetchQueries({});
   }, []);
   return {
     operation,
