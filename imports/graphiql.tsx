@@ -12,25 +12,25 @@ const useStyles = makeStyles(() => ({
   root: {
     width: '100%', height: '100%',
     '& .topBar, & .docExplorerShow': {
-      background: 'transparent',
+      background: 'transparent !important',
       '& .title': {
-        display: 'none',
+        display: 'none !important',
       },
       '& .execute-button-wrap': {
         margin: 0,
         '& svg': {
-          fill: '#fff',
+          fill: '#fff !important',
         },
       },
       '& .execute-button': {
-        background: 'transparent',
-        color: '#fff',
+        background: 'transparent !important',
+        color: '#fff !important',
         border: 0,
         boxShadow: 'none !important',
       },
       '& .toolbar-button': {
-        background: 'transparent',
-        color: '#fff',
+        background: 'transparent !important',
+        color: '#fff !important',
         border: 0,
         boxShadow: 'none !important',
       },

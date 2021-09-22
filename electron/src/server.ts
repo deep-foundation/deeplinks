@@ -7,12 +7,38 @@ import { exec } from 'child_process';
 
 const execP = promisify(exec);
 
+process.env['MIGRATIONS_DEEPLINKS_APP_URL'] = 'localhost:3007';
+process.env['MIGRATIONS_HASURA_PATH'] = 'localhost:8080';
+process.env['MIGRATIONS_HASURA_SSL'] = '0';
+process.env['MIGRATIONS_HASURA_SECRET'] = 'myadminsecretkey';
+
+const {
+  MIGRATIONS_HASURA_PATH,
+  MIGRATIONS_HASURA_SSL,
+  MIGRATIONS_HASURA_SECRET,
+  MIGRATIONS_DEEPLINKS_APP_URL,
+} = process.env;
+
+const envsObj = {
+  MIGRATIONS_HASURA_PATH,
+  MIGRATIONS_HASURA_SSL,
+  MIGRATIONS_HASURA_SECRET,
+  MIGRATIONS_DEEPLINKS_APP_URL,
+};
+
+const envsKeys = Object.keys(envsObj);
+let envs = '';
+for (let e = 0; e < envsKeys.length; e++) {
+  const en = envsKeys[e];
+  envs += `export ${en}='${envsObj[en]}';`;
+}
+
 (async () => {
   const app = express();
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
   app.post('/api/deeplinks', async (req, res) => {
-    res.json(await call({ ...req.body, PATH: `${__dirname}/../../resources/bin` }));
+    res.json(await call({ ...req.body, PATH: `${__dirname}/../../resources/bin`, handle: (str) => envs + str }));
   });
   app.post('/test', async (req, res) => {
     const PATH = `${__dirname}/../../resources/bin`;
