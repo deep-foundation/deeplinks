@@ -11,7 +11,11 @@ import { Typography } from '@material-ui/core';
 import Link from 'next/link';
 import { PaperPanel } from '../pages';
 
-const _call = (options: IOptions) => axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, options).then(console.log, console.log);
+export interface IOptionsPath extends IOptions {
+  path: string;
+}
+
+const _call = (options: IOptionsPath) => axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, options).then(console.log, console.log);
 
 export function useEngineConnected() {
   return useLocalStore('dc-connected', false);
@@ -25,7 +29,7 @@ export function useEngine() {
   const client = useApolloClient();
   const [connected, setConnected] = useEngineConnected();
   const [operation, setOperation] = useState('');
-  const call = useCallback(async (options: IOptions) => {
+  const call = useCallback(async (options: IOptionsPath) => {
     setOperation(options.operation);
     if (['reset', 'sleep'].includes(options.operation)) {
       setConnected(false);

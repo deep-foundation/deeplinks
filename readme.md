@@ -18,7 +18,7 @@ export NEXT_PUBLIC_HASURA_SSL=0;
 
 ```
 npm ci
-npm run dev 3000
+npm run dev -- -p 3007
 ```
 
 ## prod server
@@ -33,6 +33,7 @@ npm run start
 (renderer client builded, not dev)
 
 ```
-export ASSET_PREFIX='.'; npm run build; npm run export;
+cross-env ASSET_PREFIX='.' npm run build;
+npm run export;
 npx cap copy electron; npx cap open electron;
 ```
