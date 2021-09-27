@@ -13,30 +13,28 @@ const _hasura = path.normalize(`${__dirname}/../../hasura`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
 
 export async function call (options: IOptions) {
-  if (options.operation === 'run') {
-    let str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && cd ${__dirname} && wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
-    str = options.handle ? options.handle(str) : str;
-    console.log(str);
-    const { stdout, stderr } = await execP(str);
-    console.log(stdout);
-    console.log(stderr);
-  }
-  if (options.operation === 'sleep') {
-    let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && cd ${__dirname}`;
-    str = options.handle ? options.handle(str) : str;
-    console.log(str);
-    const { stdout, stderr } = await execP(str);
-    console.log(stdout);
-    console.log(stderr);
-  }
-  if (options.operation === 'reset') {
-    let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && cd ${__dirname} && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && rimraf .migrate`;
-    str = options.handle ? options.handle(str) : str;
-    console.log(str);
-    const { stdout, stderr } = await execP(str);
-    console.log(stdout);
-    console.log(stderr);
-  }
   console.log('called', options);
+  try {
+    if (options.operation === 'run') {
+      let str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
+      str = options.handle ? options.handle(str) : str;
+      const { stdout, stderr } = await execP(str);
+      return { ...options, str, stdout, stderr };
+    }
+    if (options.operation === 'sleep') {
+      let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
+      str = options.handle ? options.handle(str) : str;
+      const { stdout, stderr } = await execP(str);
+      return { ...options, str, stdout, stderr };
+    }
+    if (options.operation === 'reset') {
+      let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && rimraf .migrate`;
+      str = options.handle ? options.handle(str) : str;
+      const { stdout, stderr } = await execP(str);
+      return { ...options, str, stdout, stderr };
+    }
+  } catch(error) {
+    return { ...options, error };
+  }
   return options;
 };
