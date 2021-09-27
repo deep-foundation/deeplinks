@@ -27,10 +27,10 @@ const envsObj = {
 };
 
 const envsKeys = Object.keys(envsObj);
-let envs = 'cross-env';
+let envs = 'cross-env-shell ';
 for (let e = 0; e < envsKeys.length; e++) {
   const en = envsKeys[e];
-  envs += ` ${en}='${envsObj[en]}'`;
+  envs += `${en}='${envsObj[en]}' `;
 }
 
 (async () => {
@@ -38,11 +38,12 @@ for (let e = 0; e < envsKeys.length; e++) {
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
   app.post('/api/deeplinks', async (req, res) => {
-    res.json(await call({ ...req.body, handle: (str) => envs + str }));
+    res.json(await call({ ...req.body, handle: (str) => `${envs} "${str}"` }));
   });
   app.post('/test', async (req, res) => {
     const PATH = `${__dirname}/../../resources/bin`;
-    const path = PATH ? `export PATH=${PATH}:$PATH;` : '';
+    let path = '';
+    if (process.platform !== 'win32') path = PATH ? `cross-env-shell PATH=${PATH}:$PATH;` : '';
     res.json(await execP(`${path}${req.body.exec}`));
   });
   app.post('/eval', async (req, res) => {
