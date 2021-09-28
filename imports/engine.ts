@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import path from 'path';
+import publicIp from 'public-ip';
 
 const execP = promisify(exec);
 
@@ -16,7 +17,7 @@ export async function call (options: IOptions) {
   console.log('called', options);
   try {
     if (options.operation === 'run') {
-      let str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
+      let str = `cd ${path.normalize(`${_hasura}/local/`)} && cross-env DOCKERHOST=${await publicIp.v4()} "npm run docker" && wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
       str = options.handle ? options.handle(str) : str;
       const { stdout, stderr } = await execP(str);
       return { ...options, str, stdout, stderr };
