@@ -1,43 +1,27 @@
 const { spawn, execSync } = require('child_process');
 const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' });
+const { createProxyMiddleware } = require('http-proxy-middleware');
 var express = require('express');
 var app = express();
 
-app.get('/hasura/api', function(req, res) {
-  res.send('hello hasura');
-});
-
-app.ws('/hasura/api', function(ws, req) {
-  ws.on('message', function(msg) {
-    ws.send(msg);
-  });
-});
-
-app.get('/hasura', function(req, res) {
-  res.send('hello hasura');
-});
-app.get('/', function(req, res) {
-  res.send('hello world');
-});
+app.use('/hasura/api', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
+app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
+app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.PORT}`, changeOrigin: true }));
 
 app.listen(process.env.PORT, () => {
   console.log(`Example app listening at ${process.env.PORT} port`);
 })
 
-
 const gql = spawn('./graphql-engine', ['serve'], {
   env: {
     ...process.env,
-    HASURA_GRAPHQL_DATABASE_URL: url
+    HASURA_GRAPHQL_DATABASE_URL: url,
+    HASURA_GRAPHQL_ENABLE_CONSOLE: true,
+    HASURA_GRAPHQL_ADMIN_SECRET: 'myadminsecretkey'
   }
 });
 
-const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
-  env: {
-    ...process.env,
-    NEXTPORT: "3007"
-  }
-});
+const deeplinksApp = spawn('npm', ['run', 'heroku-next-start']);
 
 let migrations;
 console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
