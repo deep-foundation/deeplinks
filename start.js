@@ -11,6 +11,7 @@ app.listen(process.env.PORT, () => {
   console.log(`Hello bugfixers! Wrapped app listening at ${process.env.PORT} port`);
 })
 
+const url = execSync('echo -n $DATABASE_URL', { encoding: 'utf-8' });
 const gql = spawn('./graphql-engine', ['serve'], {
   env: {
     ...process.env,
