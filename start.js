@@ -3,22 +3,22 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 var express = require('express');
 var app = express();
 
-// app.use('/hasura/api', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
-// app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
+app.use('/hasura/api', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
+app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
 app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.NEXTPORT}`, changeOrigin: true }));
 
 app.listen(process.env.PORT, () => {
-  console.log(`Example app listening at ${process.env.PORT} port`);
+  console.log(`Hello bugfixers! Wrapped app listening at ${process.env.PORT} port`);
 })
 
-// const gql = spawn('./graphql-engine', ['serve'], {
-//   env: {
-//     ...process.env,
-//     HASURA_GRAPHQL_DATABASE_URL: url,
-//     HASURA_GRAPHQL_ENABLE_CONSOLE: true,
-//     HASURA_GRAPHQL_ADMIN_SECRET: 'myadminsecretkey'
-//   }
-// });
+const gql = spawn('./graphql-engine', ['serve'], {
+  env: {
+    ...process.env,
+    HASURA_GRAPHQL_DATABASE_URL: url,
+    HASURA_GRAPHQL_ENABLE_CONSOLE: true,
+    HASURA_GRAPHQL_ADMIN_SECRET: 'myadminsecretkey'
+  }
+});
 
 const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
     env: {
@@ -27,19 +27,17 @@ const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
     }
   });
 
-// let migrations;
-// console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
-// gql.stdout.on('data', (data) => {
-//   console.log(`{ "logtype": "hasura", "log": ${data}`);
-// });
+gql.stdout.on('data', (data) => {
+  console.log(`{ "logtype": "hasura", "log": ${data}`);
+});
 
-// gql.stderr.on('data', (data) => {
-//   console.log(`{ "logtype": "hasura", "error": ${data}`);
-// });
+gql.stderr.on('data', (data) => {
+  console.log(`{ "logtype": "hasura", "error": ${data}`);
+});
 
-// gql.on('close', (code) => {
-//   console.log(`gql exited with code ${code}`);
-// });
+gql.on('close', (code) => {
+  console.log(`gql exited with code ${code}`);
+});
 
 deeplinksApp.stdout.on('data', (data) => {
  console.log(`{ "logtype": "app", "log": ${data}`);
@@ -53,6 +51,7 @@ deeplinksApp.on('close', (code) => {
   console.log(`deeplinksApp exited with code ${code}`);
 });
 
+// let migrations;
 // setTimeout(()=>{
 //   migrations = spawn('npm', ['run', 'migrate']);
 //   console.log(3);
