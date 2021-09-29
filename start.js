@@ -3,7 +3,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 var express = require('express');
 var app = express();
 
-app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', ws: true, changeOrigin: true }));
+app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
 app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.NEXTPORT}`, changeOrigin: true }));
 
 app.listen(process.env.PORT, () => {
