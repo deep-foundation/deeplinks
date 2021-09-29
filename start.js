@@ -5,9 +5,7 @@ var app = express();
 
 // app.use('/hasura/api', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
 // app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
-app.use('/', createProxyMiddleware({ 
-  target: `http://localhost:${process.env.PORT}`,
-}));
+app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.NEXTPORT}`, changeOrigin: true }));
 
 app.listen(process.env.PORT, () => {
   console.log(`Example app listening at ${process.env.PORT} port`);
@@ -22,7 +20,12 @@ app.listen(process.env.PORT, () => {
 //   }
 // });
 
-const deeplinksApp = spawn('npm', ['run', 'heroku-next-start']);
+const deeplinksApp = spawn('npm', ['run', 'heroku-next-start'], {
+    env: {
+      ...process.env,
+      PORT: process.env.NEXTPORT
+    }
+  });
 
 // let migrations;
 // console.log(`Hello bugfixers! This hasura wrapped by menzorg@deep.foundation`);
