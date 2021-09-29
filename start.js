@@ -5,11 +5,13 @@ var app = express();
 
 // app.use('/hasura/api', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
 // app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
-// app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.PORT}`, changeOrigin: true }));
+app.use('/', createProxyMiddleware({ 
+  target: `http://localhost:${process.env.PORT}`,
+}));
 
-// app.listen(process.env.PORT, () => {
-//   console.log(`Example app listening at ${process.env.PORT} port`);
-// })
+app.listen(process.env.PORT, () => {
+  console.log(`Example app listening at ${process.env.PORT} port`);
+})
 
 // const gql = spawn('./graphql-engine', ['serve'], {
 //   env: {
