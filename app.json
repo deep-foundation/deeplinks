@@ -14,10 +14,6 @@
       "description": "Use devDependencies.",
       "value": "false"
     },
-    "NEXTPORT": {
-      "description": "App port.",
-      "value": "3007"
-    },
     "CHECK": {
       "description": "check cached or not heroku",
       "value": "asd3"
