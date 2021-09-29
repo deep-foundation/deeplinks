@@ -6,7 +6,7 @@
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "electron-dev": "cd electron && cd .. && npx cap copy electron && npx cap open electron",
+    "electron-dev": "cd electron && npm ci && cd .. && npx cap copy electron && npx cap open electron",
     "electron-build": "(cd electron && npx electron-packager . --overwrite)",
     "package:publish": "npm run build && npm publish --access public"
   },
