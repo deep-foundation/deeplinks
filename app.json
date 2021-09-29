@@ -17,10 +17,6 @@
     "NEXTPORT": {
       "description": "App port.",
       "value": "3007"
-    },
-    "REBUILD": {
-      "description": "check cached or not heroku",
-      "value": "0"
     }
   },
   "buildpacks": [
