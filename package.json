@@ -1,13 +1,13 @@
 {
   "name": "@deepcase/deeplinks",
-  "version": "0.0.32",
+  "version": "0.0.34",
   "scripts": {
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
     "migrate": "npx migrate up --compiler=ts:./compiler/index.js",
     "unmigrate": "npx migrate down --compiler=ts:./compiler/index.js",
-    "hasura-docker": "cross-env-shell JWT_SECRET='{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}' npm run hasura-docker-core",
+    "hasura-docker": "cross-env JWT_SECRET='{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}' npm run hasura-docker-core",
     "hasura-docker-core": "cd ./node_modules/@deepcase/hasura/local && docker-compose up -d"
   },
   "dependencies": {

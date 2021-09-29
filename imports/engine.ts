@@ -7,35 +7,44 @@ const execP = promisify(exec);
 
 export interface IOptions {
   operation: 'run' | 'sleep' | 'reset';
-  handle?: (exec: string) => string;
+  envs: { [key: string]: string; };
 }
 
 const _hasura = path.normalize(`${__dirname}/../../hasura`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
 
+const handleEnvWindows = (k, envs, envString) => envString+` set ${k} ${envs[k]} &&`;
+const handleEnvUnix = (k, envs, envString) => envString+` export ${k}=${envs[k]} &&`;
+const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
+
+const generateEnvs = (envs) => {
+  let envsString = '';
+  Object.keys(envs).forEach(k => envsString += handleEnv(k, envs, envsString));
+  return envsString;
+};
+
 export async function call (options: IOptions) {
   console.log('called', options);
+  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4(), JWT_SECRET: '"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}"' };
+  let envsString = generateEnvs(envs);
   try {
     if (options.operation === 'run') {
-      let str = `cd ${path.normalize(`${_hasura}/local/`)} && cross-env-shell DOCKERHOST=${await internalIp.v4()} "npm run docker" && wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
-      str = options.handle ? options.handle(str) : str;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
-      return { ...options, str, stdout, stderr };
+      return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
-      str = options.handle ? options.handle(str) : str;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
       const { stdout, stderr } = await execP(str);
-      return { ...options, str, stdout, stderr };
+      return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && rimraf .migrate`;
-      str = options.handle ? options.handle(str) : str;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
-      return { ...options, str, stdout, stderr };
+      return { ...options, envs, str, stdout, stderr };
     }
   } catch(error) {
-    return { ...options, error };
+    return { ...options, envs, error };
   }
   return options;
 };
