@@ -11,11 +11,7 @@ import { Typography } from '@material-ui/core';
 import Link from 'next/link';
 import { PaperPanel } from '../pages';
 
-export interface IOptionsPath extends IOptions {
-  path: string;
-}
-
-const _call = (options: IOptionsPath) => axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, options).then(console.log, console.log);
+const _call = (options: IOptions) => axios.post(`${process.env.NEXT_PUBLIC_DEEPLINKS_SERVER}/api/deeplinks`, options).then(console.log, console.log);
 
 export function useEngineConnected() {
   return useLocalStore('dc-connected', false);
@@ -29,7 +25,7 @@ export function useEngine() {
   const client = useApolloClient();
   const [connected, setConnected] = useEngineConnected();
   const [operation, setOperation] = useState('');
-  const call = useCallback(async (options: IOptionsPath) => {
+  const call = useCallback(async (options: IOptions) => {
     setOperation(options.operation);
     if (['reset', 'sleep'].includes(options.operation)) {
       setConnected(false);
@@ -86,18 +82,18 @@ export const EngineWindow = React.memo<any>(function EngineWindow({
               echo $PATH;
             </Typography>
           </PaperPanel>
-          </PaperPanel>
+        </PaperPanel>
       </Grid>
       <Grid item xs={12}>
         <Button disabled={!!operation || !path} size="small" variant="outlined" fullWidth onClick={async () => {
-          await call({ operation: 'run', path });
+          await call({ operation: 'run', envs: { PATH: path } });
           regenerate();
         }}>run engine</Button>
         <LinearProgress variant={operation === 'run' ? 'indeterminate' : 'determinate'} value={!path ? 0 : 100}/>
       </Grid>
       <Grid item xs={12}>
         <Button disabled={!!operation || !path} size="small" variant="outlined" fullWidth onClick={async () => {
-          await call({ operation: 'reset', path });
+          await call({ operation: 'reset', envs: { PATH: path } });
           regenerate();
         }}>reset engine</Button>
         <LinearProgress variant={operation === 'reset' ? 'indeterminate' : 'determinate'} value={!path ? 0 : 100}/>
@@ -118,7 +114,7 @@ export const EnginePanel = React.memo<any>(function EnginePanel({
   return <>
     <ButtonGroup variant="outlined">
       <Button onClick={async () => {
-        await call({ operation: 'sleep', path });
+        await call({ operation: 'sleep', envs: { PATH: path } });
         regenerate();
       }}>sleep</Button>
     </ButtonGroup>

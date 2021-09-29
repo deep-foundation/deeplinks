@@ -26,25 +26,15 @@ const envsObj = {
   MIGRATIONS_DEEPLINKS_APP_URL,
 };
 
-const envsKeys = Object.keys(envsObj);
-let envs = 'cross-env-shell ';
-for (let e = 0; e < envsKeys.length; e++) {
-  const en = envsKeys[e];
-  envs += `${en}='${envsObj[en]}' `;
-}
-
 (async () => {
   const app = express();
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
   app.post('/api/deeplinks', async (req, res) => {
-    res.json(await call({ ...req.body, handle: (str) => `${envs} "${str}"` }));
+    res.json(await call({ ...req.body, envs: { ...envsObj, ...req?.body?.envs } }));
   });
   app.post('/test', async (req, res) => {
-    const PATH = `${__dirname}/../../resources/bin`;
-    let path = '';
-    if (process.platform !== 'win32') path = PATH ? `cross-env-shell PATH=${PATH}:$PATH;` : '';
-    res.json(await execP(`${path}${req.body.exec}`));
+    res.json(await execP(`${req.body.exec}`));
   });
   app.post('/eval', async (req, res) => {
     res.json({ eval: eval(req.body.eval) });
