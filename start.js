@@ -3,7 +3,8 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 var express = require('express');
 var app = express();
 
-app.use('/hasura', createProxyMiddleware({ target: 'http://localhost:8080', changeOrigin: true }));
+app.use('/hasura/v1/graphql', createProxyMiddleware({ target: 'http://localhost:8080/v1/graphql', ws: true, changeOrigin: true }));
+app.use('/hasura/console', createProxyMiddleware({ target: 'http://localhost:8080/console', changeOrigin: true }));
 app.use('/', createProxyMiddleware({ target: `http://localhost:${process.env.NEXTPORT}`, changeOrigin: true }));
 
 app.listen(process.env.PORT, () => {
