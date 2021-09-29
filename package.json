@@ -3,7 +3,7 @@
   "version": "0.0.16",
   "scripts": {
     "migrate": "export MIGRATIONS_HASURA_PATH=localhost:8080; export MIGRATIONS_HASURA_SSL=0; export MIGRATIONS_HASURA_SECRET=myadminsecretkey; (cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate;)",
-    "heroku-start": "export SCRIPT=$(curl https://raw.githubusercontent.com/deepcase/deeplinks/docker-hub-menzorg-deepcase/start.js); echo $SCRIPT && node start.js",
+    "heroku-start": "node start.js",
     "heroku-postbuild": "PORT=$NEXTPORT && next build",
     "heroku-next-start": "next start -p $PORT",
     "unsafe-dev": "next dev -p $PORT",
