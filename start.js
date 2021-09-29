@@ -16,7 +16,9 @@ const gql = spawn('./graphql-engine', ['serve'], {
     ...process.env,
     HASURA_GRAPHQL_DATABASE_URL: url,
     HASURA_GRAPHQL_ENABLE_CONSOLE: true,
-    HASURA_GRAPHQL_ADMIN_SECRET: 'myadminsecretkey'
+    HASURA_GRAPHQL_ADMIN_SECRET: 'myadminsecretkey',
+    HASURA_GRAPHQL_DEV_MODE: 'true',
+    HASURA_GRAPHQL_LOG_LEVEL: 'debug',
   }
 });
 
