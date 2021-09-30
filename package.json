@@ -15,7 +15,7 @@
     "@capacitor-community/electron": "^4.0.3",
     "@capacitor/core": "^3.2.3",
     "@deepcase/deeplinks": "0.0.34",
-    "@deepcase/hasura": "0.0.25",
+    "@deepcase/hasura": "0.0.26",
     "@graphiql/toolkit": "^0.2.2",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
