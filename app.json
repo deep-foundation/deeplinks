@@ -27,9 +27,6 @@
       "url": "https://github.com/carloluis/heroku-buildpack-vim"
     },
     {
-      "url": "https://github.com/ryandotsmith/nginx-buildpack.git"
-    },
-    {
       "url": "heroku-community/apt"
     },
     {
