@@ -4,7 +4,7 @@
   "scripts": {
     "migrate": "export MIGRATIONS_DEEPLINKS_APP_URL=localhost:3007; export MIGRATIONS_HASURA_PATH=localhost:8080; export MIGRATIONS_HASURA_SSL=0; export MIGRATIONS_HASURA_SECRET=myadminsecretkey; (cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate;)",
     "heroku-start": "node start.js",
-    "heroku-postbuild": "NEXT_PUBLIC_DEEP_FOUNDATION_HASURA_RELATIVE=1 NEXT_PUBLIC_DEEPLINKS_SERVER='' NEXT_PUBLIC_HASURA_PATH=/hasura PORT=$NEXTPORT next build",
+    "heroku-postbuild": "NEXT_PUBLIC_DEEP_FOUNDATION_HASURA_RELATIVE=1 NEXT_PUBLIC_DEEPLINKS_SERVER='' NEXT_PUBLIC_HASURA_SSL=1 NEXT_PUBLIC_HASURA_PATH=/hasura PORT=$NEXTPORT next build",
     "heroku-next-start": "next start -p $PORT",
     "unsafe-dev": "next dev -p $PORT",
     "dev": "next dev",
