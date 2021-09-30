@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useApolloClient } from '@apollo/client';
 import { generateSerial, insertMutation } from '@deepcase/deeplinks/imports/gql';
 import { Grid } from '@material-ui/core';
 import React from 'react';

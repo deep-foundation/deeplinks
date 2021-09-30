@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';

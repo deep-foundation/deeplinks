@@ -118,3 +118,10 @@ projects/app/electron/app
 
 # migrations
 .migrate
+
+# deepcase
+/app
+/out
+/electron/build
+/electron/Deep.Case*
+/electron/node_modules

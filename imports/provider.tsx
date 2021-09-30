@@ -3,21 +3,29 @@ import { ApolloClientTokenizedProvider } from '@deepcase/react-hasura/apollo-cli
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { LocalStoreProvider } from '@deepcase/store/local';
 import { QueryStoreProvider } from '@deepcase/store/query';
-import { colors, createMuiTheme, ThemeProvider } from './ui';
+import { colors, createTheme, ThemeProvider } from './ui';
 import React, { useEffect } from 'react';
 import { AuthProvider } from './auth';
 import { Analitics } from './analitics';
 
-const temp = createMuiTheme({});
+const temp = createTheme({});
 const { breakpoints } = temp;
 
-export const theme = createMuiTheme({
+export const theme = createTheme({
   typography: {
     fontFamily: ['Comfortaa', 'sans-serif'].join(','),
   },
   palette: {
+    type: 'dark',
+    background: {
+      default: '#111720',
+      paper: '#00000030',
+    },
     primary: colors.lightBlue,
     secondary: colors.lightGreen,
+  },
+  shape: {
+    borderRadius: 0,
   },
   overrides: {
     MuiButton: {
@@ -25,7 +33,22 @@ export const theme = createMuiTheme({
         textTransform: 'none',
       },
     },
+    MuiPaper: {
+      elevation1: {
+        border: '1px dashed #ffffff40',
+      },
+      elevation2: {
+        border: '1px dashed #ffffff60',
+      },
+      elevation3: {
+        border: '1px dashed #ffffff80',
+      },
+      elevation4: {
+        border: '1px dashed #ffffff100',
+      },
+    },
   },
+  shadows: ['none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none'],
 });
 
 export function ProviderConnected({

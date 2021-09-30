@@ -1,11 +1,42 @@
 import GraphiQL from 'graphiql';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useApolloClient } from '@apollo/client';
 import { GRAPHQL_PATH, GRAPHQL_SSL } from './provider';
 import 'graphiql/graphiql.css';
 import { useMemo, useState } from 'react';
 import { generateHeaders } from '@deepcase/hasura/client';
 import { TokenContext, useToken } from '@deepcase/react-hasura/token-context';
+import { makeStyles } from '@material-ui/styles';
+
+const useStyles = makeStyles(() => ({
+  root: {
+    width: '100%', height: '100%',
+    '& .topBar, & .docExplorerShow': {
+      background: 'transparent !important',
+      '& .title': {
+        display: 'none !important',
+      },
+      '& .execute-button-wrap': {
+        margin: 0,
+        '& svg': {
+          fill: '#fff !important',
+        },
+      },
+      '& .execute-button': {
+        background: 'transparent !important',
+        color: '#fff !important',
+        border: 0,
+        boxShadow: 'none !important',
+      },
+      '& .toolbar-button': {
+        background: 'transparent !important',
+        color: '#fff !important',
+        border: 0,
+        boxShadow: 'none !important',
+      },
+    },
+  },
+}));
 
 export function Graphiql({
   defaultQuery,
@@ -14,6 +45,7 @@ export function Graphiql({
   defaultQuery: string;
   onVisualize: (query: string, variables: any) => any;
 }) {
+  const classes = useStyles();
   const token: string = useToken() || '';
   const fetcher = useMemo(() => {
     return createGraphiQLFetcher({
@@ -23,19 +55,19 @@ export function Graphiql({
   const [query, setQuery] = useState('');
   const [variables, setVariables] = useState({});
   return <>
-    {!!fetcher && <>
+    {!!fetcher && <div className={classes.root}>
       <GraphiQL
         query={defaultQuery}
         fetcher={fetcher}
         defaultVariableEditorOpen={false}
-        editorTheme={'dracula'}
+        editorTheme={'material-darker'}
         headers={JSON.stringify(generateHeaders({
           token: token,
           client: 'deeplinks-graphiql',
         }))}
         toolbar={{
           additionalContent: <>
-            <GraphiQL.Button title="Deep.Visualize" label="Deep.Vizualize" onClick={() => onVisualize(query, variables)}></GraphiQL.Button>
+            <GraphiQL.Button title="Draw" label="Draw" onClick={() => onVisualize(query, variables)}></GraphiQL.Button>
           </>
         }}
         onEditQuery={(query) => setQuery(query)}
@@ -45,6 +77,6 @@ export function Graphiql({
           } catch(error) {}
         }}
       />
-    </>}
+    </div>}
   </>;
 }

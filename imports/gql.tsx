@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation } from '@apollo/client';
 import { useCallback } from 'react';
 import { generateMutation, generateSerial, ISerialOptions } from '@deepcase/deeplinks/imports/gql';
 
