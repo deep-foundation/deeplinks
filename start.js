@@ -6,7 +6,7 @@ var app = express();
 app.use('/hasura', createProxyMiddleware({
   target: 'http://localhost:8080',
   changeOrigin: true,
-  ws:true,
+  ws: true,
   pathRewrite: {
     "^/hasura": "/",
   }
