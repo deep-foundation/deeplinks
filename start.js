@@ -55,17 +55,16 @@ deeplinksApp.on('close', (code) => {
   console.log(`deeplinksApp exited with code ${code}`);
 });
 
-// let migrations;
-// setTimeout(()=>{
-//   migrations = spawn('npm', ['run', 'migrate']);
-//   console.log(3);
-//   deeplinksApp.stderr.on('data', (data) => {
-//     console.log(`{ "logtype": "migrations", "error": ${data}`);
-//   });
-//   migrations.stdout.on('data', (data) => {
-//    console.log(`{ "logtype": "migrations", "log": "${data}""`);
-//   });
-//   migrations.on('close', (code) => {
-//     console.log(`migrations exited with code ${code}`);
-//   });
-// }, 20000);
+let migrations;
+setTimeout(()=>{
+  migrations = spawn('npm', ['run', 'migrate']);
+  deeplinksApp.stderr.on('data', (data) => {
+    console.log(`{ "logtype": "migrations", "error": ${data}`);
+  });
+  migrations.stdout.on('data', (data) => {
+   console.log(`{ "logtype": "migrations", "log": "${data}""`);
+  });
+  migrations.on('close', (code) => {
+    console.log(`migrations exited with code ${code}`);
+  });
+}, 20000);
