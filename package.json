@@ -1,28 +1,25 @@
 {
-  "name": "@deepcase/deeplinks-app-heroku",
-  "version": "0.0.0",
+  "name": "@deepcase/deeplinks-app",
+  "version": "0.0.21",
   "scripts": {
     "migrate": "export MIGRATIONS_DEEPLINKS_APP_URL=localhost:3007; export MIGRATIONS_HASURA_PATH=localhost:8080; export MIGRATIONS_HASURA_SSL=0; export MIGRATIONS_HASURA_SECRET=myadminsecretkey; (cd node_modules/@deepcase/deeplinks; npm run unmigrate; npm run migrate;)",
     "heroku-start": "node start.js",
-    "build": "NEXT_PUBLIC_DEEP_FOUNDATION_HASURA_RELATIVE=1 NEXT_PUBLIC_DEEPLINKS_SERVER='' NEXT_PUBLIC_HASURA_SSL=1 NEXT_PUBLIC_HASURA_PATH=hasura PORT=$NEXTPORT next build",
-    "heroku-next-start": "next start -p $PORT"
+    "heroku-postbuild": "NEXT_PUBLIC_DEEP_FOUNDATION_HASURA_RELATIVE=1 NEXT_PUBLIC_DEEPLINKS_SERVER='' NEXT_PUBLIC_HASURA_SSL=1 NEXT_PUBLIC_HASURA_PATH=hasura PORT=$NEXTPORT next build",
+    "heroku-next-start": "next start -p $PORT",
+    "unsafe-dev": "next dev -p $PORT",
+    "dev": "next dev",
+    "build": "next build",
+    "export": "next export",
+    "start": "next start",
+    "electron-dev": "cd electron && npm ci && cd .. && npx cap copy electron && npx cap open electron",
+    "electron-build": "(cd electron && npx electron-packager . --overwrite)",
+    "package:publish": "npm run build && npm publish --access public"
   },
-  "heroku-run-build-script": false,
   "dependencies": {
-    "@deepcase/deeplinks": "0.0.34",
-    "express": "^4.17.1",
-    "http-proxy-middleware": "^2.0.1",
-    "next": "^10.2.3",
-    "next-env": "^1.1.1"
-  },
-  "engines": {
-    "node": ">=15.10",
-    "npm": ">=7.5.3"
-  },
-  "devDependencies": {
     "@apollo/client": "^3.3.19",
     "@capacitor-community/electron": "^4.0.3",
     "@capacitor/core": "^3.2.3",
+    "@deepcase/deeplinks": "0.0.34",
     "@deepcase/hasura": "0.0.26",
     "@graphiql/toolkit": "^0.2.2",
     "@material-ui/core": "^4.11.4",
@@ -34,8 +31,12 @@
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "dotenv-load": "^2.0.0",
+    "express": "^4.17.1",
     "graphiql": "^1.4.2",
+    "http-proxy-middleware": "^2.0.1",
     "jsonwebtoken": "^8.5.1",
+    "next": "^10.2.3",
+    "next-env": "^1.1.1",
     "normalize.css": "^8.0.1",
     "promisify-child-process": "^4.1.1",
     "react": "^17.0.2",
@@ -48,7 +49,13 @@
     "react-yandex-metrika": "^2.6.0",
     "three-bmfont-text": "^3.0.1",
     "three-spritetext": "^1.6.2",
-    "use-debounce": "^6.0.1",
+    "use-debounce": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=15.10",
+    "npm": ">=7.5.3"
+  },
+  "devDependencies": {
     "@capacitor/cli": "^3.2.3",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
