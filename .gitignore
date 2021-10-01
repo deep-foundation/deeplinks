@@ -120,7 +120,6 @@ projects/app/electron/app
 .migrate
 
 # deepcase
-/app
 /out
 /electron/build
 /electron/Deep.Case*

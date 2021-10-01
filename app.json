@@ -11,8 +11,8 @@
   "success_url": "/",
   "env": {
     "NPM_CONFIG_PRODUCTION": {
-      "description": "Use devDependencies.",
-      "value": "false"
+      "description": "Dont use devDependencies.",
+      "value": "true"
     },
     "NEXTPORT": {
       "description": "App port.",

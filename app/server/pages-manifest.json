@@ -1,0 +1,11 @@
+{
+  "/_app": "pages/_app.js",
+  "/_document": "pages/_document.js",
+  "/api/deeplinks": "pages/api/deeplinks.js",
+  "/api/eh/bool_exp": "pages/api/eh/bool_exp.js",
+  "/api/eh/links": "pages/api/eh/links.js",
+  "/api/jwt": "pages/api/jwt.js",
+  "/": "pages/index.html",
+  "/_error": "pages/_error.js",
+  "/404": "pages/404.html"
+}
