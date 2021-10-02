@@ -42,6 +42,8 @@ export function useEngine() {
   };
 }
 
+const isMac = process.platform === 'darwin';
+
 export const EngineWindow = React.memo<any>(function EngineWindow({
 }: {
 }) {
@@ -50,6 +52,8 @@ export const EngineWindow = React.memo<any>(function EngineWindow({
   const theme: any = useTheme();
   const [path, setPath] = useEnginePath();
   const { regenerate } = useApolloClientRegenerator();
+
+  const pathReady = !!path || !isMac;
 
   return <>
     <Grid container spacing={1} style={{ padding: theme.spacing(3), width: 400 }}>
@@ -65,7 +69,7 @@ export const EngineWindow = React.memo<any>(function EngineWindow({
       <Grid item xs={12} component={Typography} align="center" variant="caption">
         Some of the functionality has not yet been translated by our programmers from deep space of wet dreams.
       </Grid>
-      <Grid item xs={12}>
+      {!!isMac && <Grid item xs={12}>
         <PaperPanel style={{ padding: theme.spacing(1) }}>
           <TextField
             fullWidth
@@ -83,20 +87,20 @@ export const EngineWindow = React.memo<any>(function EngineWindow({
             </Typography>
           </PaperPanel>
         </PaperPanel>
-      </Grid>
+      </Grid>}
       <Grid item xs={12}>
-        <Button disabled={!!operation || !path} size="small" variant="outlined" fullWidth onClick={async () => {
+        <Button disabled={!!operation || !pathReady} size="small" variant="outlined" fullWidth onClick={async () => {
           await call({ operation: 'run', envs: { PATH: path } });
           regenerate();
         }}>run engine</Button>
-        <LinearProgress variant={operation === 'run' ? 'indeterminate' : 'determinate'} value={!path ? 0 : 100}/>
+        <LinearProgress variant={operation === 'run' ? 'indeterminate' : 'determinate'} value={!pathReady ? 0 : 100}/>
       </Grid>
       <Grid item xs={12}>
-        <Button disabled={!!operation || !path} size="small" variant="outlined" fullWidth onClick={async () => {
+        <Button disabled={!!operation || !pathReady} size="small" variant="outlined" fullWidth onClick={async () => {
           await call({ operation: 'reset', envs: { PATH: path } });
           regenerate();
         }}>reset engine</Button>
-        <LinearProgress variant={operation === 'reset' ? 'indeterminate' : 'determinate'} value={!path ? 0 : 100}/>
+        <LinearProgress variant={operation === 'reset' ? 'indeterminate' : 'determinate'} value={!pathReady ? 0 : 100}/>
       </Grid>
     </Grid>
   </>;

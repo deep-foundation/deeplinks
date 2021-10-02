@@ -18,6 +18,7 @@ import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Back
 import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 import axios from 'axios';
+import cn from 'classnames';
 
 import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
@@ -87,7 +88,6 @@ const useStyles = makeStyles((theme) => ({
     boxSizing: 'border-box',
     padding: theme.spacing(1),
     ...connectedPosition({ top: connected ? 0 : -500 }),
-    ...transitionHoverScale,
   }),
   right: {
     margin: `16px 0 16px 16px`,
@@ -105,7 +105,6 @@ const useStyles = makeStyles((theme) => ({
     float: 'right',
     boxSizing: 'border-box',
     ...connectedPosition({ right: connected ? 0 : -1000 }),
-    ...transitionHoverScale,
   }),
   bottom: {
     width: '100%',
@@ -121,12 +120,14 @@ const useStyles = makeStyles((theme) => ({
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
   },
+  transitionHoverScale,
 }));
 
 export function PaperPanel(props: any) {
   const [hover, setHover] = useState(false);
+  const classes = useStyles({ connected: false });
   
-  return <Paper onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} elevation={hover ? 3 : 1} {...props}/>;
+  return <Paper onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} elevation={hover ? 3 : 1} className={props.flying ? classes.transitionHoverScale : null} {...props}/>;
 }
 
 export function useOperation() {
@@ -373,7 +374,7 @@ export function PageContent() {
     />]}
     <div className={classes.overlay}>
       <div className={classes.top}>
-        <PaperPanel className={classes.topPaper}>
+        <PaperPanel className={cn(classes.topPaper, classes.transitionHoverScale)}>
           <Grid container justify="space-between">
             <Grid item>
               <Grid container spacing={1}>
@@ -442,7 +443,7 @@ export function PageContent() {
         </PaperPanel>
       </div>
       <div className={classes.right}>
-        <PaperPanel className={classes.rightPaper}>
+        <PaperPanel className={cn(classes.rightPaper, classes.transitionHoverScale)}>
           <Grid container spacing={1}>
             <Grid item xs={12}>
               <Button variant="outlined" fullWidth onClick={() => setSelectedLinks([])}>
@@ -506,7 +507,7 @@ export function PageContent() {
       </div>
     </Draggable>}
     <Backdrop className={classes.backdrop} open={!connected}>
-      <PaperPanel>
+      <PaperPanel flying>
         <EngineWindow/>
       </PaperPanel>
     </Backdrop>
