@@ -125,6 +125,7 @@ export class ElectronCapacitorApp {
         process.platform === 'win32' ? 'appIcon.ico' : 'appIcon.png',
       ),
     );
+    console.log(icon);
     this.mainWindowState = windowStateKeeper({
       defaultWidth: 1000,
       defaultHeight: 800,

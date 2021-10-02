@@ -43,8 +43,5 @@
   "keywords": [
     "capacitor",
     "electron"
-  ],
-  "build": {
-    "asar": false
-  }
+  ]
 }

@@ -6,8 +6,8 @@
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "electron-dev": "cd electron && npm ci && cd .. && npx cap copy electron && npx cap open electron",
-    "electron-build": "(cd electron && npx electron-packager . --overwrite)",
+    "electron-dev": "(cd electron && npm ci && cd .. && npx cap copy electron && npx cap open electron)",
+    "electron-build": "(cd electron && npx cap copy electron && npx electron-packager . --overwrite)",
     "package:publish": "npm run build && npm publish --access public"
   },
   "dependencies": {
