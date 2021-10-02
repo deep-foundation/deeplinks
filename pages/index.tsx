@@ -14,7 +14,7 @@ import { LINKS, LINKS_string, insertLink, deleteLink } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
-import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress } from '../imports/ui';
+import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress, Typography } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 import axios from 'axios';
@@ -27,6 +27,8 @@ import { useTheme } from '@material-ui/styles';
 
 import { Capacitor } from '@capacitor/core';
 import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
+
+import pckg from '../package.json';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -435,6 +437,9 @@ export function PageContent() {
             <Grid item>
               <Grid container spacing={1}>
                 <Grid item>
+                  <Button disabled>{pckg.version}</Button>
+                </Grid>
+                <Grid item>
                   <EnginePanel/>
                 </Grid>
               </Grid>
@@ -509,6 +514,7 @@ export function PageContent() {
     <Backdrop className={classes.backdrop} open={!connected}>
       <PaperPanel flying>
         <EngineWindow/>
+        <Typography align='center'><Button disabled>{pckg.version}</Button></Typography>
       </PaperPanel>
     </Backdrop>
   </div>
