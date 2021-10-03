@@ -97,6 +97,7 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
   },
   rightPaper: ({ connected }: StyleProps) => ({
+    ...connectedPosition({ right: connected ? 0 : -1000 }),
     position: 'absolute',
     top: 0, right: 0,
     overflow: 'scroll',
@@ -104,9 +105,7 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
     padding: theme.spacing(1),
     pointerEvents: 'all',
-    float: 'right',
     boxSizing: 'border-box',
-    ...connectedPosition({ right: connected ? 0 : -1000 }),
   }),
   bottom: {
     width: '100%',
