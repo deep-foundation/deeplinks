@@ -99,7 +99,6 @@ const useStyles = makeStyles((theme) => ({
   rightPaper: ({ connected }: StyleProps) => ({
     ...connectedPosition({ right: connected ? 0 : -1000 }),
     position: 'absolute',
-    top: 0, right: 0,
     overflow: 'scroll',
     width: 300,
     height: '100%',
