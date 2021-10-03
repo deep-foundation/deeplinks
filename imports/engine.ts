@@ -39,7 +39,7 @@ export async function call (options: IOptions) {
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && rimraf .migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }

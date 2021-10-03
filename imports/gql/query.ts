@@ -1,4 +1,5 @@
 import Debug from 'debug';
+import gql from 'graphql-tag';
 
 const debug = Debug('deepcase:deeplinks:gql:query');
 
@@ -10,23 +11,23 @@ const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
   'where': `${tableName}_bool_exp!`,
 });
 
-export interface IGenerateQueryOptions {
+export interface IGenerateQueryDataOptions {
   tableName: string;
-  operation: 'query' | 'subscription';
-  queryName: string;
+  operation?: 'query' | 'subscription';
+  queryName?: string;
   returning?: string;
-  variables: any; // TODO
+  variables?: any; // TODO
 }
 
-export interface IGenerateQueryBuilder {
-  (alias: string, index: number): IGenerateQueryResult
+export interface IGenerateQueryDataBuilder {
+  (alias: string, index: number): IGenerateQueryDataResult
 }
 
 export interface IGenerateQueryFieldTypes {
   [field: string]: string;
 }
 
-export interface IGenerateQueryResult extends IGenerateQueryOptions {
+export interface IGenerateQueryDataResult extends IGenerateQueryDataOptions {
   resultReturning: string;
   fields: string[];
   fieldTypes: IGenerateQueryFieldTypes;
@@ -38,18 +39,18 @@ export interface IGenerateQueryResult extends IGenerateQueryOptions {
   resultVariables: any;
 }
 
-export const generateQuery = ({
+export const generateQueryData = ({
   tableName,
   operation = 'query',
   queryName = `${tableName}`,
   returning = `id`,
   variables,
-}: IGenerateQueryOptions): IGenerateQueryBuilder => {
+}: IGenerateQueryDataOptions): IGenerateQueryDataBuilder => {
   debug('generateQuery', { tableName, operation, queryName, returning, variables });
   const fields = ['distinct_on', 'limit', 'offset', 'order_by', 'where'];
   const fieldTypes = fieldsInputs(tableName);
 
-  return (alias: string, index: number): IGenerateQueryResult => {
+  return (alias: string, index: number): IGenerateQueryDataResult => {
     debug('generateQueryBuilder', { tableName, operation, queryName, returning, variables, alias, index });
     const defs = [];
     const args = [];
@@ -86,3 +87,44 @@ export const generateQuery = ({
     return result
   };
 };
+export interface IGenerateQueryOptions {
+  queries: any[];
+  name: string;
+  alias?: string;
+};
+
+export interface IGenerateQueryResult {
+  query: any;
+  queryString: any;
+  variables: any;
+};
+
+export const generateQuery = ({
+  queries = [],
+  name = 'QUERY',
+  alias = 'q',
+}: IGenerateQueryOptions): IGenerateQueryResult => {
+  debug('generateQuery', { name, alias, queries });
+  const calledQueries = queries.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
+  const defs = calledQueries.map(m => m.defs.join(',')).join(',');
+  const queryString = `query ${name} (${defs}) { ${calledQueries.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
+  const query = gql`${queryString}`;
+  const variables = {};
+  for (let a = 0; a < calledQueries.length; a++) {
+    const action = calledQueries[a];
+    for (const v in action.resultVariables) {
+      if (Object.prototype.hasOwnProperty.call(action.resultVariables, v)) {
+        const variable = action.resultVariables[v];
+        variables[v] = variable;
+      }
+    }
+  }
+  const result = {
+    query,
+    variables,
+    queryString,
+  };
+  debug('generateQueryResult', JSON.stringify({ query: queryString, variables }, null, 2));
+  return result;
+};
+
