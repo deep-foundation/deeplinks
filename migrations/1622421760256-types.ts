@@ -76,7 +76,6 @@ export const up = async () => {
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 32,*/ type_id: 21, from_id: 0, to_id: 0 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 33,*/ type_id: 22, from_id: 32, to_id: 31 } }),
       insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 34,*/ type_id: 22, from_id: 32, to_id: 13 } }),
-      insertMutation(LINKS_TABLE_NAME, { objects: { /*id: 35,*/ type_id: 22, from_id: 32, to_id: 1 } }),
     ],
     name: 'INSERT_TYPE_TYPE',
   }));
