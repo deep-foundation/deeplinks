@@ -1,8 +1,8 @@
-export interface LinkPlain {
-  id: number;
-  type_id: number;
-  from_id: number;
-  to_id: number;
+export interface LinkPlain<Ref extends number> {
+  id: Ref;
+  type_id: Ref;
+  from_id: Ref;
+  to_id: Ref;
 }
 
 export interface LinkRelations<L> {
@@ -15,12 +15,18 @@ export interface LinkRelations<L> {
   to: L;
 }
 
-export interface Link extends LinkPlain, LinkRelations<Link> {}
+export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>> {}
 
-export function minilinks(linksArray) {
-  const types: { [id: number]: Link[] } = {};
-  const byId: { [id: number]: Link } = {};
-  const links: Link[] = [];
+export interface LinksResult<Link> {
+  links: Link[];
+  types: { [id: number]: Link[] };
+  byId: { [id: number]: Link };
+}
+
+export function minilinks<L extends Link<number>>(linksArray): LinksResult<L> {
+  const types: { [id: number]: L[] } = {};
+  const byId: { [id: number]: L } = {};
+  const links: L[] = [];
   for (let l = 0; l < linksArray.length; l++) {
     const link = { ...linksArray[l], in: [], out: [], inByType: {}, outByType: {} };
     byId[link.id] = link;

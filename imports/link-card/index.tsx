@@ -11,6 +11,7 @@ import { Divider } from '@material-ui/core';
 import { LinkCardType } from './types/type';
 import { LinkCardSubject } from './types/subject';
 import { LinkCardRule } from './types/rule';
+import { LinkCardPackage } from './types/package';
 
 export function LinkCard({
   link,
@@ -64,6 +65,9 @@ export function LinkCard({
         </Grid>}
         {link?.type_id === 9 && <Grid item xs={12}>
           <LinkCardRule link={link}/>
+        </Grid>}
+        {link?.type_id === 31 && <Grid item xs={12}>
+          <LinkCardPackage link={link}/>
         </Grid>}
         <Grid item xs={12}>
           <Divider/>
