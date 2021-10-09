@@ -59,45 +59,45 @@ const trigger = Trigger({
   isAllowSpreadFromCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.id
+    l.to_id = CURRENT.type_id
   )`,
   isAllowSpreadCurrentTo: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.id
+    l.to_id = CURRENT.type_id
   )`,
 
   isAllowSpreadToCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.id
+    l.to_id = CURRENT.type_id
   )`,
   isAllowSpreadCurrentFrom: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.id
+    l.to_id = CURRENT.type_id
   )`,
 
   isAllowSpreadToInCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.id
+    l.to_id = flowLink.type_id
   )`,
   isAllowSpreadCurrentFromOut: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.id
+    l.to_id = flowLink.type_id
   )`,
 
   isAllowSpreadFromOutCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.id
+    l.to_id = flowLink.type_id
   )`,
   isAllowSpreadCurrentToIn: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.id
+    l.to_id = flowLink.type_id
   )`,
 });
 
