@@ -1,13 +1,12 @@
 import { generateSerial, insertMutation } from '@deepcase/deeplinks/imports/gql';
 import axios from 'axios';
 import React, { useCallback, useState } from 'react';
-import { Button, Grid, ButtonGroup, Divider, LinearProgress, TextField } from './ui';
+import { Button, Grid, ButtonGroup, Divider, LinearProgress, TextField, Typography } from './ui';
 import { IOptions } from '@deepcase/deeplinks/imports/engine';
 import { useLocalStore } from '@deepcase/store/local';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useApolloClientRegenerator } from '@deepcase/react-hasura/apollo-client-regenerator';
 import { useTheme } from '@material-ui/styles';
-import { Typography } from '@material-ui/core';
 import Link from 'next/link';
 import { PaperPanel } from '../pages';
 

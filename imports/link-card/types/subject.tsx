@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { useApolloClient } from '@apollo/client';
 import { generateSerial, insertMutation } from '@deepcase/deeplinks/imports/gql';
-import { Grid } from '@material-ui/core';
+import { Grid } from '../../ui';
 import React from 'react';
 import { useAuth } from '../../auth';
 import { Button } from '../../ui';

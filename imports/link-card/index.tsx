@@ -1,12 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog } from '../ui';
+import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog, Divider } from '../ui';
 import { Delete } from '../icons';
 import { useMutation } from '@apollo/client';
 import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from '../gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import MonacoEditor from 'react-monaco-editor';
-import { Divider } from '@material-ui/core';
 
 import { LinkCardType } from './types/type';
 import { LinkCardSubject } from './types/subject';
