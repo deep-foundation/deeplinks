@@ -122,7 +122,7 @@ export const up = async () => {
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
-    IF ([23,24,25].includes(NEW."type_id")) THEN
+    IF (NEW."type_id" IN (22,23,24)) THEN
       PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
     END IF;
@@ -132,7 +132,7 @@ export const up = async () => {
   DECLARE groupRow RECORD;
   BEGIN
     -- if delete link - is group include link
-    IF ([23,24,25].includes(OLD."type_id")) THEN
+    IF (OLD."type_id" IN (22,23,24)) THEN
       SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = 21;
       PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
