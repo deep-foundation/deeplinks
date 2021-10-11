@@ -12,7 +12,7 @@ const debug = Debug('deepcase:deeplinks:migrations:up-down');
 
 export const up = async () => {
   debug('up');
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__down_links__function(link ${LINKS_TABLE_NAME}, group_id bigint)
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__down_links__function(link ${LINKS_TABLE_NAME}, tree bigint)
     RETURNS SETOF ${LINKS_TABLE_NAME}
     LANGUAGE sql
     STABLE
@@ -20,11 +20,11 @@ export const up = async () => {
     SELECT ${LINKS_TABLE_NAME}.*
     FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
     WHERE
-    ${MP_TABLE_NAME}.group_id = group_id AND
+    ${MP_TABLE_NAME}.group_id = tree AND
     ${MP_TABLE_NAME}.path_item_id = link.id AND
     ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.item_id
   $function$;`);
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__up_links__function(link ${LINKS_TABLE_NAME}, group_id bigint)
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__up_links__function(link ${LINKS_TABLE_NAME}, tree bigint)
     RETURNS SETOF ${LINKS_TABLE_NAME}
     LANGUAGE sql
     STABLE
@@ -32,7 +32,7 @@ export const up = async () => {
     SELECT ${LINKS_TABLE_NAME}.*
     FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
     WHERE
-    ${MP_TABLE_NAME}.group_id = group_id AND
+    ${MP_TABLE_NAME}.group_id = tree AND
     ${MP_TABLE_NAME}.item_id = link.id AND
     ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.path_item_id
   $function$;`);
