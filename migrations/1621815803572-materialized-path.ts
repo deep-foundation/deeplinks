@@ -139,6 +139,30 @@ export const up = async () => {
     END IF;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__down_links__function(link ${LINKS_TABLE_NAME}, group_id bigint)
+    RETURNS SETOF ${LINKS_TABLE_NAME}
+    LANGUAGE sql
+    STABLE
+  AS $function$
+    SELECT ${LINKS_TABLE_NAME}.*
+    FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
+    WHERE
+    ${MP_TABLE_NAME}.group_id = group_id AND
+    ${MP_TABLE_NAME}.path_item_id = link.id AND
+    ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.item_id
+  $function$;`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__up_links__function(link ${LINKS_TABLE_NAME}, group_id bigint)
+    RETURNS SETOF ${LINKS_TABLE_NAME}
+    LANGUAGE sql
+    STABLE
+  AS $function$
+    SELECT ${LINKS_TABLE_NAME}.*
+    FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
+    WHERE
+    ${MP_TABLE_NAME}.group_id = group_id AND
+    ${MP_TABLE_NAME}.item_id = link.id AND
+    ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.path_item_id
+  $function$;`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__tree_include__insert__trigger AFTER INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__tree_include__insert__function();`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__tree_include__delete__trigger AFTER DELETE ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__tree_include__delete__function();`);
 };

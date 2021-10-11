@@ -157,12 +157,7 @@ export const down = async () => {
         schema: SCHEMA,
         name: TABLE_NAME,
       },
-    },
-  });
-  await api.query({
-    type: 'delete_event_trigger',
-    args: {
-      name: 'links',
+      cascade: true,
     },
   });
   await api.sql(sql`
