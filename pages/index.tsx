@@ -3,7 +3,7 @@ import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
 import { useQueryStore } from '@deepcase/store/query';
-import { Add, Clear } from '@material-ui/icons';
+import { Add, Clear, Colorize } from '@material-ui/icons';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { isEqual, random } from 'lodash';
 import React, { DOMElement, ElementRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -245,6 +245,9 @@ export function PageContent() {
     } else if (operation === 'type') {
       setInserting({ ...inserting, type: node.link.id });
       setOperation('');
+    } else if (operation === 'pipette') {
+      setInserting({ ...inserting, from: node.link.from_id, to: node.link.to_id, type: node.link.type_id });
+      setOperation('');
     } else if (clickSelect) {
       setFlyPanel({
         top: (mouseMove?.current?.clientY),
@@ -387,6 +390,10 @@ export function PageContent() {
                 </Grid>
                 <Grid item>
                   <ButtonGroup variant="outlined">
+                    <Button
+                      color={operation === 'pipette' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'pipette' ? '' : 'pipette')}
+                    ><Colorize/></Button>
                     <Button
                       onClick={async () => {
                         await insertLinkD({
