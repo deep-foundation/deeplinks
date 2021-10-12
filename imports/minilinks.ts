@@ -16,7 +16,9 @@ export interface LinkRelations<L> {
   to: L;
 }
 
-export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>> {}
+export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>> {
+  [key: string]: any;
+}
 
 export interface LinksResult<Link> {
   links: Link[];
@@ -24,7 +26,7 @@ export interface LinksResult<Link> {
   byId: { [id: number]: Link };
 }
 
-export function minilinks<L extends Link<number>>(linksArray): LinksResult<L> {
+export function minilinks<L extends Link<number>>(linksArray = []): LinksResult<L> {
   const types: { [id: number]: L[] } = {};
   const byId: { [id: number]: L } = {};
   const links: L[] = [];

@@ -29,6 +29,7 @@ import { Capacitor } from '@capacitor/core';
 import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
 
 import pckg from '../package.json';
+import { minilinks } from '../imports/minilinks';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -202,12 +203,13 @@ export function PageContent() {
   const s = useSubscription(query, { variables });
 
   const inD = useMemo(() => {
+    const ml = minilinks(s?.data?.links);
+
     const nodes = [];
     const links = [];
 
-    const _links = s?.data?.links || [];
-    for (let l = 0; l < _links.length; l++) {
-      const link = _links[l];
+    for (let l = 0; l < ml.links.length; l++) {
+      const link = ml.links[l];
       nodes.push({ id: link.id, link });
       if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#ffffff' });
       if (showMP) for (let i = 0; i < link._by_item.length; i++) {
@@ -215,10 +217,10 @@ export function PageContent() {
         links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#ffffff' });
       }
     }
-    for (let l = 0; l < _links.length; l++) {
-      const link = _links[l];
-      links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: '#a83232' });
-      links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: '#32a848' });
+    for (let l = 0; l < ml.links.length; l++) {
+      const link = ml.links[l];
+      if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: '#a83232' });
+      if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: '#32a848' });
     }
 
     return { nodes, links };
@@ -309,7 +311,7 @@ export function PageContent() {
       </div>}
     </Popover>
     {[<ForceGraph
-      key={JSON.stringify(outD)}
+      key={JSON.stringify(s?.data?.links)}
       Component={ForceGraph2D}
       graphData={outD}
       // backgroundColor={theme?.palette?.background?.default}

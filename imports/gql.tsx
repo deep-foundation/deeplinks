@@ -14,23 +14,8 @@ export const JWT = gql`query JWT($linkId: Int) {
 export const LINKS_BODY_string = `
 id
 type_id
-type {
-  string {
-    value
-  }
-}
 from_id
-from {
-  string {
-    value
-  }
-}
 to_id
-to {
-  string {
-    value
-  }
-}
 string {
   id
   value
