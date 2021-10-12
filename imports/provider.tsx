@@ -47,6 +47,12 @@ export const theme = createTheme({
         border: '1px dashed #ffffff100',
       },
     },
+    MuiOutlinedInput: {
+      inputMarginDense: {
+        paddingTop: 8,
+        paddingBottom: 8,
+      },
+    }
   },
   shadows: ['none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none','none'],
 });

@@ -14,7 +14,7 @@ import { LINKS, LINKS_string, insertLink, deleteLink } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
-import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress, Typography } from '../imports/ui';
+import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress, Typography, TextField } from '../imports/ui';
 import { useImmutableData } from '../imports/use-immutable-data';
 import gql from 'graphql-tag';
 import axios from 'axios';
@@ -168,6 +168,7 @@ export function PageContent() {
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
   const [operation, setOperation] = useOperation();
   const [connected, setConnected] = useEngineConnected();
+  const [screenFind, setScreenFind] = useQueryStore<any>('screen-find', '');
 
   const classes = useStyles({ connected });
 
@@ -337,7 +338,9 @@ export function PageContent() {
       width={drawerSize.width}
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {
-        const isSelected = selectedLinks?.find(id => id === node?.link?.id);
+        const isSelected = screenFind ? (
+          node?.link?.id.toString() === screenFind || !!(node?.link?.string?.value && node?.link?.string?.value?.includes(screenFind)) || node?.link?.number?.value === screenFind
+        ) : selectedLinks?.find(id => id === node?.link?.id);
 
         const label = [node.id];
         if (node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
@@ -441,6 +444,13 @@ export function PageContent() {
             </Grid>
             <Grid item>
               <Grid container spacing={1}>
+                <Grid item>
+                  <TextField variant="outlined" size="small"
+                    value={screenFind}
+                    onChange={e => setScreenFind(e.target.value)}
+                    placeholder="find..."
+                  />
+                </Grid>
                 <Grid item>
                   <Button disabled>{pckg.version}</Button>
                 </Grid>

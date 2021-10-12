@@ -46,8 +46,8 @@ export class Packager {
           _or: [
             { id: { _eq: options.packageLinkId } },
             { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } },
-            { type_id: { _eq: 1 }, in: { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } } },
-          ],
+            { in: { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } } },
+          ]
         } } }),
       ],
       name: 'LOAD_PACKAGE_LINKS',
@@ -55,6 +55,12 @@ export class Packager {
   }
   parseGlobalLinks(globalLinks: LinksResult<IPackagerLink>, options: IPackagerExportOptions, pckg: IPackagerPackage) {
     let counter = 1;
+    for (let l = 0; l < globalLinks.links.length; l++) {
+      const link = globalLinks.links[l];
+      if (!!link.type_id && !globalLinks.byId[link.type_id]) pckg.errors.push({ message: `Link ${link.id} use as type_id ${link.type_id} which is outside the package.` });
+      if (!!link.from_id && !globalLinks.byId[link.from_id]) pckg.errors.push({ message: `Link ${link.id} use as from_id ${link.from_id} which is outside the package.` });
+      if (!!link.to_id && !globalLinks.byId[link.to_id]) pckg.errors.push({ message: `Link ${link.id} use as to_id ${link.to_id} which is outside the package.` });
+    }
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
       if (link.type_id === 1) {
@@ -65,13 +71,17 @@ export class Packager {
       } else {
         link.id = counter++;
       }
-      for (let lo = 0; lo < link.out.length; lo++) {
-        const linkOut = link.out[lo];
-        linkOut.from_id = link.string.value;
+      for (let ki = 0; ki < link.out.length; ki++) {
+        const _link = link.out[ki];
+        _link.from_id = link.id;
       }
       for (let li = 0; li < link.in.length; li++) {
-        const linkIn = link.in[li];
-        linkIn.to_id = link.string.value;
+        const _link = link.in[li];
+        _link.to_id = link.id;
+      }
+      for (let li = 0; li < link.typed.length; li++) {
+        const _link = link.typed[li];
+        _link.type_id = link.id;
       }
       pckg.links.push({
         id: link.id,
@@ -83,7 +93,8 @@ export class Packager {
   }
   async exportPackage(options: IPackagerExportOptions) {
     const globalLinks = await this.loadPackageLinks(options);
-    const pckgLink = globalLinks.types?.[31]?.[0];
+    console.log(globalLinks);
+    const pckgLink = globalLinks.types?.[29]?.[0];
     const packageName = pckgLink?.string?.value;
     const pckg = {
       packageName,

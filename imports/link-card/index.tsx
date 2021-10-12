@@ -65,7 +65,7 @@ export function LinkCard({
         {link?.type_id === 9 && <Grid item xs={12}>
           <LinkCardRule link={link}/>
         </Grid>}
-        {link?.type_id === 31 && <Grid item xs={12}>
+        {link?.type_id === 29 && <Grid item xs={12}>
           <LinkCardPackage link={link}/>
         </Grid>}
         <Grid item xs={12}>

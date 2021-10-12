@@ -6,6 +6,7 @@ export interface LinkPlain<Ref extends number> {
 }
 
 export interface LinkRelations<L> {
+  typed: L[];
   type: L;
   in: L[];
   inByType: { [id: number]: L[] };
@@ -28,7 +29,7 @@ export function minilinks<L extends Link<number>>(linksArray): LinksResult<L> {
   const byId: { [id: number]: L } = {};
   const links: L[] = [];
   for (let l = 0; l < linksArray.length; l++) {
-    const link = { ...linksArray[l], in: [], out: [], inByType: {}, outByType: {} };
+    const link = { ...linksArray[l], typed: [], in: [], out: [], inByType: {}, outByType: {} };
     byId[link.id] = link;
     types[link.type_id] = types[link.type_id] || [];
     types[link.type_id].push(link);
@@ -38,6 +39,7 @@ export function minilinks<L extends Link<number>>(linksArray): LinksResult<L> {
     const link = links[l];
     if (byId[link.type_id]) {
       link.type = byId[link.type_id];
+      byId[link.type_id].typed.push(link);
     }
     if (byId[link.from_id]) {
       link.from = byId[link.from_id];
