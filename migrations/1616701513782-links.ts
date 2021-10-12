@@ -146,6 +146,24 @@ export const up = async () => {
       },
     },
   });
+  await api.query({
+    type: 'create_array_relationship',
+    args: {
+      table: TABLE_NAME,
+      name: 'typed',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: SCHEMA,
+            name: TABLE_NAME,
+          },
+          column_mapping: {
+            id: 'type_id',
+          },
+        },
+      },
+    },
+  });
 };
 
 export const down = async () => {
