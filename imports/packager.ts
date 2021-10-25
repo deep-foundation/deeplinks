@@ -181,19 +181,22 @@ export class Packager {
       }
     }
     await delay(3000);
+    if (!errors.length) {
+      const tables = await this.loadTypesTablesHash(sorted.filter(l => l.type_id === 1).map(l => l.id));
+      const actions = sorted.filter(l => l._mutated && !!tables[l.type_id]).map(l => insertMutation(`table${tables[l.type_id]}`, { objects: { link_id: l.id, ...l.value } }));
+      const insertValuesResult = await this.client.mutate(generateSerial({
+        actions,
+        name: 'IMPORT_PACKAGE_LINKS',
+      }));
+      if (insertValuesResult?.errors) {
+        errors.push(insertValuesResult?.errors);
+      }
+    }
     if (errors.length) {
       const mutateResult = await this.client.mutate(generateSerial({
         actions: [deleteMutation('links', { where: { id: { _in: ids } } })],
         name: 'REVERT_IMPORT_PACKAGE_LINKS',
       }));
     }
-    const tables = await this.loadTypesTablesHash(sorted.filter(l => l.type_id === 1).map(l => l.id));
-    console.log(tables);
-    const actions = sorted.filter(l => l._mutated && !!tables[l.type_id]).map(l => insertMutation(`table${tables[l.type_id]}`, { objects: { link_id: l.id, ...l.value } }));
-    const insertValuesResult = await this.client.mutate(generateSerial({
-      actions,
-      name: 'IMPORT_PACKAGE_LINKS',
-    }));
-    console.log(insertValuesResult);
   }
 }
