@@ -116,6 +116,9 @@ export const up = async () => {
     insert: {}, // generatePermissionWhere(16),
     update: {}, // generatePermissionWhere(17),
     delete: generatePermissionWhere(18),
+
+    columns: ['id','from_id','to_id','type_id'],
+    computed_fields: ['value'],
   });
   await api.sql(trigger.upFunctionInsertNode());
   await api.sql(trigger.upFunctionDeleteNode());
@@ -145,18 +148,22 @@ export const up = async () => {
 
 export const down = async () => {
   debug('down');
-  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__function;`);
-  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__function;`);
+  debug('dropInclude');
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__function CASCADE;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__trigger ON "${LINKS_TABLE_NAME}";`);
-  await api.sql(trigger.downTriggerDelete());
-  await api.sql(trigger.downTriggerInsert());
-  await api.sql(trigger.downFunctionInsertNode());
-  await api.sql(trigger.downFunctionDeleteNode());
+  debug('dropRels');
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
   });
+  debug('dropTrigger');
+  await api.sql(trigger.downFunctionInsertNode());
+  await api.sql(trigger.downFunctionDeleteNode());
+  await api.sql(trigger.downTriggerDelete());
+  await api.sql(trigger.downTriggerInsert());
+  debug('dropTable');
   await downTable({
     MP_TABLE: MP_TABLE_NAME,
   });

@@ -65,12 +65,12 @@ export const down = async () => {
   debug('down');
   debug('insert');
   await api.sql(sql`
-    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__function();
-    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__trigger;
+    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__trigger ON ${TABLE_NAME} CASCADE;
+    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__function() CASCADE;
   `);
   debug('delete');
   await api.sql(sql`
-    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__function();
-    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__trigger;
+    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__trigger ON ${TABLE_NAME} CASCADE;
+    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__function() CASCADE;
   `);
 };

@@ -27,13 +27,53 @@ export const up = async () => {
     CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__to_id_hash ON ${TABLE_NAME} USING hash (to_id);
     CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__to_id_btree ON ${TABLE_NAME} USING btree (to_id);
     CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__type_id_hash ON ${TABLE_NAME} USING hash (type_id);
-    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__type_id_btree ON ${TABLE_NAME} USING btree (type_id); 
+    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__type_id_btree ON ${TABLE_NAME} USING btree (type_id);
+  `);
+  await api.sql(sql`
+    CREATE TABLE ${SCHEMA}."${TABLE_NAME}__tables" (id bigint PRIMARY KEY, name TEXT);
+    CREATE SEQUENCE ${TABLE_NAME}__tables_id_seq
+    AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+    ALTER SEQUENCE ${TABLE_NAME}__tables_id_seq OWNED BY ${SCHEMA}."${TABLE_NAME}__tables".id;
+    ALTER TABLE ONLY ${SCHEMA}."${TABLE_NAME}__tables" ALTER COLUMN id SET DEFAULT nextval('${TABLE_NAME}__tables_id_seq'::regclass);
+    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__tables__id_hash ON ${TABLE_NAME}__tables USING hash (id);
+    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__tables__name_hash ON ${TABLE_NAME}__tables USING hash (name);
+    CREATE INDEX IF NOT EXISTS ${TABLE_NAME}__tables__name_btree ON ${TABLE_NAME}__tables USING btree (name);
   `);
   await api.query({
     type: 'track_table',
     args: {
       schema: SCHEMA,
+      name: `${TABLE_NAME}__tables`,
+    },
+  });
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; result json; BEGIN
+    SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=31 AND "to_id"=link."type_id";
+    IF (tableId IS NOT NULL) THEN
+        EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || tableId) || ' as t LIMIT 1' INTO result;
+        RETURN result->0;
+    END IF;
+    RETURN NULL;
+  END; $function$ LANGUAGE plpgsql;`);
+  await api.query({
+    type: 'track_table',
+    args: {
+      schema: SCHEMA,
       name: TABLE_NAME,
+    },
+  });
+  await api.query({
+    type: 'add_computed_field',
+    args: {
+      table: TABLE_NAME,
+      source: 'default',
+      name: 'value',
+      definition:{
+        function:{
+            name: `${TABLE_NAME}__value__function`,
+            schema: 'public',
+        },
+        table_argument: 'link',
+      }
     },
   });
   await api.query({
@@ -169,6 +209,16 @@ export const up = async () => {
 export const down = async () => {
   debug('down');
   await api.query({
+    type: 'drop_computed_field',
+    args: {
+      table: TABLE_NAME,
+      source: 'default',
+      name: 'value',
+      cascade: true,
+    },
+  });
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${TABLE_NAME}__value__function CASCADE;`);
+  await api.query({
     type: 'untrack_table',
     args: {
       table: {
@@ -179,6 +229,25 @@ export const down = async () => {
     },
   });
   await api.sql(sql`
-    DROP TABLE ${SCHEMA}."${TABLE_NAME}";
+    DROP TABLE ${SCHEMA}."${TABLE_NAME}" CASCADE;
+  `);
+  const tables = ((await api.sql(sql`
+    SELECT * FROM ${TABLE_NAME}__tables;
+  `))?.data?.result || [])?.slice(1);
+  await api.query({
+    type: 'untrack_table',
+    args: {
+      table: {
+        schema: SCHEMA,
+        name: `${TABLE_NAME}__tables`,
+      },
+      cascade: true,
+    },
+  });
+  await api.sql(sql`
+    ${tables.map(table => `DROP TABLE ${table[1]} CASCADE;`)}
+  `);
+  await api.sql(sql`
+    DROP TABLE ${TABLE_NAME}__tables CASCADE;
   `);
 };

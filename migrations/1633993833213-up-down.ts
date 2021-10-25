@@ -88,6 +88,6 @@ export const down = async () => {
       cascade: false,
     },
   });
-  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__down_links__function;`);
-  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__up_links__function;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__down_links__function CASCADE;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__up_links__function CASCADE;`);
 };

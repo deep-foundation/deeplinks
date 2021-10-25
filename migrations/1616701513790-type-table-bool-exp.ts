@@ -40,6 +40,12 @@ export const up = async () => {
 
 export const down = async () => {
   debug('down');
+  await api.query({
+    type: 'delete_event_trigger',
+    args: {
+      name: 'bool_exp',
+    },
+  });
   await (generateDown({
     schemaName: SCHEMA,
     tableName: TABLE_NAME,
@@ -48,10 +54,4 @@ export const down = async () => {
     linksTableName: LINKS_TABLE_NAME,
     api,
   })());
-  await api.query({
-    type: 'delete_event_trigger',
-    args: {
-      name: 'bool_exp',
-    },
-  });
 };

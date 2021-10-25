@@ -9,19 +9,28 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
   insert: any;
   update: any;
   delete: any;
+
+  columns?: string | string[];
+  computed_fields?: string[];
 } = {
   select: {},
   insert: {},
   update: {},
   delete: {},
+  
+  columns: '*',
+  computed_fields: [],
 }) => {
-  await api.query({
-    type: 'create_select_permission',
+  const columns = actions.columns || '*';
+  const computed_fields = actions.computed_fields || [];
+  await api.metadata({
+    type: 'pg_create_select_permission',
     args: {
       table: table,
       role: 'guest',
       permission: {
-        columns: '*',
+        columns: columns,
+        computed_fields,
         filter: {},
         limit: 999,
         allow_aggregations: true
@@ -61,13 +70,14 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
       }
     }
   });
-  await api.query({
-    type: 'create_select_permission',
+  await api.metadata({
+    type: 'pg_create_select_permission',
     args: {
       table: table,
       role: 'link',
       permission: {
-        columns: '*',
+        columns: columns,
+        computed_fields,
         filter: actions.select,
         limit: 999,
         allow_aggregations: true
