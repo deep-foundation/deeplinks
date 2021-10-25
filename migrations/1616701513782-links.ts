@@ -49,7 +49,7 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; result json; BEGIN
     SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=31 AND "to_id"=link."type_id";
     IF (tableId IS NOT NULL) THEN
-        EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || tableId) || ' as t LIMIT 1' INTO result;
+        EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || tableId) || ' as t WHERE link_id=' || link."id" || ' LIMIT 1' INTO result;
         RETURN result->0;
     END IF;
     RETURN NULL;
@@ -244,7 +244,7 @@ export const down = async () => {
       cascade: true,
     },
   });
-  await api.sql(sql`
+  if (!!tables.length) await api.sql(sql`
     ${tables.map(table => `DROP TABLE ${table[1]} CASCADE;`)}
   `);
   await api.sql(sql`
