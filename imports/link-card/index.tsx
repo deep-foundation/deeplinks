@@ -105,54 +105,6 @@ export function LinkCard({
             </Button>
           </>}
         </Grid>
-        <Grid item xs={12}>
-          {!!link?.string ? <>
-            <TextField
-              label={'string'}
-              variant="outlined" size="small" fullWidth
-              defaultValue={link.string.value || ''}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">
-                  <IconButton onClick={() => deleteStringD()}><Delete/></IconButton>
-                </InputAdornment>,
-              }}
-              onChange={!!link.string.id ? async (e) => {
-                updateStringD(e.target.value);
-              } : null}
-            />
-          </> : <>
-            <Button
-              size="small" variant="outlined" fullWidth
-              onClick={() => insertStringD()}
-            >
-              + string
-            </Button>
-          </>}
-        </Grid>
-        <Grid item xs={12}>
-          {!!link?.number ? <>
-            <TextField
-              label={'number'}
-              variant="outlined" size="small" fullWidth
-              defaultValue={link.number.value || ''}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">
-                  <IconButton onClick={() => deleteNumberD()}><Delete/></IconButton>
-                </InputAdornment>,
-              }}
-              onChange={!!link.number.id ? async (e) => {
-                updateNumberD(+e.target.value);
-              } : null}
-            />
-          </> : <>
-            <Button
-              size="small" variant="outlined" fullWidth
-              onClick={() => insertNumberD()}
-            >
-              + number
-            </Button>
-          </>}
-        </Grid>
       </Grid>
     </CardActions>
   </Card>;

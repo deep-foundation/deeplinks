@@ -341,13 +341,12 @@ export function PageContent() {
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {
         const isSelected = screenFind ? (
-          node?.link?.id.toString() === screenFind || !!(node?.link?.string?.value && node?.link?.string?.value?.includes(screenFind)) || node?.link?.number?.value === screenFind
+          node?.link?.id.toString() === screenFind || !!(node?.link?.value?.value && node?.link?.value?.value?.includes(screenFind))
         ) : selectedLinks?.find(id => id === node?.link?.id);
 
         const label = [node.id];
-        if (node?.link?.type?.string?.value) label.push(`${node?.link?.type?.string?.value}`);
-        if (node?.link?.string?.value) label.push(`string: ${node?.link?.string?.value}`);
-        if (node?.link?.number?.value) label.push(`number: ${node?.link?.number?.value}`);
+        if (node?.link?.type?.value?.value) label.push(`${node?.link?.type?.value?.value}`);
+        if (node?.link?.value?.value) label.push(`value: ${node?.link?.value?.value}`);
         const _l = label;
         const fontSize = 12/globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;

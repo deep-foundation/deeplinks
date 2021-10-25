@@ -16,14 +16,7 @@ id
 type_id
 from_id
 to_id
-string {
-  id
-  value
-}
-number {
-  id
-  value
-}
+value
 bool_exp {
   id
   gql
