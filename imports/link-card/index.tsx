@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog, Divider } from '../ui';
 import { Delete } from '../icons';
 import { useMutation } from '@apollo/client';
@@ -11,6 +11,7 @@ import { LinkCardType } from './types/type';
 import { LinkCardSubject } from './types/subject';
 import { LinkCardRule } from './types/rule';
 import { LinkCardPackage } from './types/package';
+import { Packager } from '@deepcase/deeplinks/imports/packager';
 
 export function LinkCard({
   link,
@@ -48,6 +49,15 @@ export function LinkCard({
 
   const [dialog, setDialog] = useState(false);
 
+  useEffect(() => {
+    if (process.browser) {
+      // @ts-ignore
+      window.packager = new Packager(client);
+      // @ts-ignore
+      console.log(window.packager);
+    }
+  }, []);
+
   // NeedPackerTypeNaming
 
   return <Card>
@@ -65,7 +75,7 @@ export function LinkCard({
         {link?.type_id === 9 && <Grid item xs={12}>
           <LinkCardRule link={link}/>
         </Grid>}
-        {link?.type_id === 29 && <Grid item xs={12}>
+        {link?.type_id === 32 && <Grid item xs={12}>
           <LinkCardPackage link={link}/>
         </Grid>}
         <Grid item xs={12}>

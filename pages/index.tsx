@@ -29,7 +29,7 @@ import { Capacitor } from '@capacitor/core';
 import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
 
 import pckg from '../package.json';
-import { minilinks } from '../imports/minilinks';
+import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });

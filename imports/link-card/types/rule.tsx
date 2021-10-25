@@ -10,7 +10,7 @@ import { generateSerial, insertMutation } from '@deepcase/deeplinks/imports/gql'
 import { useOperation, useSelectedLinks } from '../../../pages';
 import { useClickEmitter } from '../../click-emitter';
 import { useMemo } from 'react';
-import { minilinks } from '../../minilinks';
+import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 import { flatten } from 'lodash';
 
 export function LinkCardRule({

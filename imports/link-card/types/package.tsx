@@ -1,7 +1,7 @@
 import { generateSerial, insertMutation } from '@deepcase/deeplinks/imports/gql';
-import { Packager } from '../../packager';
+import { Packager } from '@deepcase/deeplinks/imports/packager';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelectedLinks } from '../../../pages';
 import { Button, Grid } from '../../ui';
 
@@ -18,8 +18,7 @@ export function LinkCardPackage({
       <Grid item xs={12}><Button
         size="small" variant="outlined" fullWidth
         onClick={() => {
-          const packager = new Packager(client);
-          console.log(packager)
+          // @ts-ignore
           packager.exportPackage({ packageLinkId: link.id }).then(console.log, console.log);
         }}
       >
