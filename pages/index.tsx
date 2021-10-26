@@ -1,35 +1,30 @@
 import { useSubscription } from '@apollo/client';
+import { Capacitor } from '@capacitor/core';
+import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
 import { useQueryStore } from '@deepcase/store/query';
 import { Add, Clear, Colorize } from '@material-ui/icons';
+import { useTheme } from '@material-ui/styles';
 import { useDebounceCallback } from '@react-hook/debounce';
-import { isEqual, random } from 'lodash';
-import React, { DOMElement, ElementRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
+import cn from 'classnames';
+import gql from 'graphql-tag';
+import { random } from 'lodash';
+import dynamic from 'next/dynamic';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Draggable from 'react-draggable';
 import ReactResizeDetector from 'react-resize-detector';
 import { useAuth } from '../imports/auth';
-import { check } from '../imports/check';
-import { LINKS, LINKS_string, insertLink, deleteLink } from '../imports/gql';
+import { useClickEmitter } from '../imports/click-emitter';
+import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
+import { deleteLink, insertLink, LINKS_string } from '../imports/gql';
 import { ForceGraph, ForceGraph2D } from '../imports/graph';
 import { LinkCard } from '../imports/link-card/index';
 import { Provider } from '../imports/provider';
-import { Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, Backdrop, CircularProgress, Typography, TextField } from '../imports/ui';
-import { useImmutableData } from '../imports/use-immutable-data';
-import gql from 'graphql-tag';
-import axios from 'axios';
-import cn from 'classnames';
-
-import dynamic from 'next/dynamic';
-import Draggable from 'react-draggable';
-import { useClickEmitter } from '../imports/click-emitter';
-import { useTheme } from '@material-ui/styles';
-
-import { Capacitor } from '@capacitor/core';
-import { EnginePanel, EngineWindow, useEngineConnected } from '../imports/engine';
-
+import { Backdrop, Button, ButtonGroup, Grid, IconButton, makeStyles, Paper, Popover, TextField, Typography } from '../imports/ui';
 import pckg from '../package.json';
-import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 
 // @ts-ignore
 const Graphiql = dynamic(() => import('../imports/graphiql').then(m => m.Graphiql), { ssr: false });
@@ -202,32 +197,39 @@ export function PageContent() {
 
   const s = useSubscription(query, { variables });
 
-  const inD = useMemo(() => {
-    const ml = minilinks(s?.data?.links);
+  const prevD = useRef<any>({ nodes: [], links: [] });
+  const outD = useMemo(() => {
+    if (s?.data?.links) {
+      const ml = minilinks(s?.data?.links);
+      const prev = prevD.current;
+      var prevNodes = prev?.nodes?.reduce(function(map, node) {
+        map[node.id] = node;
+        return map;
+      }, {});
 
-    const nodes = [];
-    const links = [];
+      const nodes = [];
+      const links = [];
 
-    for (let l = 0; l < ml.links.length; l++) {
-      const link = ml.links[l];
-      nodes.push({ id: link.id, link });
-      if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#ffffff' });
-      if (showMP) for (let i = 0; i < link._by_item.length; i++) {
-        const pos = link._by_item[i];
-        links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#ffffff' });
+      for (let l = 0; l < ml.links.length; l++) {
+        const link = ml.links[l];
+        nodes.push({ ...prevNodes?.[link.id], id: link.id, link });
+        if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#ffffff' });
+        if (showMP) for (let i = 0; i < link._by_item.length; i++) {
+          const pos = link._by_item[i];
+          links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#ffffff' });
+        }
       }
-    }
-    for (let l = 0; l < ml.links.length; l++) {
-      const link = ml.links[l];
-      if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: '#a83232' });
-      if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: '#32a848' });
-    }
+      for (let l = 0; l < ml.links.length; l++) {
+        const link = ml.links[l];
+        if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: '#a83232' });
+        if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: '#32a848' });
+      }
 
-    return { nodes, links };
+      return { nodes, links };
+    }
+    return prevD.current;
   }, [s]);
-
-  // const outD = useImmutableData(inD, (a, b) => isEqual(a.link, b.link));
-  const outD = connected ? inD : { nodes: [], links: [] };
+  prevD.current = outD;
   
   const mouseMove = useRef<any>();
   const onNodeClickRef = useRef<any>();
@@ -310,8 +312,7 @@ export function PageContent() {
         ><Add/></IconButton>
       </div>}
     </Popover>
-    {[<ForceGraph
-      key={JSON.stringify(s?.data?.links)}
+    <ForceGraph
       Component={ForceGraph2D}
       graphData={outD}
       // backgroundColor={theme?.palette?.background?.default}
@@ -378,7 +379,7 @@ export function PageContent() {
         
       }}
       onZoom={handleZoom}
-    />]}
+    />
     <div className={classes.overlay}>
       <div className={classes.top}>
         <PaperPanel className={cn(classes.topPaper, classes.transitionHoverScale)}>

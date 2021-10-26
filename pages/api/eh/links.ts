@@ -80,13 +80,15 @@ export default async (req, res) => {
         console.log({ tableName, columns, valuesCount });
 
         if (operation === 'INSERT' && valuesCount === 1) {
-          console.log((await api.sql(sql`
+          const createTable = await api.sql(sql`
             CREATE TABLE ${SCHEMA}."${tableName}" (id bigint PRIMARY KEY, link_id bigint, ${columns.map(c => `${c.name} ${c.type}`).join(',')});
             CREATE SEQUENCE ${tableName}_id_seq
             AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
             ALTER SEQUENCE ${tableName}_id_seq OWNED BY ${SCHEMA}."${tableName}".id;
             ALTER TABLE ONLY ${SCHEMA}."${tableName}" ALTER COLUMN id SET DEFAULT nextval('${tableName}_id_seq'::regclass);
-          `))?.data?.internal?.error);
+          `);
+          const error = createTable?.data?.internal?.error;
+          if (error) console.log(error);
           await api.sql(sql`
             INSERT INTO "links__tables" (name) VALUES ('${tableName}');
           `);
