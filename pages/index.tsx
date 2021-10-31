@@ -5,7 +5,7 @@ import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
 import { useQueryStore } from '@deepcase/store/query';
-import { Add, Clear, Colorize } from '@material-ui/icons';
+import { Add, Clear, Colorize, Visibility as VisibilityOn , VisibilityOff } from '@material-ui/icons';
 import { useTheme } from '@material-ui/styles';
 import { useDebounceCallback } from '@react-hook/debounce';
 import axios from 'axios';
@@ -161,6 +161,8 @@ export function PageContent() {
   const [showMP, setShowMP] = useQueryStore('show-mp', false);
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useSelectedLinks();
+  const [container, setContainer] = useQueryStore('container', 0);
+  const [containerVisible, setContainerVisible] = useState(true);
   const [inserting, setInserting] = useQueryStore<any>('dc-dg-ins', {});
   const [operation, setOperation] = useOperation();
   const [connected, setConnected] = useEngineConnected();
@@ -212,23 +214,35 @@ export function PageContent() {
 
       for (let l = 0; l < ml.links.length; l++) {
         const link = ml.links[l];
-        nodes.push({ ...prevNodes?.[link.id], id: link.id, link });
-        if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: '#ffffff' });
+        const isTransparent = link.type_id === 13 && link?.from?.type_id === 32 && !containerVisible;
+
+        const label: (string|number)[] = [];
+        if (!isTransparent) {
+          label.push(link.id);
+          if (link?.type?.value?.value) label.push(`${link?.type?.value?.value}`);
+          if (link?.value?.value) label.push(`value: ${link?.value?.value}`);
+        }
+
+        nodes.push({ ...prevNodes?.[link.id], id: link.id, link, label });
+
+        if (showTypes && link.type_id) links.push({ id: `type--${link.id}`, source: link.id, target: link.type_id, link, type: 'type', color: isTransparent ? 'transparent' : '#ffffff' });
+
         if (showMP) for (let i = 0; i < link._by_item.length; i++) {
           const pos = link._by_item[i];
-          links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: '#ffffff' });
+          links.push({ id: `by-item--${pos.id}`, source: link.id, target: pos.path_item_id, link, pos, type: 'by-item', color: isTransparent ? 'transparent' : '#ffffff' });
         }
       }
       for (let l = 0; l < ml.links.length; l++) {
         const link = ml.links[l];
-        if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: '#a83232' });
-        if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: '#32a848' });
+        const isTransparent = link.type_id === 13 && link?.from?.type_id === 32 && !containerVisible;
+        if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: isTransparent ? 'transparent' : '#a83232' });
+        if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: isTransparent ? 'transparent' : '#32a848' });
       }
 
       return { nodes, links };
     }
     return prevD.current;
-  }, [s]);
+  }, [s, containerVisible, container]);
   prevD.current = outD;
   
   const mouseMove = useRef<any>();
@@ -252,6 +266,9 @@ export function PageContent() {
       setOperation('');
     } else if (operation === 'pipette') {
       setInserting({ ...inserting, from: node.link.from_id, to: node.link.to_id, type: node.link.type_id });
+      setOperation('');
+    } else if (operation === 'container') {
+      setContainer(node.link.id);
       setOperation('');
     } else if (clickSelect) {
       setFlyPanel({
@@ -342,18 +359,15 @@ export function PageContent() {
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {
         const isSelected = screenFind ? (
-          node?.link?.id.toString() === screenFind || !!(node?.link?.value?.value && node?.link?.value?.value?.includes(screenFind))
+          node?.link?.id.toString() === screenFind || !!(node?.link?.value?.value && node?.link?.value?.value?.includes(screenFind)) || !!(node?.link?.type?.value?.value && node?.link?.type?.value?.value?.includes(screenFind))
         ) : selectedLinks?.find(id => id === node?.link?.id);
 
-        const label = [node.id];
-        if (node?.link?.type?.value?.value) label.push(`${node?.link?.type?.value?.value}`);
-        if (node?.link?.value?.value) label.push(`value: ${node?.link?.value?.value}`);
-        const _l = label;
+        const _l = node.label || [];
         const fontSize = 12/globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;
         let textWidth = 0;
         for (var i = 0; i < _l.length; i++)
-          textWidth = ctx.measureText(label).width > textWidth ? ctx.measureText(label).width : textWidth;
+          textWidth = ctx.measureText(node.label).width > textWidth ? ctx.measureText(node.label).width : textWidth;
         const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
 
         ctx.fillStyle = 'rgba(0,0,0, 0)';
@@ -372,6 +386,14 @@ export function PageContent() {
       //   sprite.textHeight = 8;
       //   return sprite;
       // }}
+      onNodeDragEnd={node => {
+        if (node.fx) delete node.fx;
+        else node.fx = node.x;
+        if (node.fy) delete node.fy;
+        else node.fy = node.y;
+        if (node.fz) delete node.fz;
+        else node.fz = node.z;
+      }}
       onNodeClick={(node) => {
         onNodeClickRef.current(node);
       }}
@@ -396,15 +418,39 @@ export function PageContent() {
                 <Grid item>
                   <ButtonGroup variant="outlined">
                     <Button
+                      color={operation === 'container' ? 'primary' : 'default'}
+                      onClick={() => setOperation(operation === 'container' ? '' : 'container')}
+                    >
+                      container: {container}
+                    </Button>
+                    <Button
+                      onClick={() => setContainer(0)}
+                    ><Clear/></Button>
+                    <Button
+                      color={containerVisible ? 'primary' : 'default'}
+                      onClick={() => setContainerVisible((containerVisible) => !containerVisible)}
+                    >
+                      {containerVisible ? <VisibilityOn/> : <VisibilityOff/>}
+                    </Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button
                       color={operation === 'pipette' ? 'primary' : 'default'}
                       onClick={() => setOperation(operation === 'pipette' ? '' : 'pipette')}
                     ><Colorize/></Button>
                     <Button
                       onClick={async () => {
-                        await insertLinkD({
+                        const r = await insertLinkD({
                           from_id: inserting.from || 0,
                           to_id: inserting.to || 0,
                           type_id: inserting.type || 0,
+                        });
+                        if (container) await insertLinkD({
+                          from_id: container,
+                          to_id: r?.data?.m0?.returning?.[0]?.id,
+                          type_id: 13,
                         });
                       }}
                     ><Add/></Button>

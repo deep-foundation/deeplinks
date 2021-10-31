@@ -7,6 +7,8 @@ import { generateMutation, generateQuery, generateSerial } from '@deepcase/deepl
 import { gql } from 'apollo-boost';
 import vm from 'vm';
 
+import { generatePermissionWhere, permissions } from '@deepcase/deeplinks/imports/permission';
+
 const SCHEMA = 'public';
 
 export const api = new HasuraApi({
@@ -81,7 +83,7 @@ export default async (req, res) => {
 
         if (operation === 'INSERT' && valuesCount === 1) {
           const createTable = await api.sql(sql`
-            CREATE TABLE ${SCHEMA}."${tableName}" (id bigint PRIMARY KEY, link_id bigint, ${columns.map(c => `${c.name} ${c.type}`).join(',')});
+            CREATE TABLE ${SCHEMA}."${tableName}" (id bigint PRIMARY KEY, link_id bigint NOT NULL, ${columns.map(c => `${c.name} ${c.type}`).join(',')});
             CREATE SEQUENCE ${tableName}_id_seq
             AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
             ALTER SEQUENCE ${tableName}_id_seq OWNED BY ${SCHEMA}."${tableName}".id;
@@ -134,6 +136,12 @@ export default async (req, res) => {
                 },
               },
             },
+          });
+          await permissions(api, tableName, {
+            select: {},
+            insert: {}, // generatePermissionWhere(16),
+            update: {}, // generatePermissionWhere(17),
+            delete: {},
           });
         } else if (operation === 'DELETE' && !valuesCount) {
           await api.sql(sql`

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Typography, TextField, Card, CardContent, CardActions, InputAdornment, IconButton, Grid, Dialog, Divider } from '../ui';
 import { Delete } from '../icons';
-import { useMutation } from '@apollo/client';
-import { updateString, insertString, deleteString, updateNumber, insertNumber, deleteNumber, insertBoolExp, updateBoolExp, deleteBoolExp } from '../gql';
+import { useMutation, useQuery, useSubscription } from '@apollo/client';
+import { updateString, insertString, deleteString, insertBoolExp, updateBoolExp, deleteBoolExp, LINKS, LINKS_WHERE } from '../gql';
 import { useDebouncedCallback } from 'use-debounce';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import MonacoEditor from 'react-monaco-editor';
@@ -12,6 +12,7 @@ import { LinkCardSubject } from './types/subject';
 import { LinkCardRule } from './types/rule';
 import { LinkCardPackage } from './types/package';
 import { Packager } from '@deepcase/deeplinks/imports/packager';
+import { generateMutation, generateSerial } from '@deepcase/deeplinks/imports/gql';
 
 export function LinkCard({
   link,
@@ -19,24 +20,6 @@ export function LinkCard({
   link: any;
 }) {
   const client = useApolloClient();
-  const insertStringD = useCallback(async () => (
-    await client.mutate(insertString(link.id, ''))
-  ), [link]);
-  const updateStringD = useDebouncedCallback(async (value) => (
-    await client.mutate(updateString(link.string.id, value))
-  ), 1000);
-  const deleteStringD = useCallback(async () => (
-    await client.mutate(deleteString(link.string.id))
-  ), [link?.string?.id]);
-  const insertNumberD = useCallback(async () => (
-    await client.mutate(insertNumber(link.id, 0))
-  ), [link]);
-  const updateNumberD = useDebouncedCallback(async (value: number) => (
-    await client.mutate(updateNumber(link.number.id, value))
-  ), 1000);
-  const deleteNumberD = useCallback(async () => (
-    await client.mutate(deleteNumber(link.number.id))
-  ), [link?.number?.id]);
   const insertBoolExpD = useCallback(async () => (
     await client.mutate(insertBoolExp(link.id, ''))
   ), [link]);
@@ -47,7 +30,21 @@ export function LinkCard({
     await client.mutate(deleteBoolExp(link.bool_exp.id))
   ), [link?.bool_exp?.id]);
 
-  const [dialog, setDialog] = useState(false);
+  const [valueInserted, setValueInserted] = useState(false);
+
+  const columnsQ = useSubscription(LINKS_WHERE, { variables: {
+    where: {
+      type_id: { _eq: 30 },
+      from: {
+        type_id: { _eq: 29 },
+        out: {
+          type_id: { _eq: 31 },
+          to_id: { _eq: link?.type_id },
+        },
+      },
+    },
+  } });
+  const columns = columnsQ?.data?.links || [];
 
   useEffect(() => {
     if (process.browser) {
@@ -81,30 +78,51 @@ export function LinkCard({
         <Grid item xs={12}>
           <Divider/>
         </Grid>
-        <Grid item xs={12}>
-          {!!link?.bool_exp ? <>
-            <TextField
-              label={'bool_exp'}
-              variant="outlined" size="small" fullWidth
-              defaultValue={link.bool_exp.gql || ''}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">
-                  <IconButton onClick={() => deleteBoolExpD()}><Delete/></IconButton>
-                </InputAdornment>,
-              }}
-              onChange={!!link.bool_exp.id ? async (e) => {
-                updateBoolExpD(e.target.value);
-              } : null}
-            />
+        {<Grid key={link?.value?.id || ''} item xs={12}>
+          {link?.value || valueInserted ? <>
+            {columns.map((column) => {
+              return <>
+                <TextField
+                  label={column?.value?.value || 'value'}
+                  variant="outlined" size="small" fullWidth
+                  defaultValue={link?.value?.[column?.value?.value || 'value'] || ''}
+                  onChange={async (e) => {
+                    console.log(1);
+                    if (!link?.value) return;
+                    console.log(2);
+                    await client.mutate(generateSerial({
+                      actions: [
+                        generateMutation({
+                          tableName: `table${column.from_id}`, operation: 'update',
+                          variables: { where: { link_id: { _eq: link.id } }, _set: { [column?.value?.value || 'value']: e.target.value } },
+                        }),
+                      ],
+                      name: 'UPDATE_VALUE',
+                    }));
+                  }}
+                />
+              </>;
+            })}
           </> : <>
             <Button
               size="small" variant="outlined" fullWidth
-              onClick={() => insertBoolExpD()}
+              onClick={async () => {
+                setValueInserted(true);
+                await client.mutate(generateSerial({
+                  actions: [
+                    generateMutation({
+                      tableName: `table${columns[0].from_id}`, operation: 'insert',
+                      variables: { objects: { link_id: link.id } },
+                    }),
+                  ],
+                  name: 'UPDATE_VALUE',
+                }));
+              }}
             >
-              + bool_exp
+              insert value
             </Button>
           </>}
-        </Grid>
+        </Grid>}
       </Grid>
     </CardActions>
   </Card>;

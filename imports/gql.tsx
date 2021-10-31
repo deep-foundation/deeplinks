@@ -90,6 +90,7 @@ export const deleteLink = (id: number) => {
     name: 'DELETE_LINK',
   });
 }
+
 export const insertString = (link_id: number, value: string) => {
   return generateSerial({
     actions: [
@@ -121,39 +122,6 @@ export const deleteString = (id: number) => {
       }),
     ],
     name: 'DELETE_STRING',
-  });
-}
-export const insertNumber = (link_id: number, value: number) => {
-  return generateSerial({
-    actions: [
-      generateMutation({
-        tableName: 'number', operation: 'insert',
-        variables: { objects: { link_id, value } },
-      }),
-    ],
-    name: 'INSERT_NUMBER',
-  });
-}
-export const updateNumber = (id: number, value: number) => {
-  return generateSerial({
-    actions: [
-      generateMutation({
-        tableName: 'number', operation: 'update',
-        variables: { where: { id: { _eq: id } }, _set: { value: value } },
-      }),
-    ],
-    name: 'UPDATE_NUMBER',
-  });
-}
-export const deleteNumber = (id: number) => {
-  return generateSerial({
-    actions: [
-      generateMutation({
-        tableName: 'number', operation: 'delete',
-        variables: { where: { id: { _eq: id } } },
-      }),
-    ],
-    name: 'DELETE_NUMBER',
   });
 }
 
