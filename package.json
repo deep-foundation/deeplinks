@@ -14,7 +14,7 @@
     "@apollo/client": "^3.3.19",
     "@capacitor-community/electron": "^4.0.3",
     "@capacitor/core": "^3.2.3",
-    "@deepcase/deeplinks": "0.0.49",
+    "@deepcase/deeplinks": "0.0.50",
     "@deepcase/hasura": "0.0.33",
     "@deepcase/materialized-path": "0.0.29",
     "@graphiql/toolkit": "^0.2.2",
