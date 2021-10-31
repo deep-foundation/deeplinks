@@ -8,33 +8,33 @@ export interface IPackagerExportOptions {
   packageLinkId: number;
 }
 
-export interface IPackagerCursor {
-  packageName: string;
-  linkName: string;
+export interface IPackagerSelector {
+  package: string;
+  id: number;
+  any?: any;
 }
 
-export interface IPackagerLink extends Link<any> {
-  string: {
-    id: number;
-    value: string;
-  };
-}
+export interface IPackagerLink {
+  id: number;
+  _id?: number;
 
+  from_id: number;
+  to_id: number;
+  type_id: number;
+
+  value: any;
+}
+export interface IPackagerLinkLinked extends Link<any> {
+  value: any;
+}
 export interface IPackagerError {
   message: string;
 }
 
 export interface IPackagerPackage {
-  packageName?: string;
-  version?: string;
-  links: {
-    id?: number;
-    from_id?: number;
-    to_id?: number;
-    type_id?: number;
-
-    value?: any;
-  }[];
+  package?: string;
+  links: IPackagerLink[];
+  dependencies?: { [localId:number]: IPackagerSelector };
   strict?: boolean;
   errors?: IPackagerError[];
 }
@@ -47,10 +47,39 @@ export class Packager {
     // @ts-ignore
     global.packager = this;
   }
-  async loadPackageLinks(options: IPackagerExportOptions): Promise<LinksResult<IPackagerLink>> {
+  async loadPackageLinks(options: IPackagerExportOptions): Promise<LinksResult<IPackagerLinkLinked>> {
     const result = await this.client.query(generateQuery({
       queries: [
-        generateQueryData({ tableName: 'links', returning: 'id type_id from_id to_id value', variables: { where: {
+        generateQueryData({ tableName: 'links', returning: `
+          id type_id from_id to_id value
+          type {
+            id value
+            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+          from {
+            id
+            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+          to {
+            id
+            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+        `, variables: { where: {
           _or: [
             { id: { _eq: options.packageLinkId } },
             { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } },
@@ -83,24 +112,41 @@ export class Packager {
     }
     return result;
   }
-  parseGlobalLinks(globalLinks: LinksResult<IPackagerLink>, options: IPackagerExportOptions, pckg: IPackagerPackage) {
+  async parseGlobalLinks(globalLinks: LinksResult<IPackagerLinkLinked>, options: IPackagerExportOptions, pckg: IPackagerPackage) {
     let counter = 1;
+    const dependencies = {};
+    const dependencedPackages = {};
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
-      if (!!link.type_id && !globalLinks.byId[link.type_id]) pckg.errors.push({ message: `Link ${link.id} use as type_id ${link.type_id} which is outside the package.` });
-      if (!!link.from_id && !globalLinks.byId[link.from_id]) pckg.errors.push({ message: `Link ${link.id} use as from_id ${link.from_id} which is outside the package.` });
-      if (!!link.to_id && !globalLinks.byId[link.to_id]) pckg.errors.push({ message: `Link ${link.id} use as to_id ${link.to_id} which is outside the package.` });
+      if (!!link.type_id && !globalLinks.byId[link.type_id]) {
+        if (!dependencedPackages[link?.type?.contains?.[0]?.package?.id]) {
+          dependencedPackages[link?.type?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.type?.contains?.[0]?.package?.id });
+        }
+        const dep = { id: dependencedPackages[link?.type?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.type_id)?.id, package: link?.type?.contains?.[0]?.package?.value?.value };
+        link.type_id = counter++;
+        dependencies[link.type_id] = dep;
+      }
+      if (!!link.from_id && !globalLinks.byId[link.from_id]) {
+        if (!dependencedPackages[link?.from?.contains?.[0]?.package?.id]) {
+          dependencedPackages[link?.from?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.from?.contains?.[0]?.package?.id });
+        }
+        const dep = { id: dependencedPackages[link?.from?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.from_id)?.id, package: link?.from?.contains?.[0]?.package?.value?.value };
+        link.from_id = counter++;
+        dependencies[link.from_id] = dep;
+      }
+      if (!!link.to_id && !globalLinks.byId[link.to_id]) {
+        if (!dependencedPackages[link?.to?.contains?.[0]?.package?.id]) {
+          dependencedPackages[link?.to?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.to?.contains?.[0]?.package?.id });
+        }
+        const dep = { id: dependencedPackages[link?.to?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.to_id)?.id, package: link?.to?.contains?.[0]?.package?.value?.value };
+        link.to_id = counter++;
+        dependencies[link.to_id] = dep;
+      }
     }
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
-      // if (link.type_id === 1) {
-        // if (!link?.string?.value) pckg.errors.push({ message: `Link ${link.id} is broken, link.string.value does not exists.` });
-        // else {
-        //   link.id = link.string.value;
-        // }
-      // } else {
-        link.id = counter++;
-      // }
+      link._id = link.id;
+      link.id = counter++;
       for (let li = 0; li < link.out.length; li++) {
         const _link = link.out[li];
         _link.from_id = link.id;
@@ -113,30 +159,29 @@ export class Packager {
         const _link = link.typed[li];
         _link.type_id = link.id;
       }
-      pckg.links.push({
+      const { id: __id, link_id: __link_id, ...value } = link.value;
+      const newLink: IPackagerLink = {
         id: link.id,
+        _id: link._id,
         type_id: link.type_id,
         from_id: link.from_id,
         to_id: link.to_id,
-        value: link?.value,
-      });
+        value,
+      };
+      pckg.links.push(newLink);
     }
+    pckg.dependencies = dependencies;
   }
   async exportPackage(options: IPackagerExportOptions) {
     const globalLinks = await this.loadPackageLinks(options);
-    console.log(globalLinks);
-    const pckgLink = globalLinks.types?.[29]?.[0];
-    const packageName = pckgLink?.string?.value;
+    const pckgLink = globalLinks.types?.[32]?.[0];
+    const packageName = pckgLink?.value?.value;
     const pckg = {
-      packageName,
-      version: '',
+      package: packageName,
       links: [],
       errors: [],
     };
-    // if (typeof(packageName) !== 'string') {
-    //   pckg.errors.push({ message: 'Package is broken, name not founded in pckgLink.string.value.' });
-    // }
-    this.parseGlobalLinks(globalLinks, options, pckg);
+    await this.parseGlobalLinks(globalLinks, options, pckg);
     return pckg;
   }
   async importPackage(pckg: IPackagerPackage) {
@@ -161,7 +206,6 @@ export class Packager {
         actions: [insertMutation('links', { objects })],
         name: 'IMPORT_PACKAGE_LINKS',
       }));
-      console.log({ ...objects, id: mutateResult?.data?.m0?.returning?.[0]?.id });
       if (mutateResult?.errors) {
         errors.push(mutateResult?.errors);
         break;
@@ -184,12 +228,14 @@ export class Packager {
     if (!errors.length) {
       const tables = await this.loadTypesTablesHash(sorted.filter(l => l.type_id === 1).map(l => l.id));
       const actions = sorted.filter(l => l._mutated && !!tables[l.type_id]).map(l => insertMutation(`table${tables[l.type_id]}`, { objects: { link_id: l.id, ...l.value } }));
-      const insertValuesResult = await this.client.mutate(generateSerial({
-        actions,
-        name: 'IMPORT_PACKAGE_LINKS',
-      }));
-      if (insertValuesResult?.errors) {
-        errors.push(insertValuesResult?.errors);
+      if (actions?.length) {
+        const insertValuesResult = await this.client.mutate(generateSerial({
+          actions,
+          name: 'IMPORT_PACKAGE_LINKS',
+        }));
+        if (insertValuesResult?.errors) {
+          errors.push(insertValuesResult?.errors);
+        }
       }
     }
     if (errors.length) {

@@ -63,8 +63,10 @@ export const generateMutation = ({
     const args = [];
     for (let f = 0; f < fields.length; f++) {
       const field = fields[f];
-      defs.push(`$${field + index}: ${fieldTypes[field]}`);
-      args.push(`${field}: $${field}${index}`);
+      if (variables[field]) {
+        defs.push(`$${field + index}: ${fieldTypes[field]}`);
+        args.push(`${field}: $${field}${index}`);
+      }
     }
     const resultAlias = `${alias}${typeof(index) === 'number' ? index : ''}`;
     const resultReturning = `returning { ${returning} }`;

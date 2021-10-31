@@ -46,9 +46,10 @@ export const up = async () => {
       name: `${TABLE_NAME}__tables`,
     },
   });
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; result json; BEGIN
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; exists int; result json; BEGIN
     SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=31 AND "to_id"=link."type_id";
-    IF (tableId IS NOT NULL) THEN
+    SELECT COUNT(id) FROM "links__tables" INTO exists WHERE name='table' || tableId || '';
+    IF (tableId IS NOT NULL AND exists = 1) THEN
         EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || tableId) || ' as t WHERE link_id=' || link."id" || ' LIMIT 1' INTO result;
         RETURN result->0;
     END IF;
@@ -245,7 +246,7 @@ export const down = async () => {
     },
   });
   if (!!tables.length) await api.sql(sql`
-    ${tables.map(table => `DROP TABLE ${table[1]} CASCADE;`)}
+    ${tables.map(table => `DROP TABLE IF EXISTS ${table[1]} CASCADE;`).join('')}
   `);
   await api.sql(sql`
     DROP TABLE ${TABLE_NAME}__tables CASCADE;
