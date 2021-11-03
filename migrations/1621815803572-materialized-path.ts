@@ -126,7 +126,7 @@ export const up = async () => {
   await api.sql(trigger.upTriggerInsert());
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
     IF (NEW."type_id" IN (22,23,24)) THEN
-      PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*)
+      PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
     END IF;
     RETURN NEW;
