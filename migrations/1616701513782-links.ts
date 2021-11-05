@@ -1,6 +1,7 @@
 import { HasuraApi } from '@deepcase/hasura/api';
 import { sql } from '@deepcase/hasura/sql';
 import Debug from 'debug';
+import { GLOBAL_ID_TABLE_VALUE } from '../imports/global-ids';
 
 const debug = Debug('deepcase:deeplinks:migrations:links');
 
@@ -47,7 +48,7 @@ export const up = async () => {
     },
   });
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; exists int; result json; BEGIN
-    SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=31 AND "to_id"=link."type_id";
+    SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=${GLOBAL_ID_TABLE_VALUE} AND "to_id"=link."type_id";
     SELECT COUNT(id) FROM "links__tables" INTO exists WHERE name='table' || tableId || '';
     IF (tableId IS NOT NULL AND exists = 1) THEN
         EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || tableId) || ' as t WHERE link_id=' || link."id" || ' LIMIT 1' INTO result;

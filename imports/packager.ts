@@ -1,102 +1,125 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
+import { GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
-import { LinksResult, Link, minilinks } from './minilinks';
+import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
 
-export interface IPackagerExportOptions {
-  packageLinkId: number;
-}
+export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
 
-export interface IPackagerSelector {
-  package: string;
-  id: number;
-  any?: any;
-}
-
-export interface IPackagerLink {
-  id: number;
-  _id?: number;
-
-  from_id: number;
-  to_id: number;
-  type_id: number;
-
-  value: any;
-}
-export interface IPackagerLinkLinked extends Link<any> {
-  value: any;
-}
-export interface IPackagerError {
-  message: string;
-}
-
-export interface IPackagerPackage {
+export interface PackagerPackage {
   package?: string;
-  links: IPackagerLink[];
-  dependencies?: { [localId:number]: IPackagerSelector };
+  data: PackagerPackageItem[];
   strict?: boolean;
-  errors?: IPackagerError[];
+  errors?: PackagerError[];
 }
 
-const delay = (time) => new Promise(r => setTimeout(() => r(true), time));
+export interface PackagerPackageItem {
+  id: number | string;
+  type?: number | string;
+  from?: number | string;
+  to?: number | string;
+  value?: PackagerValue;
+}
+
+export interface PackagerValue {
+  [key: string]: any;
+}
+
+export type PackagerError = any;
+
+export interface PackagerImportResult {
+  errors?: PackagerError[];
+}
+
+export type PackagerMutated = { [index: number]: boolean };
+
+/** Deserialize pckg data to links list with local numerical ids. */
+export function deserialize(
+  pckg: PackagerPackage,
+  errors: PackagerError[] = [],
+): {
+  data: PackagerPackageItem[];
+  errors?: PackagerError[];
+ } {
+  // clone for now hert pckg object
+  const data: PackagerPackageItem[] = pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined }));
+  const containsHash: { [key: string]: PackagerPackageItem } = {};
+  let id = 1;
+  // string id field to numeric ids
+  for (let l = 0; l < data.length; l++) {
+    const item = data[l];
+    if (item.type) {
+      containsHash[item.id] = item;
+      item.id = id++;
+    }
+  }
+  // type, from, to fields to numeric ids
+  for (let l = 0; l < data.length; l++) {
+    const item = data[l];
+    if (!item.type && item.id) item.id = containsHash[item.id]?.id;
+    if (item.type) item.type = containsHash[item.type]?.id;
+    if (item.from) item.from = containsHash[item.from]?.id || 0;
+    if (item.to) item.to = containsHash[item.to]?.id || 0;
+  }
+  // create contains links
+  const containsArray = Object.keys(containsHash);
+  for (let c = 0; c < containsArray.length; c++) {
+    const contain = containsArray[c];
+    data.push({
+      id: id++,
+      type: containsHash?.['Contain']?.id,
+      from: containsHash?.['package']?.id,
+      to: containsHash[contain]?.id,
+      value: { value: contain },
+    });
+  }
+  return { data, errors };
+}
+
+/** Generate inserting order for links and values. */
+export function sort(
+  pckg: PackagerPackage,
+  data: PackagerPackageItem[],
+  errors: PackagerError[] = [],
+) {
+  let sorted = [];
+  if (pckg.strict) {
+    sorted = data;
+  } else {
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      if (item?.type) {
+        const first = sorted.findIndex((l, index) => l.from == item.id || l.to == item.id || l.type == item.id);
+        const max = sorted.reduce((p, l, index) => l.id == item.type || l.id == item.from || l.id === item.to ? index : p, 0);
+        sorted.splice((!!~first && first < max ? first : max) + 1, 0, item);
+      } else {
+        const max = sorted.reduce((p, l, index) => l.id == item.id ? index : p, 0);
+        sorted.splice((max) + 1, 0, item);
+      }
+    }
+  }
+  return { sorted };
+}
+
 export class Packager {
+  pckg: PackagerPackage;
   client: ApolloClient<any>;
   constructor(client: ApolloClient<any>) {
     this.client = client;
     // @ts-ignore
     global.packager = this;
   }
-  async loadPackageLinks(options: IPackagerExportOptions): Promise<LinksResult<IPackagerLinkLinked>> {
-    const result = await this.client.query(generateQuery({
-      queries: [
-        generateQueryData({ tableName: 'links', returning: `
-          id type_id from_id to_id value
-          type {
-            id value
-            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
-              id
-              package: from {
-                id value
-              }
-            }
-          }
-          from {
-            id
-            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
-              id
-              package: from {
-                id value
-              }
-            }
-          }
-          to {
-            id
-            contains: in(where: { type_id: { _eq: 13 }, from: { type_id: { _eq: 32 } } }) {
-              id
-              package: from {
-                id value
-              }
-            }
-          }
-        `, variables: { where: {
-          _or: [
-            { id: { _eq: options.packageLinkId } },
-            { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } },
-            { in: { type_id: { _eq: 13 }, from: { id: { _eq: options.packageLinkId } } } },
-          ]
-        } } }),
-      ],
-      name: 'LOAD_PACKAGE_LINKS',
-    }));
-    return minilinks((result)?.data?.q0);
-  }
-  async loadTypesTablesHash(types: number[]): Promise<{ [type: string]: string }> {
+
+  /**
+   * Fetch tables names by type names.
+   */
+  async fetchTypeToTablesHash(types: number[]): Promise<{ [type: string]: string }> {
     const q = await this.client.query(generateQuery({
       queries: [
-        generateQueryData({ tableName: 'links', returning: 'id values: out(where: { type_id: { _eq: 31 } }) { id: to_id }', variables: { where: {
-          type_id: { _eq: 29 },
-          out: { type_id: { _eq: 31 }, to_id: { _in: types } },
+        generateQueryData({ tableName: 'links', returning: `id values: out(where: { type_id: { _eq: ${GLOBAL_ID_TABLE_VALUE} } }) { id: to_id }`, variables: { where: {
+          type_id: { _eq: GLOBAL_ID_TABLE },
+          out: { type_id: { _eq: GLOBAL_ID_TABLE_VALUE }, to_id: { _in: types } },
         } } }),
       ],
       name: 'LOAD_TYPES_TABLES_HASH',
@@ -112,137 +135,83 @@ export class Packager {
     }
     return result;
   }
-  async parseGlobalLinks(globalLinks: LinksResult<IPackagerLinkLinked>, options: IPackagerExportOptions, pckg: IPackagerPackage) {
-    let counter = 1;
-    const dependencies = {};
-    const dependencedPackages = {};
-    for (let l = 0; l < globalLinks.links.length; l++) {
-      const link = globalLinks.links[l];
-      if (!!link.type_id && !globalLinks.byId[link.type_id]) {
-        if (!dependencedPackages[link?.type?.contains?.[0]?.package?.id]) {
-          dependencedPackages[link?.type?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.type?.contains?.[0]?.package?.id });
-        }
-        const dep = { id: dependencedPackages[link?.type?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.type_id)?.id, package: link?.type?.contains?.[0]?.package?.value?.value };
-        link.type_id = counter++;
-        dependencies[link.type_id] = dep;
-      }
-      if (!!link.from_id && !globalLinks.byId[link.from_id]) {
-        if (!dependencedPackages[link?.from?.contains?.[0]?.package?.id]) {
-          dependencedPackages[link?.from?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.from?.contains?.[0]?.package?.id });
-        }
-        const dep = { id: dependencedPackages[link?.from?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.from_id)?.id, package: link?.from?.contains?.[0]?.package?.value?.value };
-        link.from_id = counter++;
-        dependencies[link.from_id] = dep;
-      }
-      if (!!link.to_id && !globalLinks.byId[link.to_id]) {
-        if (!dependencedPackages[link?.to?.contains?.[0]?.package?.id]) {
-          dependencedPackages[link?.to?.contains?.[0]?.package?.id] = await this.exportPackage({ packageLinkId: +link?.to?.contains?.[0]?.package?.id });
-        }
-        const dep = { id: dependencedPackages[link?.to?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.to_id)?.id, package: link?.to?.contains?.[0]?.package?.value?.value };
-        link.to_id = counter++;
-        dependencies[link.to_id] = dep;
-      }
-    }
-    for (let l = 0; l < globalLinks.links.length; l++) {
-      const link = globalLinks.links[l];
-      link._id = link.id;
-      link.id = counter++;
-      for (let li = 0; li < link.out.length; li++) {
-        const _link = link.out[li];
-        _link.from_id = link.id;
-      }
-      for (let li = 0; li < link.in.length; li++) {
-        const _link = link.in[li];
-        _link.to_id = link.id;
-      }
-      for (let li = 0; li < link.typed.length; li++) {
-        const _link = link.typed[li];
-        _link.type_id = link.id;
-      }
-      const { id: __id, link_id: __link_id, ...value } = link.value;
-      const newLink: IPackagerLink = {
-        id: link.id,
-        _id: link._id,
-        type_id: link.type_id,
-        from_id: link.from_id,
-        to_id: link.to_id,
-        value,
-      };
-      pckg.links.push(newLink);
-    }
-    pckg.dependencies = dependencies;
-  }
-  async exportPackage(options: IPackagerExportOptions) {
-    const globalLinks = await this.loadPackageLinks(options);
-    const pckgLink = globalLinks.types?.[32]?.[0];
-    const packageName = pckgLink?.value?.value;
-    const pckg = {
-      package: packageName,
-      links: [],
-      errors: [],
-    };
-    await this.parseGlobalLinks(globalLinks, options, pckg);
-    return pckg;
-  }
-  async importPackage(pckg: IPackagerPackage) {
-    const links = minilinks(pckg.links);
-    let sorted = [];
-    if (pckg.strict) {
-      sorted.push(...links.links);
-    } else { 
-      for (let i = 0; i < links.links.length; i++) {
-        const link = links.links[i];
-        const first = sorted.findIndex((l, index) => l.from_id == link.id || l.to_id == link.id || l.type_id == link.id);
-        const max = sorted.reduce((p, l, index) => l.id == link.type_id || l.id == link.from_id || l.id === link.to_id ? index : p, 0);
-        sorted.splice((!!~first && first < max ? first : max) + 1, 0, link);
-      }
-    }
-    const errors = [];
-    const ids = [];
-    for (let i = 0; i < sorted.length; i++) {
-      const link = sorted[i];
-      const objects = { type_id: link.type_id, from_id: link.from_id, to_id: link.to_id };
-      const mutateResult = await this.client.mutate(generateSerial({
-        actions: [insertMutation('links', { objects })],
+
+  /**
+   * Insert one item.
+   */
+  async insertItem(
+    items: PackagerPackageItem[],
+    item: PackagerPackageItem,
+    errors: PackagerError[],
+    mutated: PackagerMutated,
+  ) {
+    await delay(1000);
+    if (item.type) {
+      const linkInsert = await this.client.mutate(generateSerial({
+        actions: [insertMutation('links', { objects: { type_id: item.type, from_id: item.from, to_id: item.to } })],
         name: 'IMPORT_PACKAGE_LINKS',
       }));
-      if (mutateResult?.errors) {
-        errors.push(mutateResult?.errors);
-        break;
-      } else {
-        ids.push(mutateResult?.data?.m0?.returning?.[0]?.id);
-        link.id = mutateResult?.data?.m0?.returning?.[0]?.id;
-        link._mutated = true;
-        for (let li = 0; li < link.out.length; li++) {
-          link.out[li].from_id = link.id;
-        }
-        for (let li = 0; li < link.in.length; li++) {
-          link.in[li].to_id = link.id;
-        }
-        for (let li = 0; li < link.typed.length; li++) {
-          link.typed[li].type_id = link.id;
-        }
-      }
+      if (linkInsert?.errors) errors.push(linkInsert?.errors);
+      mutated[item.id] = true;
+      const id = linkInsert?.data?.m0?.returning?.[0]?.id;
+      items.filter(i => i.id === item.id).forEach(l => l.id = id);
+      items.filter(i => i.from === item.id).forEach(l => l.from = id);
+      items.filter(i => i.to === item.id).forEach(l => l.to = id);
+      items.filter(i => i.type === item.id).forEach(l => l.type = id);
+      item.id = id;
     }
-    await delay(3000);
-    if (!errors.length) {
-      const tables = await this.loadTypesTablesHash(sorted.filter(l => l.type_id === 1).map(l => l.id));
-      const actions = sorted.filter(l => l._mutated && !!tables[l.type_id]).map(l => insertMutation(`table${tables[l.type_id]}`, { objects: { link_id: l.id, ...l.value } }));
-      if (actions?.length) {
-        const insertValuesResult = await this.client.mutate(generateSerial({
-          actions,
+    if (item.value) {
+      await delay(1000);
+      const valueLink = items.find(i => i.id === item.id && !!i.type);
+      if (!valueLink) errors.push(`Link ${item.id} for value not founded.`);
+      else {
+        const tables = await this.fetchTypeToTablesHash([+valueLink.type]);
+        const valueInsert = await this.client.mutate(generateSerial({
+          actions: [insertMutation(`table${tables[valueLink.type]}`, { objects: { link_id: valueLink.id, ...item.value } })],
           name: 'IMPORT_PACKAGE_LINKS',
         }));
-        if (insertValuesResult?.errors) {
-          errors.push(insertValuesResult?.errors);
-        }
+        if (valueInsert?.errors) errors.push(valueInsert?.errors);
       }
     }
-    if (errors.length) {
-      const mutateResult = await this.client.mutate(generateSerial({
-        actions: [deleteMutation('links', { where: { id: { _in: ids } } })],
-        name: 'REVERT_IMPORT_PACKAGE_LINKS',
-      }));
+  }
+
+  async insertItems(
+    pckg: PackagerPackage,
+    data: PackagerPackageItem[],
+    errors: PackagerError[] = [],
+    mutated: { [index: number]: boolean } = {},
+  ) {
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      await this.insertItem(data, item, errors, mutated);
+      if (errors.length) return;
     }
+  }
+
+  /**
+   * Import into system pckg.
+   */
+  async import(pckg: PackagerPackage): Promise<PackagerImportResult> {
+    const errors = [];
+
+    const { data } = deserialize(pckg, errors);
+    if (errors.length) return { errors };
+    const { sorted } = sort(pckg, data, errors);
+    if (errors.length) return { errors };
+    await this.insertItems(pckg, sorted, errors);
+    if (errors.length) return { errors };
+
+    return { errors };
+  }
+  /**
+   * Export from system pckg by package link id.
+   */
+  async export(): Promise<PackagerPackage> {
+    return {
+      package: '',
+      data: [],
+      strict: false,
+      errors: [],
+    };
   }
 }

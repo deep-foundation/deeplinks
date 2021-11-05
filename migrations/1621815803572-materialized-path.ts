@@ -34,12 +34,13 @@ const trigger = Trigger({
     mpInclude."type_id" IN (22,23,24) AND
     mpInclude."to_id" = NEW.type_id AND
     mpInclude."from_id" = mpGroup."id" AND
-    mpGroup."type_id" = 21
+    mpGroup."type_id" = 21 AND
+    ((groupid != 0 AND groupid = mpGroup."id") OR groupid = 0)
     ) LOOP`,
-    iteratorInsertEnd: 'END LOOP;',
-    groupInsert: 'groupRow."id"',
-    iteratorDeleteDeclare: 'groupRow RECORD;',
-    iteratorDeleteBegin: `FOR groupRow IN (
+  iteratorInsertEnd: 'END LOOP;',
+  groupInsert: 'groupRow."id"',
+  iteratorDeleteDeclare: 'groupRow RECORD;',
+  iteratorDeleteBegin: `FOR groupRow IN (
     SELECT
     mpGroup.*
     FROM
