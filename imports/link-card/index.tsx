@@ -13,6 +13,7 @@ import { LinkCardRule } from './types/rule';
 import { LinkCardPackage } from './types/package';
 import { Packager } from '@deepcase/deeplinks/imports/packager';
 import { generateMutation, generateSerial } from '@deepcase/deeplinks/imports/gql';
+import { GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_COLUMN, GLOBAL_ID_TABLE_VALUE } from '@deepcase/deeplinks/imports/global-ids';
 
 export function LinkCard({
   link,
@@ -34,11 +35,11 @@ export function LinkCard({
 
   const columnsQ = useSubscription(LINKS_WHERE, { variables: {
     where: {
-      type_id: { _eq: 30 },
+      type_id: { _eq: GLOBAL_ID_TABLE_COLUMN },
       from: {
-        type_id: { _eq: 29 },
+        type_id: { _eq: GLOBAL_ID_TABLE },
         out: {
-          type_id: { _eq: 31 },
+          type_id: { _eq: GLOBAL_ID_TABLE_VALUE },
           to_id: { _eq: link?.type_id },
         },
       },

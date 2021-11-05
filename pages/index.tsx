@@ -1,11 +1,12 @@
 import { useSubscription } from '@apollo/client';
 import { Capacitor } from '@capacitor/core';
+import { GLOBAL_ID_CONTAIN } from '@deepcase/deeplinks/imports/global-ids';
 import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
 import { useLocalStore } from '@deepcase/store/local';
 import { useQueryStore } from '@deepcase/store/query';
-import { Add, Clear, Colorize, Visibility as VisibilityOn , VisibilityOff } from '@material-ui/icons';
+import { Add, Clear, Colorize, LaptopChromebook, Visibility as VisibilityOn , VisibilityOff } from '@material-ui/icons';
 import { useTheme } from '@material-ui/styles';
 import { useDebounceCallback } from '@react-hook/debounce';
 import axios from 'axios';
@@ -167,6 +168,7 @@ export function PageContent() {
   const [operation, setOperation] = useOperation();
   const [connected, setConnected] = useEngineConnected();
   const [screenFind, setScreenFind] = useQueryStore<any>('screen-find', '');
+  const [labelsConfig, setLabelsConfig] = useQueryStore('labels-config', { types: true, contains: false, values: true });
 
   const classes = useStyles({ connected });
 
@@ -219,8 +221,10 @@ export function PageContent() {
         const label: (string|number)[] = [];
         if (!isTransparent) {
           label.push(link.id);
-          if (link?.type?.value?.value) label.push(`${link?.type?.value?.value}`);
-          if (link?.value?.value) label.push(`value: ${link?.value?.value}`);
+          if (labelsConfig?.values && link?.value?.value) label.push(`value:${link.value.value}`);
+          if (labelsConfig?.contains) (link?.inByType?.[GLOBAL_ID_CONTAIN] || []).forEach(link => label.push(`name:${link?.value?.value}`));
+          if (labelsConfig?.types) if (link?.type?.value?.value) label.push(`type:${link?.type?.value?.value}`);
+          // if (link?.value?.value) label.push(`value: ${link?.value?.value}`);
         }
 
         nodes.push({ ...prevNodes?.[link.id], id: link.id, link, label });
@@ -242,7 +246,7 @@ export function PageContent() {
       return { nodes, links };
     }
     return prevD.current;
-  }, [s, containerVisible, container]);
+  }, [s, containerVisible, container, labelsConfig]);
   prevD.current = outD;
   
   const mouseMove = useRef<any>();
@@ -405,7 +409,7 @@ export function PageContent() {
     <div className={classes.overlay}>
       <div className={classes.top}>
         <PaperPanel className={cn(classes.topPaper, classes.transitionHoverScale)}>
-          <Grid container justify="space-between">
+          <Grid container justify="space-between" spacing={1}>
             <Grid item>
               <Grid container spacing={1}>
                 <Grid item>
@@ -413,6 +417,13 @@ export function PageContent() {
                     <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
                     <Button color={showMP ? 'primary' : 'default'} onClick={() => setShowMP(!showMP)}>mp</Button>
                     <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button color={labelsConfig.types ? 'primary' : 'default'} onClick={() => setLabelsConfig({ ...labelsConfig, types: !labelsConfig.types })}>types</Button>
+                    <Button color={labelsConfig.values ? 'primary' : 'default'} onClick={() => setLabelsConfig({ ...labelsConfig, values: !labelsConfig.values })}>values</Button>
+                    <Button color={labelsConfig.contains ? 'primary' : 'default'} onClick={() => setLabelsConfig({ ...labelsConfig, contains: !labelsConfig.contains })}>contains</Button>
                   </ButtonGroup>
                 </Grid>
                 <Grid item>

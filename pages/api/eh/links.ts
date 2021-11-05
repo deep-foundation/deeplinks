@@ -8,6 +8,7 @@ import { gql } from 'apollo-boost';
 import vm from 'vm';
 
 import { generatePermissionWhere, permissions } from '@deepcase/deeplinks/imports/permission';
+import { GLOBAL_ID_TABLE_VALUE, GLOBAL_ID_TABLE_COLUMN } from '@deepcase/deeplinks/imports/global-ids';
 
 const SCHEMA = 'public';
 
@@ -34,6 +35,7 @@ export default async (req, res) => {
       const newRow = event?.data?.new;
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
+      console.log({ current });
 
       // type |== type: handle ==> INSERT symbol (ONLY)
       const handleStringResult = await client.query({ query: gql`query SELECT_STRING_HANDLE($typeId: bigint) { string(where: {
@@ -58,16 +60,16 @@ export default async (req, res) => {
       }
 
       // tables
-      if (typeId === 31) {
+      if (typeId === 6) {
         const results = await client.query({ query: gql`query SELECT_TABLE_STRUCTURE($tableId: bigint) {
           links(where: {id: {_eq: $tableId}}) {
             id
-            values: out_aggregate(where: {type_id: {_eq: 31}}) {
+            values: out_aggregate(where: {type_id: {_eq: ${GLOBAL_ID_TABLE_VALUE}}}) {
               aggregate {
                 count
               }
             }
-            columns: out(where: {type_id: {_eq: 30}}) {
+            columns: out(where: {type_id: {_eq: ${GLOBAL_ID_TABLE_COLUMN}}}) {
               id column_id: to_id value
             }
           }
