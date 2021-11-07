@@ -1,6 +1,6 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
-import { GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE } from './global-ids';
+import { GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
 import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
@@ -34,6 +34,14 @@ export interface PackagerImportResult {
 
 export type PackagerMutated = { [index: number]: boolean };
 
+export interface PackagerExportOptions {
+  packageLinkId: number;
+}
+
+export interface PackagerLink extends Link<any> {
+  value?: any;
+}
+
 /** Deserialize pckg data to links list with local numerical ids. */
 export function deserialize(
   pckg: PackagerPackage,
@@ -45,13 +53,13 @@ export function deserialize(
   // clone for now hert pckg object
   const data: PackagerPackageItem[] = pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined }));
   const containsHash: { [key: string]: PackagerPackageItem } = {};
-  let id = 1;
+  let counter = 1;
   // string id field to numeric ids
   for (let l = 0; l < data.length; l++) {
     const item = data[l];
     if (item.type) {
       containsHash[item.id] = item;
-      item.id = id++;
+      item.id = counter++;
     }
   }
   // type, from, to fields to numeric ids
@@ -67,7 +75,7 @@ export function deserialize(
   for (let c = 0; c < containsArray.length; c++) {
     const contain = containsArray[c];
     data.push({
-      id: id++,
+      id: counter++,
       type: containsHash?.['Contain']?.id,
       from: containsHash?.['package']?.id,
       to: containsHash[contain]?.id,
@@ -133,23 +141,21 @@ export class Packager {
         if (types.includes(type)) result[type] = table.id;
       }
     }
+    console.log(types, result);
     return result;
   }
 
-  /**
-   * Insert one item.
-   */
   async insertItem(
     items: PackagerPackageItem[],
     item: PackagerPackageItem,
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
-    await delay(1000);
+    await delay(2000);
     if (item.type) {
       const linkInsert = await this.client.mutate(generateSerial({
-        actions: [insertMutation('links', { objects: { type_id: item.type, from_id: item.from, to_id: item.to } })],
-        name: 'IMPORT_PACKAGE_LINKS',
+        actions: [insertMutation('links', { objects: { type_id: item.type, from_id: item.from || 0, to_id: item.to || 0 } })],
+        name: 'IMPORT_PACKAGE_LINK',
       }));
       if (linkInsert?.errors) errors.push(linkInsert?.errors);
       mutated[item.id] = true;
@@ -168,7 +174,7 @@ export class Packager {
         const tables = await this.fetchTypeToTablesHash([+valueLink.type]);
         const valueInsert = await this.client.mutate(generateSerial({
           actions: [insertMutation(`table${tables[valueLink.type]}`, { objects: { link_id: valueLink.id, ...item.value } })],
-          name: 'IMPORT_PACKAGE_LINKS',
+          name: 'IMPORT_PACKAGE_VALUE',
         }));
         if (valueInsert?.errors) errors.push(valueInsert?.errors);
       }
@@ -203,15 +209,137 @@ export class Packager {
 
     return { errors };
   }
+
+  async selectLinks(options: PackagerExportOptions): Promise<LinksResult<PackagerLink>> {
+    const result = await this.client.query(generateQuery({
+      queries: [
+        generateQueryData({ tableName: 'links', returning: `
+          id type_id from_id to_id value
+          type {
+            id value
+            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+          from {
+            id
+            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+          to {
+            id
+            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+              id
+              package: from {
+                id value
+              }
+            }
+          }
+        `, variables: { where: {
+          _or: [
+            { id: { _eq: options.packageLinkId } },
+            { type: { value: { _contains: { value: GLOBAL_NAME_CONTAIN } } }, from: { id: { _eq: options.packageLinkId } } },
+            { in: { type: { value: { _contains: { value: GLOBAL_NAME_CONTAIN } } }, from: { id: { _eq: options.packageLinkId } } } },
+          ]
+        } } }),
+      ],
+      name: 'LOAD_PACKAGE_LINKS',
+    }));
+    return minilinks((result)?.data?.q0);
+  }
+
+  async serialize(globalLinks: LinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {
+    let counter = 1;
+    // const dependencies = {};
+    // const dependencedPackages = {};
+    // for (let l = 0; l < globalLinks.links.length; l++) {
+    //   const link = globalLinks.links[l];
+    //   if (!!link.type_id && !globalLinks.byId[link.type_id]) {
+    //     if (!dependencedPackages[link?.type?.contains?.[0]?.package?.id]) {
+    //       dependencedPackages[link?.type?.contains?.[0]?.package?.id] = await this.export({ packageLinkId: +link?.type?.contains?.[0]?.package?.id });
+    //     }
+    //     const dep = { id: dependencedPackages[link?.type?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.type_id)?.id, package: link?.type?.contains?.[0]?.package?.value?.value };
+    //     link.type_id = counter++;
+    //     dependencies[link.type_id] = dep;
+    //   }
+    //   if (!!link.from_id && !globalLinks.byId[link.from_id]) {
+    //     if (!dependencedPackages[link?.from?.contains?.[0]?.package?.id]) {
+    //       dependencedPackages[link?.from?.contains?.[0]?.package?.id] = await this.export({ packageLinkId: +link?.from?.contains?.[0]?.package?.id });
+    //     }
+    //     const dep = { id: dependencedPackages[link?.from?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.from_id)?.id, package: link?.from?.contains?.[0]?.package?.value?.value };
+    //     link.from_id = counter++;
+    //     dependencies[link.from_id] = dep;
+    //   }
+    //   if (!!link.to_id && !globalLinks.byId[link.to_id]) {
+    //     if (!dependencedPackages[link?.to?.contains?.[0]?.package?.id]) {
+    //       dependencedPackages[link?.to?.contains?.[0]?.package?.id] = await this.export({ packageLinkId: +link?.to?.contains?.[0]?.package?.id });
+    //     }
+    //     const dep = { id: dependencedPackages[link?.to?.contains?.[0]?.package?.id]?.links?.find(l => l?._id === link.to_id)?.id, package: link?.to?.contains?.[0]?.package?.value?.value };
+    //     link.to_id = counter++;
+    //     dependencies[link.to_id] = dep;
+    //   }
+    // }
+    const containsByTo = {};
+    const links = [];
+    for (let l = 0; l < globalLinks.links.length; l++) {
+      const link = globalLinks.links[l];
+      if (link.type?.value?.value === GLOBAL_NAME_CONTAIN) {
+        containsByTo[+link.to_id] = link;
+      } else links.push(link);
+    }
+    for (let l = 0; l < links.length; l++) {
+      const link = links[l];
+      link._id = link.id;
+      link.id = containsByTo[+link.id]?.value?.value ? containsByTo[+link.id].value.value : counter++;
+      for (let li = 0; li < link.out.length; li++) {
+        const _link = link.out[li];
+        _link.from_id = link.id;
+      }
+      for (let li = 0; li < link.in.length; li++) {
+        const _link = link.in[li];
+        _link.to_id = link.id;
+      }
+      for (let li = 0; li < link.typed.length; li++) {
+        const _link = link.typed[li];
+        _link.type_id = link.id;
+      }
+      let value;
+      if (link?.value) {
+        const { id: __id, link_id: __link_id, ..._value } = link.value;
+        value = _value;
+      }
+      const newLink: PackagerPackageItem = {
+        id: link.id,
+        type: link.type_id,
+      };
+      if (link.from) newLink.from = link.from.id;
+      if (link.to) newLink.to = link.to.id;
+      if (value) newLink.value = value;
+      pckg.data.push(newLink);
+    }
+  }
+
   /**
    * Export from system pckg by package link id.
    */
-  async export(): Promise<PackagerPackage> {
-    return {
-      package: '',
+  async export(options: PackagerExportOptions): Promise<PackagerPackage> {
+    const globalLinks = await this.selectLinks(options);
+    const packageLink = globalLinks.links?.find(l => l?.type?.value?.value === GLOBAL_NAME_PACKAGE);
+    const packageName = packageLink?.value?.value;
+    const pckg = {
+      package: packageName,
       data: [],
       strict: false,
       errors: [],
     };
+    await this.serialize(globalLinks, options, pckg);
+    return pckg;
   }
 }

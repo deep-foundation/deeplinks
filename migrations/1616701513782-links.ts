@@ -47,7 +47,7 @@ export const up = async () => {
       name: `${TABLE_NAME}__tables`,
     },
   });
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS json STABLE AS $function$ DECLARE tableId bigint; exists int; result json; BEGIN
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS jsonb STABLE AS $function$ DECLARE tableId bigint; exists int; result json; BEGIN
     SELECT from_id FROM "${TABLE_NAME}" INTO tableId WHERE "type_id"=${GLOBAL_ID_TABLE_VALUE} AND "to_id"=link."type_id";
     SELECT COUNT(id) FROM "links__tables" INTO exists WHERE name='table' || tableId || '';
     IF (tableId IS NOT NULL AND exists = 1) THEN

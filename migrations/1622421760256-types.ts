@@ -27,6 +27,12 @@ const corePckg = {
     { id: 'String', type: 'Type' },
     { id: 'Number', type: 'Type' },
     { id: 'JSON', type: 'Type' },
+    { id: 'Any', type: 'Type' },
+
+    { id: 'Promise', type: 'Type' },
+    { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' },
+    { id: 'Resolve', type: 'Type', from: 'Promise', to: 'Any' },
+    { id: 'Reject', type: 'Type', from: 'Promise', to: 'Any' },
 
     { id: 'typeTable', type: 'Table' },
     { id: 'typeTableColumn', type: 'Column', from: 'typeTable', to: 'String' },
@@ -37,6 +43,12 @@ const corePckg = {
     { id: 'Table', value: { value: 'Table' } },
     { id: 'Column', value: { value: 'Column' } },
     { id: 'Value', value: { value: 'Value' } },
+    { id: 'Any', value: { value: 'Any' } },
+
+    { id: 'Promise', value: { value: 'Promise' } },
+    { id: 'Then', value: { value: 'Then' } },
+    { id: 'Resolve', value: { value: 'Resolve' } },
+    { id: 'Reject', value: { value: 'Reject' } },
 
     { id: 'columnTable', type: 'Table' },
     { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' },
@@ -50,8 +62,6 @@ const corePckg = {
     { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'Column' },
     { id: 'packageTableColumnLocals', type: 'Column', from: 'packageTable', to: 'Column', value: { value: 'locals' } },
     { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
-
-    { id: 'Any', type: 'Type', value: { value: 'Any' } },
 
     { id: 'Selector', type: 'Type', value: { value: 'Selector' } },
     { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
@@ -75,10 +85,10 @@ const corePckg = {
     { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' },
     { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' },
 
-    { id: 'Insert', type: 'Operation', value: { value: 'Insert' } },
-    { id: 'Update', type: 'Operation', value: { value: 'Update' } },
-    { id: 'Delete', type: 'Operation', value: { value: 'Delete' } },
-    { id: 'Select', type: 'Operation', value: { value: 'Select' } },
+    { id: 'Insert', type: 'Operation' },
+    { id: 'Update', type: 'Operation' },
+    { id: 'Delete', type: 'Operation' },
+    { id: 'Select', type: 'Operation' },
 
     { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' },
     { id: 'Handle', type: 'Type', value: { value: 'Handle' }, from: 'Type', to: 'Operation' },
