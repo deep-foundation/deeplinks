@@ -1,6 +1,6 @@
 import { useSubscription } from '@apollo/client';
 import { Capacitor } from '@capacitor/core';
-import { GLOBAL_ID_CONTAIN } from '@deepcase/deeplinks/imports/global-ids';
+import { GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PROMISE, GLOBAL_ID_THEN, GLOBAL_ID_RESOLVED, GLOBAL_ID_REJECTED } from '@deepcase/deeplinks/imports/global-ids';
 import { minilinks } from '@deepcase/deeplinks/imports/minilinks';
 import { useTokenController } from '@deepcase/deeplinks/imports/react-token';
 import { useApolloClient } from '@deepcase/react-hasura/use-apollo-client';
@@ -159,6 +159,7 @@ export function PageContent() {
   const [flyPanel, setFlyPanel] = useState<any>();
 
   const [showTypes, setShowTypes] = useQueryStore('show-types', false);
+  const [promises, setPromises] = useQueryStore('promises', false);
   const [showMP, setShowMP] = useQueryStore('show-mp', false);
   const [clickSelect, setClickSelect] = useState(false);
   const [selectedLinks, setSelectedLinks] = useSelectedLinks();
@@ -202,9 +203,9 @@ export function PageContent() {
   const s = useSubscription(query, { variables });
 
   const prevD = useRef<any>({ nodes: [], links: [] });
+  const ml = useMemo(() => minilinks(s?.data?.links), [s]);
   const outD = useMemo(() => {
     if (s?.data?.links) {
-      const ml = minilinks(s?.data?.links);
       const prev = prevD.current;
       var prevNodes = prev?.nodes?.reduce(function(map, node) {
         map[node.id] = node;
@@ -216,7 +217,11 @@ export function PageContent() {
 
       for (let l = 0; l < ml.links.length; l++) {
         const link = ml.links[l];
-        const isTransparent = link.type_id === 13 && link?.from?.type_id === 32 && !containerVisible;
+        const isTransparent = link.type_id === GLOBAL_ID_CONTAIN && link?.from?.type_id === GLOBAL_ID_PACKAGE && !containerVisible;
+
+        if (!promises && [GLOBAL_ID_PROMISE, GLOBAL_ID_THEN, GLOBAL_ID_RESOLVED, GLOBAL_ID_REJECTED].includes(link.type_id)) {
+          continue;
+        }
 
         const label: (string|number)[] = [];
         if (!isTransparent) {
@@ -224,7 +229,6 @@ export function PageContent() {
           if (labelsConfig?.values && link?.value?.value) label.push(`value:${link.value.value}`);
           if (labelsConfig?.contains) (link?.inByType?.[GLOBAL_ID_CONTAIN] || []).forEach(link => label.push(`name:${link?.value?.value}`));
           if (labelsConfig?.types) if (link?.type?.value?.value) label.push(`type:${link?.type?.value?.value}`);
-          // if (link?.value?.value) label.push(`value: ${link?.value?.value}`);
         }
 
         nodes.push({ ...prevNodes?.[link.id], id: link.id, link, label });
@@ -238,7 +242,12 @@ export function PageContent() {
       }
       for (let l = 0; l < ml.links.length; l++) {
         const link = ml.links[l];
-        const isTransparent = link.type_id === 13 && link?.from?.type_id === 32 && !containerVisible;
+        const isTransparent = link.type_id === GLOBAL_ID_CONTAIN && link?.from?.type_id === GLOBAL_ID_PACKAGE && !containerVisible;
+
+        if (!promises && [GLOBAL_ID_PROMISE, GLOBAL_ID_THEN, GLOBAL_ID_RESOLVED, GLOBAL_ID_REJECTED].includes(link.type_id)) {
+          continue;
+        }
+
         if (link.from) links.push({ id: `from--${link.id}`, source: link.id, target: link.from_id || link.id, link, type: 'from', color: isTransparent ? 'transparent' : '#a83232' });
         if (link.to) links.push({ id: `to--${link.id}`, source: link.id, target: link.to_id || link.id, link, type: 'to', color: isTransparent ? 'transparent' : '#32a848' });
       }
@@ -362,11 +371,12 @@ export function PageContent() {
       width={drawerSize.width}
       height={drawerSize.height}
       nodeCanvasObject={(node, ctx, globalScale) => {
+        const _l = node.label || [];
+
         const isSelected = screenFind ? (
-          node?.link?.id.toString() === screenFind || !!(node?.link?.value?.value && node?.link?.value?.value?.includes(screenFind)) || !!(node?.link?.type?.value?.value && node?.link?.type?.value?.value?.includes(screenFind))
+          node?.link?.id.toString() === screenFind || !!(_l?.join(' ')?.includes(screenFind))
         ) : selectedLinks?.find(id => id === node?.link?.id);
 
-        const _l = node.label || [];
         const fontSize = 12/globalScale;
         ctx.font = `${fontSize}px Sans-Serif`;
         let textWidth = 0;
@@ -417,6 +427,11 @@ export function PageContent() {
                     <Button color={showTypes ? 'primary' : 'default'} onClick={() => setShowTypes(!showTypes)}>types</Button>
                     <Button color={showMP ? 'primary' : 'default'} onClick={() => setShowMP(!showMP)}>mp</Button>
                     <Button color={clickSelect ? 'primary' : 'default'} onClick={() => setClickSelect(!clickSelect)}>select</Button>
+                  </ButtonGroup>
+                </Grid>
+                <Grid item>
+                  <ButtonGroup variant="outlined">
+                    <Button color={promises ? 'primary' : 'default'} onClick={() => setPromises(!promises)}>promises</Button>
                   </ButtonGroup>
                 </Grid>
                 <Grid item>
@@ -531,7 +546,7 @@ export function PageContent() {
             </Grid>
             <Grid item xs={12}><LinkCard link={{ id: 1, type: 1 }}/></Grid>
             {selectedLinks.map((id) => {
-              const link = (s?.data?.links || []).find(l => l.id === id);
+              const link = ml.byId[id];
               return <Grid key={id} item xs={12} style={{ position: 'relative' }}>
                 <LinkCard link={link}/>
                 <IconButton

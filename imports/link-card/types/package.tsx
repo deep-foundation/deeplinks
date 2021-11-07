@@ -19,7 +19,7 @@ export function LinkCardPackage({
         size="small" variant="outlined" fullWidth
         onClick={() => {
           // @ts-ignore
-          packager.exportPackage({ packageLinkId: link.id }).then(console.log, console.log);
+          packager.export({ packageLinkId: link.id }).then(console.log, console.log);
         }}
       >
         export
