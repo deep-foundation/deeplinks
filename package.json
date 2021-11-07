@@ -1,6 +1,6 @@
 {
   "name": "@deepcase/deeplinks",
-  "version": "0.0.51",
+  "version": "0.0.52",
   "scripts": {
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
