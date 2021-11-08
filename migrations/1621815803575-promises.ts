@@ -1,14 +1,14 @@
-import { generateApolloClient } from '@deepcase/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
-import { up as upTable, down as downTable } from '@deepcase/materialized-path/table';
-import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
-import { Trigger } from '@deepcase/materialized-path/trigger';
+import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
+import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
+import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { generatePermissionWhere, permissions } from '../imports/permission';
-import { sql } from '@deepcase/hasura/sql';
+import { sql } from '@deep-foundation/hasura/sql';
 import { GLOBAL_ID_PROMISE, GLOBAL_ID_REJECTED, GLOBAL_ID_RESOLVED, GLOBAL_ID_THEN } from '../imports/global-ids';
 
-const debug = Debug('deepcase:deeplinks:migrations:promises');
+const debug = Debug('deeplinks:migrations:promises');
 
 export const up = async () => {
   debug('up');

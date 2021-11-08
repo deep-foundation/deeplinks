@@ -1,7 +1,7 @@
-# deepcase deeplinks
+# deep-foundation deeplinks
 
-[![npm version](https://badge.fury.io/js/%40deepcase%2Fdeeplinks.svg)](https://badge.fury.io/js/%40deepcase%2Fdeeplinks) 
-[![develop deepcase](https://badgen.net/badge/develop/deepcase)](https://github.com/deepcase/deepcase)
+[![npm version](https://badge.fury.io/js/%40deep-foundation%2Fdeeplinks.svg)](https://badge.fury.io/js/%40deep-foundation%2Fdeeplinks) 
+[![develop deep-foundation](https://badgen.net/badge/develop/deep-foundation)](https://github.com/deep-foundation/dev)
 
 ## install
 

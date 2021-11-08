@@ -1,7 +1,7 @@
-import { HasuraApi } from '@deepcase/hasura/api';
+import { HasuraApi } from '@deep-foundation/hasura/api';
 import Debug from 'debug';
 
-const debug = Debug('deepcase:deeplinks:migrations:jwt');
+const debug = Debug('deeplinks:migrations:jwt');
 
 const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,

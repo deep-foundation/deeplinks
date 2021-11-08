@@ -1,10 +1,10 @@
-import { sql } from '@deepcase/hasura/sql';
+import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bool-exp';
 
-const debug = Debug('deepcase:deeplinks:migrations:model-permissions');
+const debug = Debug('deeplinks:migrations:model-permissions');
 
 export const TABLE_NAME = 'links';
 export const REPLACE_PATTERN_ID = '777777777777';

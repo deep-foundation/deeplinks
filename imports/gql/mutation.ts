@@ -1,6 +1,6 @@
 import Debug from 'debug';
 
-const debug = Debug('deepcase:deeplinks:gql:mutation');
+const debug = Debug('deeplinks:gql:mutation');
 
 const fieldsInputs = (tableName): IGenerateMutationFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,

@@ -1,4 +1,4 @@
-import { generateApolloClient } from '@deepcase/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
 import { generateMutation, generateSerial, insertMutation } from '../imports/gql';
 import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
@@ -6,7 +6,7 @@ import times from 'lodash/times';
 import { time } from 'console';
 import { Packager } from '../imports/packager';
 
-const debug = Debug('deepcase:deeplinks:migrations:types');
+const debug = Debug('deeplinks:migrations:types');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,

@@ -1,13 +1,13 @@
-import { generateApolloClient } from '@deepcase/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
-import { up as upTable, down as downTable } from '@deepcase/materialized-path/table';
-import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
-import { Trigger } from '@deepcase/materialized-path/trigger';
+import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
+import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
+import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { generatePermissionWhere, permissions } from '../imports/permission';
-import { sql } from '@deepcase/hasura/sql';
+import { sql } from '@deep-foundation/hasura/sql';
 
-const debug = Debug('deepcase:deeplinks:migrations:materialized-path');
+const debug = Debug('deeplinks:migrations:materialized-path');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
