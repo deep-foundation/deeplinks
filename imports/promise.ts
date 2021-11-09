@@ -5,10 +5,9 @@ import { generateQuery, generateQueryData, generateSerial, insertMutation } from
 export interface PromiseOptions {
   id: number;
   client: ApolloClient<any>;
-
 }
 
-export function awaitPromise(options) {
+export function awaitPromise(options: PromiseOptions) {
   const id = options.id;
   const client: ApolloClient<any> = options.client;
   return new Promise((res, rej) => {
@@ -59,8 +58,8 @@ export function awaitPromise(options) {
   });
 };
 
-export async function findPromise(options) {
-  const result = await this.client.query(generateQuery({
+export async function findPromise(options: PromiseOptions) {
+  const result = await options.client.query(generateQuery({
     queries: [
       generateQueryData({ tableName: 'links', returning: `id`, variables: { where: {
         type: { value: { _contains: { value: GLOBAL_NAME_PROMISE } } },
@@ -75,8 +74,8 @@ export async function findPromise(options) {
   return result?.data?.q0;
 }
 
-export async function findLinkByValue(options, value: string) {
-  const result = await this.client.query(generateQuery({
+export async function findLinkByValue(options: PromiseOptions, value: string) {
+  const result = await options.client.query(generateQuery({
     queries: [
       generateQueryData({ tableName: 'links', returning: `id`, variables: { where: {
         value: { _contains: { value: value } },
@@ -87,7 +86,7 @@ export async function findLinkByValue(options, value: string) {
   return result?.data?.q0;
 }
 
-export async function reject(options): Promise<boolean> {
+export async function reject(options: PromiseOptions): Promise<boolean> {
   const rej = await findLinkByValue(options, GLOBAL_NAME_REJECTED);
   const promise = await findPromise(options);
   if (promise) {
@@ -100,7 +99,7 @@ export async function reject(options): Promise<boolean> {
   return false;
 }
 
-export async function resolve(options): Promise<boolean> {
+export async function resolve(options: PromiseOptions): Promise<boolean> {
   const res = await findLinkByValue(options, GLOBAL_NAME_RESOLVED);
   const promise = await findPromise(options);
   if (promise) {
