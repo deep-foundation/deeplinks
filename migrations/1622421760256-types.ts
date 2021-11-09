@@ -50,8 +50,6 @@ const corePckg = {
     { id: 'Resolve', value: { value: 'Resolve' } },
     { id: 'Reject', value: { value: 'Reject' } },
 
-    { id: 'Reserved', value: { value: 'Reserved' } },
-
     { id: 'columnTable', type: 'Table' },
     { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' },
     { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' },
@@ -104,7 +102,7 @@ const corePckg = {
     { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' },
     { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' },
     
-    { id: 'Reserved', type: 'Type' },
+    { id: 'Reserved', type: 'Type', value: { value: 'Reserved' } },
   ],
   errors: [],
   dependencies: {},

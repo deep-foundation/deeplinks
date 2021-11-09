@@ -74,7 +74,7 @@ export const up = async () => {
     type: 'create_cron_trigger',
     args: {
       name: 'reserved_links_cleaner',
-      webhook: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/reserved/cleaner`,
+      webhook: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/api/reserved/cleaner`,
       schedule: '0 22 * * 1-5',
       include_in_metadata: true,
       payload: {},
@@ -101,7 +101,7 @@ export const up = async () => {
           fields: [
             {
               name: 'ids',
-              type: '[String!]!'
+              type: '[bigint!]!'
             }
           ]
         }
@@ -124,48 +124,7 @@ export const up = async () => {
           },
         ],
         output_type: 'reserveResponse',
-        handler: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/reserved/webhook`
-      }
-    }
-  });
-  debug('permissions');
-  await api.query({
-    type : 'pg_create_select_permission',
-    args : {
-        table : LINKS_TABLE_NAME,
-        role : 'link',
-        permission : {
-          columns : [],
-        }
-    }
-  });
-  await api.query({
-    type: 'create_insert_permission',
-    args: {
-      table: LINKS_TABLE_NAME,
-      role: 'link',
-      permission: {
-        columns: [],
-      }
-    }
-  });
-  await api.query({
-    type: 'create_update_permission',
-    args: {
-      table: LINKS_TABLE_NAME,
-      role: 'link',
-      permission: {
-        columns: [],
-      }
-    }
-  });
-  await api.query({
-    type: 'create_delete_permission',
-    args: {
-      table: LINKS_TABLE_NAME,
-      role: 'link',
-      permission: {
-        columns: [],
+        handler: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/api/reserved/webhook`
       }
     }
   });
@@ -173,35 +132,6 @@ export const up = async () => {
 
 export const down = async () => {
   debug('down');
-  debug('permissions');
-  await api.query({
-    type : 'pg_drop_select_permission',
-    args : {
-        table : LINKS_TABLE_NAME,
-        role : 'link',
-    }
-  });
-  await api.query({
-    type : 'pg_drop_insert_permission',
-    args : {
-        table : LINKS_TABLE_NAME,
-        role : 'link',
-    }
-  });
-  await api.query({
-    type : 'pg_drop_update_permission',
-    args : {
-        table : LINKS_TABLE_NAME,
-        role : 'link',
-    }
-  });
-  await api.query({
-    type : 'pg_drop_delete_permission',
-    args : {
-        table : LINKS_TABLE_NAME,
-        role : 'link',
-    }
-  });
   debug('action');
   await api.query({
     type:'drop_action',
