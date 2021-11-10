@@ -62,6 +62,7 @@ export const up = async () => {
         IF EXISTS( SELECT RL.id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 0 AND LINKS.id = NEW.id) THEN
           DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
           INSERT INTO ${LINKS_TABLE_NAME} (id, type_id, from_id, to_id) VALUES (NEW.id, NEW.type_id, NEW.from_id, NEW.to_id);
+          RETURN NULL;
         ELSE
         RAISE EXCEPTION 'Illegal INSERT with id --> %', NEW.id USING HINT = 'Use reserve action before inserting link with id';
         END IF;
