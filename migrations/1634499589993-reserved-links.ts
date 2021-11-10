@@ -60,7 +60,8 @@ export const up = async () => {
     BEGIN
       IF NEW.id IS NOT NULL THEN
         IF EXISTS( SELECT id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 0
-          UPDATE ${LINKS_TABLE_NAME} SET type_id = NEW.type_id, from_id = NEW.from_id, to_id = NEW.to_id WHERE id = NEW.id;
+          DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
+          INSERT INTO ${LINKS_TABLE_NAME} (id, type_id, from_id, to_id) VALUES (NEW.id, NEW.type_id, NEW.from_id, NEW.to_id);
         ELSE
         RAISE EXCEPTION 'Illegal INSERT with id --> %', NEW.id USING HINT = 'Use reserve action before inserting link with id';
         END IF;
