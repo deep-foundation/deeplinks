@@ -1,6 +1,6 @@
-import { HasuraApi } from '@deepcase/hasura/api';
-import { generateApolloClient } from '@deepcase/hasura/client';
-import { sql } from '@deepcase/hasura/sql';
+import { HasuraApi } from '@deep-foundation/hasura/api';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { sql } from '@deep-foundation/hasura/sql';
 import { permissions } from './permission';
 
 export interface ITypeTableStringOptions {

@@ -16,4 +16,5 @@ export const GLOBAL_NAME_RESOLVED='Resolved';
 export const GLOBAL_ID_REJECTED=14;
 export const GLOBAL_NAME_REJECTED='Rejected';
 
+export const GLOBAL_ID_CONTAIN=34;
 export const GLOBAL_NAME_CONTAIN='Contain';

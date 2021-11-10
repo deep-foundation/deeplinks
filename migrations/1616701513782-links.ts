@@ -1,9 +1,9 @@
-import { HasuraApi } from '@deepcase/hasura/api';
-import { sql } from '@deepcase/hasura/sql';
+import { HasuraApi } from '@deep-foundation/hasura/api';
+import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 import { GLOBAL_ID_TABLE_VALUE } from '../imports/global-ids';
 
-const debug = Debug('deepcase:deeplinks:migrations:links');
+const debug = Debug('deeplinks:migrations:links');
 
 export const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,

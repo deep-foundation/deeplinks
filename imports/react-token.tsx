@@ -1,7 +1,7 @@
 import React from 'react';
 import uniqid from 'uniqid';
-import { TokenContext } from '@deepcase/react-hasura/token-context';
-import { useLocalStore } from '@deepcase/store/local';
+import { TokenContext } from '@deep-foundation/react-hasura/token-context';
+import { useLocalStore } from '@deep-foundation/store/local';
 
 export function useTokenController() {
   return useLocalStore('dc-dg-token', '');
