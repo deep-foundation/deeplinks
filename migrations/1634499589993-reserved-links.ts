@@ -1,9 +1,5 @@
-import { generateApolloClient } from '@deepcase/hasura/client';
 import Debug from 'debug';
-import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
-import { Trigger } from '@deepcase/materialized-path/trigger';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from '../../../../deeplinks/migrations/1616701513782-links';
-import { generatePermissionWhere, permissions } from '../../../../deeplinks/imports/permission';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { sql } from '@deepcase/hasura/sql';
 
 const debug = Debug('deepcase:deeplinks:migrations:reserved-links');
