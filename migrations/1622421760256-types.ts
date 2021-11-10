@@ -101,6 +101,8 @@ const corePckg = {
     { id: 'userTree', type: 'Tree' },
     { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' },
     { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' },
+    
+    { id: 'Reserved', type: 'Type', value: { value: 'Reserved' } },
   ],
   errors: [],
   dependencies: {},
