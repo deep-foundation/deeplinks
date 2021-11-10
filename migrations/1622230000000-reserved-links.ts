@@ -1,8 +1,8 @@
 import Debug from 'debug';
 import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { sql } from '@deepcase/hasura/sql';
+import { sql } from '@deep-foundation/hasura/sql';
 
-const debug = Debug('deepcase:deeplinks:migrations:reserved-links');
+const debug = Debug('deep-foundation:deeplinks:migrations:reserved-links');
 
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_RL_TABLE = process.env.MIGRATIONS_RL_TABLE || 'rl_example__links__reserved';
