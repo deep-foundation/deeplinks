@@ -21,6 +21,10 @@ export const upTable = async ({
 } = {}) => {
   await api.sql(sql`
     CREATE TABLE ${SCHEMA}."${RL_TABLE}" (id bigint PRIMARY KEY, created_at ${DEFAULT_DATE_TYPE_SQL}, reserved_ids jsonb, user_id bigint${customColumns});
+    CREATE SEQUENCE ${RL_TABLE}_id_seq
+    AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+    ALTER SEQUENCE ${RL_TABLE}_id_seq OWNED BY ${SCHEMA}."${RL_TABLE}".id;
+    ALTER TABLE ONLY ${SCHEMA}."${RL_TABLE}" ALTER COLUMN id SET DEFAULT nextval('${RL_TABLE}_id_seq'::regclass);
   `);
   await api.query({
     type: 'track_table',
