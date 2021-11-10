@@ -59,7 +59,7 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() RETURNS TRIGGER AS $trigger$
     BEGIN
       IF NEW.id IS NOT NULL THEN
-        IF EXISTS( SELECT RL.id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id::text::jsonb AND LINKS.type_id = 0 AND LINKS.id = NEW.id) THEN
+        IF EXISTS( SELECT FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id::text::jsonb AND LINKS.type_id = 0 AND LINKS.id = NEW.id) IS NOT NULL THEN
           DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
           INSERT INTO ${LINKS_TABLE_NAME} (id, type_id, from_id, to_id) VALUES (NEW.id, NEW.type_id, NEW.from_id, NEW.to_id);
           RETURN NULL;
@@ -69,7 +69,7 @@ export const up = async () => {
       END IF;
       RETURN NEW;
     END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger BEFORE INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger BEFORE INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW WHEN (pg_trigger_depth() < 1) EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function();`);
 
   debug('cron_trigger');
   await api.query({
