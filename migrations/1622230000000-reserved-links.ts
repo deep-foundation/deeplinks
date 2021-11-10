@@ -68,7 +68,7 @@ export const up = async () => {
       END IF;
       RETURN NEW;
     END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger INSTEAD OF INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger BEFORE INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function();`);
 
   debug('cron_trigger');
   await api.query({
