@@ -1,9 +1,5 @@
-import { generateApolloClient } from '@deepcase/hasura/client';
 import Debug from 'debug';
-import { up as upRels, down as downRels } from '@deepcase/materialized-path/relationships';
-import { Trigger } from '@deepcase/materialized-path/trigger';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from '../../../../deeplinks/migrations/1616701513782-links';
-import { generatePermissionWhere, permissions } from '../../../../deeplinks/imports/permission';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { sql } from '@deepcase/hasura/sql';
 
 const debug = Debug('deepcase:deeplinks:migrations:reserved-links');
@@ -11,7 +7,7 @@ const debug = Debug('deepcase:deeplinks:migrations:reserved-links');
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_RL_TABLE = process.env.MIGRATIONS_RL_TABLE || 'rl_example__links__reserved';
 const DEFAULT_DATE_TYPE_SQL = process.env.MIGRATIONS_DATE_TYPE_SQL || 'timestamp';
-const DEFAULT_RL_CHECK_TIME = process.env.MIGRATIONS_RL_CHECK_TIME || 60 * 60 * 1000;
+const DEFAULT_RL_CRON_SHEDULE = process.env.DEFAULT_RL_CRON_SHEDULE || '0 22 * * *';
 const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER || 'http://localhost:3007';
 
 export const RL_TABLE_NAME = 'reserved';
@@ -21,6 +17,10 @@ export const upTable = async ({
 } = {}) => {
   await api.sql(sql`
     CREATE TABLE ${SCHEMA}."${RL_TABLE}" (id bigint PRIMARY KEY, created_at ${DEFAULT_DATE_TYPE_SQL}, reserved_ids jsonb, user_id bigint${customColumns});
+    CREATE SEQUENCE ${RL_TABLE}_id_seq
+    AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+    ALTER SEQUENCE ${RL_TABLE}_id_seq OWNED BY ${SCHEMA}."${RL_TABLE}".id;
+    ALTER TABLE ONLY ${SCHEMA}."${RL_TABLE}" ALTER COLUMN id SET DEFAULT nextval('${RL_TABLE}_id_seq'::regclass);
   `);
   await api.query({
     type: 'track_table',
@@ -59,8 +59,9 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() RETURNS TRIGGER AS $trigger$
     BEGIN
       IF NEW.id IS NOT NULL THEN
-        IF EXISTS( SELECT id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 26
-          UPDATE ${LINKS_TABLE_NAME} SET type_id = NEW.type_id, from_id = NEW.from_id, to_id = NEW.to_id WHERE id = NEW.id;
+        IF EXISTS( SELECT id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 0
+          DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
+          INSERT INTO ${LINKS_TABLE_NAME} (id, type_id, from_id, to_id) VALUES (NEW.id, NEW.type_id, NEW.from_id, NEW.to_id);
         ELSE
         RAISE EXCEPTION 'Illegal INSERT with id --> %', NEW.id USING HINT = 'Use reserve action before inserting link with id';
         END IF;
@@ -75,7 +76,7 @@ export const up = async () => {
     args: {
       name: 'reserved_links_cleaner',
       webhook: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/api/reserved/cleaner`,
-      schedule: '0 22 * * 1-5',
+      schedule: DEFAULT_RL_CRON_SHEDULE,
       include_in_metadata: true,
       payload: {},
       retry_conf: {
