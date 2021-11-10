@@ -1,7 +1,7 @@
 import { HasuraApi } from "@deepcase/hasura/api";
 
 export const generatePermissionWhere = (actionId: number) => {
-  return {"_and":[{"_or":[{"type_id":{"_eq":14}},{"type_id":{"_eq":1}},{"_by_item":{"_and":[{"path_item":{"in":{"from":{"in":{"from":{"_and":[{"type_id":{"_eq":9}},{"out":{"to":{"out":{"to_id":{"_eq":40}}},"type_id":{"_eq":10}}},{"out":{"to":{"out":{"to_id":{"_eq":15}}},"type_id":{"_eq":12}}}]},"type_id":{"_eq":11}},"type_id":{"_eq":7}},"type_id":{"_eq":8}}}}]}},{"_by_item":{"path_item_id":{"_eq":40}}}]},{"type_id":{"_neq":26}}]};
+  return {"_and":[{"_or":[{"type_id":{"_eq":14}},{"type_id":{"_eq":1}},{"_by_item":{"_and":[{"path_item":{"in":{"from":{"in":{"from":{"_and":[{"type_id":{"_eq":9}},{"out":{"to":{"out":{"to_id":{"_eq":40}}},"type_id":{"_eq":10}}},{"out":{"to":{"out":{"to_id":{"_eq":15}}},"type_id":{"_eq":12}}}]},"type_id":{"_eq":11}},"type_id":{"_eq":7}},"type_id":{"_eq":8}}}}]}},{"_by_item":{"path_item_id":{"_eq":40}}}]},{"type_id":{"_neq":0}}]};
 };
 
 export const permissions = async (api: HasuraApi, table: string, actions: {

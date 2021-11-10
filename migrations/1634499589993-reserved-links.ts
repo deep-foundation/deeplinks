@@ -59,7 +59,7 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() RETURNS TRIGGER AS $trigger$
     BEGIN
       IF NEW.id IS NOT NULL THEN
-        IF EXISTS( SELECT id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 26
+        IF EXISTS( SELECT id FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id AND LINKS.type_id = 0
           UPDATE ${LINKS_TABLE_NAME} SET type_id = NEW.type_id, from_id = NEW.from_id, to_id = NEW.to_id WHERE id = NEW.id;
         ELSE
         RAISE EXCEPTION 'Illegal INSERT with id --> %', NEW.id USING HINT = 'Use reserve action before inserting link with id';
