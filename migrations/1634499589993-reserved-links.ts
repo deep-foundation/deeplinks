@@ -11,7 +11,7 @@ const debug = Debug('deepcase:deeplinks:migrations:reserved-links');
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_RL_TABLE = process.env.MIGRATIONS_RL_TABLE || 'rl_example__links__reserved';
 const DEFAULT_DATE_TYPE_SQL = process.env.MIGRATIONS_DATE_TYPE_SQL || 'timestamp';
-const DEFAULT_RL_CHECK_TIME = process.env.MIGRATIONS_RL_CHECK_TIME || 60 * 60 * 1000;
+const DEFAULT_RL_CRON_SHEDULE = process.env.DEFAULT_RL_CRON_SHEDULE || '0 22 * * *';
 const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER || 'http://localhost:3007';
 
 export const RL_TABLE_NAME = 'reserved';
@@ -79,7 +79,7 @@ export const up = async () => {
     args: {
       name: 'reserved_links_cleaner',
       webhook: `${NEXT_PUBLIC_DEEPLINKS_SERVER}/api/reserved/cleaner`,
-      schedule: '0 22 * * 1-5',
+      schedule: DEFAULT_RL_CRON_SHEDULE,
       include_in_metadata: true,
       payload: {},
       retry_conf: {
