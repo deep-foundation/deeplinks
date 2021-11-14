@@ -17,7 +17,10 @@ const client = generateApolloClient({
 const corePckg = {
   package: "@deep-foundation/core@0.0.0",
   data: [
+    // 0
+
     { id: 'Type', type: 'Type' },
+    // 1
     { id: 'Package', type: 'Type' },
     { id: 'package', type: 'Package' },
     { id: 'Table', type: 'Type' },
@@ -28,49 +31,61 @@ const corePckg = {
     { id: 'Number', type: 'Type' },
     { id: 'JSON', type: 'Type' },
     { id: 'Any', type: 'Type' },
-
+    // 10
     { id: 'Promise', type: 'Type' },
     { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' },
-    { id: 'Resolve', type: 'Type', from: 'Promise', to: 'Any' },
-    { id: 'Reject', type: 'Type', from: 'Promise', to: 'Any' },
+    { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' },
+    { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' },
+
+    // ===
 
     { id: 'typeTable', type: 'Table' },
+    // 15
     { id: 'typeTableColumn', type: 'Column', from: 'typeTable', to: 'String' },
     { id: 'typeTableValue', type: 'Value', from: 'typeTable', to: 'Type' },
+    // 17
 
+    { id: 'tableTable', type: 'Table' },
+    { id: 'tableTableColumn', type: 'Column', from: 'tableTable', to: 'String' },
+    { id: 'tableTableValue', type: 'Value', from: 'tableTable', to: 'Table' },
+    // 20
+
+    { id: 'columnTable', type: 'Table' },
+    { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' },
+    { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' },
+    // 23
+
+    { id: 'packageTable', type: 'Table' },
+    { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' },
+    { id: 'packageTableColumnLocals', type: 'Column', from: 'packageTable', to: 'String', value: { value: 'locals' } },
+    { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
+    // 27
+
+    // ===
+
+    // ign
     { id: 'Type', value: { value: 'Type' } },
     { id: 'Package', value: { value: 'Package' } },
     { id: 'Table', value: { value: 'Table' } },
     { id: 'Column', value: { value: 'Column' } },
     { id: 'Value', value: { value: 'Value' } },
     { id: 'Any', value: { value: 'Any' } },
-
+    
     { id: 'Promise', value: { value: 'Promise' } },
     { id: 'Then', value: { value: 'Then' } },
-    { id: 'Resolve', value: { value: 'Resolve' } },
-    { id: 'Reject', value: { value: 'Reject' } },
-
-    { id: 'columnTable', type: 'Table' },
-    { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' },
-    { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' },
-
-    { id: 'tableTable', type: 'Table' },
-    { id: 'tableTableColumn', type: 'Column', from: 'tableTable', to: 'String' },
-    { id: 'tableTableValue', type: 'Value', from: 'tableTable', to: 'Table' },
-
-    { id: 'packageTable', type: 'Table' },
-    { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'Column' },
-    { id: 'packageTableColumnLocals', type: 'Column', from: 'packageTable', to: 'Column', value: { value: 'locals' } },
-    { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
-
+    { id: 'Resolved', value: { value: 'Resolved' } },
+    { id: 'Rejected', value: { value: 'Rejected' } },
+    // /ign
+    
     { id: 'Selector', type: 'Type', value: { value: 'Selector' } },
+    // 28
     { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
-
+    
     { id: 'Rule', type: 'Type', value: { value: 'Rule' } },
     { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' },
-
+    
     { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' },
 
     { id: 'containTable', type: 'Table' },
@@ -110,7 +125,11 @@ const corePckg = {
 export const up = async () => {
   debug('up');
   const packager = new Packager(client);
-  await packager.import(corePckg);
+  const { errors } = await packager.import(corePckg);
+  if (errors.length) {
+    console.log(errors);
+    throw new Error('Import error');
+  }
 };
 
 export const down = async () => {

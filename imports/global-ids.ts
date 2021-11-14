@@ -18,3 +18,6 @@ export const GLOBAL_NAME_REJECTED='Rejected';
 
 export const GLOBAL_ID_CONTAIN=34;
 export const GLOBAL_NAME_CONTAIN='Contain';
+
+export const DENIED_IDS = [0, 11, 12, 13, 14];
+export const ALLOWED_IDS = [6];
