@@ -82,6 +82,7 @@ const corePckg = {
     { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
     
     { id: 'Rule', type: 'Type', value: { value: 'Rule' } },
+    //30
     { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' },
@@ -92,15 +93,18 @@ const corePckg = {
     { id: 'containTableColumn', type: 'Column', from: 'containTable', to: 'String' },
     { id: 'containTableValue', type: 'Value', from: 'containTable', to: 'Contain' },
 
-    { id: 'User', type: 'Type', value: { value: 'Rule' } },
+    { id: 'User', type: 'Type', value: { value: 'User' } },
+    { id: 'admin', type: 'User' },
 
     { id: 'Operation', type: 'Type', value: { value: 'Operation' } },
+    // 40
 
     { id: 'operationTable', type: 'Table' },
     { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' },
     { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' },
 
     { id: 'Insert', type: 'Operation' },
+    // 44
     { id: 'Update', type: 'Operation' },
     { id: 'Delete', type: 'Operation' },
     { id: 'Select', type: 'Operation' },

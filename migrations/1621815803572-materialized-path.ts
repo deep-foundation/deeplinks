@@ -6,6 +6,7 @@ import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
+import { GLOBAL_ID_DELETE, GLOBAL_ID_INSERT, GLOBAL_ID_SELECT, GLOBAL_ID_UPDATE } from '../imports/global-ids';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
 
@@ -113,10 +114,10 @@ export const up = async () => {
   });
   await permissions(api, MP_TABLE_NAME);
   await permissions(api, LINKS_TABLE_NAME, {
-    select: generatePermissionWhere(15),
-    insert: {}, // generatePermissionWhere(16),
-    update: {}, // generatePermissionWhere(17),
-    delete: generatePermissionWhere(18),
+    select: generatePermissionWhere(GLOBAL_ID_SELECT),
+    insert: {}, // generatePermissionWhere(GLOBAL_ID_INSERT),
+    update: generatePermissionWhere(GLOBAL_ID_UPDATE),
+    delete: generatePermissionWhere(GLOBAL_ID_DELETE),
 
     columns: ['id','from_id','to_id','type_id'],
     computed_fields: ['value'],

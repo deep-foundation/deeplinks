@@ -1,7 +1,56 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
+import { GLOBAL_ID_ACTION, GLOBAL_ID_OBJECT, GLOBAL_ID_RULE, GLOBAL_ID_SELECTION, GLOBAL_ID_SELECTOR, GLOBAL_ID_SUBJECT, GLOBAL_ID_TYPE, GLOBAL_ID_USER } from "./global-ids";
 
-export const generatePermissionWhere = (actionId: number) => {
-  return {"_and":[{"_or":[{"type_id":{"_eq":14}},{"type_id":{"_eq":1}},{"_by_item":{"_and":[{"path_item":{"in":{"from":{"in":{"from":{"_and":[{"type_id":{"_eq":9}},{"out":{"to":{"out":{"to_id":{"_eq":40}}},"type_id":{"_eq":10}}},{"out":{"to":{"out":{"to_id":{"_eq":15}}},"type_id":{"_eq":12}}}]},"type_id":{"_eq":11}},"type_id":{"_eq":7}},"type_id":{"_eq":8}}}}]}},{"_by_item":{"path_item_id":{"_eq":40}}}]},{"type_id":{"_ne":0}}]};
+export const generatePermissionWhere = (actionId: number, _or = []) => {
+  return {
+    _and: [
+      {
+        _or: [
+          { type_id: { _eq: GLOBAL_ID_USER } },
+          { type_id: { _eq: GLOBAL_ID_TYPE } },
+          {
+            _by_item: { // parents
+              _and: [
+                {
+                  path_item: { // each
+                    in: { // selection
+                      from: { // selector
+                        in: { // object
+                          type_id: { _eq: GLOBAL_ID_OBJECT },
+                          from: { // rule
+                            _and: [
+                              { type_id: { _eq: GLOBAL_ID_RULE } },
+                              {
+                                out: {
+                                  type_id: { _eq: GLOBAL_ID_ACTION },
+                                  to: { out: { to_id: { _eq: actionId } } },
+                                },
+                              },
+                              {
+                                out: {
+                                  type_id: { _eq: GLOBAL_ID_SUBJECT },
+                                  to: { out: { to_id: { _eq: 'X-Hasura-User-Id' } } },
+                                },
+                              },
+                            ],
+                          },
+                        },
+                        type_id: { _eq: GLOBAL_ID_SELECTOR },
+                      },
+                      type_id: { _eq: GLOBAL_ID_SELECTION },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          { _by_item: { path_item_id: { _eq: GLOBAL_ID_USER } } },
+        ],
+      },
+      { type_id: { _ne: 0 } },
+      ..._or,
+    ],
+  };
 };
 
 export const permissions = async (api: HasuraApi, table: string, actions: {

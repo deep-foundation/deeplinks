@@ -24,8 +24,7 @@ const generateEnvs = (envs) => {
 };
 
 export async function call (options: IOptions) {
-  console.log('called', options);
-  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4(), JWT_SECRET: '"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}"' };
+  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   let envsString = generateEnvs(envs);
   try {
     if (options.operation === 'run') {

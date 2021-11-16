@@ -1,7 +1,7 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
 import Debug from 'debug';
-import { DENIED_IDS, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
+import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
 import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
@@ -267,7 +267,7 @@ export class Packager {
           id type_id from_id to_id value
           type {
             id value
-            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
               id
               package: from {
                 id value
@@ -276,7 +276,7 @@ export class Packager {
           }
           from {
             id
-            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
               id
               package: from {
                 id value
@@ -285,7 +285,7 @@ export class Packager {
           }
           to {
             id
-            contains: in(where: { type: { value: { _contains: { value: ${GLOBAL_NAME_CONTAIN} } } }, from: { type: { value: { _contains: { value: ${GLOBAL_NAME_PACKAGE} } } } } }) {
+            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
               id
               package: from {
                 id value
@@ -295,8 +295,8 @@ export class Packager {
         `, variables: { where: {
           _or: [
             { id: { _eq: options.packageLinkId } },
-            { type: { value: { _contains: { value: GLOBAL_NAME_CONTAIN } } }, from: { id: { _eq: options.packageLinkId } } },
-            { in: { type: { value: { _contains: { value: GLOBAL_NAME_CONTAIN } } }, from: { id: { _eq: options.packageLinkId } } } },
+            { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
+            { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
           ]
         } } }),
       ],
@@ -340,7 +340,7 @@ export class Packager {
     const links = [];
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
-      if (link.type?.value?.value === GLOBAL_NAME_CONTAIN) {
+      if (link.type_id === GLOBAL_ID_CONTAIN) {
         containsByTo[+link.to_id] = link;
       } else links.push(link);
     }
