@@ -27,6 +27,7 @@ export interface LinksResult<Link> {
 }
 
 export interface MinilinksGeneratorOptions {
+  id: 'id',
   type_id: 'type_id',
   type: 'type',
   typed: 'typed',
@@ -41,6 +42,7 @@ export interface MinilinksGeneratorOptions {
 }
 
 export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
+  id: 'id',
   type_id: 'type_id',
   type: 'type',
   typed: 'typed',
@@ -61,7 +63,7 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
     const links: L[] = [];
     for (let l = 0; l < linksArray.length; l++) {
       const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
-      byId[link.id] = link;
+      byId[link[options.id]] = link;
       types[link[options.type_id]] = types[link[options.type_id]] || [];
       types[link[options.type_id]].push(link);
       links.push(link);
@@ -72,17 +74,17 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
         link[options.type] = byId[link[options.type_id]];
         byId[link[options.type_id]][options.typed].push(link);
       }
-      if (byId[link.from_id]) {
-        link[options.from] = byId[link.from_id];
-        byId[link.from_id][options.out].push(link);
-        byId[link.from_id][options.outByType][link[options.type_id]] = byId[link.from_id][options.outByType][link[options.type_id]] || [];
-        byId[link.from_id][options.outByType][link[options.type_id]].push(link);
+      if (byId[link[options.from_id]]) {
+        link[options.from] = byId[link[options.from_id]];
+        byId[link[options.from_id]][options.out].push(link);
+        byId[link[options.from_id]][options.outByType][link[options.type_id]] = byId[link[options.from_id]][options.outByType][link[options.type_id]] || [];
+        byId[link[options.from_id]][options.outByType][link[options.type_id]].push(link);
       }
-      if (byId[link.to_id]) {
-        link[options.to] = byId[link.to_id];
-        byId[link.to_id][options.in].push(link);
-        byId[link.to_id][options.inByType][link[options.type_id]] = byId[link.to_id][options.inByType][link[options.type_id]] || [];
-        byId[link.to_id][options.inByType][link[options.type_id]].push(link);
+      if (byId[link[options.to_id]]) {
+        link[options.to] = byId[link[options.to_id]];
+        byId[link[options.to_id]][options.in].push(link);
+        byId[link[options.to_id]][options.inByType][link[options.type_id]] = byId[link[options.to_id]][options.inByType][link[options.type_id]] || [];
+        byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
       }
     }
     return {
