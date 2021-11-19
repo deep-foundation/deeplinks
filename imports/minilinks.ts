@@ -39,6 +39,7 @@ export interface MinilinksGeneratorOptions {
   in: 'in',
   inByType: 'inByType',
   outByType: 'outByType',
+  handler?: (link, result: any) => any;
 }
 
 export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
@@ -57,10 +58,10 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
 };
 
 export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
-  return function minilinks<L extends Link<number>>(linksArray = []): LinksResult<L> {
-    const types: { [id: number]: L[] } = {};
-    const byId: { [id: number]: L } = {};
-    const links: L[] = [];
+  return function minilinks<L extends Link<number>>(linksArray = [], memory: any = {}): LinksResult<L> {
+    const types: { [id: number]: L[] } = memory.types || {};
+    const byId: { [id: number]: L } = memory.byId || {};
+    const links: L[] = memory.links || [];
     for (let l = 0; l < linksArray.length; l++) {
       const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
       byId[link[options.id]] = link;
@@ -86,10 +87,12 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
         byId[link[options.to_id]][options.inByType][link[options.type_id]] = byId[link[options.to_id]][options.inByType][link[options.type_id]] || [];
         byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
       }
+      if (options.handler) options.handler(link, memory);
     }
-    return {
-      links, types, byId,
-    };
+    if (!memory.types) memory.types = types;
+    if (!memory.byId) memory.byId = byId;
+    if (!memory.links) memory.links = links;
+    return memory;
   }
 }
 
