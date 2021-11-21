@@ -62,15 +62,21 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
     const types: { [id: number]: L[] } = memory.types || {};
     const byId: { [id: number]: L } = memory.byId || {};
     const links: L[] = memory.links || [];
+    const newLinks: L[] = [];
     for (let l = 0; l < linksArray.length; l++) {
-      const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
-      byId[link[options.id]] = link;
-      types[link[options.type_id]] = types[link[options.type_id]] || [];
-      types[link[options.type_id]].push(link);
-      links.push(link);
+      if (byId[linksArray[l][options.id]]) {
+        if (options.handler) options.handler(byId[linksArray[l][options.id]], memory);
+      } else {
+        const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
+        byId[link[options.id]] = link;
+        types[link[options.type_id]] = types[link[options.type_id]] || [];
+        types[link[options.type_id]].push(link);
+        links.push(link);
+        newLinks.push(link);
+      }
     }
-    for (let l = 0; l < links.length; l++) {
-      const link = links[l];
+    for (let l = 0; l < newLinks.length; l++) {
+      const link = newLinks[l];
       if (byId[link[options.type_id]]) {
         link[options.type] = byId[link[options.type_id]];
         byId[link[options.type_id]][options.typed].push(link);
