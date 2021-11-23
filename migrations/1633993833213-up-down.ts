@@ -20,7 +20,7 @@ export const up = async () => {
     SELECT ${LINKS_TABLE_NAME}.*
     FROM ${LINKS_TABLE_NAME}
     WHERE id IN (
-      SELECT DISTINCT ON (${LINKS_TABLE_NAME}.id)
+      SELECT DISTINCT ${LINKS_TABLE_NAME}.id
       FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
       WHERE
       ${MP_TABLE_NAME}.group_id = tree AND
@@ -36,7 +36,7 @@ export const up = async () => {
     SELECT ${LINKS_TABLE_NAME}.*
     FROM ${LINKS_TABLE_NAME}
     WHERE id IN (
-      SELECT DISTINCT ON (${LINKS_TABLE_NAME}.id)
+      SELECT DISTINCT ${LINKS_TABLE_NAME}.id
       FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
       WHERE
       ${MP_TABLE_NAME}.group_id = tree AND
