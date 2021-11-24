@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.9",
-    "@deep-foundation/materialized-path": "^0.0.3",
+    "@deep-foundation/materialized-path": "0.0.6",
     "@deep-foundation/react-hasura": "^0.0.3",
     "@deep-foundation/store": "^0.0.3",
     "@types/node": "^14.17.14",

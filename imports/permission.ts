@@ -11,7 +11,6 @@ export const generatePermissionWhere = (actionId: number, _or = []) => {
           { type_id: { _eq: GLOBAL_ID_PACKAGE } },
           { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { type_id: { _eq: GLOBAL_ID_PACKAGE } } },
           { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { type_id: { _eq: GLOBAL_ID_PACKAGE } } } },
-          { _by_item: { path_item_id: { _eq: GLOBAL_ID_USER } } },
           {
             _by_item: { // parents
               _and: [

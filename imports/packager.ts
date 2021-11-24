@@ -1,7 +1,7 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
 import Debug from 'debug';
-import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
+import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_VERSION, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
 import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
@@ -10,9 +10,19 @@ import { reserve } from './reserve';
 
 const debug = Debug('deeplinks:packager');
 
+export interface PackagerPackageIdentifier {
+  name: string;
+  version: string;
+  uri: string;
+  type: string;
+  options?: any;
+  // typeId?: number; TODO
+}
+
 export interface PackagerPackage {
-  package?: string;
+  package: PackagerPackageIdentifier;
   data: PackagerPackageItem[];
+  dependencies?: PackagerPackageIdentifier[];
   strict?: boolean;
   errors?: PackagerError[];
 }
@@ -23,6 +33,7 @@ export interface PackagerPackageItem {
   from?: number | string;
   to?: number | string;
   value?: PackagerValue;
+  package?: number;
 }
 
 export interface PackagerValue {
@@ -74,6 +85,20 @@ export function deserialize(
     if (item.from) item.from = containsHash[item.from] || 0;
     if (item.to) item.to = containsHash[item.to] || 0;
   }
+  data.push({
+    id: ++counter,
+    type: GLOBAL_ID_PACKAGE,
+    value: { value: pckg.package.name },
+    // @ts-ignore
+    _: true,
+  });
+  data.push({
+    id: ++counter,
+    type: GLOBAL_ID_PACKAGE_VERSION,
+    value: { value: pckg.package.version },
+    // @ts-ignore
+    _: true,
+  });
   // create contains links
   const containsArray = Object.keys(containsHash);
   for (let c = 0; c < containsArray.length; c++) {
@@ -163,7 +188,6 @@ export class Packager {
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
-    // await delay(1000);
     debug('insertItem', { id }, item);
     try {
       if (item.type) {
@@ -176,14 +200,29 @@ export class Packager {
         }
         mutated[item.id] = true;
         item.id = id;
-        items.filter(i => i.id === item.id).forEach(l => l.id = id);
-        items.filter(i => i.from === item.id).forEach(l => l.from = id);
-        items.filter(i => i.to === item.id).forEach(l => l.to = id);
-        items.filter(i => i.type === item.id).forEach(l => l.type = id);
+        items.filter(i => (
+          i.id === item.id && (
+            // @ts-ignore
+            !i._
+        ))).forEach(l => l.id = id);
+        items.filter(i => (
+          i.from === item.id && (
+            // @ts-ignore
+            !i._
+        ))).forEach(l => l.from = id);
+        items.filter(i => (
+          i.to === item.id && (
+            // @ts-ignore
+            !i._
+        ))).forEach(l => l.to = id);
+        items.filter(i => (
+          i.type === item.id && (
+            // @ts-ignore
+            !i._
+        ))).forEach(l => l.type = id);
       }
       debug('insertItem promise', id);
       await awaitPromise({ id, client: this.client });
-      // await delay(1000);
       debug('insertItem promise awaited', id);
       if (item.value) {
         debug('insertItem value', id, item);
@@ -240,6 +279,50 @@ export class Packager {
       errors.push(error);
     }
   }
+
+  async importNamespace() {
+    // const result = await this.client.query(generateQuery({
+    //   queries: [
+    //     generateQueryData({ tableName: 'links', returning: `
+    //       id type_id from_id to_id value
+    //       type {
+    //         id value
+    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+    //           id
+    //           package: from {
+    //             id value
+    //           }
+    //         }
+    //       }
+    //       from {
+    //         id
+    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+    //           id
+    //           package: from {
+    //             id value
+    //           }
+    //         }
+    //       }
+    //       to {
+    //         id
+    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+    //           id
+    //           package: from {
+    //             id value
+    //           }
+    //         }
+    //       }
+    //     `, variables: { where: {
+    //       _or: [
+    //         { id: { _eq: options.packageLinkId } },
+    //         { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
+    //         { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
+    //       ]
+    //     } } }),
+    //   ],
+    //   name: 'LOAD_PACKAGE_LINKS',
+    // }));
+  }
   
   /**
    * Import into system pckg.
@@ -253,6 +336,7 @@ export class Packager {
       if (errors.length) return { errors };
       await this.insertItems(pckg, sorted, counter, errors);
       if (errors.length) return { errors };
+      await this.importNamespace();
     } catch(error) {
       debug('insertItems error', error);
       errors.push(error);

@@ -2,16 +2,24 @@ import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
 import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
 import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
+import { up as upPerms, down as downPerms } from '@deep-foundation/materialized-path/permissions';
 import { Trigger } from '@deep-foundation/materialized-path/trigger';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
-import { GLOBAL_ID_DELETE, GLOBAL_ID_INSERT, GLOBAL_ID_SELECT, GLOBAL_ID_UPDATE } from '../imports/global-ids';
+import { GLOBAL_ID_ANY, GLOBAL_ID_DELETE, GLOBAL_ID_INSERT, GLOBAL_ID_SELECT, GLOBAL_ID_UPDATE } from '../imports/global-ids';
+import { HasuraApi } from '@deep-foundation/hasura/api';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  secret: process.env.MIGRATIONS_HASURA_SECRET,
+});
+
+const api = new HasuraApi({
+  path: process.env.MIGRATIONS_HASURA_PATH,
   ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
@@ -59,58 +67,61 @@ const trigger = Trigger({
   // TODO optimize duplicating equal selects
 
   isAllowSpreadFromCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 22 AND
+    l.type_id IN (22,23,24) AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.type_id
+    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentTo: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 22 AND
+    l.type_id IN (22,23,24) AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.type_id
+    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
   )`,
 
   isAllowSpreadToCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.type_id
+    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentFrom: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = CURRENT.type_id
+    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
   )`,
 
   isAllowSpreadToInCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.type_id
+    l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentFromOut: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 22 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.type_id
+    l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
 
   isAllowSpreadFromOutCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.type_id
+    l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentToIn: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
     l.type_id = 23 AND
     l.from_id = groupRow.id AND
-    l.to_id = flowLink.type_id
+    l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
 });
 
 export const up = async () => {
   debug('up');
   await upTable({
-    MP_TABLE: MP_TABLE_NAME,
+    MP_TABLE: MP_TABLE_NAME, customColumns: '',
+    api,
   });
   await upRels({
+    SCHEMA,
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
+    api,
   });
   await permissions(api, MP_TABLE_NAME);
   await permissions(api, LINKS_TABLE_NAME, {
@@ -159,6 +170,7 @@ export const down = async () => {
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
+    api,
   });
   debug('dropTrigger');
   await api.sql(trigger.downFunctionInsertNode());
@@ -168,5 +180,6 @@ export const down = async () => {
   debug('dropTable');
   await downTable({
     MP_TABLE: MP_TABLE_NAME,
+    api,
   });
 };
