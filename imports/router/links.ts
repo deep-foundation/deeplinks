@@ -1,3 +1,5 @@
+import Debug from 'debug';
+
 import Cors from 'cors';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { corsMiddleware } from '@deep-foundation/hasura/cors-middleware';
@@ -8,10 +10,12 @@ import { gql } from 'apollo-boost';
 import vm from 'vm';
 
 import { generatePermissionWhere, permissions } from '../permission';
-import { GLOBAL_ID_TABLE_VALUE, GLOBAL_ID_TABLE_COLUMN } from '../global-ids';
+import { GLOBAL_ID_TABLE_VALUE, GLOBAL_ID_TABLE_COLUMN, DENIED_IDS, ALLOWED_IDS } from '../global-ids';
 import { reject, resolve } from '../promise';
 
 const SCHEMA = 'public';
+
+const debug = Debug('deepcase:eh');
 
 export const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -36,30 +40,29 @@ export default async (req, res) => {
       const newRow = event?.data?.new;
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
-      console.log({ current });
 
       try {
         // type |== type: handle ==> INSERT symbol (ONLY)
-        const handleStringResult = await client.query({ query: gql`query SELECT_STRING_HANDLE($typeId: bigint) { string(where: {
-          link: {
-            type_id: { _eq: 20 },
-            to_id: { _eq: 16 },
-            from_id: { _eq: $typeId }
-          },
-        }) {
-          id
-          value
-        } }`, variables: {
-          typeId,
-        }});
-        const handleStringValue = handleStringResult?.data?.string?.[0]?.value;
-        if (handleStringValue) {
-          try { 
-            vm.runInNewContext(handleStringValue, { console, Error, oldRow, newRow });
-          } catch(error) {
-            console.log(error);
-          }
-        }
+        // const handleStringResult = await client.query({ query: gql`query SELECT_STRING_HANDLE($typeId: bigint) { string(where: {
+        //   link: {
+        //     type_id: { _eq: 20 },
+        //     to_id: { _eq: 16 },
+        //     from_id: { _eq: $typeId }
+        //   },
+        // }) {
+        //   id
+        //   value
+        // } }`, variables: {
+        //   typeId,
+        // }});
+        // const handleStringValue = handleStringResult?.data?.string?.[0]?.value;
+        // if (handleStringValue) {
+        //   try { 
+        //     vm.runInNewContext(handleStringValue, { console, Error, oldRow, newRow });
+        //   } catch(error) {
+        //     debug(error);
+        //   }
+        // }
 
         // tables
         if (typeId === 6) {
@@ -83,7 +86,7 @@ export default async (req, res) => {
           const valuesCount = table?.values?.aggregate?.count;
           const columns = (table?.columns || []).map(c => ({ name: `${c?.value?.value || 'value'}`, type: 'TEXT' }));
 
-          console.log({ tableName, columns, valuesCount });
+          debug('table', { tableName, columns, valuesCount });
 
           if (operation === 'INSERT' && valuesCount === 1) {
             const createTable = await api.sql(sql`
@@ -166,9 +169,17 @@ export default async (req, res) => {
             `);
           }
         }
-        // if (operation === 'INSERT') await resolve({ id: current.id, client });
+        if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
+          debug('resolve', current.id);
+          await resolve({ id: current.id, client });
+        }
+        return res.status(200).json({});
       } catch(error) {
-      // if (operation === 'INSERT') await reject({ id: current.id, client });
+        debug('error', error);
+        if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
+          debug('reject', current.id);
+          await reject({ id: current.id, client });
+        }
       }
 
       return res.status(500).json({ error: 'notexplained' });
