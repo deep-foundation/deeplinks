@@ -18,11 +18,15 @@ export const up = async () => {
     STABLE
   AS $function$
     SELECT ${LINKS_TABLE_NAME}.*
-    FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
-    WHERE
-    ${MP_TABLE_NAME}.group_id = tree AND
-    ${MP_TABLE_NAME}.path_item_id = link.id AND
-    ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.item_id
+    FROM ${LINKS_TABLE_NAME}
+    WHERE id IN (
+      SELECT DISTINCT ${LINKS_TABLE_NAME}.id
+      FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
+      WHERE
+      ${MP_TABLE_NAME}.group_id = tree AND
+      ${MP_TABLE_NAME}.path_item_id = link.id AND
+      ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.item_id
+    )
   $function$;`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__up_links__function(link ${LINKS_TABLE_NAME}, tree bigint)
     RETURNS SETOF ${LINKS_TABLE_NAME}
@@ -30,11 +34,15 @@ export const up = async () => {
     STABLE
   AS $function$
     SELECT ${LINKS_TABLE_NAME}.*
-    FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
-    WHERE
-    ${MP_TABLE_NAME}.group_id = tree AND
-    ${MP_TABLE_NAME}.item_id = link.id AND
-    ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.path_item_id
+    FROM ${LINKS_TABLE_NAME}
+    WHERE id IN (
+      SELECT DISTINCT ${LINKS_TABLE_NAME}.id
+      FROM ${LINKS_TABLE_NAME}, ${MP_TABLE_NAME}
+      WHERE
+      ${MP_TABLE_NAME}.group_id = tree AND
+      ${MP_TABLE_NAME}.item_id = link.id AND
+      ${LINKS_TABLE_NAME}.id = ${MP_TABLE_NAME}.path_item_id
+    )
   $function$;`);
   await api.query({
     type: 'add_computed_field',

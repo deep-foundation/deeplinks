@@ -23,6 +23,18 @@ export const up = async () => {
       },
     }
   });
+  await api.query({
+    type: 'add_remote_schema',
+    args: {
+      name: 'guest',
+      definition: {
+        url: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/guest`,
+        headers: [{ name: 'x-hasura-client', value: 'deeplinks-guest' }],
+        forward_client_headers: true,
+        timeout_seconds: 60
+      },
+    }
+  });
 };
 
 export const down = async () => {
@@ -31,6 +43,12 @@ export const down = async () => {
     type: 'remove_remote_schema',
     args: {
       name: 'jwt',
+    },
+  });
+  await api.query({
+    type: 'remove_remote_schema',
+    args: {
+      name: 'guest',
     },
   });
 };

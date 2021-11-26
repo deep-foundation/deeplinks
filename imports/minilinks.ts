@@ -27,6 +27,7 @@ export interface LinksResult<Link> {
 }
 
 export interface MinilinksGeneratorOptions {
+  id: 'id',
   type_id: 'type_id',
   type: 'type',
   typed: 'typed',
@@ -38,9 +39,11 @@ export interface MinilinksGeneratorOptions {
   in: 'in',
   inByType: 'inByType',
   outByType: 'outByType',
+  handler?: (link, result: any) => any;
 }
 
 export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
+  id: 'id',
   type_id: 'type_id',
   type: 'type',
   typed: 'typed',
@@ -55,39 +58,47 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
 };
 
 export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
-  return function minilinks<L extends Link<number>>(linksArray = []): LinksResult<L> {
-    const types: { [id: number]: L[] } = {};
-    const byId: { [id: number]: L } = {};
-    const links: L[] = [];
+  return function minilinks<L extends Link<number>>(linksArray = [], memory: any = {}): LinksResult<L> {
+    const types: { [id: number]: L[] } = memory.types || {};
+    const byId: { [id: number]: L } = memory.byId || {};
+    const links: L[] = memory.links || [];
+    const newLinks: L[] = [];
     for (let l = 0; l < linksArray.length; l++) {
-      const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
-      byId[link.id] = link;
-      types[link[options.type_id]] = types[link[options.type_id]] || [];
-      types[link[options.type_id]].push(link);
-      links.push(link);
+      if (byId[linksArray[l][options.id]]) {
+        if (options.handler) options.handler(byId[linksArray[l][options.id]], memory);
+      } else {
+        const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
+        byId[link[options.id]] = link;
+        types[link[options.type_id]] = types[link[options.type_id]] || [];
+        types[link[options.type_id]].push(link);
+        links.push(link);
+        newLinks.push(link);
+      }
     }
-    for (let l = 0; l < links.length; l++) {
-      const link = links[l];
+    for (let l = 0; l < newLinks.length; l++) {
+      const link = newLinks[l];
       if (byId[link[options.type_id]]) {
         link[options.type] = byId[link[options.type_id]];
         byId[link[options.type_id]][options.typed].push(link);
       }
-      if (byId[link.from_id]) {
-        link[options.from] = byId[link.from_id];
-        byId[link.from_id][options.out].push(link);
-        byId[link.from_id][options.outByType][link[options.type_id]] = byId[link.from_id][options.outByType][link[options.type_id]] || [];
-        byId[link.from_id][options.outByType][link[options.type_id]].push(link);
+      if (byId[link[options.from_id]]) {
+        link[options.from] = byId[link[options.from_id]];
+        byId[link[options.from_id]][options.out].push(link);
+        byId[link[options.from_id]][options.outByType][link[options.type_id]] = byId[link[options.from_id]][options.outByType][link[options.type_id]] || [];
+        byId[link[options.from_id]][options.outByType][link[options.type_id]].push(link);
       }
-      if (byId[link.to_id]) {
-        link[options.to] = byId[link.to_id];
-        byId[link.to_id][options.in].push(link);
-        byId[link.to_id][options.inByType][link[options.type_id]] = byId[link.to_id][options.inByType][link[options.type_id]] || [];
-        byId[link.to_id][options.inByType][link[options.type_id]].push(link);
+      if (byId[link[options.to_id]]) {
+        link[options.to] = byId[link[options.to_id]];
+        byId[link[options.to_id]][options.in].push(link);
+        byId[link[options.to_id]][options.inByType][link[options.type_id]] = byId[link[options.to_id]][options.inByType][link[options.type_id]] || [];
+        byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
       }
+      if (options.handler) options.handler(link, memory);
     }
-    return {
-      links, types, byId,
-    };
+    if (!memory.types) memory.types = types;
+    if (!memory.byId) memory.byId = byId;
+    if (!memory.links) memory.links = links;
+    return memory;
   }
 }
 
