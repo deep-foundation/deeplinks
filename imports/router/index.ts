@@ -5,8 +5,8 @@ import deepLinks from './deeplinks';
 
 const router = express.Router();
 
-router.get('/api/eh/links', links);
-router.get('/api/eh/bool_exp', boolExp);
-router.get('/api/eh/deeplinks', deepLinks);
+router.get('/api/links', links);
+router.get('/api/bool_exp', boolExp);
+router.get('/api/deeplinks', deepLinks);
 
 export default router;

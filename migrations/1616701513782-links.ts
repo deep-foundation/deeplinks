@@ -83,7 +83,7 @@ export const up = async () => {
     args: {
       name: TABLE_NAME,
       table: TABLE_NAME,
-      webhook: `${process.env.MIGRATIONS_DEEPLINKS_APP_URL}/api/eh/links`,
+      webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/links`,
       insert: {
         columns: "*",
         payload: '*',
