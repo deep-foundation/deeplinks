@@ -2,7 +2,9 @@
   "name": "@deep-foundation/deeplinks",
   "version": "0.0.9",
   "scripts": {
-    "start": "PORT=3006 ts-node index.ts",
+    "start": "cd local && docker-compose up",
+    "stop": "cd local && docker-compose down",
+    "local": "(cd local && docker-compose down || true) && PORT=3006 ts-node index.ts",
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
