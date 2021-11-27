@@ -16,10 +16,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
       - name: build
-        run: npm ci
-        run: npm run build
+        run: npm ci && npm run build
         with:
-          node-version: '15.10'
+          node-version: '14.15'
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
