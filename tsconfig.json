@@ -3,6 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "sourceMap": true,
+    "sourceRoot": "/",
+    "outDir": "build",
     "noImplicitAny": false,
     "removeComments": true,
     "jsx": "react",
@@ -21,6 +23,8 @@
     "declaration": true,
   },
   "exclude": [
+    "./node_modules",
+    "./build",
     "migrations"
   ]
 }

@@ -1,0 +1,5 @@
+version: '3.6'
+services:
+  deeplinks-docker:
+    image: menzorg/deeplinks
+    restart: always
