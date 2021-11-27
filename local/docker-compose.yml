@@ -3,3 +3,8 @@ services:
   deeplinks-docker:
     image: menzorg/deeplinks:deeplinks-21-menzorg
     restart: always
+    environment:
+      MIGRATIONS_HASURA_PATH: '${MIGRATIONS_HASURA_PATH}'
+      MIGRATIONS_HASURA_SSL: '${MIGRATIONS_HASURA_SSL}'
+      MIGRATIONS_HASURA_SECRET: '${MIGRATIONS_HASURA_SECRET}'
+      JWT_SECRET: '${JWT_SECRET}'
