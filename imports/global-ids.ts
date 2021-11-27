@@ -1,8 +1,8 @@
 export const GLOBAL_ID_TYPE=1;
 export const GLOBAL_ID_PACKAGE=2;
 export const GLOBAL_NAME_PACKAGE='Package';
-export const GLOBAL_ID_PACKAGE_VERSION=60;
-export const GLOBAL_NAME_PACKAGE_VERSION='PackageVersion';
+export const GLOBAL_ID_PACKAGE_NAMESPACE=56;
+export const GLOBAL_ID_PACKAGE_ACTIVE=63;
 
 export const GLOBAL_ID_TABLE=3;
 export const GLOBAL_NAME_TABLE = 'Table';
@@ -10,6 +10,11 @@ export const GLOBAL_ID_TABLE_COLUMN=4;
 export const GLOBAL_NAME_TABLE_COLUMN = 'Column';
 export const GLOBAL_ID_TABLE_VALUE=5;
 export const GLOBAL_NAME_TABLE_VALUE = 'Value';
+
+export const GLOBAL_ID_STRING=6;
+export const GLOBAL_ID_NUMBER=7;
+export const GLOBAL_ID_JSON=8;
+
 export const GLOBAL_ID_ANY=9;
 export const GLOBAL_ID_PROMISE=10;
 export const GLOBAL_NAME_PROMISE='Promise';

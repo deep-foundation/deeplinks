@@ -1,5 +1,5 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
-import { GLOBAL_ID_ACTION, GLOBAL_ID_CONTAIN, GLOBAL_ID_OBJECT, GLOBAL_ID_PACKAGE, GLOBAL_ID_RULE, GLOBAL_ID_SELECTION, GLOBAL_ID_SELECTOR, GLOBAL_ID_SUBJECT, GLOBAL_ID_TYPE, GLOBAL_ID_USER } from "./global-ids";
+import { GLOBAL_ID_ACTION, GLOBAL_ID_CONTAIN, GLOBAL_ID_OBJECT, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_RULE, GLOBAL_ID_SELECTION, GLOBAL_ID_SELECTOR, GLOBAL_ID_SUBJECT, GLOBAL_ID_TYPE, GLOBAL_ID_USER } from "./global-ids";
 
 export const generatePermissionWhere = (actionId: number, _or = []) => {
   return {
@@ -8,7 +8,7 @@ export const generatePermissionWhere = (actionId: number, _or = []) => {
         _or: [
           { type_id: { _eq: GLOBAL_ID_USER } },
           { type_id: { _eq: GLOBAL_ID_TYPE } },
-          { type_id: { _eq: GLOBAL_ID_PACKAGE } },
+          { type_id: { _in: [GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE] } },
           { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { type_id: { _eq: GLOBAL_ID_PACKAGE } } },
           { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { type_id: { _eq: GLOBAL_ID_PACKAGE } } } },
           {

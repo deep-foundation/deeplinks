@@ -61,7 +61,7 @@ const corePckg: PackagerPackage = {
 
     { id: 'packageTable', type: 'Table' },
     { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' },
-    { id: 'packageTableColumnLocals', type: 'Column', from: 'packageTable', to: 'String', value: { value: 'locals' } },
+    { id: 'packageTableColumnIdentifier', type: 'Column', from: 'packageTable', to: 'JSON', value: { value: 'identifier' } },
     { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
     // 26
 
@@ -80,7 +80,7 @@ const corePckg: PackagerPackage = {
     { id: 'Resolved', value: { value: 'Resolved' } },
     { id: 'Rejected', value: { value: 'Rejected' } },
     // /ign
-    
+
     { id: 'Selector', type: 'Type', value: { value: 'Selector' } },
     // 27
     { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
@@ -127,12 +127,16 @@ const corePckg: PackagerPackage = {
     { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' },
     // 55
     { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } },
+
     { id: 'packageNamespaceTable', type: 'Table' },
     { id: 'packageNamespaceTableColumnValue', type: 'Column', from: 'packageNamespaceTable', to: 'String' },
     { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' },
     // 59
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' },
+    { id: 'packageVersionTable', type: 'Table' },
+    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' },
+    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' },
+
     { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' },
   ],
   errors: [],
