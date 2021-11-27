@@ -2,10 +2,10 @@
   "name": "@deep-foundation/deeplinks",
   "version": "0.0.9",
   "scripts": {
-    "start": "cd local && docker-compose up",
-    "stop": "cd local && docker-compose down",
+    "docker-start": "cd local && docker-compose up",
+    "docker-stop": "cd local && docker-compose down",
     "build": "tsc --project ./tsconfig.json",
-    "local": "(cd local && docker-compose down || true) && PORT=3006 ts-node index.ts",
+    "dev": "(cd local && docker-compose down || true) && PORT=3006 nodemon index.ts",
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
@@ -29,6 +29,7 @@
     "graphql-tag": "^2.11.0",
     "internal-ip": "^6.2.0",
     "jsonwebtoken": "^8.5.1",
+    "nodemon": "^2.0.15",
     "rimraf": "^3.0.2",
     "uniqid": "^5.3.0",
     "wait-on": "^6.0.0"

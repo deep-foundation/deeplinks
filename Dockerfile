@@ -9,4 +9,4 @@ COPY node_modules ./node_modules
 ENV PORT 3006
 
 EXPOSE 3006
-ENTRYPOINT ["npm", "start"]
+ENTRYPOINT ["node", "build/index.js"]
