@@ -21,7 +21,7 @@ export const up = async () => {
     args: {
       name: 'bool_exp',
       table: TABLE_NAME,
-      webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/bool_exp`,
+      webhook: `${process.env.DEEPLINKS_URL}/api/bool_exp`,
       insert: {
         columns: "*",
         payload: '*',

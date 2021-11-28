@@ -16,7 +16,7 @@ export const up = async () => {
     args: {
       name: 'jwt',
       definition: {
-        url: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/jwt`,
+        url: `${process.env.DEEPLINKS_URL}/api/jwt`,
         headers: [{ name: 'x-hasura-client', value: 'deeplinks-jwt' }],
         forward_client_headers: true,
         timeout_seconds: 60
@@ -28,7 +28,7 @@ export const up = async () => {
     args: {
       name: 'guest',
       definition: {
-        url: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/guest`,
+        url: `${process.env.DEEPLINKS_URL}/api/guest`,
         headers: [{ name: 'x-hasura-client', value: 'deeplinks-guest' }],
         forward_client_headers: true,
         timeout_seconds: 60

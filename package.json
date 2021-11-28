@@ -24,6 +24,7 @@
     "apollo-boost": "^0.4.9",
     "apollo-server": "^2.21.0",
     "apollo-server-express": "^3.5.0",
+    "axios": "^0.24.0",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "fkill": "^8.0.0",
