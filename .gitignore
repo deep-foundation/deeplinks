@@ -124,3 +124,6 @@ projects/app/electron/app
 /*.js.map
 /imports/*.js
 /imports/*.js.map
+/imports/router/*.js
+/imports/router/*.js.map
+/imports/router/*.d.ts
