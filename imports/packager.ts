@@ -110,7 +110,8 @@ export class Packager {
       }));
       return (q)?.data?.q0?.[0]?.id;
     } catch(error) {
-      debug('fetchPackageNamespaceId error', error);
+      debug('fetchPackageNamespaceId error');
+      console.log(error);
     }
     return 0;
   }
@@ -137,7 +138,8 @@ export class Packager {
       }));
       return (q)?.data?.q0?.[0]?.link?.id || 0;
     } catch(error) {
-      debug('fetchDependenciedLinkId error', error);
+      debug('fetchDependenciedLinkId error');
+      console.log(error);
     }
     return 0;
   }
@@ -169,7 +171,8 @@ export class Packager {
         }
       }
     } catch(error) {
-      debug('fetchTableNamesValuedToTypeId error', error);
+      debug('fetchTableNamesValuedToTypeId error');
+      console.log(error);
       errors.push(error);
     }
     return result;
@@ -245,7 +248,8 @@ export class Packager {
         }
       }
     } catch(error) {
-      debug('insertItem error', error);
+      debug('insertItem error');
+      console.log(error);
       errors.push(error);
     }
     return;
@@ -282,7 +286,8 @@ export class Packager {
       }
       return { ids };
     } catch(error) {
-      debug('insertItems error', error);
+      debug('insertItems error');
+      console.log(error);
       errors.push(error);
     }
     return { ids: [] };
@@ -348,7 +353,8 @@ export class Packager {
       await this.importNamespace();
       return { ids, errors };
     } catch(error) {
-      debug('insertItems error', error);
+      debug('insertItems error');
+      console.log(error);
       errors.push(error);
     }
     return { ids: [], errors };
