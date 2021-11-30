@@ -29,20 +29,20 @@ export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   let envsString = generateEnvs(envs);
   try {
+    const isDockerResult = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`);
+    const isDocker = isDockerResult?.data?.docker;
     if (options.operation === 'run') {
-      const isDockerResult = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`);
-      const isDocker = isDockerResult?.data?.docker;
       let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? '&& npm run docker-start && npx -q wait-on tcp:3006' : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      let str = `${envsString} cd ${_deeplinks}/local/ && (docker-compose down || true) && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
+      let str = `${envsString} cd ${_deeplinks}/local/ && ${isDocker ? 'docker-compose down' : isDocker === 0 ? 'npx -q fkill :3006' : ''} && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `${envsString} cd ${_deeplinks}/local/ && (docker-compose down || true) && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
+      let str = `${envsString} cd ${_deeplinks}/local/ && ${isDocker ? 'docker-compose down' : isDocker === 0 ? 'npx -q fkill :3006' : ''} && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
