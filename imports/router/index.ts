@@ -7,10 +7,10 @@ import healthz from './healthz';
 
 const router = express.Router();
 
-router.get('/api/links', links);
-router.get('/api/bool_exp', boolExp);
-router.get('/api/reserved', reserved);
-router.get('/api/reserved-cleaner', reservedCleaner);
-router.get('/api/healthz', healthz);
+router.use('/api/links', links);
+router.use('/api/bool_exp', boolExp);
+router.use('/api/reserved', reserved);
+router.use('/api/reserved-cleaner', reservedCleaner);
+router.use('/api/healthz', healthz);
 
 export default router;

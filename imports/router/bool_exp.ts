@@ -1,6 +1,4 @@
-import Cors from 'cors';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { corsMiddleware } from '@deep-foundation/hasura/cors-middleware';
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { generateMutation, generateSerial } from '../gql';
 
@@ -16,9 +14,7 @@ const client = generateApolloClient({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-const cors = Cors({ methods: ['GET', 'HEAD', 'POST'] });
 export default async (req, res) => {
-  await corsMiddleware(req, res, cors);
   try {
     const event = req?.body?.event;
     const operation = event?.op;
