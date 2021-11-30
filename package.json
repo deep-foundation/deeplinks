@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "scripts": {
     "docker-start": "cd local && docker-compose up",
     "docker-stop": "cd local && docker-compose down",

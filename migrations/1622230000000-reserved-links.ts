@@ -129,6 +129,13 @@ export const up = async () => {
       }
     }
   });
+  await api.metadata({
+    type: 'create_action_permission',
+    args: {
+      action: 'reserve',
+      role: 'link',
+    }
+  });
 };
 
 export const down = async () => {
@@ -140,14 +147,14 @@ export const down = async () => {
        name:'reserve',
        clear_data: true
     }
- });
+  });
   debug('cron_trigger');
   await api.query({
     type: 'delete_cron_trigger',
     args: {
        name: 'reserved_links_cleaner',
     }
- });
+  });
  debug('trigger');
   await api.sql(sql`
     DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger ON ${LINKS_TABLE_NAME} CASCADE;
