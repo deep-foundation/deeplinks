@@ -1,10 +1,11 @@
 FROM node:12.16-stretch
 
-COPY ./package.json .
-COPY ./package-lock.json .
-COPY ./index.ts .
-COPY build ./build
+COPY package.json .
+COPY index.js .
+COPY index.js.map .
+COPY index.ts .
 COPY node_modules ./node_modules
+COPY imports ./imports
 
 ENV PORT 3006
 ENV DOCKER 1
