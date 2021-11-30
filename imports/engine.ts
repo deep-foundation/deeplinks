@@ -5,7 +5,7 @@ import internalIp from 'internal-ip';
 import axios from 'axios';
 
 const execP = promisify(exec);
-const DEEPLINKS_URL = process.env.DEEPLINKS_URL;
+const NEXT_PUBLIC_DEEPLINKS_URL = process.env.NEXT_PUBLIC_DEEPLINKS_URL || 'http://localhost:3006';
 
 export interface IOptions {
   operation: 'run' | 'sleep' | 'reset';
@@ -30,19 +30,19 @@ export async function call (options: IOptions) {
   let envsString = generateEnvs(envs);
   try {
     if (options.operation === 'run') {
-      const isDocker = await axios.get(`${DEEPLINKS_URL}/api/healthz`);
-      console.log(isDocker);
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} && npm run migrate`;
+      const isDockerResult = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`);
+      const isDocker = isDockerResult?.data?.docker;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? '&& npm run docker-start && npx -q wait-on tcp:3006' : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
+      let str = `${envsString} cd ${_deeplinks}/local/ && (docker-compose down || true) && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
+      let str = `${envsString} cd ${_deeplinks}/local/ && (docker-compose down || true) && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
