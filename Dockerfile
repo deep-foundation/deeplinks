@@ -11,4 +11,4 @@ ENV PORT 3006
 ENV DOCKER 1
 
 EXPOSE 3006
-ENTRYPOINT ["node", "build/index.js"]
+ENTRYPOINT ["node", "index.js"]
