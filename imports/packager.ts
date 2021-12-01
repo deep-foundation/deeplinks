@@ -200,20 +200,14 @@ export class Packager {
         mutated[item.id] = true;
         item.id = id;
         items.filter(i => (
-          i.id === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.id = id);
+          i.id === item.id
+        )).forEach(l => l.id = id);
         items.filter(i => (
-          i.from === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.from = id);
+          i.from === item.id
+        )).forEach(l => l.from = id);
         items.filter(i => (
-          i.to === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.to = id);
+          i.to === item.id
+        )).forEach(l => l.to = id);
         items.filter(i => (
           i.type === item.id && (
             // @ts-ignore

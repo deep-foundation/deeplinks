@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "scripts": {
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.9",
-    "@deep-foundation/hasura": "0.0.6",
-    "@deep-foundation/materialized-path": "0.0.7",
-    "@deep-foundation/react-hasura": "^0.0.3",
+    "@deep-foundation/hasura": "0.0.7",
+    "@deep-foundation/materialized-path": "0.0.8",
+    "@deep-foundation/react-hasura": "0.0.4",
     "@deep-foundation/store": "^0.0.3",
     "@types/node": "^14.17.14",
     "@types/react": "^17.0.19",

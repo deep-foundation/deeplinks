@@ -2,7 +2,7 @@ export const GLOBAL_ID_TYPE=1;
 export const GLOBAL_ID_PACKAGE=2;
 export const GLOBAL_NAME_PACKAGE='Package';
 export const GLOBAL_ID_PACKAGE_NAMESPACE=56;
-export const GLOBAL_ID_PACKAGE_ACTIVE=63;
+export const GLOBAL_ID_PACKAGE_ACTIVE=60;
 
 export const GLOBAL_ID_TABLE=3;
 export const GLOBAL_NAME_TABLE = 'Table';
