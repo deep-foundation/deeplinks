@@ -187,6 +187,7 @@ export class Packager {
   ) {
     debug('insertItem', { id }, item);
     try {
+      // insert link section
       if (item.type) {
         const linkInsert = await this.client.mutate(generateSerial({
           actions: [insertMutation('links', { objects: { id, type_id: item.type, from_id: item.from || 0, to_id: item.to || 0 } })],
@@ -196,12 +197,9 @@ export class Packager {
           errors.push(linkInsert?.errors);
         }
       }
+      // modify ids section
       if (item.type || item.package) {
         mutated[item.id] = true;
-        item.id = id;
-        items.filter(i => (
-          i.id === item.id
-        )).forEach(l => l.id = id);
         items.filter(i => (
           i.from === item.id
         )).forEach(l => l.from = id);
@@ -213,6 +211,9 @@ export class Packager {
             // @ts-ignore
             !i._
         ))).forEach(l => l.type = id);
+        items.filter(i => (
+          i.id === item.id
+        )).forEach(l => l.id = id);
       }
       debug('insertItem promise', id);
       await awaitPromise({ id, client: this.client });
@@ -438,6 +439,20 @@ export class Packager {
       // @ts-ignore
       _: true,
     });
+    // create contains links
+    const containsArray = Object.keys(containsHash);
+    for (let c = 0; c < containsArray.length; c++) {
+      const contain = containsArray[c];
+      data.push({
+        id: ++counter,
+        type: GLOBAL_ID_CONTAIN,
+        from: packageId,
+        to: containsHash[contain],
+        value: { value: contain },
+        // @ts-ignore
+        _: true,
+      });
+    }
     let namespaceId = await this.fetchPackageNamespaceId(pckg.package.name);
     if (!namespaceId) {
       namespaceId = ++counter;
@@ -465,20 +480,6 @@ export class Packager {
       // @ts-ignore
       _: true,
     });
-    // create contains links
-    const containsArray = Object.keys(containsHash);
-    for (let c = 0; c < containsArray.length; c++) {
-      const contain = containsArray[c];
-      data.push({
-        id: ++counter,
-        type: GLOBAL_ID_CONTAIN,
-        from: packageId,
-        to: containsHash[contain],
-        value: { value: contain },
-        // @ts-ignore
-        _: true,
-      });
-    }
     return { data, errors, counter, dependedLinks };
   }
 
