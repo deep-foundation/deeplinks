@@ -71,8 +71,17 @@ export function sort(
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
       if (item?.type) {
-        const first = sorted.findIndex((l, index) => l.from == item.id || l.to == item.id || l.type == item.id);
-        const max = sorted.reduce((p, l, index) => l.id == item.type || l.id == item.from || l.id === item.to ? index : p, 0);
+        // @ts-ignore
+        const _ = item?._;
+        const first = sorted.findIndex((l, index) => {
+          return l.from == item.id || l.to == item.id || (
+            // @ts-ignore
+            l.type == item.id && !l._
+          );
+        });
+        const max = sorted.reduce((p, l, index) => {
+          return (l.id == item.type && !_) || l.id == item.from || l.id === item.to ? index : p;
+        }, 0);
         sorted.splice((!!~first && first < max ? first : max) + 1, 0, item);
       } else {
         const max = sorted.reduce((p, l, index) => l.id == item.id ? index : p, 0);
