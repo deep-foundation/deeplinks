@@ -1,7 +1,7 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
 import Debug from 'debug';
-import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
+import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_PACKAGE_VERSION, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
 import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
@@ -97,23 +97,23 @@ export class Packager {
    */
   async fetchPackageNamespaceId(
     name: string,
-  ): Promise<number> {
+  ): Promise<{ error: any, namespaceId: number }> {
     try {
       const tables = await this.fetchTableNamesValuedToTypeId([GLOBAL_ID_PACKAGE_NAMESPACE], []);
       const q = await this.client.query(generateQuery({
         queries: [
-          generateQueryData({ tableName: tables[GLOBAL_ID_PACKAGE_NAMESPACE], returning: `id: link_id`, variables: { where: {
+          generateQueryData({ tableName: `table${tables[GLOBAL_ID_PACKAGE_NAMESPACE]}`, returning: `id: link_id`, variables: { where: {
             value: { _eq: name },
           } } }),
         ],
         name: 'LOAD_PACKAGE_NAMESPACE',
       }));
-      return (q)?.data?.q0?.[0]?.id;
+      return { error: false, namespaceId: (q)?.data?.q0?.[0]?.id };
     } catch(error) {
       debug('fetchPackageNamespaceId error');
-      console.log(error);
+      return { error, namespaceId: 0 };
     }
-    return 0;
+    return { error: true, namespaceId: 0 };
   }
 
   /**
@@ -338,6 +338,8 @@ export class Packager {
   async import(pckg: PackagerPackage): Promise<PackagerImportResult> {
     const errors = [];
     try {
+      if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
+      if (!pckg?.package?.version) throw new Error(`!pckg?.package?.version`);
       const { data, counter, dependedLinks } = await this.deserialize(pckg, errors);
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors);
@@ -453,7 +455,9 @@ export class Packager {
         _: true,
       });
     }
-    let namespaceId = await this.fetchPackageNamespaceId(pckg.package.name);
+    const n = await this.fetchPackageNamespaceId(pckg.package.name);
+    if (n.error) errors.push(n.error);
+    let namespaceId = n.namespaceId;
     if (!namespaceId) {
       namespaceId = ++counter;
       data.push({
@@ -472,6 +476,15 @@ export class Packager {
         _: true,
       });
     }
+    data.push({
+      id: ++counter,
+      type: GLOBAL_ID_PACKAGE_VERSION,
+      to: packageId,
+      from: namespaceId,
+      value: { value: pckg.package.version },
+      // @ts-ignore
+      _: true,
+    });
     data.push({
       id: ++counter,
       type: GLOBAL_ID_CONTAIN,

@@ -134,6 +134,12 @@ const corePckg: PackagerPackage = {
     // 59
 
     { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' },
+
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' },
+
+    { id: 'packageVersionTable', type: 'Table' },
+    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' },
+    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' },
   ],
   errors: [],
   strict: true,
