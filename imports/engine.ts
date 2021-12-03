@@ -28,6 +28,7 @@ const generateEnvs = (envs) => {
 const checkStatus = async () => {
   const result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
   return result?.data?.docker;
+}
 
 const deeplinksEnvs = `MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_PATH=http://localhost:8080/ JWT_SECRET='{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'`;
 
