@@ -43,12 +43,12 @@ export async function call (options: IOptions) {
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      let str = `${envsString} cd ${_deeplinks} && ${isDocker ? '(npm run docker-stop || true)' : isDocker === 0 ? 'npx -q fkill :3006' : ''} && cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
+      let str = `${envsString} cd ${_deeplinks} && ${isDocker ? 'npm run docker-stop &&' : ''} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `${envsString} cd ${_deeplinks} && ${isDocker ? '(npm run docker-stop || true) &&' : isDocker === 0 ? 'npx -q fkill :3006 &&' : ''} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
+      let str = `${envsString} cd ${_deeplinks} && ${isDocker ? 'npm run docker-stop &&' : ''} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }

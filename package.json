@@ -27,7 +27,6 @@
     "body-parser": "^1.19.0",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
-    "fkill": "^8.0.0",
     "gists": "^2.0.0",
     "graphql": "^15.5.0",
     "graphql-tag": "^2.11.0",
