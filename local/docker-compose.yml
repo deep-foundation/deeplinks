@@ -2,6 +2,7 @@ version: '3.6'
 services:
   deeplinks-docker:
     image: menzorg/deeplinks:deeplinks-21-menzorg
+    extra_hosts: ['host.docker.internal:host-gateway']
     restart: always
     environment:
       MIGRATIONS_HASURA_PATH: '${MIGRATIONS_HASURA_PATH}'
