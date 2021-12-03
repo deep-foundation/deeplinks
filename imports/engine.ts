@@ -28,7 +28,8 @@ const generateEnvs = (envs) => {
 const checkStatus = async () => {
   const result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
   return result?.data?.docker;
-}
+
+const deeplinksEnvs = `MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_PATH=http://localhost:8080/ JWT_SECRET='{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'`;
 
 export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
@@ -36,7 +37,7 @@ export async function call (options: IOptions) {
   try {
     const isDocker = await checkStatus();
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? '&& npm run docker-start && npx -q wait-on tcp:3006' : ''} && npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& ${deeplinksEnvs} npm run start-docker && npx -q wait-on tcp:3006` : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }

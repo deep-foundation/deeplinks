@@ -11,8 +11,8 @@
     "hasura-docker": "cross-env JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" npm run hasura-docker-core",
     "hasura-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose up -d",
     "hasura-docker-stop": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose down",
-    "docker-start": "cd local && docker-compose up",
-    "docker-stop": "cd local && docker-compose down"
+    "start-docker": "cd local && docker-compose up",
+    "stop-docker": "cd local && docker-compose down"
   },
   "dependencies": {
     "@apollo/client": "^3.4.9",
