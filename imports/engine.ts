@@ -22,15 +22,22 @@ const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUni
 const generateEnvs = (envs) => {
   let envsString = '';
   Object.keys(envs).forEach(k => envsString += handleEnv(k, envs, envsString));
+  const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
+  const hasuraPort = 8080;
+  const deeplinksPort = 3006;
+  const deepcasePort = 3007;
+  if (isGitpod) {
+    envsString += `export npm_config_yes=true; export JWT_SECRET='{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'; export MIGRATIONS_ID_TYPE_SQL=bigint; export MIGRATIONS_ID_TYPE_GQL=bigint; export MIGRATIONS_HASURA_PATH=$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}'); export MIGRATIONS_HASURA_SSL=1; export MIGRATIONS_HASURA_SECRET=myadminsecretkey; export NEXT_PUBLIC_DEEPLINKS_SERVER=https://$(echo $(gp url ${deepcasePort}) | awk -F[/:] '{print $4}'); export NEXT_PUBLIC_HASURA_PATH=$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}'); export NEXT_PUBLIC_HASURA_SSL=1 HASURA_PATH=$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}'); export HASURA_SSL=1; export MIGRATIONS_DEEPLINKS_APP_URL=$(gp url ${deepcasePort}); export DEEPLINKS_URL=$(gp url ${deeplinksPort}); export NEXT_PUBLIC_DEEPLINKS_URL=$(gp url ${deeplinksPort});`
+  } else {
+    envsString += `cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_ID_TYPE_SQL=bigint MIGRATIONS_ID_TYPE_GQL=bigint MIGRATIONS_HASURA_PATH=localhost:${hasuraPort} MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey NEXT_PUBLIC_DEEPLINKS_SERVER=http://localhost:${deepcasePort} NEXT_PUBLIC_HASURA_PATH=localhost:${hasuraPort} NEXT_PUBLIC_HASURA_SSL=0 HASURA_PATH=localhost:${hasuraPort} HASURA_SSL=0 MIGRATIONS_DEEPLINKS_APP_URL=http://host.docker.internal:${deepcasePort} DEEPLINKS_URL=http://host.docker.internal:${deeplinksPort} NEXT_PUBLIC_DEEPLINKS_URL=http://localhost:${deeplinksPort}`
+  }
   return envsString;
 };
 
 const checkStatus = async () => {
   const result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
   return result?.data?.docker;
-}
-
-const deeplinksEnvs = `MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_PATH=http://localhost:8080/ JWT_SECRET='{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'`;
+};
 
 export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
@@ -38,7 +45,7 @@ export async function call (options: IOptions) {
   try {
     const isDocker = await checkStatus();
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& ${deeplinksEnvs} npm run start-docker && npx -q wait-on tcp:3006` : ''} && npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-docker && npx -q wait-on tcp:3006` : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
