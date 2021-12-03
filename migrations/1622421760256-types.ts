@@ -5,14 +5,17 @@ import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import times from 'lodash/times';
 import { time } from 'console';
 import { Packager, PackagerPackage } from '../imports/packager';
+import { DeepClient } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:types');
 
-const client = generateApolloClient({
+const apolloClient = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
+
+const client = new DeepClient({ apolloClient });
 
 const corePckg: PackagerPackage = {
   package: {
@@ -157,13 +160,5 @@ export const up = async () => {
 
 export const down = async () => {
   debug('down');
-  const mutateResult = await client.mutate(generateSerial({
-    actions: [
-      generateMutation({
-        tableName: LINKS_TABLE_NAME, operation: 'delete',
-        variables: { where: {} },
-      }),
-    ],
-    name: 'DELETE_TYPE_TYPE'
-  }));
+  await client.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };
