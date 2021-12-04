@@ -15,7 +15,7 @@
     "stop-docker": "cd local && docker-compose down"
   },
   "dependencies": {
-    "@apollo/client": "^3.4.9",
+    "@apollo/client": "^3.5.5",
     "@deep-foundation/materialized-path": "0.0.6",
     "@deep-foundation/react-hasura": "^0.0.3",
     "@deep-foundation/store": "^0.0.3",
