@@ -47,3 +47,15 @@ export const GLOBAL_ID_INSERT=43;
 export const GLOBAL_ID_UPDATE=44;
 export const GLOBAL_ID_DELETE=45;
 export const GLOBAL_ID_SELECT=46;
+
+// Handler
+export const GLOBAL_ID_HANDLER=48;
+
+// SyncTextFile
+export const GLOBAL_ID_SYNC_TEXT_FILE=65;
+
+// JSExecutionProvider
+export const GLOBAL_ID_JS_EXECUTION_PROVIDER=69;
+
+// HandleInsert
+export const GLOBAL_ID_HANDLE_INSERT=70;

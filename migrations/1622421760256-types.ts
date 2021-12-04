@@ -112,12 +112,12 @@ const corePckg: PackagerPackage = {
 
     { id: 'Insert', type: 'Operation' },
     // 43
-    { id: 'Update', type: 'Operation' },
-    { id: 'Delete', type: 'Operation' },
-    { id: 'Select', type: 'Operation' },
+    { id: 'Update', type: 'Operation' }, // 44
+    { id: 'Delete', type: 'Operation' }, // 45
+    { id: 'Select', type: 'Operation' }, // 46
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' },
-    { id: 'Handle', type: 'Type', value: { value: 'Handle' }, from: 'Type', to: 'Operation' },
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 47
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 48
 
     { id: 'Tree', type: 'Type', value: { value: 'Tree' } },
     { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } },
@@ -136,13 +136,44 @@ const corePckg: PackagerPackage = {
     { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' },
     // 59
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' },
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 60
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' },
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 61
 
-    { id: 'packageVersionTable', type: 'Table' },
-    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' },
-    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' },
+    { id: 'packageVersionTable', type: 'Table' }, // 62
+    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' }, // 63
+    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' }, // 64
+
+    { id: 'SyncTextFile', type: 'Type' }, // 65
+
+    { id: 'syncTextFileTable', type: 'Table' }, // 66
+    { id: 'syncTextFileTableColumnValue', type: 'Column', from: 'syncTextFileTable', to: 'String' }, // 67
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'syncTextFileTable', to: 'SyncTextFile' }, // 68
+
+    { id: 'JSExecutionProvider', type: 'Type' }, // 69
+
+    { id: 'HandleInsert', type: 'Table' }, // 70
+    { id: 'HandleUpdate', type: 'Table' }, // 71
+    { id: 'HandleCreate', type: 'Table' }, // 72
+
+    { 
+      id: 'helloWorldJsFile',
+      type: 'SyncTextFile',
+      value: { value: "console.log('hello from insert handler');" }
+    }, // 73
+    { 
+      id: 'helloWorldHandler',
+      from: 'JSExecutionProvider',
+      type: 'Handler',
+      to: 'helloWorldJsFile'
+    }, // 74
+    { 
+      id: 'helloWorldInsertHandler',
+      from: 'Type',
+      type: 'HandleInsert',
+      to: 'helloWorldHandler'
+    } // 75
+
   ],
   errors: [],
   strict: true,
