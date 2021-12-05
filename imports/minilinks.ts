@@ -20,25 +20,26 @@ export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<
   [key: string]: any;
 }
 
-export interface LinksResult<Link> {
+export interface MinilinksResult<Link> {
   links: Link[];
   types: { [id: number]: Link[] };
   byId: { [id: number]: Link };
+  options: MinilinksGeneratorOptions;
 }
 
 export interface MinilinksGeneratorOptions {
-  id: 'id',
-  type_id: 'type_id',
-  type: 'type',
-  typed: 'typed',
-  from_id: 'from_id',
-  from: 'from',
-  out: 'out',
-  to_id: 'to_id',
-  to: 'to',
-  in: 'in',
-  inByType: 'inByType',
-  outByType: 'outByType',
+  id: string;
+  type_id: string;
+  type: string;
+  typed: string;
+  from_id: string;
+  from: string;
+  out: string;
+  to_id: string;
+  to: string;
+  in: string;
+  inByType: string;
+  outByType: string;
   handler?: (link, result: any) => any;
 }
 
@@ -57,8 +58,13 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   outByType: 'outByType',
 };
 
-export function Minilinks<MGO extends MinilinksGeneratorOptions>(options: MGO) {
-  return function minilinks<L extends Link<number>>(linksArray = [], memory: any = {}): LinksResult<L> {
+export interface MinilinksInstance<L extends Link<number>>{
+  (linksArray: L[], memory?: MinilinksResult<L>): MinilinksResult<L>
+}
+
+export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<number>>(options: MGO): MinilinksInstance<L> {
+  return function minilinks<L>(linksArray = [], memory: any = {}): MinilinksResult<L> {
+    if (!memory.options) memory.options = options;
     const types: { [id: number]: L[] } = memory.types || {};
     const byId: { [id: number]: L } = memory.byId || {};
     const links: L[] = memory.links || [];

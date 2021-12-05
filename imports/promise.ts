@@ -14,7 +14,7 @@ export interface PromiseOptions {
   client: ApolloClient<any>;
 }
 
-export function awaitPromise(options: PromiseOptions) {
+export function awaitPromise(options: PromiseOptions): Promise<boolean> {
   const id = options.id;
   const timeout = options.timeout || 1000;
   const client: ApolloClient<any> = options.client;

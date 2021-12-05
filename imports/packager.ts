@@ -1,12 +1,13 @@
 import { ApolloClient } from '@apollo/client';
 import { link } from 'fs';
 import Debug from 'debug';
-import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
+import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_PACKAGE_VERSION, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
-import { LinksResult, Link, LinkPlain, minilinks } from './minilinks';
+import { MinilinksResult, Link, LinkPlain, minilinks } from './minilinks';
 import { awaitPromise } from './promise';
 import { reserve } from './reserve';
+import { DeepClient } from './client';
 
 const debug = Debug('deeplinks:packager');
 
@@ -71,8 +72,17 @@ export function sort(
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
       if (item?.type) {
-        const first = sorted.findIndex((l, index) => l.from == item.id || l.to == item.id || l.type == item.id);
-        const max = sorted.reduce((p, l, index) => l.id == item.type || l.id == item.from || l.id === item.to ? index : p, 0);
+        // @ts-ignore
+        const _ = item?._;
+        const first = sorted.findIndex((l, index) => {
+          return l.from == item.id || l.to == item.id || (
+            // @ts-ignore
+            l.type == item.id && !l._
+          );
+        });
+        const max = sorted.reduce((p, l, index) => {
+          return (l.id == item.type && !_) || l.id == item.from || l.id === item.to ? index : p;
+        }, 0);
         sorted.splice((!!~first && first < max ? first : max) + 1, 0, item);
       } else {
         const max = sorted.reduce((p, l, index) => l.id == item.id ? index : p, 0);
@@ -83,10 +93,10 @@ export function sort(
   return { sorted };
 }
 
-export class Packager {
+export class Packager<L extends Link<any>> {
   pckg: PackagerPackage;
-  client: ApolloClient<any>;
-  constructor(client: ApolloClient<any>) {
+  client: DeepClient<any>;
+  constructor(client: DeepClient<L>) {
     this.client = client;
     // @ts-ignore
     global.packager = this;
@@ -97,22 +107,19 @@ export class Packager {
    */
   async fetchPackageNamespaceId(
     name: string,
-  ): Promise<number> {
+  ): Promise<{ error: any, namespaceId: number }> {
     try {
       const tables = await this.fetchTableNamesValuedToTypeId([GLOBAL_ID_PACKAGE_NAMESPACE], []);
-      const q = await this.client.query(generateQuery({
-        queries: [
-          generateQueryData({ tableName: tables[GLOBAL_ID_PACKAGE_NAMESPACE], returning: `id: link_id`, variables: { where: {
-            value: { _eq: name },
-          } } }),
-        ],
-        name: 'LOAD_PACKAGE_NAMESPACE',
-      }));
-      return (q)?.data?.q0?.[0]?.id;
+      const q = await this.client.select({ value: { _eq: name }, }, {
+        table: `table${tables[GLOBAL_ID_PACKAGE_NAMESPACE]}`,
+        returning: 'id: link_id'
+      });
+      return { error: false, namespaceId: q?.data?.[0]?.id };
     } catch(error) {
-      debug('fetchPackageNamespaceId error', error);
+      debug('fetchPackageNamespaceId error');
+      return { error, namespaceId: 0 };
     }
-    return 0;
+    return { error: true, namespaceId: 0 };
   }
 
   /**
@@ -126,18 +133,17 @@ export class Packager {
       const tables = await this.fetchTableNamesValuedToTypeId([GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE], []);
       const packageName = pckg?.dependencies?.[dependedLink?.package?.dependencyId]?.name;
       const packageTableName = `table${tables[GLOBAL_ID_PACKAGE]}`;
-      const q = await this.client.query(generateQuery({
-        queries: [
-          generateQueryData({ tableName: `table${tables[GLOBAL_ID_CONTAIN]}`, returning: `id link { id: to_id }`, variables: { where: {
-            value: { _eq: dependedLink?.package?.containValue },
-            link: { from: { [packageTableName]: { value: { _eq: packageName } } } },
-          } } }),
-        ],
-        name: 'FETCH_DEPENDENCIES_LINKS_IDS',
-      }));
-      return (q)?.data?.q0?.[0]?.link?.id || 0;
+      const q = await this.client.select({
+        value: { _eq: dependedLink?.package?.containValue },
+        link: { from: { [packageTableName]: { value: { _eq: packageName } } } },
+      }, {
+        table: `table${tables[GLOBAL_ID_CONTAIN]}`,
+        returning: 'id link { id: to_id }'
+      });
+      return q?.data?.[0]?.link?.id || 0;
     } catch(error) {
-      debug('fetchDependenciedLinkId error', error);
+      debug('fetchDependenciedLinkId error');
+      console.log(error);
     }
     return 0;
   }
@@ -151,16 +157,13 @@ export class Packager {
   ): Promise<{ [type: string]: string }> {
     const result = {};
     try {
-      const q = await this.client.query(generateQuery({
-        queries: [
-          generateQueryData({ tableName: 'links', returning: `id values: out(where: { type_id: { _eq: ${GLOBAL_ID_TABLE_VALUE} } }) { id: to_id }`, variables: { where: {
-            type_id: { _eq: GLOBAL_ID_TABLE },
-            out: { type_id: { _eq: GLOBAL_ID_TABLE_VALUE }, to_id: { _in: types } },
-          } } }),
-        ],
-        name: 'LOAD_TYPES_TABLES_HASH',
-      }));
-      const tables = (q)?.data?.q0;
+      const q = await this.client.select({
+        type_id: { _eq: GLOBAL_ID_TABLE },
+        out: { type_id: { _eq: GLOBAL_ID_TABLE_VALUE }, to_id: { _in: types } },
+      }, {
+        returning: `id values: out(where: { type_id: { _eq: ${GLOBAL_ID_TABLE_VALUE} } }) { id: to_id }`
+      });
+      const tables = (q)?.data;
       for (let t = 0; t < tables.length; t++) {
         const table = tables[t];
         for (let i = 0; i < table.values.length; i++) {
@@ -169,7 +172,8 @@ export class Packager {
         }
       }
     } catch(error) {
-      debug('fetchTableNamesValuedToTypeId error', error);
+      debug('fetchTableNamesValuedToTypeId error');
+      console.log(error);
       errors.push(error);
     }
     return result;
@@ -184,41 +188,33 @@ export class Packager {
   ) {
     debug('insertItem', { id }, item);
     try {
+      // insert link section
       if (item.type) {
-        const linkInsert = await this.client.mutate(generateSerial({
-          actions: [insertMutation('links', { objects: { id, type_id: item.type, from_id: item.from || 0, to_id: item.to || 0 } })],
-          name: 'IMPORT_PACKAGE_LINK',
-        }));
+        const linkInsert = await this.client.insert({ id: +id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 }, { name: 'IMPORT_PACKAGE_LINK' });
         if (linkInsert?.errors) {
           errors.push(linkInsert?.errors);
         }
       }
+      // modify ids section
       if (item.type || item.package) {
         mutated[item.id] = true;
-        item.id = id;
         items.filter(i => (
-          i.id === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.id = id);
+          i.from === item.id
+        )).forEach(l => l.from = id);
         items.filter(i => (
-          i.from === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.from = id);
-        items.filter(i => (
-          i.to === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.to = id);
+          i.to === item.id
+        )).forEach(l => l.to = id);
         items.filter(i => (
           i.type === item.id && (
             // @ts-ignore
             !i._
         ))).forEach(l => l.type = id);
+        items.filter(i => (
+          i.id === item.id
+        )).forEach(l => l.id = id);
       }
       debug('insertItem promise', id);
-      await awaitPromise({ id, client: this.client });
+      await this.client.await(id);
       debug('insertItem promise awaited', id);
       if (item.value && !item.package) {
         debug('insertItem value', id, item);
@@ -236,16 +232,14 @@ export class Packager {
           const tables = await this.fetchTableNamesValuedToTypeId([+valueLink.type], errors);
           debug('insertItem tables', tables);
           if (!tables[valueLink.type]) errors.push(`Table for type ${valueLink.type} for link ${valueLink.id} not founded for insert ${JSON.stringify(item)}.`);
-          const valueInsert = await this.client.mutate(generateSerial({
-            actions: [insertMutation(`table${tables[valueLink.type]}`, { objects: { link_id: valueLink.id, ...item.value } })],
-            name: 'IMPORT_PACKAGE_VALUE',
-          }));
+          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `table${tables[valueLink.type]}`, name: 'IMPORT_PACKAGE_VALUE' });
           debug('insertItem valueInsert', valueInsert);
           if (valueInsert?.errors) errors.push(valueInsert?.errors);
         }
       }
     } catch(error) {
-      debug('insertItem error', error);
+      debug('insertItem error');
+      console.log(error);
       errors.push(error);
     }
     return;
@@ -260,16 +254,13 @@ export class Packager {
     mutated: { [index: number]: boolean } = {},
   ): Promise<{ ids: number[] }> {
     try {
-      const ids = await reserve({
-        client: this.client,
-        count: (counter - dependedLinks.length) + 2,
-      });
+      const ids = await this.client.reserve((counter - dependedLinks.length) + 2);
       for (let i = 0; i < dependedLinks.length; i++) {
         const item = dependedLinks[i];
         const id = await this.fetchDependenciedLinkId(pckg, item);
         if (!id) throw new Error(`Cant find id for ${item.id}`);
         await this.insertItem(id, data, item, errors, mutated);
-        if (errors.length) return;
+        if (errors.length) return { ids: [] };
       }
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
@@ -277,12 +268,13 @@ export class Packager {
           const id = ids[+(item.id) - 1];
           if (!id) throw new Error(`Cant find id for ${item.id} ${data.filter(i => i.id === item.id)}`);
           await this.insertItem(id, data, item, errors, mutated);
-          if (errors.length) return;
+          if (errors.length) return { ids: [] };
         }
       }
       return { ids };
     } catch(error) {
-      debug('insertItems error', error);
+      debug('insertItems error');
+      console.log(error);
       errors.push(error);
     }
     return { ids: [] };
@@ -338,6 +330,9 @@ export class Packager {
   async import(pckg: PackagerPackage): Promise<PackagerImportResult> {
     const errors = [];
     try {
+      if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
+      if (!pckg?.package?.version) throw new Error(`!pckg?.package?.version`);
+      if (!pckg?.strict) throw new Error(`!pckg?.strict`);
       const { data, counter, dependedLinks } = await this.deserialize(pckg, errors);
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors);
@@ -348,16 +343,23 @@ export class Packager {
       await this.importNamespace();
       return { ids, errors };
     } catch(error) {
-      debug('insertItems error', error);
+      debug('insertItems error');
+      console.log(error);
       errors.push(error);
     }
     return { ids: [], errors };
   }
 
-  async selectLinks(options: PackagerExportOptions): Promise<LinksResult<PackagerLink>> {
-    const result = await this.client.query(generateQuery({
-      queries: [
-        generateQueryData({ tableName: 'links', returning: `
+  async selectLinks(options: PackagerExportOptions): Promise<MinilinksResult<PackagerLink>> {
+    const result = await this.client.select({
+      _or: [
+        { id: { _eq: options.packageLinkId } },
+        { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
+        { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
+      ]
+    }, {
+      name: 'LOAD_PACKAGE_LINKS',
+      returning: `
           id type_id from_id to_id value
           type {
             id value
@@ -386,17 +388,9 @@ export class Packager {
               }
             }
           }
-        `, variables: { where: {
-          _or: [
-            { id: { _eq: options.packageLinkId } },
-            { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
-            { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
-          ]
-        } } }),
-      ],
-      name: 'LOAD_PACKAGE_LINKS',
-    }));
-    return minilinks((result)?.data?.q0);
+        `
+    })
+    return minilinks((result)?.data);
   }
 
 
@@ -438,7 +432,23 @@ export class Packager {
       // @ts-ignore
       _: true,
     });
-    let namespaceId = await this.fetchPackageNamespaceId(pckg.package.name);
+    // create contains links
+    const containsArray = Object.keys(containsHash);
+    for (let c = 0; c < containsArray.length; c++) {
+      const contain = containsArray[c];
+      data.push({
+        id: ++counter,
+        type: GLOBAL_ID_CONTAIN,
+        from: packageId,
+        to: containsHash[contain],
+        value: { value: contain },
+        // @ts-ignore
+        _: true,
+      });
+    }
+    const n = await this.fetchPackageNamespaceId(pckg.package.name);
+    if (n.error) errors.push(n.error);
+    let namespaceId = n.namespaceId;
     if (!namespaceId) {
       namespaceId = ++counter;
       data.push({
@@ -459,30 +469,25 @@ export class Packager {
     }
     data.push({
       id: ++counter,
+      type: GLOBAL_ID_PACKAGE_VERSION,
+      to: packageId,
+      from: namespaceId,
+      value: { value: pckg.package.version },
+      // @ts-ignore
+      _: true,
+    });
+    data.push({
+      id: ++counter,
       type: GLOBAL_ID_CONTAIN,
       from: namespaceId,
       to: packageId,
       // @ts-ignore
       _: true,
     });
-    // create contains links
-    const containsArray = Object.keys(containsHash);
-    for (let c = 0; c < containsArray.length; c++) {
-      const contain = containsArray[c];
-      data.push({
-        id: ++counter,
-        type: GLOBAL_ID_CONTAIN,
-        from: packageId,
-        to: containsHash[contain],
-        value: { value: contain },
-        // @ts-ignore
-        _: true,
-      });
-    }
     return { data, errors, counter, dependedLinks };
   }
 
-  async serialize(globalLinks: LinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {
+  async serialize(globalLinks: MinilinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {
     let counter = 1;
     let dependenciesCounter = 1;
     const dependencies = {};

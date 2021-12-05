@@ -2,7 +2,8 @@ export const GLOBAL_ID_TYPE=1;
 export const GLOBAL_ID_PACKAGE=2;
 export const GLOBAL_NAME_PACKAGE='Package';
 export const GLOBAL_ID_PACKAGE_NAMESPACE=56;
-export const GLOBAL_ID_PACKAGE_ACTIVE=63;
+export const GLOBAL_ID_PACKAGE_ACTIVE=60;
+export const GLOBAL_ID_PACKAGE_VERSION=61;
 
 export const GLOBAL_ID_TABLE=3;
 export const GLOBAL_NAME_TABLE = 'Table';
@@ -46,3 +47,15 @@ export const GLOBAL_ID_INSERT=43;
 export const GLOBAL_ID_UPDATE=44;
 export const GLOBAL_ID_DELETE=45;
 export const GLOBAL_ID_SELECT=46;
+
+// Handler
+export const GLOBAL_ID_HANDLER=48;
+
+// SyncTextFile
+export const GLOBAL_ID_SYNC_TEXT_FILE=65;
+
+// JSExecutionProvider
+export const GLOBAL_ID_JS_EXECUTION_PROVIDER=69;
+
+// HandleInsert
+export const GLOBAL_ID_HANDLE_INSERT=70;
