@@ -3,6 +3,7 @@ import Gists from 'gists';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { Packager } from '../packager';
 import { ApolloServer } from 'apollo-server-express';
+import { DeepClient } from '../client';
 
 const gists = new Gists({
   username: 'ivansglazunov', 
@@ -15,7 +16,7 @@ const client = generateApolloClient({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-const packager = new Packager(client);
+const packager = new Packager(new DeepClient({ apolloClient: client }));
 
 const typeDefs = gql`
   type Query {
