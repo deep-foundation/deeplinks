@@ -1,6 +1,5 @@
 import Debug from 'debug';
 
-import Cors from 'cors';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { sql } from '@deep-foundation/hasura/sql';
@@ -19,7 +18,7 @@ import {
   GLOBAL_ID_HANDLER,
   GLOBAL_ID_JS_EXECUTION_PROVIDER,
   GLOBAL_ID_HANDLE_INSERT,
-} from '@deep-foundation/deeplinks/imports/global-ids';
+} from '../global-ids';
 import { reject, resolve } from '../promise';
 
 const SCHEMA = 'public';

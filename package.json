@@ -42,14 +42,12 @@
     "wait-on": "^6.0.0"
   },
   "peerDependencies": {
-    "@deep-foundation/hasura": "*",
     "react": "*"
   },
   "engines": {
     "node": "^14.15.0"
   },
   "devDependencies": {
-    "@deep-foundation/hasura": "0.0.4",
     "@types/node": "^14.17.34",
     "jest": "^26.6.3",
     "typescript": "^4.4.3"
