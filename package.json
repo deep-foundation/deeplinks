@@ -5,6 +5,7 @@
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
+    "test": "export HASURA_PATH=localhost:8080; export HASURA_SSL=0; export HASURA_SECRET=myadminsecretkey; DEBUG='materialized-path:*' jest",
     "migrate": "npx migrate up --compiler=ts:./compiler/index.js",
     "unmigrate": "npx migrate down --compiler=ts:./compiler/index.js",
     "hasura-docker": "cross-env JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" npm run hasura-docker-core",
@@ -18,6 +19,7 @@
     "@deep-foundation/store": "^0.0.3",
     "@types/node": "^14.17.14",
     "@types/react": "^17.0.19",
+    "@types/jest": "^26.0.22",
     "apollo-boost": "^0.4.9",
     "apollo-server": "^2.21.0",
     "cross-env": "^7.0.3",
@@ -28,6 +30,7 @@
     "jsonwebtoken": "^8.5.1",
     "rimraf": "^3.0.2",
     "uniqid": "^5.3.0",
+    "ts-jest": "^26.5.4",
     "wait-on": "^6.0.0"
   },
   "peerDependencies": {
@@ -38,6 +41,7 @@
     "node": "^14.15.0"
   },
   "devDependencies": {
+    "jest": "^26.6.3",
     "typescript": "^4.4.3"
   }
 }
