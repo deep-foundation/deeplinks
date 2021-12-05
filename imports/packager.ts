@@ -71,22 +71,25 @@ export function sort(
   } else {
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
-      if (item?.type) {
-        // @ts-ignore
-        const _ = item?._;
-        const first = sorted.findIndex((l, index) => {
-          return l.from == item.id || l.to == item.id || (
-            // @ts-ignore
-            l.type == item.id && !l._
-          );
-        });
-        const max = sorted.reduce((p, l, index) => {
-          return (l.id == item.type && !_) || l.id == item.from || l.id === item.to ? index : p;
-        }, 0);
-        sorted.splice((!!~first && first < max ? first : max) + 1, 0, item);
-      } else {
+      if (item.value && !item.type) {
         const max = sorted.reduce((p, l, index) => l.id == item.id ? index : p, 0);
         sorted.splice((max) + 1, 0, item);
+      } else if (item.package) {
+        sorted.splice(0, 0, item);
+      } else {
+        // @ts-ignore
+        const _ = item?._;
+        const firstDependIndex = sorted.findIndex((l, index) => {
+          return l.from == item.id || l.to == item.id || (
+            // @ts-ignore
+            (l.type == item.id) && !l._
+          );
+        });
+        const maxDependIndex = sorted.reduce((p, l, index) => {
+          return ((l.id == item.type) && !_) || l.id == item.from || l.id === item.to ? index : p;
+        }, 0);
+        const _index = (!!~firstDependIndex && firstDependIndex < maxDependIndex ? firstDependIndex : maxDependIndex)
+        sorted.splice(_index + 1, 0, item);
       }
     }
   }
@@ -180,44 +183,27 @@ export class Packager<L extends Link<any>> {
   }
 
   async insertItem(
-    id: number,
     items: PackagerPackageItem[],
     item: PackagerPackageItem,
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
-    debug('insertItem', { id }, item);
+    debug('insertItem', item);
     try {
       // insert link section
       if (item.type) {
-        const linkInsert = await this.client.insert({ id: +id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 }, { name: 'IMPORT_PACKAGE_LINK' });
+        const insert = { id: +item.id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 };
+        const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
+        console.log('linkInsert', insert, linkInsert);
         if (linkInsert?.errors) {
           errors.push(linkInsert?.errors);
         }
       }
-      // modify ids section
-      if (item.type || item.package) {
-        mutated[item.id] = true;
-        items.filter(i => (
-          i.from === item.id
-        )).forEach(l => l.from = id);
-        items.filter(i => (
-          i.to === item.id
-        )).forEach(l => l.to = id);
-        items.filter(i => (
-          i.type === item.id && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.type = id);
-        items.filter(i => (
-          i.id === item.id
-        )).forEach(l => l.id = id);
-      }
-      debug('insertItem promise', id);
-      await this.client.await(id);
-      debug('insertItem promise awaited', id);
+      debug('insertItem promise', item.id);
+      await this.client.await(+item.id);
+      debug('insertItem promise awaited', item.id);
       if (item.value && !item.package) {
-        debug('insertItem value', id, item);
+        debug('insertItem value', item);
         let valueLink
         if (!item.type) {
           valueLink = items.find(i => i.id === item.id && !!i.type);
@@ -252,32 +238,27 @@ export class Packager<L extends Link<any>> {
     dependedLinks: PackagerPackageItem[],
     errors: PackagerError[] = [],
     mutated: { [index: number]: boolean } = {},
-  ): Promise<{ ids: number[] }> {
+  ): Promise<any> {
     try {
-      const ids = await this.client.reserve((counter - dependedLinks.length) + 2);
       for (let i = 0; i < dependedLinks.length; i++) {
         const item = dependedLinks[i];
-        const id = await this.fetchDependenciedLinkId(pckg, item);
-        if (!id) throw new Error(`Cant find id for ${item.id}`);
-        await this.insertItem(id, data, item, errors, mutated);
+        await this.insertItem(data, item, errors, mutated);
         if (errors.length) return { ids: [] };
       }
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
         if (!item.package) {
-          const id = ids[+(item.id) - 1];
-          if (!id) throw new Error(`Cant find id for ${item.id} ${data.filter(i => i.id === item.id)}`);
-          await this.insertItem(id, data, item, errors, mutated);
+          await this.insertItem(data, item, errors, mutated);
           if (errors.length) return { ids: [] };
         }
       }
-      return { ids };
+      return;
     } catch(error) {
       debug('insertItems error');
       console.log(error);
       errors.push(error);
     }
-    return { ids: [] };
+    return;
   }
 
   async importNamespace() {
@@ -323,7 +304,38 @@ export class Packager<L extends Link<any>> {
     //   name: 'LOAD_PACKAGE_LINKS',
     // }));
   }
-  
+
+  async updateIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]) {
+    let idsIndex = 0;
+    for (let l = 0; l < links.length; l++) {
+      const item = links[l];
+      const oldId = item.id;
+      let newId;
+      if (item.package) {
+        newId = await this.fetchDependenciedLinkId(pckg, item);
+        item.id = newId;
+      } else {
+        newId = ids[idsIndex++];
+      }
+      if (item.type || item.package) {
+        links.filter(i => (
+          i.from === oldId
+        )).forEach(l => l.from = newId);
+        links.filter(i => (
+          i.to === oldId
+        )).forEach(l => l.to = newId);
+        links.filter(i => (
+          i.type === oldId && (
+            // @ts-ignore
+            !i._
+        ))).forEach(l => l.type = newId);
+        links.filter(i => (
+          i.id === oldId
+        )).forEach(l => l.id = newId);
+      }
+    }
+  }
+
   /**
    * Import into system pckg.
    */
@@ -332,13 +344,14 @@ export class Packager<L extends Link<any>> {
     try {
       if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
       if (!pckg?.package?.version) throw new Error(`!pckg?.package?.version`);
-      if (!pckg?.strict) throw new Error(`!pckg?.strict`);
       const { data, counter, dependedLinks } = await this.deserialize(pckg, errors);
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors);
       if (errors.length) return { errors };
       const mutated = {};
-      const { ids } = await this.insertItems(pckg, sorted, counter, dependedLinks, errors, mutated);
+      const ids = await this.client.reserve((counter - dependedLinks.length) + 2);
+      await this.updateIds(pckg, ids, sorted);
+      await this.insertItems(pckg, sorted, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       await this.importNamespace();
       return { ids, errors };
@@ -392,7 +405,6 @@ export class Packager<L extends Link<any>> {
     })
     return minilinks((result)?.data);
   }
-
 
   /** Deserialize pckg data to links list with local numerical ids. */
   async deserialize(

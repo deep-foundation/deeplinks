@@ -59,34 +59,30 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
           else if (result?.data) {
             debug('data', result.data);
             const links = result.data?.q0;
-            if (links.length) {
-              let thenExists = false;
-              let thenResolved = false;
-              let thenRejected = false;
-              for (let l = 0; l < links.length; l++) {
-                const link = links[l];
-                if (link?.type?.id === GLOBAL_ID_THEN) thenExists = true;
-                else if (link?.type?.id === GLOBAL_ID_RESOLVED) thenResolved = true;
-                else if (link?.type?.id === GLOBAL_ID_REJECTED) thenRejected = true;
-              }
-              debug('analized', { thenExists, thenResolved, thenRejected });
-              if (thenExists) {
-                if (thenResolved && !thenRejected) {
-                  debug('resolved');
-                  return res(true);
-                }
-                else if (thenRejected) {
-                  debug('rejected');
-                  return rej(false);
-                } else {
-                  debug('waiting');
-                }
-              } else {
-                debug('!then');
+            let thenExists = false;
+            let thenResolved = false;
+            let thenRejected = false;
+            for (let l = 0; l < links.length; l++) {
+              const link = links[l];
+              if (link?.type?.id === GLOBAL_ID_THEN) thenExists = true;
+              else if (link?.type?.id === GLOBAL_ID_RESOLVED) thenResolved = true;
+              else if (link?.type?.id === GLOBAL_ID_REJECTED) thenRejected = true;
+            }
+            debug('analized', { thenExists, thenResolved, thenRejected });
+            if (thenExists) {
+              if (thenResolved && !thenRejected) {
+                debug('resolved');
                 return res(true);
               }
+              else if (thenRejected) {
+                debug('rejected');
+                return rej(false);
+              } else {
+                debug('waiting');
+              }
             } else {
-              debug('waiting');
+              debug('!then');
+              return res(true);
             }
           }
         } catch(error) {
