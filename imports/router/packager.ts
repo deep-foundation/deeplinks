@@ -1,14 +1,14 @@
 import gql from 'graphql-tag';
-import Gists from 'gists';
+// import Gists from 'gists';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { Packager } from '../packager';
 import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client';
 
-const gists = new Gists({
-  username: 'ivansglazunov', 
-  password: 'Isg7499Github',
-});
+// const gists = new Gists({
+//   username: 'ivansglazunov', 
+//   password: 'Isg7499Github',
+// });
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -49,20 +49,20 @@ const resolvers = {
       const { name, version, uri, type } = args.input;
       const errors = [];
       if (type === 'gist') {
-        const result = await gists.get('4cf14e3e58f4e96f7e7914b963ecdd29');
-        const files = result?.body?.files;
-        const deepPckgContent = files?.['deep.pckg']?.content;
-        if (deepPckgContent) {
-          try {
-            const deepPckg = JSON.parse(deepPckgContent);
-            const { ids, errors } = await packager.import(deepPckg);
-            return { ids, errors };
-          } catch(error) {
-            errors.push(error);
-          }
-        } else {
-          errors.push(`deep.pckg not founded in gist`);
-        }
+        // const result = await gists.get('4cf14e3e58f4e96f7e7914b963ecdd29');
+        // const files = result?.body?.files;
+        // const deepPckgContent = files?.['deep.pckg']?.content;
+        // if (deepPckgContent) {
+        //   try {
+        //     const deepPckg = JSON.parse(deepPckgContent);
+        //     const { ids, errors } = await packager.import(deepPckg);
+        //     return { ids, errors };
+        //   } catch(error) {
+        //     errors.push(error);
+        //   }
+        // } else {
+        //   errors.push(`deep.pckg not founded in gist`);
+        // }
       }
       return { ids: [], errors };
     },

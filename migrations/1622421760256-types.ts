@@ -64,9 +64,9 @@ const corePckg: PackagerPackage = {
 
     { id: 'packageTable', type: 'Table' },
     { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' },
-    { id: 'packageTableColumnIdentifier', type: 'Column', from: 'packageTable', to: 'JSON', value: { value: 'identifier' } },
+    // { id: 'packageTableColumnIdentifier', type: 'Column', from: 'packageTable', to: 'JSON', value: { value: 'identifier' } },
     { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
-    // 26
+    // 25
 
     // ===
 
@@ -85,11 +85,11 @@ const corePckg: PackagerPackage = {
     // /ign
 
     { id: 'Selector', type: 'Type', value: { value: 'Selector' } },
-    // 27
+    // 26
     { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
     
     { id: 'Rule', type: 'Type', value: { value: 'Rule' } },
-    // 29
+    // 28
     { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' },
     { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' },
@@ -104,37 +104,38 @@ const corePckg: PackagerPackage = {
     { id: 'admin', type: 'User' },
 
     { id: 'Operation', type: 'Type', value: { value: 'Operation' } },
-    // 39
+    // 38
 
     { id: 'operationTable', type: 'Table' },
     { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' },
     { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' },
 
     { id: 'Insert', type: 'Operation' },
-    // 43
-    { id: 'Update', type: 'Operation' }, // 44
-    { id: 'Delete', type: 'Operation' }, // 45
-    { id: 'Select', type: 'Operation' }, // 46
+
+    // 42
+    { id: 'Update', type: 'Operation' },
+    { id: 'Delete', type: 'Operation' },
+    { id: 'Select', type: 'Operation' },
 
     { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 47
     { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 48
 
     { id: 'Tree', type: 'Type', value: { value: 'Tree' } },
     { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } },
-    // 50
+    // 49
     { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } },
     { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } },
 
     { id: 'userTree', type: 'Tree' },
     { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' },
     { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' },
-    // 55
+    // 54
     { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } },
 
     { id: 'packageNamespaceTable', type: 'Table' },
     { id: 'packageNamespaceTableColumnValue', type: 'Column', from: 'packageNamespaceTable', to: 'String' },
     { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' },
-    // 59
+    // 58
 
     { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 60
 

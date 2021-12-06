@@ -261,50 +261,6 @@ export class Packager<L extends Link<any>> {
     return;
   }
 
-  async importNamespace() {
-    // const result = await this.client.query(generateQuery({
-    //   queries: [
-    //     generateQueryData({ tableName: 'links', returning: `
-    //       id type_id from_id to_id value
-    //       type {
-    //         id value
-    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
-    //           id
-    //           package: from {
-    //             id value
-    //           }
-    //         }
-    //       }
-    //       from {
-    //         id
-    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
-    //           id
-    //           package: from {
-    //             id value
-    //           }
-    //         }
-    //       }
-    //       to {
-    //         id
-    //         contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
-    //           id
-    //           package: from {
-    //             id value
-    //           }
-    //         }
-    //       }
-    //     `, variables: { where: {
-    //       _or: [
-    //         { id: { _eq: options.packageLinkId } },
-    //         { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
-    //         { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
-    //       ]
-    //     } } }),
-    //   ],
-    //   name: 'LOAD_PACKAGE_LINKS',
-    // }));
-  }
-
   async updateIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]) {
     let idsIndex = 0;
     for (let l = 0; l < links.length; l++) {
@@ -353,7 +309,6 @@ export class Packager<L extends Link<any>> {
       await this.updateIds(pckg, ids, sorted);
       await this.insertItems(pckg, sorted, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
-      await this.importNamespace();
       return { ids, errors };
     } catch(error) {
       debug('insertItems error');
