@@ -13,13 +13,14 @@ const debug = Debug('deeplinks:migrations:promises');
 export const up = async () => {
   debug('up');
   await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint; BEGIN
-    IF (NEW."id" NOT IN (${DENIED_IDS.join(',')}) AND NEW."type_id" NOT IN (${DENIED_IDS.join(',')}) AND NEW."type_id" IN (${ALLOWED_IDS.join('m')})) THEN
+    IF (NEW."id" NOT IN (${DENIED_IDS.join(',')}) AND NEW."type_id" != 0 AND NEW."type_id" NOT IN (${DENIED_IDS.join(',')}) AND NEW."type_id" IN (${ALLOWED_IDS.join('m')})) THEN
       INSERT INTO links ("type_id") VALUES (${GLOBAL_ID_PROMISE}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${GLOBAL_ID_THEN},NEW."id",PROMISE);
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER links__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
+  await api.sql(sql`CREATE TRIGGER links__promise__update__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
 };
 
 export const down = async () => {

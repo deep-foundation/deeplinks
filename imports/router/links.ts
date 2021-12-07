@@ -52,7 +52,7 @@ export default async (req, res) => {
       const newRow = event?.data?.new;
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
-      console.log(current);
+      console.log('current', current, typeId);
 
       try {
         // type |== type: handle ==> INSERT symbol (ONLY)
@@ -99,15 +99,15 @@ export default async (req, res) => {
         }});
         
         // console.log(handleStringResult);
-        console.log(JSON.stringify(handleStringResult, null, 2));
-        console.log(handleStringResult?.data?.links?.[0]?.value);
+        // console.log(JSON.stringify(handleStringResult, null, 2));
+        // console.log(handleStringResult?.data?.links?.[0]?.value);
 
         const code = handleStringResult?.data?.links?.[0]?.value?.value;
         if (code) {
           try { 
             vm.runInNewContext(code, { console, Error, oldRow, newRow });
           } catch(error) {
-            debug(error);
+            debug('error', error);
           }
         }
 
@@ -128,14 +128,15 @@ export default async (req, res) => {
           }`, variables: {
             tableId: current.from_id,
           }});
+          console.log('tableInitialization', current, JSON.stringify(results));
           const table = results?.data?.links?.[0];
-          const tableName = 'table'+table?.id;
           const valuesCount = table?.values?.aggregate?.count;
+          const tableName = 'table'+current.to_id;
           const columns = (table?.columns || []).map(c => ({ name: `${c?.value?.value || 'value'}`, type: ColumnTypeToSQLColumnType?.[c?.to_id] || 'TEXT' }));
 
-          debug('table', { tableName, columns, valuesCount });
+          console.log('table', { tableName, columns, valuesCount });
 
-          if (operation === 'INSERT' && valuesCount === 1) {
+          if (['INSERT','UPDATE'].includes(operation) && valuesCount === 1) {
             const createTable = await api.sql(sql`
               CREATE TABLE ${SCHEMA}."${tableName}" (id bigint PRIMARY KEY, link_id bigint NOT NULL, ${columns.map(c => `${c.name} ${c.type}`).join(',')});
               CREATE SEQUENCE ${tableName}_id_seq

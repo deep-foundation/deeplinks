@@ -5,7 +5,7 @@ import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACT
 import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
 import { generateQuery, generateQueryData } from './gql/query';
 import { MinilinksResult, Link, LinkPlain, minilinks } from './minilinks';
-import { awaitPromise } from './promise';
+import { awaitPromise, delay } from './promise';
 import { reserve } from './reserve';
 import { DeepClient } from './client';
 
@@ -36,6 +36,9 @@ export interface PackagerPackageItem {
   value?: PackagerValue;
 
   package?: { dependencyId: number; containValue: string; };
+
+  _?: boolean;
+  updated?: string[];
 }
 
 export interface PackagerValue {
@@ -112,9 +115,8 @@ export class Packager<L extends Link<any>> {
     name: string,
   ): Promise<{ error: any, namespaceId: number }> {
     try {
-      const tables = await this.fetchTableNamesValuedToTypeId([GLOBAL_ID_PACKAGE_NAMESPACE], []);
       const q = await this.client.select({ value: { _eq: name }, }, {
-        table: `table${tables[GLOBAL_ID_PACKAGE_NAMESPACE]}`,
+        table: `table${GLOBAL_ID_PACKAGE_NAMESPACE}`,
         returning: 'id: link_id'
       });
       return { error: false, namespaceId: q?.data?.[0]?.id };
@@ -133,14 +135,13 @@ export class Packager<L extends Link<any>> {
     dependedLink: PackagerPackageItem,
   ): Promise<number> {
     try {
-      const tables = await this.fetchTableNamesValuedToTypeId([GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE], []);
       const packageName = pckg?.dependencies?.[dependedLink?.package?.dependencyId]?.name;
-      const packageTableName = `table${tables[GLOBAL_ID_PACKAGE]}`;
+      const packageTableName = `table${GLOBAL_ID_PACKAGE}`;
       const q = await this.client.select({
         value: { _eq: dependedLink?.package?.containValue },
         link: { from: { [packageTableName]: { value: { _eq: packageName } } } },
       }, {
-        table: `table${tables[GLOBAL_ID_CONTAIN]}`,
+        table: `table${GLOBAL_ID_CONTAIN}`,
         returning: 'id link { id: to_id }'
       });
       return q?.data?.[0]?.link?.id || 0;
@@ -151,50 +152,19 @@ export class Packager<L extends Link<any>> {
     return 0;
   }
 
-  /**
-   * Fetch tables names by type names.
-   */
-  async fetchTableNamesValuedToTypeId(
-    types: number[],
-    errors: PackagerError[],
-  ): Promise<{ [type: string]: string }> {
-    const result = {};
-    try {
-      const q = await this.client.select({
-        type_id: { _eq: GLOBAL_ID_TABLE },
-        out: { type_id: { _eq: GLOBAL_ID_TABLE_VALUE }, to_id: { _in: types } },
-      }, {
-        returning: `id values: out(where: { type_id: { _eq: ${GLOBAL_ID_TABLE_VALUE} } }) { id: to_id }`
-      });
-      const tables = (q)?.data;
-      for (let t = 0; t < tables.length; t++) {
-        const table = tables[t];
-        for (let i = 0; i < table.values.length; i++) {
-          const type = table.values[i].id;
-          if (types.includes(type)) result[type] = table.id;
-        }
-      }
-    } catch(error) {
-      debug('fetchTableNamesValuedToTypeId error');
-      console.log(error);
-      errors.push(error);
-    }
-    return result;
-  }
-
   async insertItem(
     items: PackagerPackageItem[],
     item: PackagerPackageItem,
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
+    console.log('insertItem', item);
     debug('insertItem', item);
     try {
       // insert link section
       if (item.type) {
         const insert = { id: +item.id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 };
         const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
-        console.log('linkInsert', insert, linkInsert);
         if (linkInsert?.errors) {
           errors.push(linkInsert?.errors);
         }
@@ -215,10 +185,8 @@ export class Packager<L extends Link<any>> {
           errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
         }
         else {
-          const tables = await this.fetchTableNamesValuedToTypeId([+valueLink.type], errors);
-          debug('insertItem tables', tables);
-          if (!tables[valueLink.type]) errors.push(`Table for type ${valueLink.type} for link ${valueLink.id} not founded for insert ${JSON.stringify(item)}.`);
-          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `table${tables[valueLink.type]}`, name: 'IMPORT_PACKAGE_VALUE' });
+          debug('insertItem tables');
+          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `table${valueLink.type}`, name: 'IMPORT_PACKAGE_VALUE' });
           debug('insertItem valueInsert', valueInsert);
           if (valueInsert?.errors) errors.push(valueInsert?.errors);
         }
@@ -261,7 +229,8 @@ export class Packager<L extends Link<any>> {
     return;
   }
 
-  async updateIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]) {
+  async globalizeIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]): Promise<{ global: PackagerPackageItem[] }> {
+    const global = links.map(l => ({ ...l }));
     let idsIndex = 0;
     for (let l = 0; l < links.length; l++) {
       const item = links[l];
@@ -270,26 +239,28 @@ export class Packager<L extends Link<any>> {
       if (item.package) {
         newId = await this.fetchDependenciedLinkId(pckg, item);
         item.id = newId;
-      } else {
+      } else if (item.type) {
         newId = ids[idsIndex++];
       }
       if (item.type || item.package) {
-        links.filter(i => (
-          i.from === oldId
-        )).forEach(l => l.from = newId);
-        links.filter(i => (
-          i.to === oldId
-        )).forEach(l => l.to = newId);
-        links.filter(i => (
-          i.type === oldId && (
-            // @ts-ignore
-            !i._
-        ))).forEach(l => l.type = newId);
-        links.filter(i => (
-          i.id === oldId
-        )).forEach(l => l.id = newId);
+        for (let l = 0; l < links.length; l++) {
+          const link = links[l];
+          if (link.from === oldId) {
+            global[l].from = newId;
+          }
+          if (link.to === oldId) {
+            global[l].to = newId;
+          }
+          if (link.type === oldId && !link._) {
+            global[l].type = newId;
+          }
+          if (link.id === oldId) {
+            global[l].id = newId;
+          }
+        }
       }
     }
+    return { global };
   }
 
   /**
@@ -305,9 +276,11 @@ export class Packager<L extends Link<any>> {
       const { sorted } = sort(pckg, data, errors);
       if (errors.length) return { errors };
       const mutated = {};
-      const ids = await this.client.reserve((counter - dependedLinks.length) + 2);
-      await this.updateIds(pckg, ids, sorted);
-      await this.insertItems(pckg, sorted, counter, dependedLinks, errors, mutated);
+      const ids = await this.client.reserve(counter + 20);
+      // console.log(sorted);
+      const { global } = await this.globalizeIds(pckg, ids, sorted);
+      console.log('ids', ids.length, 'sorted', sorted.length, 'counter', counter, global);
+      await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors };
     } catch(error) {

@@ -1,9 +1,6 @@
 export const GLOBAL_ID_TYPE=1;
 export const GLOBAL_ID_PACKAGE=2;
 export const GLOBAL_NAME_PACKAGE='Package';
-export const GLOBAL_ID_PACKAGE_NAMESPACE=56;
-export const GLOBAL_ID_PACKAGE_ACTIVE=60;
-export const GLOBAL_ID_PACKAGE_VERSION=61;
 
 export const GLOBAL_ID_TABLE=3;
 export const GLOBAL_NAME_TABLE = 'Table';
@@ -29,33 +26,37 @@ export const GLOBAL_NAME_REJECTED='Rejected';
 export const ALLOWED_IDS = [5];
 export const DENIED_IDS = [0, 10, 11, 12, 13];
 
-export const GLOBAL_ID_SELECTOR=27;
-export const GLOBAL_ID_SELECTION=28;
-export const GLOBAL_ID_RULE=29;
+export const GLOBAL_ID_SELECTOR=26;
+export const GLOBAL_ID_SELECTION=27;
+export const GLOBAL_ID_RULE=28;
 
-export const GLOBAL_ID_SUBJECT=30;
-export const GLOBAL_ID_OBJECT=31;
-export const GLOBAL_ID_ACTION=32;
+export const GLOBAL_ID_SUBJECT=29;
+export const GLOBAL_ID_OBJECT=30;
+export const GLOBAL_ID_ACTION=31;
 
-export const GLOBAL_ID_CONTAIN=33;
+export const GLOBAL_ID_CONTAIN=32;
 export const GLOBAL_NAME_CONTAIN='Contain';
 
-export const GLOBAL_ID_USER=37;
-export const GLOBAL_ID_USER_ADMIN=38;
+export const GLOBAL_ID_USER=36;
+export const GLOBAL_ID_USER_ADMIN=37;
 
-export const GLOBAL_ID_INSERT=43;
-export const GLOBAL_ID_UPDATE=44;
-export const GLOBAL_ID_DELETE=45;
-export const GLOBAL_ID_SELECT=46;
+export const GLOBAL_ID_INSERT=42;
+export const GLOBAL_ID_UPDATE=43;
+export const GLOBAL_ID_DELETE=44;
+export const GLOBAL_ID_SELECT=45;
 
 // Handler
-export const GLOBAL_ID_HANDLER=48;
+export const GLOBAL_ID_HANDLER=47;
+
+export const GLOBAL_ID_PACKAGE_NAMESPACE=55;
+export const GLOBAL_ID_PACKAGE_ACTIVE=59;
+export const GLOBAL_ID_PACKAGE_VERSION=60;
 
 // SyncTextFile
-export const GLOBAL_ID_SYNC_TEXT_FILE=65;
+export const GLOBAL_ID_SYNC_TEXT_FILE=64;
 
 // JSExecutionProvider
-export const GLOBAL_ID_JS_EXECUTION_PROVIDER=69;
+export const GLOBAL_ID_JS_EXECUTION_PROVIDER=68;
 
 // HandleInsert
-export const GLOBAL_ID_HANDLE_INSERT=70;
+export const GLOBAL_ID_HANDLE_INSERT=69;

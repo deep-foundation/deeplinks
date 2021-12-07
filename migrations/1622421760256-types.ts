@@ -25,45 +25,37 @@ const corePckg: PackagerPackage = {
     type: 'git',
   },
   data: [
-    // 0
+    { id: 'Type', type: 'Type' }, // 1
+    { id: 'Package', type: 'Type' }, // 2
+    { id: 'Table', type: 'Type' }, // 3
+    { id: 'Column', type: 'Type', from: 'Table', to: 'Type' }, // 4
+    { id: 'Value', type: 'Type', from: 'Table', to: 'Type' }, // 5
 
-    { id: 'Type', type: 'Type' },
-    // 1
-    { id: 'Package', type: 'Type' },
-    { id: 'Table', type: 'Type' },
-    { id: 'Column', type: 'Type', from: 'Table', to: 'Type' },
-    { id: 'Value', type: 'Type', from: 'Table', to: 'Type' },
-
-    { id: 'String', type: 'Type' },
-    { id: 'Number', type: 'Type' },
-    { id: 'JSON', type: 'Type' },
-    { id: 'Any', type: 'Type' },
-    // 9
-    { id: 'Promise', type: 'Type' },
-    { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' },
-    { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' },
-    { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' },
+    { id: 'String', type: 'Type' }, // 6
+    { id: 'Number', type: 'Type' }, // 7
+    { id: 'JSON', type: 'Type' }, // 8
+    { id: 'Any', type: 'Type' }, // 9
+    { id: 'Promise', type: 'Type' }, // 10
+    { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' }, // 11
+    { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' }, // 12
+    { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' }, // 13
 
     // ===
 
-    { id: 'typeTable', type: 'Table' },
-    // 14
-    { id: 'typeTableColumn', type: 'Column', from: 'typeTable', to: 'String' },
-    { id: 'typeTableValue', type: 'Value', from: 'typeTable', to: 'Type' },
-    // 16
+    { id: 'typeTable', type: 'Table' }, // 14
+    { id: 'typeTableColumn', type: 'Column', from: 'typeTable', to: 'String' }, // 15
+    { id: 'typeTableValue', type: 'Value', from: 'typeTable', to: 'Type' }, // 16
 
-    { id: 'tableTable', type: 'Table' },
-    { id: 'tableTableColumn', type: 'Column', from: 'tableTable', to: 'String' },
-    { id: 'tableTableValue', type: 'Value', from: 'tableTable', to: 'Table' },
-    // 19
+    { id: 'tableTable', type: 'Table' }, // 17
+    { id: 'tableTableColumn', type: 'Column', from: 'tableTable', to: 'String' }, // 18
+    { id: 'tableTableValue', type: 'Value', from: 'tableTable', to: 'Table' }, // 19
 
-    { id: 'columnTable', type: 'Table' },
-    { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' },
-    { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' },
-    // 22
+    { id: 'columnTable', type: 'Table' }, // 20
+    { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' }, // 21
+    { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' }, // 22
 
-    { id: 'packageTable', type: 'Table' },
-    { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' },
+    { id: 'packageTable', type: 'Table' }, // 23
+    { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' }, // 24
     // { id: 'packageTableColumnIdentifier', type: 'Column', from: 'packageTable', to: 'JSON', value: { value: 'identifier' } },
     { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
     // 25
@@ -84,97 +76,89 @@ const corePckg: PackagerPackage = {
     { id: 'Rejected', value: { value: 'Rejected' } },
     // /ign
 
-    { id: 'Selector', type: 'Type', value: { value: 'Selector' } },
-    // 26
-    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' },
+    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 26
+    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' }, // 27
     
-    { id: 'Rule', type: 'Type', value: { value: 'Rule' } },
-    // 28
-    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' },
-    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' },
-    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' },
+    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 28
+    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 29
+    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 30
+    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 31
     
-    { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' },
+    { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' }, // 32
 
-    { id: 'containTable', type: 'Table' },
-    { id: 'containTableColumn', type: 'Column', from: 'containTable', to: 'String' },
-    { id: 'containTableValue', type: 'Value', from: 'containTable', to: 'Contain' },
+    { id: 'containTable', type: 'Table' }, // 33
+    { id: 'containTableColumn', type: 'Column', from: 'containTable', to: 'String' }, // 34
+    { id: 'containTableValue', type: 'Value', from: 'containTable', to: 'Contain' }, // 35
 
-    { id: 'User', type: 'Type', value: { value: 'User' } },
-    { id: 'admin', type: 'User' },
+    { id: 'User', type: 'Type', value: { value: 'User' } }, // 36
+    { id: 'admin', type: 'User' }, // 37
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } },
-    // 38
+    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 38
 
-    { id: 'operationTable', type: 'Table' },
-    { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' },
-    { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' },
+    { id: 'operationTable', type: 'Table' }, // 39
+    { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' }, // 40
+    { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' }, // 41
 
-    { id: 'Insert', type: 'Operation' },
+    { id: 'Insert', type: 'Operation' }, // 42
+    { id: 'Update', type: 'Operation' }, // 43
+    { id: 'Delete', type: 'Operation' }, // 44
+    { id: 'Select', type: 'Operation' }, // 45
 
-    // 42
-    { id: 'Update', type: 'Operation' },
-    { id: 'Delete', type: 'Operation' },
-    { id: 'Select', type: 'Operation' },
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 46
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 47
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 47
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 48
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 48
+    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 49
+    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 50
+    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 51
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } },
-    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } },
-    // 49
-    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } },
-    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } },
+    { id: 'userTree', type: 'Tree' }, // 52
+    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 53
+    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 54
 
-    { id: 'userTree', type: 'Tree' },
-    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' },
-    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' },
-    // 54
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } },
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 55
 
-    { id: 'packageNamespaceTable', type: 'Table' },
-    { id: 'packageNamespaceTableColumnValue', type: 'Column', from: 'packageNamespaceTable', to: 'String' },
-    { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' },
-    // 58
+    { id: 'packageNamespaceTable', type: 'Table' }, // 56
+    { id: 'packageNamespaceTableColumnValue', type: 'Column', from: 'packageNamespaceTable', to: 'String' }, // 57
+    { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' }, // 58
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 60
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 59
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 61
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 60
 
-    { id: 'packageVersionTable', type: 'Table' }, // 62
-    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' }, // 63
-    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' }, // 64
+    { id: 'packageVersionTable', type: 'Table' }, // 61
+    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' }, // 62
+    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' }, // 63
 
-    { id: 'SyncTextFile', type: 'Type' }, // 65
+    { id: 'SyncTextFile', type: 'Type' }, // 64
 
-    { id: 'syncTextFileTable', type: 'Table' }, // 66
-    { id: 'syncTextFileTableColumnValue', type: 'Column', from: 'syncTextFileTable', to: 'String' }, // 67
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'syncTextFileTable', to: 'SyncTextFile' }, // 68
+    { id: 'syncTextFileTable', type: 'Table' }, // 65
+    { id: 'syncTextFileTableColumnValue', type: 'Column', from: 'syncTextFileTable', to: 'String' }, // 66
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'syncTextFileTable', to: 'SyncTextFile' }, // 67
 
-    { id: 'JSExecutionProvider', type: 'Type' }, // 69
+    { id: 'JSExecutionProvider', type: 'Type' }, // 68
 
-    { id: 'HandleInsert', type: 'Table' }, // 70
-    { id: 'HandleUpdate', type: 'Table' }, // 71
-    { id: 'HandleCreate', type: 'Table' }, // 72
+    { id: 'HandleInsert', type: 'Type' }, // 69
+    { id: 'HandleUpdate', type: 'Type' }, // 70
+    { id: 'HandleCreate', type: 'Type' }, // 71
 
     { 
       id: 'helloWorldJsFile',
       type: 'SyncTextFile',
       value: { value: "console.log('hello from insert handler');" }
-    }, // 73
+    }, // 72
     { 
       id: 'helloWorldHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'helloWorldJsFile'
-    }, // 74
+    }, // 73
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'helloWorldHandler'
-    } // 75
-
+    }, // 74
   ],
   errors: [],
   strict: true,
