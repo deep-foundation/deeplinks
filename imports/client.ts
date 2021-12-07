@@ -208,35 +208,39 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return awaitPromise({ id, client: this.apolloClient });
   };
 
-  boolExpSerializeCompExps: string[] = ['id','from_id','to_id','type_id'];
-  valueKey: string = 'value';
-  valueRelations: { string: string; number: string; } = {
+  idFieldNames: string[] = ['id','from_id','to_id','type_id'];
+  valueFieldName: string = 'value';
+  valueRelationNames: { string: string; number: string; } = {
     string: 'string',
     number: 'number',
   };
 
   /**
+   * Id, type_id, from_id, to_id fields can be writed without { _eq: number }, just number.
    * { field: number } to { field: { _eq: number } }
+   * Value number and string can be writed just as string|number, without { _eq }
    * { value: number } to { number: { value: { _eq: number } } }
    * { value: string } to { string: { value: { _eq: string } } }
+   * Every Hasura standard comparasion expressions supported directly if you know value type.
    * { string: comp_exp }
    * { number: comp_exp }
    * { object: comp_exp }
    */
-  boolExpSerialize(exp: any, comparison_exp: boolean = false): any {
+  boolExpSerialize(exp: any): any {
     if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.boolExpSerialize);
     else if (typeof(exp) === 'object') {
       const keys = Object.keys(exp);
       const result = {};
       for (let k = 0; k < keys.length; k++) {
         const key = keys[k];
-        if (this.boolExpSerializeCompExps.includes(key)) {
-          if (typeof(exp[key]) === 'number') result[this.boolExpSerializeCompExps[key]] = { _eq: exp[key] };
-          else result[this.boolExpSerializeCompExps[key]] = exp;
-        } else if (key === this.valueKey && this.valueRelations[typeof(exp[key])]) {
-          return { _eq: exp[key] };
-        } else result[this.boolExpSerializeCompExps[key]] = exp;
+        if (this.idFieldNames.includes(key)) {
+          if (typeof(exp[key]) === 'number') result[key] = { _eq: exp[key] };
+          else result[key] = exp[key];
+        } else if (key === this.valueFieldName || this.valueRelationNames[typeof(exp[key])]) {
+          return result[key] = { [this.valueRelationNames[typeof(exp[key])]]: { _eq: exp[key] } };
+        } else result[key] = exp[key];
       }
+      // console.log(exp, keys, result);
       return result;
     } else return exp;
   };

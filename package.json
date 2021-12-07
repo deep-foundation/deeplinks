@@ -28,6 +28,7 @@
     "apollo-server-express": "^3.5.0",
     "axios": "^0.24.0",
     "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "gists": "^2.0.0",
