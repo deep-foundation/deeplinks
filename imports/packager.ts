@@ -158,7 +158,6 @@ export class Packager<L extends Link<any>> {
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
-    console.log('insertItem', item);
     debug('insertItem', item);
     try {
       // insert link section
@@ -277,9 +276,7 @@ export class Packager<L extends Link<any>> {
       if (errors.length) return { errors };
       const mutated = {};
       const ids = await this.client.reserve(counter + 20);
-      // console.log(sorted);
       const { global } = await this.globalizeIds(pckg, ids, sorted);
-      console.log('ids', ids.length, 'sorted', sorted.length, 'counter', counter, global);
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors };

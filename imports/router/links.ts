@@ -128,13 +128,10 @@ export default async (req, res) => {
           }`, variables: {
             tableId: current.from_id,
           }});
-          console.log('tableInitialization', current, JSON.stringify(results));
           const table = results?.data?.links?.[0];
           const valuesCount = table?.values?.aggregate?.count;
           const tableName = 'table'+current.to_id;
           const columns = (table?.columns || []).map(c => ({ name: `${c?.value?.value || 'value'}`, type: ColumnTypeToSQLColumnType?.[c?.to_id] || 'TEXT' }));
-
-          console.log('table', { tableName, columns, valuesCount });
 
           if (['INSERT','UPDATE'].includes(operation) && valuesCount === 1) {
             const createTable = await api.sql(sql`
