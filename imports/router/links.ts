@@ -110,7 +110,23 @@ export default async (req, res) => {
             if (code) {
               try {
                 console.log("handler: ");
-                vm.runInNewContext(code, { console, Error, oldRow, newRow });
+                // vm.runInNewContext(code, { console, Error, oldRow, newRow });
+
+                var vm = require('vm');
+                const _module: any = { exports: {} };
+                const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
+                console.log('start');
+                vm.runInNewContext(`
+                  module.exports = { default: async () => {
+                      ${code}
+                  } };
+                `, { module: _module, delay, console, Error, oldRow, newRow });
+                
+                console.log('end');
+                // vm.runInNewContext(`export default 123;`, { module: _module });
+                
+                await _module.exports.default();
+
               } catch(error) {
                 debug('error', error);
               }
