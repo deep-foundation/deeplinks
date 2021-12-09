@@ -1,4 +1,4 @@
 require('dotenv').config();
 
-import './tests/multidirectional';
+import './tests/handlers';
 import './tests/client';
