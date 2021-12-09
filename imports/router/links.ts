@@ -102,14 +102,22 @@ export default async (req, res) => {
         // console.log(JSON.stringify(handleStringResult, null, 2));
         // console.log(handleStringResult?.data?.links?.[0]?.value);
 
-        const code = handleStringResult?.data?.links?.[0]?.value?.value;
-        if (code) {
-          try { 
-            vm.runInNewContext(code, { console, Error, oldRow, newRow });
-          } catch(error) {
-            debug('error', error);
+        var handlersWithCode = handleStringResult?.data?.links as any[];
+        if (handlersWithCode?.length > 0)
+        {
+          for (const handlerWithCode of handlersWithCode) {
+            const code = handlerWithCode?.value?.value;
+            if (code) {
+              try {
+                console.log("handler: ");
+                vm.runInNewContext(code, { console, Error, oldRow, newRow });
+              } catch(error) {
+                debug('error', error);
+              }
+            }
           }
         }
+          
 
         // tables
         if (typeId === GLOBAL_ID_TABLE_VALUE) {
