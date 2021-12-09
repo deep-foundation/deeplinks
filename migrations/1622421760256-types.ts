@@ -145,7 +145,7 @@ const corePckg: PackagerPackage = {
     { 
       id: 'helloWorldJsFile',
       type: 'SyncTextFile',
-      value: { value: "console.log('hello from insert handler');" }
+      value: { value: "console.log('hello from insert handler'); return 123;" }
     }, // 72
     { 
       id: 'helloWorldHandler',

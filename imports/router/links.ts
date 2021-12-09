@@ -109,12 +109,13 @@ export default async (req, res) => {
             const code = handlerWithCode?.value?.value;
             if (code) {
               try {
-                console.log("handler: ");
+                console.log("handler4: ");
                 // vm.runInNewContext(code, { console, Error, oldRow, newRow });
 
                 var vm = require('vm');
                 const _module: any = { exports: {} };
                 const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
+                console.log(`code: ${code}`);
                 console.log('start');
                 vm.runInNewContext(`
                   module.exports = { default: async () => {
@@ -125,8 +126,8 @@ export default async (req, res) => {
                 console.log('end');
                 // vm.runInNewContext(`export default 123;`, { module: _module });
                 
-                await _module.exports.default();
-
+                const result = await _module.exports.default();
+                console.log(`result: ${result}`);
               } catch(error) {
                 debug('error', error);
               }
