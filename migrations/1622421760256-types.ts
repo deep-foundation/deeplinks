@@ -140,7 +140,7 @@ const corePckg: PackagerPackage = {
 
     { id: 'HandleInsert', type: 'Type' }, // 69
     { id: 'HandleUpdate', type: 'Type' }, // 70
-    { id: 'HandleCreate', type: 'Type' }, // 71
+    { id: 'HandleDelete', type: 'Type' }, // 71
 
     { 
       id: 'helloWorldJsFile',
