@@ -1,7 +1,6 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
-import { GLOBAL_ID_TABLE_VALUE } from '../imports/global-ids';
 
 const debug = Debug('deeplinks:migrations:links');
 
@@ -47,12 +46,15 @@ export const up = async () => {
       name: `${TABLE_NAME}__tables`,
     },
   });
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS jsonb STABLE AS $function$ DECLARE exists int; result json; BEGIN
-    SELECT COUNT(id) FROM "links__tables" INTO exists WHERE name='table' || link."type_id" || '';
-    IF (exists = 1) THEN
-        EXECUTE 'SELECT json_agg(t) as t FROM ' || quote_ident('table' || link."type_id") || ' as t WHERE link_id=' || link."id" || ' LIMIT 1' INTO result;
-        RETURN result->0;
-    END IF;
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__value__function(link ${TABLE_NAME}) RETURNS jsonb STABLE AS $function$ DECLARE
+    exists int; str json; num json; obj json;
+  BEGIN
+    SELECT json_agg(t) FROM "strings" as t INTO str WHERE t."link_id"=link."id";
+    SELECT json_agg(t) FROM "numbers" as t INTO num WHERE t."link_id"=link."id";
+    SELECT json_agg(t) FROM "objects" as t INTO obj WHERE t."link_id"=link."id";
+    IF (str IS NOT NULL) THEN RETURN (str->0); END IF;
+    IF (num IS NOT NULL) THEN RETURN (num->0); END IF;
+    IF (obj IS NOT NULL) THEN RETURN (obj->0); END IF;
     RETURN NULL;
   END; $function$ LANGUAGE plpgsql;`);
   await api.query({

@@ -1,9 +1,9 @@
-import { GLOBAL_ID_USER } from '../global-ids';
 import { jwt } from '../jwt';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql';
 import { ApolloServer } from 'apollo-server-express';
+import { DeepClient } from '../client';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
@@ -24,11 +24,15 @@ const client = generateApolloClient({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
+const deep = new DeepClient({
+  apolloClient: client,
+})
+
 const resolvers = {
   Query: {
     guest: async (source, args, context, info) => {
       const result = await client.mutate(generateSerial({
-        actions: [insertMutation('nodes', { objects: { type_id: GLOBAL_ID_USER } })],
+        actions: [insertMutation('nodes', { objects: { type_id: await deep.id('@deep-foundation/core', 'User') } })],
         name: 'INSERT_LINK',
       }));
       const linkId = result?.data?.m0?.returning?.[0]?.id;

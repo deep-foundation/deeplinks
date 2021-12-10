@@ -1,10 +1,21 @@
 import { ApolloClient, ApolloQueryResult } from "@apollo/client";
 import { inherits } from "util";
-import { GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE } from "./global-ids";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
 import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
 import { awaitPromise } from "./promise";
 import { reserve } from "./reserve";
+
+export const ALLOWED_IDS = [5];
+export const DENIED_IDS = [0, 10, 11, 12, 13];
+export const GLOBAL_ID_PACKAGE=2;
+export const GLOBAL_ID_PACKAGE_ACTIVE=44;
+export const GLOBAL_ID_PACKAGE_VERSION=45;
+export const GLOBAL_ID_CONTAIN=3;
+export const GLOBAL_ID_ANY=8;
+export const GLOBAL_ID_PROMISE=9;
+export const GLOBAL_ID_THEN=10;
+export const GLOBAL_ID_RESOLVED=11;
+export const GLOBAL_ID_REJECTED=12;
 
 export interface DeepClientOptions<L = Link<number>> {
   apolloClient: ApolloClient<any>;
@@ -122,7 +133,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : exp : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -168,7 +179,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : exp : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
@@ -187,7 +198,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : exp : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
@@ -204,56 +215,96 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return reserve({ count, client: this.apolloClient });
   };
 
-  await(id: number): Promise<boolean> {
-    return awaitPromise({ id, client: this.apolloClient });
+  async await(id: number): Promise<boolean> {
+    return awaitPromise({
+      id, client: this.apolloClient,
+      Then: await this.id('@deep-foundation/core', 'Then'),
+      Promise: await this.id('@deep-foundation/core', 'Promise'),
+      Resolved: await this.id('@deep-foundation/core', 'Resolved'),
+      Rejected: await this.id('@deep-foundation/core', 'Rejected'),
+    });
   };
 
-  idFieldNames: string[] = ['id','from_id','to_id','type_id'];
-  valueFieldName: string = 'value';
-  valueRelationNames: { string: string; number: string; } = {
-    string: 'string',
-    number: 'number',
+  _serialize = {
+    link: {
+      value: 'value',
+      relations: {
+        string: 'value',
+        number: 'value',
+        object: 'value',
+        to: 'link',
+        from: 'link',
+        in: 'link',
+        out: 'link',
+        type: 'link',
+        typed: 'link',
+      },
+    },
+    value: {
+      relations: {
+        link: 'link',
+      },
+    },
   };
 
   /**
-   * Id, type_id, from_id, to_id fields can be writed without { _eq: number }, just number.
-   * { field: number } to { field: { _eq: number } }
-   * Value number and string can be writed just as string|number, without { _eq }
-   * { value: number } to { number: { value: { _eq: number } } }
-   * { value: string } to { string: { value: { _eq: string } } }
-   * Every Hasura standard comparasion expressions supported directly if you know value type.
-   * { string: comp_exp }
-   * { number: comp_exp }
-   * { object: comp_exp }
+   * Watch relations to links and values.
+   * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
+   * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
    */
-  boolExpSerialize(exp: any): any {
-    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.boolExpSerialize);
+  serialize(exp: any, env: string = 'link'): any {
+    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.serialize);
     else if (typeof(exp) === 'object') {
       const keys = Object.keys(exp);
       const result = {};
       for (let k = 0; k < keys.length; k++) {
         const key = keys[k];
-        if (this.idFieldNames.includes(key)) {
-          if (typeof(exp[key]) === 'number') result[key] = { _eq: exp[key] };
-          else result[key] = exp[key];
-        } else if (key === this.valueFieldName || this.valueRelationNames[typeof(exp[key])]) {
-          return result[key] = { [this.valueRelationNames[typeof(exp[key])]]: { _eq: exp[key] } };
-        } else result[key] = exp[key];
+        const type = typeof(exp[key]);
+        let setted: any = false;
+        if (env === 'link') {
+          if (type === 'string' || type === 'number') {
+            if (key === 'value' || key === type) {
+              setted = result[type] = { value: { _eq: exp[key] } };
+            } else {
+              setted = result[key] = { _eq: exp[key] };
+            }
+          }
+        } else if (env === 'value') {
+          if (type === 'string' || type === 'number') {
+            setted = result[key] = { _eq: exp[key] };
+          }
+        }
+        if (!setted) result[key] = this._serialize?.[env]?.relations?.[key] ? this.serialize(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
       }
-      // console.log(exp, keys, result);
       return result;
     } else return exp;
   };
 
   async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
-    const pckg = { type_id: { _eq: GLOBAL_ID_PACKAGE } };
-    let where = pckg;
+    const pckg = { type_id: GLOBAL_ID_PACKAGE, value: start };
+    let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
       const item = path[p];
-      where = { type_id: { _eq: GLOBAL_ID_CONTAIN },  };
+      const nextWhere = { out: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
+      where = nextWhere;
     }
-    const q = this.select({ type: { _eq: GLOBAL_ID_CONTAIN },  });
-    return 0;
+    const query = this.serialize(where);
+    const q = await this.select(query);
+    if (q.error) throw q.error;
+    // @ts-ignore
+    return (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
   };
 }
 
+const _ids = {
+  '@deep-foundation/core': {
+    'Contain': GLOBAL_ID_CONTAIN,
+    'Package': GLOBAL_ID_PACKAGE,
+    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
+    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
+    'Promise': GLOBAL_ID_PROMISE,
+    'Then': GLOBAL_ID_THEN,
+    'Resolved': GLOBAL_ID_RESOLVED,
+    'Rejected': GLOBAL_ID_REJECTED,
+  },
+};
