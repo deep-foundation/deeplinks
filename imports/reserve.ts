@@ -1,5 +1,4 @@
 import { ApolloClient, gql } from "@apollo/client";
-import { GLOBAL_NAME_PROMISE, GLOBAL_NAME_REJECTED, GLOBAL_NAME_RESOLVED, GLOBAL_NAME_THEN } from "./global-ids";
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from "./gql";
 
 export interface ReservedOptions {

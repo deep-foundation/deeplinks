@@ -1,13 +1,6 @@
-import { ApolloClient } from '@apollo/client';
-import { link } from 'fs';
 import Debug from 'debug';
-import { DENIED_IDS, GLOBAL_ID_CONTAIN, GLOBAL_ID_PACKAGE, GLOBAL_ID_PACKAGE_ACTIVE, GLOBAL_ID_PACKAGE_NAMESPACE, GLOBAL_ID_PACKAGE_VERSION, GLOBAL_ID_TABLE, GLOBAL_ID_TABLE_VALUE, GLOBAL_NAME_CONTAIN, GLOBAL_NAME_PACKAGE, GLOBAL_NAME_TABLE, GLOBAL_NAME_TABLE_VALUE } from './global-ids';
-import { deleteMutation, generateMutation, generateSerial, insertMutation, updateMutation } from './gql';
-import { generateQuery, generateQueryData } from './gql/query';
-import { MinilinksResult, Link, LinkPlain, minilinks } from './minilinks';
-import { awaitPromise, delay } from './promise';
-import { reserve } from './reserve';
 import { DeepClient } from './client';
+import { Link, minilinks, MinilinksResult } from './minilinks';
 
 const debug = Debug('deeplinks:packager');
 
@@ -42,7 +35,9 @@ export interface PackagerPackageItem {
 }
 
 export interface PackagerValue {
-  [key: string]: any;
+  id?: number | string;
+  link_id?: number | string;
+  value?: number | string | any;
 }
 
 export type PackagerError = any;
@@ -116,7 +111,7 @@ export class Packager<L extends Link<any>> {
   ): Promise<{ error: any, namespaceId: number }> {
     try {
       const q = await this.client.select({ value: { _eq: name }, }, {
-        table: `table${GLOBAL_ID_PACKAGE_NAMESPACE}`,
+        table: `strings`,
         returning: 'id: link_id'
       });
       return { error: false, namespaceId: q?.data?.[0]?.id };
@@ -136,12 +131,12 @@ export class Packager<L extends Link<any>> {
   ): Promise<number> {
     try {
       const packageName = pckg?.dependencies?.[dependedLink?.package?.dependencyId]?.name;
-      const packageTableName = `table${GLOBAL_ID_PACKAGE}`;
+      const packageTableName = `strings`;
       const q = await this.client.select({
         value: { _eq: dependedLink?.package?.containValue },
         link: { from: { [packageTableName]: { value: { _eq: packageName } } } },
       }, {
-        table: `table${GLOBAL_ID_CONTAIN}`,
+        table: `strings`,
         returning: 'id link { id: to_id }'
       });
       return q?.data?.[0]?.link?.id || 0;
@@ -176,7 +171,7 @@ export class Packager<L extends Link<any>> {
         let valueLink
         if (!item.type) {
           valueLink = items.find(i => i.id === item.id && !!i.type);
-          debug('insertItem .value', item, valueLink);
+          debug('insertItem .value', item, valueLink);  
         } else {
           valueLink = item;
         }
@@ -185,7 +180,8 @@ export class Packager<L extends Link<any>> {
         }
         else {
           debug('insertItem tables');
-          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `table${valueLink.type}`, name: 'IMPORT_PACKAGE_VALUE' });
+          const type = typeof(item?.value?.value);
+          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s`, name: 'IMPORT_PACKAGE_VALUE' });
           debug('insertItem valueInsert', valueInsert);
           if (valueInsert?.errors) errors.push(valueInsert?.errors);
         }
@@ -289,11 +285,13 @@ export class Packager<L extends Link<any>> {
   }
 
   async selectLinks(options: PackagerExportOptions): Promise<MinilinksResult<PackagerLink>> {
+    const Contain = await this.client.id('@deep-foundation/core', 'Contain');
+    const Package = await this.client.id('@deep-foundation/core', 'Package');
     const result = await this.client.select({
       _or: [
         { id: { _eq: options.packageLinkId } },
-        { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } },
-        { in: { type_id: { _eq: GLOBAL_ID_CONTAIN }, from: { id: { _eq: options.packageLinkId } } } },
+        { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } },
+        { in: { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } } },
       ]
     }, {
       name: 'LOAD_PACKAGE_LINKS',
@@ -301,7 +299,7 @@ export class Packager<L extends Link<any>> {
           id type_id from_id to_id value
           type {
             id value
-            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -310,7 +308,7 @@ export class Packager<L extends Link<any>> {
           }
           from {
             id
-            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -319,7 +317,7 @@ export class Packager<L extends Link<any>> {
           }
           to {
             id
-            contains: in(where: { type_id: { _eq: ${GLOBAL_ID_CONTAIN} }, from: { type_id: { _eq: ${GLOBAL_ID_PACKAGE} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -341,6 +339,11 @@ export class Packager<L extends Link<any>> {
     counter: number;
     dependedLinks: PackagerPackageItem[];
   }> {
+    const Contain = await this.client.id('@deep-foundation/core', 'Contain');
+    const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const PackageNamespace = await this.client.id('@deep-foundation/core', 'PackageNamespace');
+    const Active = await this.client.id('@deep-foundation/core', 'PackageActive');
+    const Version = await this.client.id('@deep-foundation/core', 'PackageVersion');
     // clone for now hert pckg object
     const data: PackagerPackageItem[] = pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined }));
     const containsHash: { [key: string]: number } = {};
@@ -364,7 +367,7 @@ export class Packager<L extends Link<any>> {
     const packageId = ++counter;
     data.push({
       id: packageId,
-      type: GLOBAL_ID_PACKAGE,
+      type: Package,
       value: { value: pckg.package.name },
       // @ts-ignore
       _: true,
@@ -375,7 +378,7 @@ export class Packager<L extends Link<any>> {
       const contain = containsArray[c];
       data.push({
         id: ++counter,
-        type: GLOBAL_ID_CONTAIN,
+        type: Contain,
         from: packageId,
         to: containsHash[contain],
         value: { value: contain },
@@ -390,14 +393,14 @@ export class Packager<L extends Link<any>> {
       namespaceId = ++counter;
       data.push({
         id: namespaceId,
-        type: GLOBAL_ID_PACKAGE_NAMESPACE,
+        type: PackageNamespace,
         value: { value: pckg.package.name },
         // @ts-ignore
         _: true,
       });
       data.push({
         id: ++counter,
-        type: GLOBAL_ID_PACKAGE_ACTIVE,
+        type: Active,
         to: packageId,
         from: namespaceId,
         // @ts-ignore
@@ -406,7 +409,7 @@ export class Packager<L extends Link<any>> {
     }
     data.push({
       id: ++counter,
-      type: GLOBAL_ID_PACKAGE_VERSION,
+      type: Version,
       to: packageId,
       from: namespaceId,
       value: { value: pckg.package.version },
@@ -415,7 +418,7 @@ export class Packager<L extends Link<any>> {
     });
     data.push({
       id: ++counter,
-      type: GLOBAL_ID_CONTAIN,
+      type: Contain,
       from: namespaceId,
       to: packageId,
       // @ts-ignore
@@ -425,6 +428,7 @@ export class Packager<L extends Link<any>> {
   }
 
   async serialize(globalLinks: MinilinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {
+    const Contain = await this.client.id('@deep-foundation/core', 'Contain');
     let counter = 1;
     let dependenciesCounter = 1;
     const dependencies = {};
@@ -436,7 +440,7 @@ export class Packager<L extends Link<any>> {
       const link = globalLinks.links[l];
       if (!!link.type_id && !globalLinks.byId[link.type_id] && !(
         // NOT contain in ( package |- contain -> * )
-        link?.type_id === GLOBAL_ID_CONTAIN && link?.from?.id === options.packageLinkId
+        link?.type_id === Contain && link?.from?.id === options.packageLinkId
         ) && !(
         // NOT package
         link?.id === options.packageLinkId
@@ -501,7 +505,7 @@ export class Packager<L extends Link<any>> {
     pckg.dependencies = dependencies;
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
-      if (link.type_id === GLOBAL_ID_CONTAIN) {
+      if (link.type_id === Contain) {
         containsByTo[+link.to_id] = link;
       } else if (link.id !== options.packageLinkId) {
         links.push(link);
@@ -553,7 +557,8 @@ export class Packager<L extends Link<any>> {
    */
   async export(options: PackagerExportOptions): Promise<PackagerPackage> {
     const globalLinks = await this.selectLinks(options);
-    const packageLink = globalLinks.links?.find(l => l?.type?.value?.value === GLOBAL_NAME_PACKAGE);
+    const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const packageLink = globalLinks.links?.find(l => l?.type?.value?.value === Package);
     const packageName = packageLink?.value?.value;
     const pckg = {
       package: { name: packageName },

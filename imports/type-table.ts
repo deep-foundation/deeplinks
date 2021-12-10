@@ -36,7 +36,24 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       name: tableName,
     },
   });
-  await permissions(api, tableName);
+  await api.query({
+    type: 'create_object_relationship',
+    args: {
+      table: tableName,
+      name: 'link',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: schemaName,
+            name: linksTableName,
+          },
+          column_mapping: {
+            link_id: 'id',
+          },
+        },
+      },
+    },
+  });
   await api.query({
     type: 'create_object_relationship',
     args: {
@@ -55,23 +72,11 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       },
     },
   });
-  await api.query({
-    type: 'create_array_relationship',
-    args: {
-      table: tableName,
-      name: 'link',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: schemaName,
-            name: linksTableName,
-          },
-          column_mapping: {
-            link_id: 'id',
-          },
-        },
-      },
-    },
+  await permissions(api, tableName, {
+    select: {},
+    insert: {}, // generatePermissionWhere(16),
+    update: {}, // generatePermissionWhere(17),
+    delete: {},
   });
 };
 

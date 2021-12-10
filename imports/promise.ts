@@ -1,6 +1,5 @@
 import { ApolloClient } from "@apollo/client";
 import Debug from 'debug';
-import { GLOBAL_ID_PROMISE, GLOBAL_ID_REJECTED, GLOBAL_ID_RESOLVED, GLOBAL_ID_THEN } from "./global-ids";
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from "./gql";
 
 
@@ -12,11 +11,15 @@ export interface PromiseOptions {
   id: number;
   timeout?: number;
   client: ApolloClient<any>;
+  Then: number;
+  Promise: number;
+  Resolved: number;
+  Rejected: number;
 }
 
 export function awaitPromise(options: PromiseOptions): Promise<boolean> {
   const id = options.id;
-  const timeout = options.timeout || 1000;
+  const timeout = options.timeout || 1000; // @TODO todo dynamic timeout based on handlers avg runtime
   const client: ApolloClient<any> = options.client;
   return new Promise(async (res, rej) => {
     debug('promise', { id });
@@ -34,15 +37,15 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
             where: {
               _or: [
                 { id: { _eq: id } },
-                { from_id: { _eq: id }, type_id: { _eq: GLOBAL_ID_THEN } },
+                { from_id: { _eq: id }, type_id: { _eq: options.Then } },
                 {
                   from: {
-                    type_id: { _eq: GLOBAL_ID_PROMISE },
-                    in: { type_id: { _eq: GLOBAL_ID_THEN }, from_id: { _eq: id } },
+                    type_id: { _eq: options.Promise },
+                    in: { type_id: { _eq: options.Then }, from_id: { _eq: id } },
                   },
                   _or: [
-                    { type_id: { _eq: GLOBAL_ID_RESOLVED } },
-                    { type_id: { _eq: GLOBAL_ID_REJECTED } },
+                    { type_id: { _eq: options.Resolved } },
+                    { type_id: { _eq: options.Rejected } },
                   ],
                 },
               ],
@@ -64,9 +67,9 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
             let thenRejected = false;
             for (let l = 0; l < links.length; l++) {
               const link = links[l];
-              if (link?.type?.id === GLOBAL_ID_THEN) thenExists = true;
-              else if (link?.type?.id === GLOBAL_ID_RESOLVED) thenResolved = true;
-              else if (link?.type?.id === GLOBAL_ID_REJECTED) thenRejected = true;
+              if (link?.type?.id === options.Then) thenExists = true;
+              else if (link?.type?.id === options.Resolved) thenResolved = true;
+              else if (link?.type?.id === options.Rejected) thenRejected = true;
             }
             debug('analized', { thenExists, thenResolved, thenRejected });
             if (thenExists) {
@@ -102,9 +105,9 @@ export async function findPromiseLink(options: PromiseOptions) {
   const result = await options.client.query(generateQuery({
     queries: [
       generateQueryData({ tableName: 'links', returning: `id`, variables: { where: {
-        type_id: { _eq: GLOBAL_ID_PROMISE },
+        type_id: { _eq: options.Promise },
         in: {
-          type_id: { _eq: GLOBAL_ID_THEN },
+          type_id: { _eq: options.Then },
           from_id: { _eq: options.id },
         },
       } } }),
@@ -119,7 +122,7 @@ export async function reject(options: PromiseOptions): Promise<boolean> {
   const promise = await findPromiseLink(options);
   if (promise) {
     debug('rejected', await options.client.mutate(generateSerial({
-      actions: [insertMutation('links', { objects: { type_id: GLOBAL_ID_REJECTED, from_id: promise.id, to_id: promise.id } })],
+      actions: [insertMutation('links', { objects: { type_id: options.Rejected, from_id: promise.id, to_id: promise.id } })],
       name: 'REJECT',
     })));
     return true;
@@ -132,7 +135,7 @@ export async function resolve(options: PromiseOptions): Promise<boolean> {
   const promise = await findPromiseLink(options);
   if (promise) {
     debug('resolved', await options.client.mutate(generateSerial({
-      actions: [insertMutation('links', { objects: { type_id: GLOBAL_ID_RESOLVED, from_id: promise.id, to_id: promise.id } })],
+      actions: [insertMutation('links', { objects: { type_id: options.Resolved, from_id: promise.id, to_id: promise.id } })],
       name: 'RESOLVE',
     })));
     return true;

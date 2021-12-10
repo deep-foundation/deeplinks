@@ -7,19 +7,9 @@ import { gql } from 'apollo-boost';
 import vm from 'vm';
 
 import { permissions } from '../permission';
-import { 
-  GLOBAL_ID_TABLE_VALUE,
-  GLOBAL_ID_TABLE_COLUMN,
-  DENIED_IDS, ALLOWED_IDS,
-  GLOBAL_ID_STRING,
-  GLOBAL_ID_JSON,
-  GLOBAL_ID_NUMBER,
-  GLOBAL_ID_SYNC_TEXT_FILE,
-  GLOBAL_ID_HANDLER,
-  GLOBAL_ID_JS_EXECUTION_PROVIDER,
-  GLOBAL_ID_HANDLE_INSERT,
-} from '../global-ids';
 import { reject, resolve } from '../promise';
+import { DeepClient } from '../client';
+import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 
 const SCHEMA = 'public';
 
@@ -37,11 +27,9 @@ const client = generateApolloClient({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-export const ColumnTypeToSQLColumnType = {
-  [GLOBAL_ID_STRING]: 'TEXT',
-  [GLOBAL_ID_NUMBER]: 'float8',
-  [GLOBAL_ID_JSON]: 'jsonb',
-};
+const deep = new DeepClient({
+  apolloClient: client,
+})
 
 export default async (req, res) => {
   try {
@@ -78,17 +66,17 @@ export default async (req, res) => {
         // }
 
         const handleStringResult = await client.query({ query: gql`query SELECT_CODE($typeId: bigint) { links(where: {
-          type_id: { _eq: ${GLOBAL_ID_SYNC_TEXT_FILE} },
+          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
           # to_id: { _eq: 16 },
           # from_id: { _eq:  }
           in: {
-            from_id: { _eq: ${GLOBAL_ID_JS_EXECUTION_PROVIDER} },
-            type_id: { _eq: ${GLOBAL_ID_HANDLER} },
+            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
+            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'helloWorldHandler')} },
             in: {
               from: {
                 type_id: { _eq: $typeId },
               },
-              type_id: { _eq: ${GLOBAL_ID_HANDLE_INSERT} },
+              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'helloWorldInsertHandler')} },
             }
           }
         }) {
@@ -110,120 +98,28 @@ export default async (req, res) => {
             debug('error', error);
           }
         }
-
-        // tables
-        if (typeId === GLOBAL_ID_TABLE_VALUE) {
-          const results = await client.query({ query: gql`query SELECT_TABLE_STRUCTURE($tableId: bigint) {
-            links(where: {id: {_eq: $tableId}}) {
-              id
-              values: out_aggregate(where: {type_id: {_eq: ${GLOBAL_ID_TABLE_VALUE}}}) {
-                aggregate {
-                  count
-                }
-              }
-              columns: out(where: {type_id: {_eq: ${GLOBAL_ID_TABLE_COLUMN}}}) {
-                id column_id: to_id value
-              }
-            }
-          }`, variables: {
-            tableId: current.from_id,
-          }});
-          const table = results?.data?.links?.[0];
-          const valuesCount = table?.values?.aggregate?.count;
-          const tableName = 'table'+current.to_id;
-          const columns = (table?.columns || []).map(c => ({ name: `${c?.value?.value || 'value'}`, type: ColumnTypeToSQLColumnType?.[c?.to_id] || 'TEXT' }));
-
-          if (['INSERT','UPDATE'].includes(operation) && valuesCount === 1) {
-            const createTable = await api.sql(sql`
-              CREATE TABLE ${SCHEMA}."${tableName}" (id bigint PRIMARY KEY, link_id bigint NOT NULL, ${columns.map(c => `${c.name} ${c.type}`).join(',')});
-              CREATE SEQUENCE ${tableName}_id_seq
-              AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
-              ALTER SEQUENCE ${tableName}_id_seq OWNED BY ${SCHEMA}."${tableName}".id;
-              ALTER TABLE ONLY ${SCHEMA}."${tableName}" ALTER COLUMN id SET DEFAULT nextval('${tableName}_id_seq'::regclass);
-            `);
-            const error = createTable?.data?.internal?.error;
-            if (error) console.log(error);
-            await api.sql(sql`
-              INSERT INTO "links__tables" (name) VALUES ('${tableName}');
-            `);
-            await api.query({
-              type: 'track_table',
-              args: {
-                schema: SCHEMA,
-                name: tableName,
-              },
-            });
-            await api.query({
-              type: 'create_object_relationship',
-              args: {
-                table: tableName,
-                name: 'link',
-                using: {
-                  manual_configuration: {
-                    remote_table: {
-                      schema: SCHEMA,
-                      name: 'links',
-                    },
-                    column_mapping: {
-                      link_id: 'id',
-                    },
-                  },
-                },
-              },
-            });
-            await api.query({
-              type: 'create_array_relationship',
-              args: {
-                table: 'links',
-                name: tableName,
-                using: {
-                  manual_configuration: {
-                    remote_table: {
-                      schema: SCHEMA,
-                      name: tableName,
-                    },
-                    column_mapping: {
-                      id: 'link_id',
-                    },
-                  },
-                },
-              },
-            });
-            await permissions(api, tableName, {
-              select: {},
-              insert: {}, // generatePermissionWhere(16),
-              update: {}, // generatePermissionWhere(17),
-              delete: {},
-            });
-          } else if (operation === 'DELETE' && !valuesCount) {
-            await api.sql(sql`
-              DELETE FROM "links__tables" WHERE name='${tableName}';
-            `);
-            await api.query({
-              type: 'untrack_table',
-              args: {
-                table: {
-                  schema: SCHEMA,
-                  name: tableName,
-                },
-                cascade: true,
-              },
-            });
-            await api.sql(sql`
-              DROP TABLE "${tableName}" CASCADE;
-            `);
-          }
-        }
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);
-          await resolve({ id: current.id, client });
+          await resolve({
+            id: current.id, client,
+            Then: await deep.id('@deep-foundation/core', 'Then'),
+            Promise: await deep.id('@deep-foundation/core', 'Promise'),
+            Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
+            Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+          });
         }
         return res.status(200).json({});
       } catch(error) {
         debug('error', error);
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('reject', current.id);
-          await reject({ id: current.id, client });
+          await reject({
+            id: current.id, client,
+            Then: await deep.id('@deep-foundation/core', 'Then'),
+            Promise: await deep.id('@deep-foundation/core', 'Promise'),
+            Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
+            Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+          });
         }
       }
 

@@ -27,46 +27,29 @@ const corePckg: PackagerPackage = {
   data: [
     { id: 'Type', type: 'Type' }, // 1
     { id: 'Package', type: 'Type' }, // 2
-    { id: 'Table', type: 'Type' }, // 3
-    { id: 'Column', type: 'Type', from: 'Table', to: 'Type' }, // 4
-    { id: 'Value', type: 'Type', from: 'Table', to: 'Type' }, // 5
+    { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' }, // 3
+    { id: 'Value', type: 'Type', from: 'Table', to: 'Type' }, // 4
 
-    { id: 'String', type: 'Type' }, // 6
-    { id: 'Number', type: 'Type' }, // 7
-    { id: 'JSON', type: 'Type' }, // 8
-    { id: 'Any', type: 'Type' }, // 9
-    { id: 'Promise', type: 'Type' }, // 10
-    { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' }, // 11
-    { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' }, // 12
-    { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' }, // 13
+    { id: 'String', type: 'Type' }, // 5
+    { id: 'Number', type: 'Type' }, // 6
+    { id: 'JSON', type: 'Type' }, // 7
+    { id: 'Any', type: 'Type' }, // 8
+    { id: 'Promise', type: 'Type' }, // 9
+    { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' }, // 10
+    { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' }, // 11
+    { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' }, // 12
 
     // ===
 
-    { id: 'typeTable', type: 'Table' }, // 14
-    { id: 'typeTableColumn', type: 'Column', from: 'typeTable', to: 'String' }, // 15
-    { id: 'typeTableValue', type: 'Value', from: 'typeTable', to: 'Type' }, // 16
-
-    { id: 'tableTable', type: 'Table' }, // 17
-    { id: 'tableTableColumn', type: 'Column', from: 'tableTable', to: 'String' }, // 18
-    { id: 'tableTableValue', type: 'Value', from: 'tableTable', to: 'Table' }, // 19
-
-    { id: 'columnTable', type: 'Table' }, // 20
-    { id: 'columnTableColumn', type: 'Column', from: 'columnTable', to: 'String' }, // 21
-    { id: 'columnTableValue', type: 'Value', from: 'columnTable', to: 'Column' }, // 22
-
-    { id: 'packageTable', type: 'Table' }, // 23
-    { id: 'packageTableColumnValue', type: 'Column', from: 'packageTable', to: 'String' }, // 24
-    // { id: 'packageTableColumnIdentifier', type: 'Column', from: 'packageTable', to: 'JSON', value: { value: 'identifier' } },
-    { id: 'packageTableValue', type: 'Value', from: 'packageTable', to: 'Package' },
-    // 25
+    { id: 'typeValue', type: 'Value', from: 'Type', to: 'String' }, // 13
+    { id: 'columnValue', type: 'Value', from: 'Column', to: 'String' }, // 14
+    { id: 'packageValue', type: 'Value', from: 'Package', to: 'String' }, // 15
 
     // ===
 
     // ign
     { id: 'Type', value: { value: 'Type' } },
     { id: 'Package', value: { value: 'Package' } },
-    { id: 'Table', value: { value: 'Table' } },
-    { id: 'Column', value: { value: 'Column' } },
     { id: 'Value', value: { value: 'Value' } },
     { id: 'Any', value: { value: 'Any' } },
     
@@ -76,89 +59,75 @@ const corePckg: PackagerPackage = {
     { id: 'Rejected', value: { value: 'Rejected' } },
     // /ign
 
-    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 26
-    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' }, // 27
+    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 16
+    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' }, // 17
     
-    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 28
-    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 29
-    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 30
-    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 31
-    
-    { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' }, // 32
+    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 18
+    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 19
+    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 20
+    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 21
 
-    { id: 'containTable', type: 'Table' }, // 33
-    { id: 'containTableColumn', type: 'Column', from: 'containTable', to: 'String' }, // 34
-    { id: 'containTableValue', type: 'Value', from: 'containTable', to: 'Contain' }, // 35
+    { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 24
 
-    { id: 'User', type: 'Type', value: { value: 'User' } }, // 36
-    { id: 'admin', type: 'User' }, // 37
+    { id: 'User', type: 'Type', value: { value: 'User' } }, // 25
+    { id: 'admin', type: 'User' }, // 26
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 38
+    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 27
 
-    { id: 'operationTable', type: 'Table' }, // 39
-    { id: 'operationTableColumn', type: 'Column', from: 'operationTable', to: 'String' }, // 40
-    { id: 'operationTableValue', type: 'Value', from: 'operationTable', to: 'Operation' }, // 41
+    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 28
 
-    { id: 'Insert', type: 'Operation' }, // 42
-    { id: 'Update', type: 'Operation' }, // 43
-    { id: 'Delete', type: 'Operation' }, // 44
-    { id: 'Select', type: 'Operation' }, // 45
+    { id: 'Insert', type: 'Operation' }, // 29
+    { id: 'Update', type: 'Operation' }, // 30
+    { id: 'Delete', type: 'Operation' }, // 31
+    { id: 'Select', type: 'Operation' }, // 32
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 46
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 47
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 33
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 34
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 48
-    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 49
-    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 50
-    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 51
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 35
+    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 36
+    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 37
+    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 38
 
-    { id: 'userTree', type: 'Tree' }, // 52
-    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 53
-    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 54
+    { id: 'userTree', type: 'Tree' }, // 39
+    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 40
+    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 41
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 55
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 42
 
-    { id: 'packageNamespaceTable', type: 'Table' }, // 56
-    { id: 'packageNamespaceTableColumnValue', type: 'Column', from: 'packageNamespaceTable', to: 'String' }, // 57
-    { id: 'packageNamespaceTableValue', type: 'Value', from: 'packageNamespaceTable', to: 'PackageNamespace' }, // 58
+    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 43
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 59
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 44
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 60
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 45
+    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 46
 
-    { id: 'packageVersionTable', type: 'Table' }, // 61
-    { id: 'packageVersionTableColumnValue', type: 'Column', from: 'packageVersionTable', to: 'String' }, // 62
-    { id: 'packageVersionTableValue', type: 'Value', from: 'packageVersionTable', to: 'PackageVersion' }, // 63
+    { id: 'SyncTextFile', type: 'Type' }, // 47
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 48
 
-    { id: 'SyncTextFile', type: 'Type' }, // 64
+    { id: 'JSExecutionProvider', type: 'Type' }, // 49
 
-    { id: 'syncTextFileTable', type: 'Table' }, // 65
-    { id: 'syncTextFileTableColumnValue', type: 'Column', from: 'syncTextFileTable', to: 'String' }, // 66
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'syncTextFileTable', to: 'SyncTextFile' }, // 67
-
-    { id: 'JSExecutionProvider', type: 'Type' }, // 68
-
-    { id: 'HandleInsert', type: 'Type' }, // 69
-    { id: 'HandleUpdate', type: 'Type' }, // 70
-    { id: 'HandleCreate', type: 'Type' }, // 71
+    { id: 'HandleInsert', type: 'Type' }, // 50
+    { id: 'HandleUpdate', type: 'Type' }, // 51
+    { id: 'HandleCreate', type: 'Type' }, // 52
 
     { 
       id: 'helloWorldJsFile',
       type: 'SyncTextFile',
       value: { value: "console.log('hello from insert handler');" }
-    }, // 72
+    }, // 53
     { 
       id: 'helloWorldHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'helloWorldJsFile'
-    }, // 73
+    }, // 54
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'helloWorldHandler'
-    }, // 74
+    }, // 55
   ],
   errors: [],
   strict: true,
