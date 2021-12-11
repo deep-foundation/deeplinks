@@ -37,15 +37,24 @@ describe('serialize', () => {
   });
   it(`{ out: { type_id: Contain, value: item, from: where } }`, async () => {
     assert.deepEqual(deepClient.serialize(
-      { out: { type_id: await deepClient.id('@deep-foundation/core', 'Contain'), value: 'b', from: { type_id: await deepClient.id('@deep-foundation/core', 'Package') , value: 'a' } } }
+      {
+        out: {
+          type_id: await deepClient.id('@deep-foundation/core', 'Contain'),
+          value: 'b',
+          from: {
+            type_id: await deepClient.id('@deep-foundation/core', 'Package'),
+            value: 'a',
+          },
+        },
+      }
     ), {
       out: {
+        type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Contain') },
+        string: { value: { _eq: 'b' } },
         from: {
-          type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Contain') },
+          type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Package') },
           string: { value: { _eq: 'a' } },
         },
-        type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Package') },
-        string: { value: { _eq: 'b' } },
       }
     });
   });
@@ -62,6 +71,6 @@ describe('serialize', () => {
   });
   it(`id(packageName,contain)`, async () => {
     const id = await deepClient.id('@deep-foundation/core', 'Value');
-    assert.equal(id, 3);
+    assert.equal(id, 4);
   });
 });
