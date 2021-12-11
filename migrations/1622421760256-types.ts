@@ -27,8 +27,8 @@ const corePckg: PackagerPackage = {
   data: [
     { id: 'Type', type: 'Type' }, // 1
     { id: 'Package', type: 'Type' }, // 2
-    { id: 'Contain', type: 'Type', value: { value: 'Contain' }, from: 'Any', to: 'Any' }, // 3
-    { id: 'Value', type: 'Type', from: 'Table', to: 'Type' }, // 4
+    { id: 'Contain', type: 'Type', from: 'Any', to: 'Any' }, // 3
+    { id: 'Value', type: 'Type', from: 'Type', to: 'Type' }, // 4
 
     { id: 'String', type: 'Type' }, // 5
     { id: 'Number', type: 'Type' }, // 6
@@ -50,6 +50,7 @@ const corePckg: PackagerPackage = {
     // ign
     { id: 'Type', value: { value: 'Type' } },
     { id: 'Package', value: { value: 'Package' } },
+    { id: 'Contain', value: { value: 'Contain' } },
     { id: 'Value', value: { value: 'Value' } },
     { id: 'Any', value: { value: 'Any' } },
     

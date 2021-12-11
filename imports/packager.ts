@@ -133,8 +133,8 @@ export class Packager<L extends Link<any>> {
       const packageName = pckg?.dependencies?.[dependedLink?.package?.dependencyId]?.name;
       const packageTableName = `strings`;
       const q = await this.client.select({
-        value: { _eq: dependedLink?.package?.containValue },
-        link: { from: { [packageTableName]: { value: { _eq: packageName } } } },
+        value: dependedLink?.package?.containValue,
+        link: { from: { [packageTableName]: { value: packageName } } },
       }, {
         table: `strings`,
         returning: 'id link { id: to_id }'
@@ -278,7 +278,6 @@ export class Packager<L extends Link<any>> {
       return { ids, errors };
     } catch(error) {
       debug('insertItems error');
-      console.log(error);
       errors.push(error);
     }
     return { ids: [], errors };

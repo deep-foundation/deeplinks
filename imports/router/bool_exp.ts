@@ -39,8 +39,6 @@ export default async (req, res) => {
         }
         return res.json({ result: 'exaplained' });
       }
-      console.log(explained);
-      console.log(`{ links(where: { _and: [{ id: { _eq: 777777777777 } }, ${newRow.gql}] }, limit: 1) { id } }`);
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });

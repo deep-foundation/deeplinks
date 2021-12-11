@@ -133,7 +133,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -179,7 +179,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
@@ -198,7 +198,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp) : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
@@ -285,11 +285,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
       const item = path[p];
-      const nextWhere = { out: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
+      const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
       where = nextWhere;
     }
-    const query = this.serialize(where);
-    const q = await this.select(query);
+    const q = await this.select(where);
     if (q.error) throw q.error;
     // @ts-ignore
     return (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
