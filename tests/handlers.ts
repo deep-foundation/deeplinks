@@ -2,13 +2,13 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 
-import {
-  GLOBAL_ID_TYPE,
-  GLOBAL_ID_SYNC_TEXT_FILE,
-  GLOBAL_ID_HANDLER,
-  GLOBAL_ID_JS_EXECUTION_PROVIDER,
-  GLOBAL_ID_HANDLE_INSERT,
-} from '../imports/global-ids';
+// import {
+//   GLOBAL_ID_TYPE,
+//   GLOBAL_ID_SYNC_TEXT_FILE,
+//   GLOBAL_ID_HANDLER,
+//   GLOBAL_ID_JS_EXECUTION_PROVIDER,
+//   GLOBAL_ID_HANDLE_INSERT,
+// } from '../imports/global-ids';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.HASURA_PATH}/v1/graphql`,
@@ -16,7 +16,7 @@ const apolloClient = generateApolloClient({
   secret: process.env.HASURA_SECRET,
 });
 
-const deepClient = new DeepClient({ apolloClient });
+const deep = new DeepClient({ apolloClient });
 
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
@@ -50,9 +50,10 @@ beforeAll(beforeAllHandler);
 
 describe('handle by type', () => {
   it(`handle insert`, async () => {
-    const freeId = 505;
-    const insert = { id: freeId, from_id: freeId, type_id: GLOBAL_ID_TYPE, to_id: freeId };
-    const linkInsert = (await deepClient.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];
+    const freeId = 50764;
+    const typeId = await deep.id('@deep-foundation/core', 'Type')
+    const insert = { id: freeId, from_id: freeId, type_id: typeId, to_id: freeId };
+    const linkInsert = (await deep.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];
     console.log(linkInsert);
     assert.equal(freeId, linkInsert.id);
 

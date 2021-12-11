@@ -65,24 +65,48 @@ export default async (req, res) => {
         //   }
         // }
 
-        const handleStringResult = await client.query({ query: gql`query SELECT_CODE($typeId: bigint) { links(where: {
+        const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
           # to_id: { _eq: 16 },
           # from_id: { _eq:  }
           in: {
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
-            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'helloWorldHandler')} },
+            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Handler')} },
             in: {
               from: {
                 type_id: { _eq: $typeId },
               },
-              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'helloWorldInsertHandler')} },
+              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'InsertHandler')} },
             }
           }
         }) {
           id
           value
-        } }`, variables: {
+        } }`;
+        console.log(queryString);
+
+        const query = gql`query SELECT_CODE($typeId: bigint) { links(where: {
+          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
+          # to_id: { _eq: 16 },
+          # from_id: { _eq:  }
+          in: {
+            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
+            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Handler')} },
+            in: {
+              from: {
+                type_id: { _eq: $typeId },
+              },
+              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandleInsert')} },
+            }
+          }
+        }) {
+          id
+          value
+        } }`;
+        console.log(query);
+        // console.log(JSON.stringify(query, null, 2));
+
+        const handleStringResult = await client.query({ query, variables: {
           typeId,
         }});
         
@@ -91,6 +115,7 @@ export default async (req, res) => {
         // console.log(handleStringResult?.data?.links?.[0]?.value);
 
         var handlersWithCode = handleStringResult?.data?.links as any[];
+        console.log(handlersWithCode?.length);
         if (handlersWithCode?.length > 0)
         {
           for (const handlerWithCode of handlersWithCode) {
@@ -122,6 +147,7 @@ export default async (req, res) => {
             }
           }
         }
+
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);
           await resolve({

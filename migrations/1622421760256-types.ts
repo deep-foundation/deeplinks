@@ -129,6 +129,8 @@ const corePckg: PackagerPackage = {
       type: 'HandleInsert',
       to: 'helloWorldHandler'
     }, // 55
+
+    { id: 'JSONHandlerResult', type: 'Type' },
   ],
   errors: [],
   strict: true,
