@@ -232,7 +232,7 @@ export class Packager<L extends Link<any>> {
       const oldId = item.id;
       let newId;
       if (item.package) {
-        newId = await this.fetchDependenciedLinkId(pckg, item);
+        newId = await this.client.id(pckg.dependencies[item.package.dependencyId].name, item.package.containValue);
         item.id = newId;
       } else if (item.type) {
         newId = ids[idsIndex++];

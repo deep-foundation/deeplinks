@@ -4,10 +4,16 @@ import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { Packager } from '../packager';
 import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client';
+import fs from 'fs';
+import os from 'os';
+import { v4 as uuid } from 'uuid';
+import child_process from 'child_process';
+
+const tmpdir = os.tmpdir();
 
 const gists = new Gists({
   username: 'ivansglazunov', 
-  password: 'Isg3173Github',
+  password: process?.env?.PASSWORD,
 });
 
 const client = generateApolloClient({
@@ -26,7 +32,7 @@ const typeDefs = gql`
   input PackagerInstallInput {
     name: String
     version: String
-    uri: String
+    address: String
     type: String
   }
   type PackagerInstallOutput {
@@ -35,7 +41,7 @@ const typeDefs = gql`
   }
   input PackagerPublishInput {
     id: Int
-    uri: String
+    address: String
     type: String
   }
   type PackagerPublishOutput {
@@ -46,12 +52,12 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     packagerInstall: async (source, args, context, info) => {
-      const { name, version, uri, type } = args.input;
+      const { name, version, address, type } = args.input;
       const errors = [];
       if (type === 'gist') {
-        const result = await gists.get('4cf14e3e58f4e96f7e7914b963ecdd29');
+        const result = await gists.get(address);
         const files = result?.body?.files;
-        const deepPckgContent = files?.['deep.pckg']?.content;
+        const deepPckgContent = files?.['deep.json']?.content;
         if (deepPckgContent) {
           try {
             const deepPckg = JSON.parse(deepPckgContent);
@@ -61,13 +67,32 @@ const resolvers = {
             errors.push(error);
           }
         } else {
-          errors.push(`deep.pckg not founded in gist`);
+          errors.push(`deep.json not founded in gist`);
         }
+      } else if (type === 'npm') {
+        const dirid = uuid();
+        const dir = [tmpdir,dirid].join('/');
+        fs.mkdirSync(dir);
+        child_process.execSync(`cd ${dir}; npm install ${address};`,{stdio:[0,1,2]});
+        const deepPckgContent = fs.readFileSync([dir,'node_modules',address,'deep.json'].join('/'), { encoding: 'utf-8' });
+        if (deepPckgContent) {
+          try {
+            const deepPckg = JSON.parse(deepPckgContent);
+            const { ids, errors } = await packager.import(deepPckg);
+          } catch(error) {
+            errors.push(error);
+          }
+        } else {
+          errors.push(`deep.json not founded in gist`);
+        }
+        fs.rmdirSync(dir);
+      } else {
+        errors.push(`type ${type} is not valid`);
       }
       return { ids: [], errors };
     },
     packagerPublish: async (source, args, context, info) => {
-      const { id, uri, type } = args.input;
+      const { id, address, type } = args.input;
       if (type === 'gist') {
 
       }
