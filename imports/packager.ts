@@ -271,13 +271,13 @@ export class Packager<L extends Link<any>> {
       const { sorted } = sort(pckg, data, errors);
       if (errors.length) return { errors };
       const mutated = {};
-      const ids = await this.client.reserve(counter + 20);
+      const ids = await this.client.reserve(counter + 5);
       const { global } = await this.globalizeIds(pckg, ids, sorted);
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors };
     } catch(error) {
-      debug('insertItems error');
+      debug('import error');
       errors.push(error);
     }
     return { ids: [], errors };
