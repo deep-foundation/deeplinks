@@ -114,7 +114,9 @@ export default async (req, res) => {
         // console.log(JSON.stringify(handleStringResult, null, 2));
         // console.log(handleStringResult?.data?.links?.[0]?.value);
 
-        var handlersWithCode = handleStringResult?.data?.links as any[];
+        const promises: PromiseConstructor[] = [];
+
+        const handlersWithCode = handleStringResult?.data?.links as any[];
         console.log(handlersWithCode?.length);
         if (handlersWithCode?.length > 0)
         {
@@ -139,14 +141,26 @@ export default async (req, res) => {
                 console.log('end');
                 // vm.runInNewContext(`export default 123;`, { module: _module });
                 
-                const result = await _module.exports.default();
-                console.log(`result: ${result}`);
+                // const result = await _module.exports.default();
+                // console.log(`result: ${result}`);
+
+                promises.push(_module.exports.default());
               } catch(error) {
                 debug('error', error);
               }
             }
           }
         }
+
+        // promises.push();
+
+        Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
+        // Promise.allSettled(promises)
+        .then(values => {
+
+          console.log(values);
+
+        });
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);
