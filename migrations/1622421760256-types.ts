@@ -130,7 +130,8 @@ const corePckg: PackagerPackage = {
       to: 'helloWorldHandler'
     }, // 55
 
-    { id: 'JSONHandlerResult', type: 'Type' },
+    { id: 'PromiseResult', type: 'Type' },
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' },
   ],
   errors: [],
   strict: true,

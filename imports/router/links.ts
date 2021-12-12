@@ -76,7 +76,7 @@ export default async (req, res) => {
               from: {
                 type_id: { _eq: $typeId },
               },
-              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'InsertHandler')} },
+              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandleInsert')} },
             }
           }
         }) {
@@ -85,24 +85,7 @@ export default async (req, res) => {
         } }`;
         console.log(queryString);
 
-        const query = gql`query SELECT_CODE($typeId: bigint) { links(where: {
-          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-          # to_id: { _eq: 16 },
-          # from_id: { _eq:  }
-          in: {
-            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
-            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Handler')} },
-            in: {
-              from: {
-                type_id: { _eq: $typeId },
-              },
-              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandleInsert')} },
-            }
-          }
-        }) {
-          id
-          value
-        } }`;
+        const query = gql`${queryString}`;
         console.log(query);
         // console.log(JSON.stringify(query, null, 2));
 
@@ -154,11 +137,13 @@ export default async (req, res) => {
 
         // promises.push();
 
-        Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-        // Promise.allSettled(promises)
+        // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
+        Promise.allSettled(promises)
         .then(values => {
 
           console.log(values);
+
+          
 
         });
 
