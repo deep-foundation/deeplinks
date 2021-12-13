@@ -1,5 +1,6 @@
-import { ApolloClient, ApolloQueryResult } from "@apollo/client";
-import { inherits } from "util";
+import { ApolloClient, ApolloQueryResult, useApolloClient } from "@apollo/client";
+import { useMemo } from "react";
+import { deprecate, inherits } from "util";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
 import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
 import { awaitPromise } from "./promise";
@@ -8,14 +9,14 @@ import { reserve } from "./reserve";
 export const ALLOWED_IDS = [5];
 export const DENIED_IDS = [0, 10, 11, 12, 13];
 export const GLOBAL_ID_PACKAGE=2;
-export const GLOBAL_ID_PACKAGE_ACTIVE=44;
-export const GLOBAL_ID_PACKAGE_VERSION=45;
 export const GLOBAL_ID_CONTAIN=3;
 export const GLOBAL_ID_ANY=8;
 export const GLOBAL_ID_PROMISE=9;
 export const GLOBAL_ID_THEN=10;
 export const GLOBAL_ID_RESOLVED=11;
 export const GLOBAL_ID_REJECTED=12;
+export const GLOBAL_ID_PACKAGE_ACTIVE=42;
+export const GLOBAL_ID_PACKAGE_VERSION=43;
 
 export interface DeepClientOptions<L = Link<number>> {
   apolloClient: ApolloClient<any>;
@@ -291,7 +292,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const q = await this.select(where);
     if (q.error) throw q.error;
     // @ts-ignore
-    return (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
+    const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
+    return result;
   };
 }
 
@@ -307,3 +309,12 @@ const _ids = {
     'Rejected': GLOBAL_ID_REJECTED,
   },
 };
+
+export function useDeep(apolloClientProps?: ApolloClient<any>) {
+  const apolloClientHook = useApolloClient();
+  const apolloClient = apolloClientProps || apolloClientHook;
+  const deep = useMemo(() => {
+    return new DeepClient({ apolloClient });
+  }, [apolloClient]);
+  return deep;
+}

@@ -68,67 +68,67 @@ const corePckg: PackagerPackage = {
     { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 20
     { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 21
 
-    { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 24
+    { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 22
 
-    { id: 'User', type: 'Type', value: { value: 'User' } }, // 25
-    { id: 'admin', type: 'User' }, // 26
+    { id: 'User', type: 'Type', value: { value: 'User' } }, // 23
+    { id: 'admin', type: 'User' }, // 24
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 27
+    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 25
 
-    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 28
+    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 26
 
-    { id: 'Insert', type: 'Operation' }, // 29
-    { id: 'Update', type: 'Operation' }, // 30
-    { id: 'Delete', type: 'Operation' }, // 31
-    { id: 'Select', type: 'Operation' }, // 32
+    { id: 'Insert', type: 'Operation' }, // 27
+    { id: 'Update', type: 'Operation' }, // 28
+    { id: 'Delete', type: 'Operation' }, // 29
+    { id: 'Select', type: 'Operation' }, // 30
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 33
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 34
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 31
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 32
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 35
-    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 36
-    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 37
-    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 38
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 33
+    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 34
+    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 35
+    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 36
 
-    { id: 'userTree', type: 'Tree' }, // 39
-    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 40
-    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 41
+    { id: 'userTree', type: 'Tree' }, // 37
+    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 38
+    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 39
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 42
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 40
 
-    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 43
+    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 41
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 44
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 42
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 45
-    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 46
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 43
+    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 44
 
-    { id: 'SyncTextFile', type: 'Type' }, // 47
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 48
+    { id: 'SyncTextFile', type: 'Type' }, // 45
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 46
 
-    { id: 'JSExecutionProvider', type: 'Type' }, // 49
+    { id: 'JSExecutionProvider', type: 'Type' }, // 47
 
-    { id: 'HandleInsert', type: 'Type' }, // 50
-    { id: 'HandleUpdate', type: 'Type' }, // 51
-    { id: 'HandleCreate', type: 'Type' }, // 52
+    { id: 'HandleInsert', type: 'Type' }, // 48
+    { id: 'HandleUpdate', type: 'Type' }, // 49
+    { id: 'HandleCreate', type: 'Type' }, // 50
 
     { 
       id: 'helloWorldJsFile',
       type: 'SyncTextFile',
       value: { value: "console.log('hello from insert handler');" }
-    }, // 53
+    }, // 51
     { 
       id: 'helloWorldHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'helloWorldJsFile'
-    }, // 54
+    }, // 52
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'helloWorldHandler'
-    }, // 55
+    }, // 53
   ],
   errors: [],
   strict: true,

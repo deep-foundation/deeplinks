@@ -262,6 +262,7 @@ export class Packager<L extends Link<any>> {
    * Import into system pckg.
    */
   async import(pckg: PackagerPackage): Promise<PackagerImportResult> {
+    // console.log(JSON.stringify(pckg));
     const errors = [];
     try {
       if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
@@ -286,11 +287,13 @@ export class Packager<L extends Link<any>> {
   async selectLinks(options: PackagerExportOptions): Promise<MinilinksResult<PackagerLink>> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
     const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
     const result = await this.client.select({
       _or: [
         { id: { _eq: options.packageLinkId } },
         { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } },
         { in: { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } } },
+        { type_id: { _eq: PackageVersion }, to: { id: { _eq: options.packageLinkId } } },
       ]
     }, {
       name: 'LOAD_PACKAGE_LINKS',
@@ -364,6 +367,7 @@ export class Packager<L extends Link<any>> {
       if (item.to) item.to = containsHash[item.to] || 0;
     }
     const packageId = ++counter;
+    // package
     data.push({
       id: packageId,
       type: Package,
@@ -375,6 +379,7 @@ export class Packager<L extends Link<any>> {
     const containsArray = Object.keys(containsHash);
     for (let c = 0; c < containsArray.length; c++) {
       const contain = containsArray[c];
+      // each contain to package value
       data.push({
         id: ++counter,
         type: Contain,
@@ -390,6 +395,7 @@ export class Packager<L extends Link<any>> {
     let namespaceId = n.namespaceId;
     if (!namespaceId) {
       namespaceId = ++counter;
+      // namespace it self
       data.push({
         id: namespaceId,
         type: PackageNamespace,
@@ -397,6 +403,7 @@ export class Packager<L extends Link<any>> {
         // @ts-ignore
         _: true,
       });
+      // active link if first in namespace
       data.push({
         id: ++counter,
         type: Active,
@@ -406,6 +413,7 @@ export class Packager<L extends Link<any>> {
         _: true,
       });
     }
+    // version link
     data.push({
       id: ++counter,
       type: Version,
@@ -415,6 +423,7 @@ export class Packager<L extends Link<any>> {
       // @ts-ignore
       _: true,
     });
+    // contain link
     data.push({
       id: ++counter,
       type: Contain,
@@ -556,16 +565,20 @@ export class Packager<L extends Link<any>> {
    */
   async export(options: PackagerExportOptions): Promise<PackagerPackage> {
     const globalLinks = await this.selectLinks(options);
+    // console.log('globalLinks', globalLinks.links);
     const Package = await this.client.id('@deep-foundation/core', 'Package');
-    const packageLink = globalLinks.links?.find(l => l?.type?.value?.value === Package);
-    const packageName = packageLink?.value?.value;
+    const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
+    const version: any = globalLinks.types[PackageVersion]?.[0];
+    const pack: any = globalLinks.types[Package]?.[0];
     const pckg = {
-      package: { name: packageName },
+      package: { name: pack?.value?.value, version: version?.value?.value },
       data: [],
       strict: false,
       errors: [],
     };
-    await this.serialize(globalLinks, options, pckg);
+    // console.log('pckg1', JSON.stringify(pckg));
+    await this.serialize(minilinks(globalLinks.links.filter(l => l.id !== version.id)), options, pckg);
+    // console.log('pckg2', JSON.stringify(pckg));
     return pckg;
   }
 }
