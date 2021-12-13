@@ -48,9 +48,14 @@ export const beforeAllHandler = async () => {
 };
 beforeAll(beforeAllHandler);
 
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 describe('handle by type', () => {
   it(`handle insert`, async () => {
-    const freeId = 50764;
+    const freeId = randomInteger(5000000, 9999999999);
+    console.log(freeId);
     const typeId = await deep.id('@deep-foundation/core', 'Type')
     const insert = { id: freeId, from_id: freeId, type_id: typeId, to_id: freeId };
     const linkInsert = (await deep.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];

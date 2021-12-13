@@ -2,12 +2,12 @@ import Debug from 'debug';
 
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { HasuraApi } from "@deep-foundation/hasura/api";
-import { sql } from '@deep-foundation/hasura/sql';
+// import { sql } from '@deep-foundation/hasura/sql';
 import { gql } from 'apollo-boost';
 import vm from 'vm';
 
 import { permissions } from '../permission';
-import { reject, resolve } from '../promise';
+import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 
@@ -137,14 +137,50 @@ export default async (req, res) => {
 
         // promises.push();
 
+        const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+        const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+        const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+
+        const promise = await findPromiseLink({
+          id: newRow.id, client: deep.apolloClient,
+          Then: await deep.id('@deep-foundation/core', 'Then'),
+          Promise: await deep.id('@deep-foundation/core', 'Promise'),
+          Resolved: resolvedTypeId,
+          Rejected: rejectedTypeId,
+        });
+
         // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
         Promise.allSettled(promises)
-        .then(values => {
-
+        .then(async values => {
           console.log(values);
+          for (let i = 0; i < values.length; i++)
+          {
+            const value = values[i];
+            if (value.status == 'fulfilled')
+            {
+              const result = value.value;
 
-          
+              let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
+              let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
 
+              // await deep.update(insertedLink.id, { value: result });
+
+              await deep.update({ link_id: { _eq: insertedLink.id } }, { value: {} }, { table: 'objects' });
+
+              linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+              insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
+            }
+            if (value.status == 'rejected')
+            {
+              const error = value.reason;
+
+              let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
+              let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
+
+              linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+              insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
+            }
+          }
         });
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
