@@ -35,7 +35,12 @@ const generateEnvs = (envs) => {
 };
 
 const checkStatus = async () => {
-  const result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
+  let result;
+  try {
+    result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
+  } catch (error){
+    console.error(error);
+  }
   return result?.data?.docker;
 };
 
