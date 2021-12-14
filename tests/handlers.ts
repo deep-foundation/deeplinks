@@ -1,6 +1,7 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
+import gql from "graphql-tag";
 
 // import {
 //   GLOBAL_ID_TYPE,
@@ -57,10 +58,39 @@ describe('handle by type', () => {
     const freeId = randomInteger(5000000, 9999999999);
     console.log(freeId);
     const typeId = await deep.id('@deep-foundation/core', 'Type')
+    // const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise')
+    // const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved')
+    // const thenTypeId = await deep.id('@deep-foundation/core', 'Then')
     const insert = { id: freeId, from_id: freeId, type_id: typeId, to_id: freeId };
     const linkInsert = (await deep.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];
     console.log(linkInsert);
     assert.equal(freeId, linkInsert.id);
+
+    // await deep.await(freeId);
+
+    // const client = deep.apolloClient;
+    // const result = await client.query({
+    //   query: gql`{
+    //     links(where: { 
+    //       in: { 
+    //         type_id: { _eq: ${resolvedTypeId} }, # Resolved
+    //         from: { 
+    //           type_id: { _eq: ${promiseTypeId} }, # Promise
+    //           in: { 
+    //             type_id: { _eq: ${thenTypeId} } # Then
+    //             from_id: { _eq: ${freeId} } # freeId
+    //           }
+    //         }
+    //       },
+    //     }) {
+    //   object { value }
+    //     }
+    //   }`,
+    // });
+    
+    // console.log(JSON.stringify(result, null, 2));
+    // console.log(JSON.stringify(result?.data?.links?.object?.value, null, 2))
+    
 
     // TODO: check result link is created
     // TODO: check resolve link is created

@@ -180,6 +180,9 @@ export default async (req, res) => {
               let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
               let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
 
+              // TODO: Store errors
+              // await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
+
               linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
               insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
             }
