@@ -45,7 +45,7 @@ export async function call (options: IOptions) {
   try {
     const isDocker = await checkStatus();
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz` : ''} && npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz` : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }

@@ -1,8 +1,9 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.17",
+  "version": "0.0.19",
   "scripts": {
-    "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey DEEPLINKS_URL=http://host.docker.internal:3006 PORT=3006 nodemon index.ts",
+    "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey DEEPLINKS_URL=http://host.docker.internal:3006 PORT=3006 npm run launch",
+    "launch": "fkill :3006; ts-node ./index.ts;",
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./benchmarks && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts) && (cd ./imports/router && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./tests && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
@@ -10,11 +11,11 @@
     "benchmark": "export HASURA_PATH=localhost:8080; export HASURA_SSL=0; export HASURA_SECRET=myadminsecretkey; DEBUG='materialized-path:*' ts-node benchmarks/index.ts",
     "migrate": "npx migrate up --compiler=ts:./compiler/index.js",
     "unmigrate": "npx migrate down --compiler=ts:./compiler/index.js",
-    "hasura-docker": "cross-env JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" npm run hasura-docker-core",
-    "hasura-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose up -d",
-    "hasura-docker-stop": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose down",
-    "start-docker": "cd local && docker-compose up -d",
-    "stop-docker": "cd local && docker-compose down"
+    "start-engine-docker": "cross-env JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" npm run start-engine-docker-core",
+    "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose up -d",
+    "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose down",
+    "start-deeplinks-docker": "cd local && docker-compose up -d",
+    "stop-deeplinks-docker": "cd local && docker-compose down"
   },
   "dependencies": {
     "@apollo/client": "^3.5.5",

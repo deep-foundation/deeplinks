@@ -1,8 +1,17 @@
 import express from 'express';
 import router from './imports/router/index';
-import jwtServer from './imports/router/jwt'
-import guestServer from './imports/router/guest'
-import packagerServer from './imports/router/packager'
+import jwtServer from './imports/router/jwt';
+import guestServer from './imports/router/guest';
+import packagerServer from './imports/router/packager';
+
+process.once('SIGUSR2', function () {
+  process.kill(process.pid, 'SIGUSR2');
+});
+
+process.on('SIGINT', function () {
+  // this is only called on ctrl+c, not restart
+  process.kill(process.pid, 'SIGINT');
+});
 
 const app = express();
 app.use(express.json());
