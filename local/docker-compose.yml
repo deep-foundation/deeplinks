@@ -2,6 +2,8 @@ version: '3.6'
 services:
   deeplinks-docker:
     image: menzorg/deeplinks:main
+    volumes:
+    - docker_socket:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
     ports:
       - 3006:3006
@@ -11,3 +13,5 @@ services:
       MIGRATIONS_HASURA_SSL: '${MIGRATIONS_HASURA_SSL}'
       MIGRATIONS_HASURA_SECRET: '${MIGRATIONS_HASURA_SECRET}'
       JWT_SECRET: '${JWT_SECRET}'
+volumes:
+  docker_socket: '${SOCKET_PATH}'
