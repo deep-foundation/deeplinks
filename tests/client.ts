@@ -12,31 +12,31 @@ const deepClient = new DeepClient({ apolloClient });
 
 describe('serialize', () => {
   it(`{ id: 5 }`, () => {
-    assert.deepEqual(deepClient.serialize({ id: 5 }), { id: { _eq: 5 } });
+    assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });
   it(`{ id: { _eq: 5 } }`, () => {
-    assert.deepEqual(deepClient.serialize({ id: { _eq: 5 } }), { id: { _eq: 5 } });
+    assert.deepEqual(deepClient.serializeWhere({ id: { _eq: 5 } }), { id: { _eq: 5 } });
   });
   it(`{ value: 5 }`, () => {
-    assert.deepEqual(deepClient.serialize({ value: 5 }), { number: { value: { _eq: 5 } } });
+    assert.deepEqual(deepClient.serializeWhere({ value: 5 }), { number: { value: { _eq: 5 } } });
   });
   it(`{ value: 'a' }`, () => {
-    assert.deepEqual(deepClient.serialize({ value: 'a' }), { string: { value: { _eq: 'a' } } });
+    assert.deepEqual(deepClient.serializeWhere({ value: 'a' }), { string: { value: { _eq: 'a' } } });
   });
   it(`{ number: { value: { _eq: 5 } } }`, () => {
-    assert.deepEqual(deepClient.serialize({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
+    assert.deepEqual(deepClient.serializeWhere({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
   });
   it(`{ string: { value: { _eq: 'a' } } }`, () => {
-    assert.deepEqual(deepClient.serialize({ string: { value: { _eq: 'a' } } }), { string: { value: { _eq: 'a' } } });
+    assert.deepEqual(deepClient.serializeWhere({ string: { value: { _eq: 'a' } } }), { string: { value: { _eq: 'a' } } });
   });
   it(`{ object: { value: { _contains: { a: 'b' } } } }`, () => {
-    assert.deepEqual(deepClient.serialize({ object: { value: { _contains: { a: 'b' } } } }), { object: { value: { _contains: { a: 'b' } } } });
+    assert.deepEqual(deepClient.serializeWhere({ object: { value: { _contains: { a: 'b' } } } }), { object: { value: { _contains: { a: 'b' } } } });
   });
   it(`{ from: { value: 5 } }`, () => {
-    assert.deepEqual(deepClient.serialize({ from: { value: 5 } }), { from: { number: { value: { _eq: 5 } } } });
+    assert.deepEqual(deepClient.serializeWhere({ from: { value: 5 } }), { from: { number: { value: { _eq: 5 } } } });
   });
   it(`{ out: { type_id: Contain, value: item, from: where } }`, async () => {
-    assert.deepEqual(deepClient.serialize(
+    assert.deepEqual(deepClient.serializeWhere(
       {
         out: {
           type_id: await deepClient.id('@deep-foundation/core', 'Contain'),
@@ -59,7 +59,7 @@ describe('serialize', () => {
     });
   });
   it(`{ value: 5, link: { type_id: 7 } }`, () => {
-    assert.deepEqual(deepClient.serialize(
+    assert.deepEqual(deepClient.serializeWhere(
       { value: 5, link: { type_id: 7 } },
       'value'
     ), {

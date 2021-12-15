@@ -90,6 +90,7 @@ export const generateQueryData = ({
 export interface IGenerateQueryOptions {
   queries: any[];
   name: string;
+  operation?: 'query' | 'subscription';
   alias?: string;
 };
 
@@ -101,13 +102,14 @@ export interface IGenerateQueryResult {
 
 export const generateQuery = ({
   queries = [],
+  operation = 'query',
   name = 'QUERY',
   alias = 'q',
 }: IGenerateQueryOptions): IGenerateQueryResult => {
   debug('generateQuery', { name, alias, queries });
   const calledQueries = queries.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
   const defs = calledQueries.map(m => m.defs.join(',')).join(',');
-  const queryString = `query ${name} (${defs}) { ${calledQueries.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
+  const queryString = `${operation} ${name} (${defs}) { ${calledQueries.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
   const query = gql`${queryString}`;
   const variables = {};
   for (let a = 0; a < calledQueries.length; a++) {

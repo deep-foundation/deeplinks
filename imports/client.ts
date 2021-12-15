@@ -60,6 +60,8 @@ export interface DeepClientInstance<L = Link<number>> {
   defaultUpdateName?: string;
   defaultDeleteName?: string;
 
+  stringify(any?: any): string;
+
   select<LL = L>(exp: any, options?: {
     table?: string;
     returning?: string;
@@ -91,6 +93,9 @@ export interface DeepClientInstance<L = Link<number>> {
   reserve<LL = L>(count: number): Promise<number[]>;
 
   await(id: number): Promise<boolean>;
+
+  serializeWhere(exp: any, env?: string): any;
+  serializeQuery(exp: any, env?: string): any;
 
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number>;
 }
@@ -128,13 +133,21 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
   }
 
+  stringify(any?: any): string {
+    if (typeof(any) === 'object') {
+      let json;
+      try { json = JSON.parse(any); } catch(error) {}
+      return json || any.toString();
+    } else return any;
+  }
+
   async select<LL = L>(exp: any, options?: {
     table?: string;
     returning?: string;
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -180,13 +193,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
     const q = await this.apolloClient.mutate(generateSerial({
-      actions: [updateMutation(table, { ...variables, where: exp, _set: value }, { tableName: table, operation: 'update', returning })],
+      actions: [updateMutation(table, { ...variables, where, _set: value }, { tableName: table, operation: 'update', returning })],
       name: name,
     }));
     // @ts-ignore
@@ -199,13 +212,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultDeleteName;
     const q = await this.apolloClient.mutate(generateSerial({
-      actions: [deleteMutation(table, { ...variables, where: exp, returning }, { tableName: table, operation: 'delete', returning })],
+      actions: [deleteMutation(table, { ...variables, where, returning }, { tableName: table, operation: 'delete', returning })],
       name: name,
     }));
     // @ts-ignore
@@ -253,8 +266,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
    * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
    */
-  serialize(exp: any, env: string = 'link'): any {
-    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.serialize);
+  serializeWhere(exp: any, env: string = 'link'): any {
+    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.serializeWhere);
     else if (typeof(exp) === 'object') {
       const keys = Object.keys(exp);
       const result = {};
@@ -269,19 +282,27 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
             } else {
               setted = result[key] = { _eq: exp[key] };
             }
+          } else if (Object.prototype.toString.call(exp[key]) === '[object Array]') {
+            // @ts-ignore
+            setted = result[key] = this.pathToWhere(...exp[key]);
           }
         } else if (env === 'value') {
           if (type === 'string' || type === 'number') {
             setted = result[key] = { _eq: exp[key] };
           }
         }
-        if (!setted) result[key] = this._serialize?.[env]?.relations?.[key] ? this.serialize(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
+        if (!setted) result[key] = this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
       }
       return result;
     } else return exp;
   };
 
-  async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+  serializeQuery(exp: any, env: string = 'link'): any {
+    const { limit, order_by, offset, distinct_on, ...where } = exp;
+    return { limit, order_by, offset, distinct_on, where: this.serializeWhere(where, env) };
+  }
+
+  pathToWhere(start: DeepClientStartItem, ...path: DeepClientPathItem[]): any {
     const pckg = { type_id: GLOBAL_ID_PACKAGE, value: start };
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
@@ -289,7 +310,11 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
       where = nextWhere;
     }
-    const q = await this.select(where);
+    return where;
+  }
+
+  async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+    const q = await this.select(this.pathToWhere(start, ...path));
     if (q.error) throw q.error;
     // @ts-ignore
     const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);

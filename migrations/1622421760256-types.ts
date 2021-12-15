@@ -129,6 +129,13 @@ const corePckg: PackagerPackage = {
       type: 'HandleInsert',
       to: 'helloWorldHandler'
     }, // 53
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 54
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'String' }, // 55
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 56
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 54
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 55
   ],
   errors: [],
   strict: true,
