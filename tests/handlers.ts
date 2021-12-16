@@ -22,7 +22,7 @@ const deep = new DeepClient({ apolloClient });
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
 
-export const beforeAllHandler = async () => {
+beforeAll(async () => {
   // { 
   //   id: 'helloWorldJsFile',
   //   type: 'SyncTextFile',
@@ -46,8 +46,51 @@ export const beforeAllHandler = async () => {
   //   type: 'HandleInsert',
   //   to: 'helloWorldHandler'
   // }, // 74
-};
-beforeAll(beforeAllHandler);
+
+  const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+  const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+  const typeId = await deep.id('@deep-foundation/core', 'Type');
+  const jsExecutionProviderId = await deep.id('@deep-foundation/core', 'JSExecutionProvider');
+
+  // {
+  //   id: 'helloWorldJsFile',
+  //   type: 'SyncTextFile',
+  //   value: { value: "console.log('hello from insert handler'); return 123;" }
+  // }, // 51
+
+  let handlerJSFile = (await deep.insert({ 
+    type_id: syncTextFileTypeId
+  }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
+  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); return 123;" }, { table: 'strings' });
+
+  // {
+  //   id: 'helloWorldHandler',
+  //   from: 'JSExecutionProvider',
+  //   type: 'Handler',
+  //   to: 'helloWorldJsFile'
+  // }, // 52
+
+  const handler = (await deep.insert({
+    from_id: jsExecutionProviderId,
+    type_id: handlerTypeId,
+    to_id: handlerJSFile?.id,
+  }, { name: 'IMPORT_HANDLER' })).data[0];
+
+  // {
+  //   id: 'helloWorldInsertHandler',
+  //   from: 'Type',
+  //   type: 'HandleInsert',
+  //   to: 'helloWorldHandler'
+  // }, // 53
+
+  const insertHandler = (await deep.insert({
+    from_id: typeId,
+    type_id: handleInsertTypeId,
+    to_id: handler?.id,
+  }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
+
+});
 
 function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -57,10 +100,10 @@ describe('handle by type', () => {
   it(`handle insert`, async () => {
     const freeId = randomInteger(5000000, 9999999999);
     console.log(freeId);
-    const typeId = await deep.id('@deep-foundation/core', 'Type')
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise')
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved')
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then')
+    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
     const insert = { id: freeId, from_id: freeId, type_id: typeId, to_id: freeId };
     const linkInsert = (await deep.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];
     console.log(linkInsert);

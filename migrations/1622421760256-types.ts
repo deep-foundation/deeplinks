@@ -112,34 +112,16 @@ const corePckg: PackagerPackage = {
     { id: 'HandleUpdate', type: 'Type' }, // 49
     { id: 'HandleDelete', type: 'Type' }, // 50
 
-    {
-      id: 'helloWorldJsFile',
-      type: 'SyncTextFile',
-      value: { value: "console.log('hello from insert handler'); return 123;" }
-    }, // 51
-    {
-      id: 'helloWorldHandler',
-      from: 'JSExecutionProvider',
-      type: 'Handler',
-      to: 'helloWorldJsFile'
-    }, // 52
-    {
-      id: 'helloWorldInsertHandler',
-      from: 'Type',
-      type: 'HandleInsert',
-      to: 'helloWorldHandler'
-    }, // 53
+    { id: 'PromiseResult', type: 'Type' }, // 51
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 52
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 54
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'String' }, // 55
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 56
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
-
-    { id: 'PromiseResult', type: 'Type' }, // 61
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 62
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 53
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'String' }, // 54
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 55
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 56
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 57
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 58
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 59
   ],
   errors: [],
   strict: true,
