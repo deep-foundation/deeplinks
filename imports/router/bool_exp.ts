@@ -3,15 +3,15 @@ import { HasuraApi } from "@deep-foundation/hasura/api";
 import { generateMutation, generateSerial } from '../gql';
 
 export const api = new HasuraApi({
-  path: process.env.MIGRATIONS_HASURA_PATH,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
-  secret: process.env.MIGRATIONS_HASURA_SECRET,
+  path: process.env.DEEPLINKS_HASURA_PATH,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const client = generateApolloClient({
-  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
-  secret: process.env.MIGRATIONS_HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 export default async (req, res) => {

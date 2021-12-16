@@ -19,9 +19,9 @@ const typeDefs = gql`
 `;
 
 const client = generateApolloClient({
-  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
-  secret: process.env.MIGRATIONS_HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const deep = new DeepClient({
