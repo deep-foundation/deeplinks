@@ -31,7 +31,7 @@ beforeAll(async () => {
   let handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
-  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); return 123;" }, { table: 'strings' });
+  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); throw 'error897478'; return 123;" }, { table: 'strings' });
 
   // {
   //   id: 'helloWorldHandler',
@@ -104,6 +104,9 @@ describe('handle by type', () => {
     // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
 
     console.log(result?.data?.links.length);
+    console.log(result?.data?.links[0]?.object?.value);
+
+    console.log(JSON.stringify(result?.data?.links, null, 2));
 
     assert.equal(result?.data?.links[0]?.object?.value, 123);
     

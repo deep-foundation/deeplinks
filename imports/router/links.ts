@@ -97,7 +97,7 @@ export default async (req, res) => {
         // console.log(JSON.stringify(handleStringResult, null, 2));
         // console.log(handleStringResult?.data?.links?.[0]?.value);
 
-        const promises: PromiseConstructor[] = [];
+        const promises: any[] = [];
 
         const handlersWithCode = handleStringResult?.data?.links as any[];
         console.log(handlersWithCode?.length);
@@ -127,7 +127,30 @@ export default async (req, res) => {
                 // const result = await _module.exports.default();
                 // console.log(`result: ${result}`);
 
-                promises.push(_module.exports.default());
+                // promises.push(_module.exports.default());
+                // promises.push(_module.exports.default().then(r => r, r => r));
+                // promises.push(new Promise((res, rej) => {
+                //   try {
+                //     return _module.exports.default();
+                //   } catch(error) {
+                //     rej(error);
+                //   }
+                // }));
+                // promises.push(new Promise((res, rej) => {
+                //   try {
+                //     return _module.exports.default().then(res, rej);
+                //   } catch(error) {
+                //     rej(error);
+                //   }
+                // }));
+                promises.push(new Promise((res, rej) => {
+                  try {
+                    return _module.exports.default() // тут убрали then
+                  } catch(error) {
+                    console.log({ error });
+                    rej(error);
+                  }
+                }));
               } catch(error) {
                 debug('error', error);
               }
@@ -135,7 +158,9 @@ export default async (req, res) => {
           }
         }
 
-        // promises.push();
+        // for (let i = 0; i < promises.length; i++) {
+        //   promises[i] = promises[i].then(r => r, r => r);
+        // }
 
         const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
         const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
@@ -181,9 +206,10 @@ export default async (req, res) => {
               let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
 
               // TODO: Store errors
-              // await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
+              await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
 
-              linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+              // linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+              linkToInsert = { from_id: promise.id, type_id: rejectedTypeId, to_id: insertedLink.id };
               insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
             }
           }
