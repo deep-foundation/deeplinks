@@ -23,6 +23,12 @@ describe('serialize', () => {
   it(`{ value: 'a' }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ value: 'a' }), { string: { value: { _eq: 'a' } } });
   });
+  it(`{ number: 5 }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ number: 5 }), { number: { value: { _eq: 5 } } });
+  });
+  it(`{ string: 'a' }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ string: 'a' }), { string: { value: { _eq: 'a' } } });
+  });
   it(`{ number: { value: { _eq: 5 } } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
   });
@@ -68,6 +74,61 @@ describe('serialize', () => {
         type_id: { _eq: 7 }
       },
     });
+  });
+  it(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
+    assert.deepEqual(
+      deepClient.serializeWhere({
+        type: ["@deep-foundation/core", "Value"],
+      }),
+      {
+        type: {
+          in: {
+            from: {
+              string: { value: { _eq: "@deep-foundation/core" } },
+              type_id: { _eq: 2 },
+            },
+            string: { value: { _eq: "Value" } },
+            type_id: { _eq: 3 },
+          },
+        },
+      },
+    );
+  });
+  it(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
+    assert.deepEqual(
+      deepClient.serializeWhere({
+        _or: [{
+          type: ["@deep-foundation/core", "Value"],
+        }, {
+          type: ["@deep-foundation/core", "User"],
+        }]
+      }),
+      {
+        _or: [{
+          type: {
+            in: {
+              from: {
+                string: { value: { _eq: "@deep-foundation/core" } },
+                type_id: { _eq: 2 },
+              },
+              string: { value: { _eq: "Value" } },
+              type_id: { _eq: 3 },
+            },
+          },
+        },{
+          type: {
+            in: {
+              from: {
+                string: { value: { _eq: "@deep-foundation/core" } },
+                type_id: { _eq: 2 },
+              },
+              string: { value: { _eq: "User" } },
+              type_id: { _eq: 3 },
+            },
+          },
+        }]
+      },
+    );
   });
   it(`id(packageName,contain)`, async () => {
     const id = await deepClient.id('@deep-foundation/core', 'Value');
