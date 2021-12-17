@@ -41,6 +41,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
     args: {
       table: tableName,
       name: 'link',
+      type: 'one_to_one',
       using: {
         manual_configuration: {
           remote_table: {
@@ -50,6 +51,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
           column_mapping: {
             link_id: 'id',
           },
+          insertion_order: 'after_parent',
         },
       },
     },
@@ -59,6 +61,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
     args: {
       table: linksTableName,
       name: linkRelation,
+      type: 'one_to_one',
       using: {
         manual_configuration: {
           remote_table: {
@@ -68,6 +71,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
           column_mapping: {
             id: 'link_id',
           },
+          insertion_order: 'after_parent',
         },
       },
     },
