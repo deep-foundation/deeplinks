@@ -3,14 +3,6 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
 
-// import {
-//   GLOBAL_ID_TYPE,
-//   GLOBAL_ID_SYNC_TEXT_FILE,
-//   GLOBAL_ID_HANDLER,
-//   GLOBAL_ID_JS_EXECUTION_PROVIDER,
-//   GLOBAL_ID_HANDLE_INSERT,
-// } from '../imports/global-ids';
-
 const apolloClient = generateApolloClient({
   path: `${process.env.HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.HASURA_SSL,
@@ -23,29 +15,6 @@ const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
 
 beforeAll(async () => {
-  // { 
-  //   id: 'helloWorldJsFile',
-  //   type: 'SyncTextFile',
-  //   value: { value: "console.log('hello from insert handler');" }
-  // }, // 72
-
-  // const insert = { type_id: GLOBAL_ID_SYNC_TEXT_FILE, `table${GLOBAL_ID_SYNC_TEXT_FILE}`: { data: { value: "console.log('hello from insert handler');" } } };
-  // // const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `table${valueLink.type}`, name: 'IMPORT_PACKAGE_VALUE' });
-  // // const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
-
-  // deepClient.insert(insert);
-  // { 
-  //   id: 'helloWorldHandler',
-  //   from: 'JSExecutionProvider',
-  //   type: 'Handler',
-  //   to: 'helloWorldJsFile'
-  // }, // 73
-  // { 
-  //   id: 'helloWorldInsertHandler',
-  //   from: 'Type',
-  //   type: 'HandleInsert',
-  //   to: 'helloWorldHandler'
-  // }, // 74
 
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
@@ -133,6 +102,8 @@ describe('handle by type', () => {
     
     // console.log(JSON.stringify(result, null, 2));
     // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+
+    console.log(result?.data?.links.length);
 
     assert.equal(result?.data?.links[0]?.object?.value, 123);
     
