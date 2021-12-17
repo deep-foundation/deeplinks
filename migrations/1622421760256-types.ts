@@ -116,12 +116,14 @@ const corePckg: PackagerPackage = {
     { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 52
 
     { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 53
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'String' }, // 54
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 54
     { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 55
     { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 56
     { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 57
     { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 58
     { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 59
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 60
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 61
   ],
   errors: [],
   strict: true,

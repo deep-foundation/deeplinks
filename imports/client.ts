@@ -261,13 +261,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     },
   };
 
+  _boolExpFields = {
+    _and: true,
+    _not: true,
+    _or: true,
+  };
+
   /**
    * Watch relations to links and values.
    * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
    * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
    */
   serializeWhere(exp: any, env: string = 'link'): any {
-    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.serializeWhere);
+    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => this.serializeWhere(e, env));
     else if (typeof(exp) === 'object') {
       const keys = Object.keys(exp);
       const result = {};
@@ -282,16 +288,16 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
             } else {
               setted = result[key] = { _eq: exp[key] };
             }
-          } else if (Object.prototype.toString.call(exp[key]) === '[object Array]') {
+          } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
             // @ts-ignore
-            setted = result[key] = this.pathToWhere(...exp[key]);
+            setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
           }
         } else if (env === 'value') {
           if (type === 'string' || type === 'number') {
             setted = result[key] = { _eq: exp[key] };
           }
         }
-        if (!setted) result[key] = this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
+        if (!setted) result[key] = this._boolExpFields[key] ? this.serializeWhere(exp[key], env) : this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
       }
       return result;
     } else return exp;

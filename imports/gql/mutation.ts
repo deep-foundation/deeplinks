@@ -12,6 +12,7 @@ const fieldsInputs = (tableName): IGenerateMutationFieldTypes => ({
   'object': `${tableName}_insert_input!`,
   '_inc': `${tableName}_inc_input`,
   '_set': `${tableName}_set_input`,
+  'on_conflict': `${tableName}_on_conflict`,
 });
 
 export interface IGenerateMutationOptions {
@@ -51,7 +52,7 @@ export const generateMutation = ({
 }: IGenerateMutationOptions): IGenerateMutationBuilder => {
   debug('generateMutationOptions', { tableName, operation, queryName, returning, variables });
   const fields =
-    operation === 'insert' ? ['objects']
+    operation === 'insert' ? ['objects','on_conflict']
   : operation === 'update' ? ['_inc','_set','where']
   : operation === 'delete' ? ['where']
   : [];
