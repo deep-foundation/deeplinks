@@ -134,7 +134,7 @@ export const up = async () => {
   const packager = new Packager(client);
   const { errors } = await packager.import(corePckg);
   if (errors.length) {
-    console.log(errors);
+    console.log(JSON.stringify(errors, null, 2));
     throw new Error('Import error');
   }
 };
