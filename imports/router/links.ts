@@ -86,7 +86,7 @@ const UseRunner = async ({ code, link }) => {
       }
     }
     console.log(5);
-    const initResult = await axios.post(`http://localhost:${port}/init`, { params: { code: '(arg)=>{console.log(arg); return {result: 123}}', jwt } }); // code
+    const initResult = await axios.post(`http://localhost:${port}/init`, { params: { code, jwt } }); // code
     console.log('initResult', initResult.data);
     console.log(6);
   // if all ok and hash has container

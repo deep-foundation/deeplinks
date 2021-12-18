@@ -14,6 +14,13 @@ const deep = new DeepClient({ apolloClient });
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
 
+let handlerId = 0;
+let insertHandlerId = 0;
+let handlerJSFileId = 0;
+let handlerJSFileValueId = 0;
+
+jest.setTimeout(30000);
+
 beforeAll(async () => {
 
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
@@ -31,8 +38,14 @@ beforeAll(async () => {
   let handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
-  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); return 123;" }, { table: 'strings' });
+  handlerJSFileId = handlerJSFile?.id;
+  console.log("handlerJSFileId: ", handlerJSFileId);
+
+  let handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: "(arg)=>{console.log(arg); return {result: 123}}" }, { table: 'strings' })).data[0];
+  // await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); return 123;" }, { table: 'strings' });
   // await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); throw 'error897478'; return 123;" }, { table: 'strings' });
+  handlerJSFileValueId = handlerJSFileValue?.id;
+  console.log("handlerJSFileValueId: ", handlerJSFileValueId);
 
   // {
   //   id: 'helloWorldHandler',
@@ -46,6 +59,8 @@ beforeAll(async () => {
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
+  handlerId = handler?.id;
+  console.log("handlerId: ", handlerId);
 
   // {
   //   id: 'helloWorldInsertHandler',
@@ -59,6 +74,8 @@ beforeAll(async () => {
     type_id: handleInsertTypeId,
     to_id: handler?.id,
   }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
+  insertHandlerId = insertHandler?.id;
+  console.log("insertHandlerId: ", insertHandlerId);
 
 });
 
@@ -80,7 +97,7 @@ describe('handle by type', () => {
     assert.equal(freeId, linkInsert.id);
 
     // await deep.await(freeId);
-    await delay(2000);
+    await delay(20000);
 
     const client = deep.apolloClient;
     const result = await client.query({
@@ -110,7 +127,7 @@ describe('handle by type', () => {
 
     console.log(JSON.stringify(result?.data?.links, null, 2));
 
-    assert.equal(result?.data?.links[0]?.object?.value, 123);
+    assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
     
 
     // TODO: check result link is created
@@ -145,6 +162,11 @@ const itDelay = () => {
     });
   }
 };
+
+afterAll(async() => {
+  await deep.delete({ id: { _in: [handlerJSFileId, handlerId, insertHandlerId]}});
+  await deep.delete({ id: { _eq: handlerJSFileValueId}}, { table: 'strings' });
+});
 
 // export const prepare = () => { };
 // export const testMinus15 = (x: boolean) => async () => { };
