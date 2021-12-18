@@ -91,13 +91,17 @@ describe('handle by type', () => {
     const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
-    const insert = { id: freeId, from_id: freeId, type_id: typeId, to_id: freeId };
-    const linkInsert = (await deep.insert(insert, { name: 'IMPORT_PACKAGE_LINK' })).data[0];
+    const linkInsert = (await deep.insert({ 
+      id: freeId,
+      from_id: freeId,
+      type_id: typeId,
+      to_id: freeId
+    }, { name: 'IMPORT_LINK' })).data[0];
     console.log(linkInsert);
     assert.equal(freeId, linkInsert.id);
 
     // await deep.await(freeId);
-    await delay(1000);
+    await delay(2000);
 
     const client = deep.apolloClient;
     const result = await client.query({
@@ -110,6 +114,94 @@ describe('handle by type', () => {
               in: { 
                 type_id: { _eq: ${thenTypeId} } # Then
                 from_id: { _eq: ${freeId} } # freeId
+              }
+            }
+          },
+        }) {
+      object { value }
+        }
+      }`,
+    });
+    
+    // console.log(JSON.stringify(result, null, 2));
+    // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+
+    console.log(result?.data?.links.length);
+    console.log(result?.data?.links[0]?.object?.value);
+
+    console.log(JSON.stringify(result?.data?.links, null, 2));
+
+    assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
+    
+
+    // TODO: check result link is created
+    // TODO: check resolve link is created
+
+    // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
+  });
+  // it(`{ id: { _eq: 5 } })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ id: { _eq: 5 } }), { id: { _eq: 5 } });
+  // });
+  // it(`{ value: 5 })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ value: 5 }), { number: { value: { _eq: 5 } } });
+  // });
+  // it(`{ value: 'a' })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ value: 'a' }), { string: { value: { _eq: 'a' } } });
+  // });
+  // it(`{ number: { value: { _eq: 5 } } })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
+  // });
+  // it(`{ string: { value: { _eq: 'a' } } })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ string: { value: { _eq: 'a' } } }), { string: { value: { _eq: 'a' } } });
+  // });
+  // it(`{ object: { value: { _contains: { a: 'b' } } } })`, () => {
+  //   assert.deepEqual(deepClient.boolExpSerialize({ object: { value: { _contains: { a: 'b' } } } }), { object: { value: { _contains: { a: 'b' } } } });
+  // });
+});
+
+describe('handle by selector', () => {
+  it(`handle insert`, async () => {
+    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+
+    // selector -- selection -> link (concrete)
+    const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
+    const selectionTypeId = await deep.id('@deep-foundation/core', 'Selection');
+
+    const userTypeId = await deep.id('@deep-foundation/core', 'User');
+    
+    const selector = (await deep.insert({ 
+      type_id: selectorTypeId
+    }, { name: 'IMPORT_SELECTOR' })).data[0];
+
+    const link = (await deep.insert({ 
+      type_id: userTypeId,
+    }, { name: 'IMPORT_LINK' })).data[0];
+
+    const selection = (await deep.insert({ 
+      from_id: selector.id,
+      type_id: selectorTypeId,
+      to_id: link.id,
+    }, { name: 'IMPORT_SELECTION' })).data[0];
+
+    console.log(link);
+
+    // await deep.await(freeId);
+    await delay(2000);
+
+    const client = deep.apolloClient;
+    const result = await client.query({
+      query: gql`{
+        links(where: { 
+          in: { 
+            type_id: { _eq: ${resolvedTypeId} }, # Resolved
+            from: { 
+              type_id: { _eq: ${promiseTypeId} }, # Promise
+              in: { 
+                type_id: { _eq: ${thenTypeId} } # Then
+                from_id: { _eq: ${link.id} } # link.id
               }
             }
           },

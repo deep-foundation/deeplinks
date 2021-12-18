@@ -137,17 +137,28 @@ export default async (req, res) => {
         //   }
         // }
 
-        const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
+        const queryString = `query SELECT_CODE($typeId: bigint, $linkId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-          # to_id: { _eq: 16 },
-          # from_id: { _eq:  }
           in: {
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
             type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Handler')} },
             in: {
-              from: {
-                type_id: { _eq: $typeId },
-              },
+              _or: [
+                {
+                  from: {
+                    type_id: { _eq: $typeId },
+                  }
+                },
+                {
+                  from: {
+                    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
+                    out: {
+                      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selection')} },
+                      to_id: { _eq: $linkId },
+                    }
+                  }
+                }
+              ],
               type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandleInsert')} },
             }
           }
@@ -163,6 +174,7 @@ export default async (req, res) => {
 
         const handleStringResult = await client.query({ query, variables: {
           typeId,
+          linkId: newRow.id,
         }});
         
         // console.log(handleStringResult);
