@@ -97,7 +97,7 @@ describe('handle by type', () => {
     assert.equal(freeId, linkInsert.id);
 
     // await deep.await(freeId);
-    await delay(10000);
+    await delay(1000);
 
     const client = deep.apolloClient;
     const result = await client.query({
