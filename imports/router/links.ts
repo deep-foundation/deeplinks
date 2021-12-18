@@ -10,7 +10,6 @@ import { permissions } from '../permission';
 import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
-import { promisify } from 'util';
 import { execSync } from 'child_process';
 import axios from 'axios';
 import crypto from 'crypto';
