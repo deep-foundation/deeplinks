@@ -31,7 +31,8 @@ beforeAll(async () => {
   let handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
-  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); throw 'error897478'; return 123;" }, { table: 'strings' });
+  await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); return 123;" }, { table: 'strings' });
+  // await deep.insert({ link_id: handlerJSFile?.id, value: "console.log('hello from insert handler'); throw 'error897478'; return 123;" }, { table: 'strings' });
 
   // {
   //   id: 'helloWorldHandler',
@@ -78,7 +79,8 @@ describe('handle by type', () => {
     console.log(linkInsert);
     assert.equal(freeId, linkInsert.id);
 
-    await deep.await(freeId);
+    // await deep.await(freeId);
+    await delay(2000);
 
     const client = deep.apolloClient;
     const result = await client.query({

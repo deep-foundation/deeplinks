@@ -127,36 +127,37 @@ export default async (req, res) => {
                 // const result = await _module.exports.default();
                 // console.log(`result: ${result}`);
 
-                // promises.push(_module.exports.default());
-                // promises.push(_module.exports.default().then(r => r, r => r));
-                // promises.push(new Promise((res, rej) => {
-                //   try {
-                //     return _module.exports.default();
-                //   } catch(error) {
-                //     rej(error);
-                //   }
-                // }));
-                // promises.push(new Promise((res, rej) => {
-                //   try {
-                //     return _module.exports.default().then(res, rej);
-                //   } catch(error) {
-                //     rej(error);
-                //   }
-                // }));
-                promises.push(new Promise((res, rej) => {
-                  try {
-                    return _module.exports.default() // тут убрали then
-                  } catch(error) {
-                    console.log({ error });
-                    rej(error);
-                  }
-                }));
+                promises.push(_module.exports.default());
               } catch(error) {
                 debug('error', error);
               }
             }
           }
         }
+
+        // promises.push(_module.exports.default().then(r => r, r => r));
+        // promises.push(new Promise((res, rej) => {
+        //   try {
+        //     return _module.exports.default();
+        //   } catch(error) {
+        //     rej(error);
+        //   }
+        // }));
+        // promises.push(new Promise((res, rej) => {
+        //   try {
+        //     return _module.exports.default().then(res, rej);
+        //   } catch(error) {
+        //     rej(error);
+        //   }
+        // }));
+        // promises.push(new Promise((res, rej) => {
+        //   try {
+        //     return _module.exports.default() // тут убрали then
+        //   } catch(error) {
+        //     console.log({ error });
+        //     rej(error);
+        //   }
+        // }));
 
         // for (let i = 0; i < promises.length; i++) {
         //   promises[i] = promises[i].then(r => r, r => r);
@@ -174,10 +175,12 @@ export default async (req, res) => {
           Rejected: rejectedTypeId,
         });
 
+        console.log("promises.length: ", promises.length);
+
         // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
         Promise.allSettled(promises)
         .then(async values => {
-          console.log(values);
+          console.log("values: ", values);
           for (let i = 0; i < values.length; i++)
           {
             const value = values[i];
