@@ -23,10 +23,30 @@ const deep = new DeepClient({
 export const up = async () => {
   debug('up');
 
-  const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert')
+  const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+  const selectionTypeId = await deep.id('@deep-foundation/core', 'Selection');
   
   await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint; BEGIN
-    IF (EXISTS(SELECT 1 FROM links WHERE from_id = NEW."type_id" AND type_id = ${handleInsertTypeId})) THEN
+    IF (
+        EXISTS(
+          SELECT 1
+          FROM links
+          WHERE from_id = NEW."type_id"
+          AND type_id = ${handleInsertTypeId}
+        )
+      --OR
+      --  EXISTS(
+      --    SELECT 1
+      --    FROM
+      --      links as selection,
+      --      links as handleInsert
+      --    WHERE 
+      --          selection.to_id = NEW."id"
+      --      AND type_id = ${selectionTypeId}
+      --      AND selection.from_id = handleInsert.from_id
+      --      AND handleInsert.type_id = ${handleInsertTypeId}
+      --  )
+    ) THEN
     INSERT INTO links ("type_id") VALUES (${GLOBAL_ID_PROMISE}) RETURNING id INTO PROMISE;
     INSERT INTO links ("type_id","from_id","to_id") VALUES (${GLOBAL_ID_THEN},NEW."id",PROMISE);
     END IF;
