@@ -25,7 +25,7 @@ const insertHandlerForType = async (typeId: number, code: string) => {
   //   id: 'helloWorldJsFile',
   //   type: 'SyncTextFile',
   //   value: { value: "console.log('hello from insert handler'); return 123;" }
-  // }, // 51
+  // },
 
   let handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId
@@ -40,7 +40,7 @@ const insertHandlerForType = async (typeId: number, code: string) => {
   //   from: 'JSExecutionProvider',
   //   type: 'Handler',
   //   to: 'helloWorldJsFile'
-  // }, // 52
+  // },
 
   const handler = (await deep.insert({
     from_id: jsExecutionProviderId,
@@ -53,7 +53,7 @@ const insertHandlerForType = async (typeId: number, code: string) => {
   //   from: 'Type',
   //   type: 'HandleInsert',
   //   to: 'helloWorldHandler'
-  // }, // 53
+  // },
 
   const handleInsert = (await deep.insert({
     from_id: typeId,
@@ -156,11 +156,11 @@ describe('handle by type', () => {
 
     assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
 
-    await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
-    await deep.delete({ id: { _in: [promiseResultId, promiseId, freeId]}}, { table: 'links' });
-    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    // await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
+    // await deep.delete({ id: { _in: [promiseResultId, promiseId, freeId]}}, { table: 'links' });
+    // await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
 
-    await deleteHandler(handler);
+    // await deleteHandler(handler);
   });
   // it(`{ id: { _eq: 5 } })`, () => {
   //   assert.deepEqual(deepClient.boolExpSerialize({ id: { _eq: 5 } }), { id: { _eq: 5 } });

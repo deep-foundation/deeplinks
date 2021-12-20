@@ -137,11 +137,14 @@ export default async (req, res) => {
         //   }
         // }
 
+        const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+
         const queryString = `query SELECT_CODE($typeId: bigint, $linkId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
           in: {
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
-            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Handler')} },
+            type_id: { _eq: ${handlerTypeId} },
             in: {
               _or: [
                 {
@@ -149,49 +152,64 @@ export default async (req, res) => {
                     type_id: { _eq: $typeId },
                   }
                 },
-                {
-                  from: {
-                    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-                    out: {
-                      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selection')} },
-                      to_id: { _eq: $linkId },
-                    }
-                  }
-                }
+                #{
+                #  from: {
+                #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
+                #    out: {
+                #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selection')} },
+                #      to_id: { _eq: $linkId },
+                #    }
+                #  }
+                #}
               ],
-              type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandleInsert')} },
+              type_id: { _eq: ${handleInsertTypeId} },
             }
           }
         }) {
           id
           value
+          in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+            id
+            in(where: { type_id: { _eq: ${handleInsertTypeId} } }) {
+              id
+            }
+          }
         } }`;
-        console.log(queryString);
 
         const query = gql`${queryString}`;
-        console.log(query);
-        // console.log(JSON.stringify(query, null, 2));
 
         const handleStringResult = await client.query({ query, variables: {
           typeId,
           linkId: newRow.id,
         }});
-        
-        // console.log(handleStringResult);
-        // console.log(JSON.stringify(handleStringResult, null, 2));
-        // console.log(handleStringResult?.data?.links?.[0]?.value);
 
         const promises: any[] = [];
+        const handleInsertsIds: any[] = [];
+          
+
 
         const handlersWithCode = handleStringResult?.data?.links as any[];
-        console.log(handlersWithCode?.length);
         if (handlersWithCode?.length > 0)
         {
+          // console.log(queryString);
+
+          // console.log(query);
+          // console.log(JSON.stringify(query, null, 2));
+
+          console.log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2))
+          console.log(handlersWithCode?.length);
+
+          // console.log(handleStringResult);
+          // console.log(JSON.stringify(handleStringResult, null, 2));
+          // console.log(handleStringResult?.data?.links?.[0]?.value);
+
           for (const handlerWithCode of handlersWithCode) {
             const code = handlerWithCode?.value?.value;
+            const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
             if (code) {
               try {
                 promises.push(UseRunner({ code, link: newRow}));
+                handleInsertsIds.push(handleInsertId);
               } catch(error) {
                 debug('error', error);
               }
@@ -229,6 +247,7 @@ export default async (req, res) => {
           const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
           const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
           const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+          const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
           const promise = await findPromiseLink({
             id: newRow.id, client: deep.apolloClient,
@@ -249,36 +268,61 @@ export default async (req, res) => {
               for (let i = 0; i < values.length; i++)
               {
                 const value = values[i];
+                const handleInsertId = handleInsertsIds[i];
                 if (value.status == 'fulfilled')
                 {
                   const result = value.value;
 
-                  let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
-                  let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
+                  let promiseResult = (await deep.insert({
+                    from_id: 0,
+                    type_id: promiseResultTypeId,
+                    to_id: 0
+                  }, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
                   // await deep.insert(insertedLink, { name: 'IMPORT_PROMISE_RESULT' });
 
-                  await deep.insert({ link_id: insertedLink?.id, value: result }, { table: 'objects' });
+                  await deep.insert({
+                    link_id: promiseResult?.id,
+                    value: result
+                  }, { table: 'objects' });
 
                   // await deep.update(insertedLink.id, { value: result });
 
                   // await deep.update({ link_id: { _eq: insertedLink.id } }, { value: {} }, { table: 'objects' });
 
-                  linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
-                  insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
+                  const resolveLink = (await deep.insert({
+                    from_id: promise.id,
+                    type_id: resolvedTypeId,
+                    to_id: promiseResult.id
+                  }, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
+
+                  const promiseReason = (await deep.insert({
+                    from_id: resolveLink.id,
+                    type_id: promiseReasonTypeId,
+                    to_id: handleInsertId
+                  }, { name: 'IMPORT_PROMISE_REASON' })).data[0];
                 }
                 if (value.status == 'rejected')
                 {
                   const error = value.reason;
 
-                  let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
-                  let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
+                  let insertedLink = (await deep.insert({ 
+                    type_id: promiseResultTypeId,
+                  }, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
 
                   // TODO: Store errors
-                  await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
+                  await deep.insert({
+                    link_id: insertedLink?.id,
+                    value: error
+                  }, { table: 'objects' });
 
                   // linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
-                  linkToInsert = { from_id: promise.id, type_id: rejectedTypeId, to_id: insertedLink.id };
-                  insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
+                  insertedLink = (await deep.insert({
+                    from_id: promise.id,
+                    type_id: rejectedTypeId,
+                    to_id: insertedLink.id
+                  }, { name: 'IMPORT_REJECT_LINK' })).data[0];
+
+
                 }
               }
             });

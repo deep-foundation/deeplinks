@@ -114,16 +114,17 @@ const corePckg: PackagerPackage = {
 
     { id: 'PromiseResult', type: 'Type' }, // 51
     { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 52
+    { id: 'PromiseReason', type: 'Type' }, // 53
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 53
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 54
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 55
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 56
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 57
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 58
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 59
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 60
-    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 61
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 54
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 55
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 56
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 61
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 62
   ],
   errors: [],
   strict: true,
