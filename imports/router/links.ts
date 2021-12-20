@@ -197,90 +197,93 @@ export default async (req, res) => {
               }
             }
           }
-        }
 
-        // promises.push(_module.exports.default().then(r => r, r => r));
-        // promises.push(new Promise((res, rej) => {
-        //   try {
-        //     return _module.exports.default();
-        //   } catch(error) {
-        //     rej(error);
-        //   }
-        // }));
-        // promises.push(new Promise((res, rej) => {
-        //   try {
-        //     return _module.exports.default().then(res, rej);
-        //   } catch(error) {
-        //     rej(error);
-        //   }
-        // }));
-        // promises.push(new Promise((res, rej) => {
-        //   try {
-        //     return _module.exports.default() // тут убрали then
-        //   } catch(error) {
-        //     console.log({ error });
-        //     rej(error);
-        //   }
-        // }));
+          // promises.push(_module.exports.default().then(r => r, r => r));
+          // promises.push(new Promise((res, rej) => {
+          //   try {
+          //     return _module.exports.default();
+          //   } catch(error) {
+          //     rej(error);
+          //   }
+          // }));
+          // promises.push(new Promise((res, rej) => {
+          //   try {
+          //     return _module.exports.default().then(res, rej);
+          //   } catch(error) {
+          //     rej(error);
+          //   }
+          // }));
+          // promises.push(new Promise((res, rej) => {
+          //   try {
+          //     return _module.exports.default() // тут убрали then
+          //   } catch(error) {
+          //     console.log({ error });
+          //     rej(error);
+          //   }
+          // }));
 
-        // for (let i = 0; i < promises.length; i++) {
-        //   promises[i] = promises[i].then(r => r, r => r);
-        // }
+          // for (let i = 0; i < promises.length; i++) {
+          //   promises[i] = promises[i].then(r => r, r => r);
+          // }
 
-        const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-        const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-        const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+          const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+          const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+          const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
 
-        const promise = await findPromiseLink({
-          id: newRow.id, client: deep.apolloClient,
-          Then: await deep.id('@deep-foundation/core', 'Then'),
-          Promise: await deep.id('@deep-foundation/core', 'Promise'),
-          Resolved: resolvedTypeId,
-          Rejected: rejectedTypeId,
-        });
-
-        console.log("promises.length: ", promises.length);
-
-        // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-        Promise.allSettled(promises)
-        .then(async values => {
-          console.log("values: ", values);
-          for (let i = 0; i < values.length; i++)
+          const promise = await findPromiseLink({
+            id: newRow.id, client: deep.apolloClient,
+            Then: await deep.id('@deep-foundation/core', 'Then'),
+            Promise: await deep.id('@deep-foundation/core', 'Promise'),
+            Resolved: resolvedTypeId,
+            Rejected: rejectedTypeId,
+          });
+          if (promise)
           {
-            const value = values[i];
-            if (value.status == 'fulfilled')
-            {
-              const result = value.value;
+            console.log('promise: ', promise);
+            console.log("promises.length: ", promises.length);
 
-              let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
-              let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
-              // await deep.insert(insertedLink, { name: 'IMPORT_PROMISE_RESULT' });
+            // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
+            Promise.allSettled(promises)
+            .then(async values => {
+              console.log("values: ", values);
+              for (let i = 0; i < values.length; i++)
+              {
+                const value = values[i];
+                if (value.status == 'fulfilled')
+                {
+                  const result = value.value;
 
-              await deep.insert({ link_id: insertedLink?.id, value: result }, { table: 'objects' });
+                  let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
+                  let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
+                  // await deep.insert(insertedLink, { name: 'IMPORT_PROMISE_RESULT' });
 
-              // await deep.update(insertedLink.id, { value: result });
+                  await deep.insert({ link_id: insertedLink?.id, value: result }, { table: 'objects' });
 
-              // await deep.update({ link_id: { _eq: insertedLink.id } }, { value: {} }, { table: 'objects' });
+                  // await deep.update(insertedLink.id, { value: result });
 
-              linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
-              insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
-            }
-            if (value.status == 'rejected')
-            {
-              const error = value.reason;
+                  // await deep.update({ link_id: { _eq: insertedLink.id } }, { value: {} }, { table: 'objects' });
 
-              let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
-              let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
+                  linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+                  insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
+                }
+                if (value.status == 'rejected')
+                {
+                  const error = value.reason;
 
-              // TODO: Store errors
-              await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
+                  let linkToInsert = { from_id: 0, type_id: promiseResultTypeId, to_id: 0 };
+                  let insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
 
-              // linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
-              linkToInsert = { from_id: promise.id, type_id: rejectedTypeId, to_id: insertedLink.id };
-              insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
-            }
+                  // TODO: Store errors
+                  await deep.insert({ link_id: insertedLink?.id, value: error }, { table: 'objects' });
+
+                  // linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
+                  linkToInsert = { from_id: promise.id, type_id: rejectedTypeId, to_id: insertedLink.id };
+                  insertedLink = (await deep.insert(linkToInsert, { name: 'IMPORT_REJECT_LINK' })).data[0];
+                }
+              }
+            });
           }
-        });
+        }
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);
