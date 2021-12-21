@@ -273,6 +273,8 @@ export default async (req, res) => {
                 {
                   const result = value.value;
 
+                  console.log("result: ", result);
+
                   let promiseResult = (await deep.insert({
                     from_id: 0,
                     type_id: promiseResultTypeId,
@@ -304,6 +306,8 @@ export default async (req, res) => {
                 if (value.status == 'rejected')
                 {
                   const error = value.reason;
+
+                  console.log("error: ", error);
 
                   let insertedLink = (await deep.insert({ 
                     type_id: promiseResultTypeId,
