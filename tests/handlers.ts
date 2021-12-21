@@ -74,13 +74,13 @@ const deleteHandler = async (handler) => {
   await deep.delete({ id: { _eq: handler.handlerJSFileValueId}}, { table: 'strings' });
 };
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-describe('handle by type', () => {
+describe('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
@@ -144,43 +144,97 @@ describe('handle by type', () => {
     const promiseResultId = resultLinks?.[0]?.id;
     const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
     
-    console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
-    
-    // console.log(JSON.stringify(result, null, 2));
-    // console.log(JSON.stringify(resultLinks[0]?.object?.value, null, 2))
+    // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
 
-    // console.log(resultLinks.length);
-    // console.log(resultLinks[0]?.object?.value);
-
-    console.log(JSON.stringify(resultLinks, null, 2));
+    // console.log(JSON.stringify(resultLinks, null, 2));
 
     assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
 
-    // await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
-    // await deep.delete({ id: { _in: [promiseResultId, promiseId, freeId]}}, { table: 'links' });
-    // await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
+    await deep.delete({ id: { _in: [promiseResultId, promiseId, freeId]}}, { table: 'links' });
+    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
 
-    // await deleteHandler(handler);
+    await deleteHandler(handler);
   });
-  // it(`{ id: { _eq: 5 } })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ id: { _eq: 5 } }), { id: { _eq: 5 } });
-  // });
-  // it(`{ value: 5 })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ value: 5 }), { number: { value: { _eq: 5 } } });
-  // });
-  // it(`{ value: 'a' })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ value: 'a' }), { string: { value: { _eq: 'a' } } });
-  // });
-  // it(`{ number: { value: { _eq: 5 } } })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
-  // });
-  // it(`{ string: { value: { _eq: 'a' } } })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ string: { value: { _eq: 'a' } } }), { string: { value: { _eq: 'a' } } });
-  // });
-  // it(`{ object: { value: { _contains: { a: 'b' } } } })`, () => {
-  //   assert.deepEqual(deepClient.boolExpSerialize({ object: { value: { _contains: { a: 'b' } } } }), { object: { value: { _contains: { a: 'b' } } } });
-  // });
 });
+
+// describe('sync function handle by type with reject', () => {
+//   it(`handle insert`, async () => {
+//     const numberToReturn = randomInteger(5000000, 9999999999);
+
+//     const typeId = await deep.id('@deep-foundation/core', 'Type');
+
+//     var handler = await insertHandlerForType(typeId, `(arg)=>{ throw ${numberToReturn}; return { "error": "return is not possible" }}`);
+
+//     const freeId = randomInteger(5000000, 9999999999);
+//     console.log(freeId);
+//     const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+//     const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+//     const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+//     const linkInsert = (await deep.insert({ 
+//       id: freeId,
+//       from_id: freeId,
+//       type_id: typeId,
+//       to_id: freeId
+//     }, { name: 'IMPORT_LINK' })).data[0];
+//     console.log(linkInsert);
+//     assert.equal(freeId, linkInsert.id);
+
+//     await deep.await(freeId);
+//     // await delay(2000);
+
+//     const client = deep.apolloClient;
+//     const resultLinks = (await client.query({
+//       query: gql`{
+//         links(where: { 
+//           in: {
+//             type_id: { _eq: ${rejectedTypeId} }, # Resolved
+//             from: { 
+//               type_id: { _eq: ${promiseTypeId} }, # Promise
+//               in: { 
+//                 type_id: { _eq: ${thenTypeId} } # Then
+//                 from_id: { _eq: ${freeId} } # freeId
+//               }
+//             }
+//           },
+//         }) {
+//           id
+//           object {
+//             id
+//             value
+//           }
+//           in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
+//             id
+//             from {
+//               id
+//               in(where: { type_id: { _eq: ${thenTypeId} } }) {
+//                 id
+//               }
+//             }
+//           }
+//         }
+//       }`,
+//     }))?.data?.links;
+
+//     const rejectedLinkId = resultLinks?.[0]?.in?.[0]?.id;
+//     const thenLinkId = resultLinks?.[0]?.in?.[0]?.from?.in?.[0]?.id;
+//     const valueId = resultLinks?.[0]?.object?.id;
+//     const promiseResultId = resultLinks?.[0]?.id;
+//     const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
+    
+//     // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
+
+//     // console.log(JSON.stringify(resultLinks, null, 2));
+
+//     assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
+
+//     await deep.delete({ id: { _in: [rejectedLinkId, thenLinkId]}}, { table: 'links' });
+//     await deep.delete({ id: { _in: [promiseResultId, promiseId, freeId]}}, { table: 'links' });
+//     await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+
+//     await deleteHandler(handler);
+//   });
+// });
 
 // describe('handle by selector', () => {
 //   it(`handle insert`, async () => {
