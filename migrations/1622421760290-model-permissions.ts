@@ -2,7 +2,10 @@ import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bool-exp';
+import { permissions } from '../imports/permission';
+import { GLOBAL_ID_ANY } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:model-permissions');
 
@@ -11,6 +14,22 @@ export const REPLACE_PATTERN_ID = '777777777777';
 
 export const up = async () => {
   debug('up');
+  debug('hasura permissions');
+  await permissions(api, MP_TABLE_NAME);
+  await permissions(api, LINKS_TABLE_NAME, {
+    select: {},
+    insert: {
+      type: {
+        id: { _is_null: false }
+      }
+    },
+    update: {},
+    delete: {},
+
+    columns: ['id','from_id','to_id','type_id'],
+    computed_fields: ['value'],
+  });
+  debug('postgresql triggers');
   debug('insert');
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__model_permissions__insert_links__function()
@@ -19,8 +38,44 @@ export const up = async () => {
     AS $function$
       DECLARE
         boolExp RECORD;
+        typeLink RECORD;
+        fromLink RECORD;
+        toLink RECORD;
         sqlResult INT;
       BEGIN
+        IF (NEW."from_id" != NEW."to_id" AND (NEW."from_id" = 0 OR NEW."to_id" = 0)) THEN
+          RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %.', NEW."id", NEW."from_id", NEW."to_id";
+        END IF;
+
+        SELECT t.* into typeLink
+        FROM "${TABLE_NAME}" as t
+        WHERE t."id" = NEW."type_id";
+
+        SELECT t.* into fromLink
+        FROM "${TABLE_NAME}" as t
+        WHERE t."id" = NEW."from_id";
+
+        SELECT t.* into toLink
+        FROM "${TABLE_NAME}" as t
+        WHERE t."id" = NEW."to_id";
+
+        IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
+          IF (typeLink."from_id" != ${GLOBAL_ID_ANY} AND typeLink."from_id" != fromLink."type_id") THEN
+            RAISE EXCEPTION 'Type conflict link: { id: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."from_id", NEW."to_id",
+              typeLink."id", typeLink."from_id", typeLink."to_id",
+              typeLink."id", fromLink."type_id", toLink."type_id"
+            ;
+          END IF;
+          IF (typeLink."to_id" != ${GLOBAL_ID_ANY} AND typeLink."to_id" != toLink."type_id") THEN
+            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."from_id", NEW."to_id",
+              typeLink."id", typeLink."from_id", typeLink."to_id",
+              typeLink."id", fromLink."type_id", toLink."type_id"
+            ;
+          END IF;
+        END IF;
+
         SELECT be.* into boolExp
         FROM "${TABLE_NAME}" as allow, "${BOOL_EXP_TABLE_NAME}" as be
         WHERE allow.type_id=19 AND allow.from_id=NEW.type_id AND allow.to_id=16 AND be.link_id=allow.id;

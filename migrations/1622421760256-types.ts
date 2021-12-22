@@ -25,7 +25,7 @@ const corePckg: PackagerPackage = {
     type: 'git',
   },
   data: [
-    { id: 'Type', type: 'Type' }, // 1
+    { id: 'Type', type: 'Type', from: 'Any', to: 'Any' }, // 1
     { id: 'Package', type: 'Type' }, // 2
     { id: 'Contain', type: 'Type', from: 'Any', to: 'Any' }, // 3
     { id: 'Value', type: 'Type', from: 'Type', to: 'Type' }, // 4
@@ -116,15 +116,35 @@ const corePckg: PackagerPackage = {
     { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 52
     { id: 'PromiseReason', type: 'Type' }, // 53
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' } }, // 54
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 54
     { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 55
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' } }, // 56
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 56
     { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
     { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
     { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
     { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
     { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 61
     { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 62
+
+    { id: 'Auth', type: 'Operation' }, // 63
+
+    { 
+      id: 'adminContainUser',
+      type: 'SyncTextFile',
+      value: { value: "console.log('User created');" }
+    },
+    { 
+      id: 'adminContainerUserHandler',
+      from: 'JSExecutionProvider',
+      type: 'Handler',
+      to: 'adminContainUser'
+    },
+    { 
+      id: 'helloWorldInsertHandler',
+      from: 'Type',
+      type: 'HandleInsert',
+      to: 'adminContainerUserHandler'
+    },
   ],
   errors: [],
   strict: true,

@@ -8,7 +8,7 @@ import { DeepClient } from '../client';
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
 
-const typeDefs = gql`
+export const typeDefsString = `
   type Query {
     guest: GuestOutput
   }
@@ -17,6 +17,7 @@ const typeDefs = gql`
     linkId: Int
   }
 `;
+export const typeDefs = gql`${typeDefsString}`;
 
 const client = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -31,16 +32,12 @@ const deep = new DeepClient({
 const resolvers = {
   Query: {
     guest: async (source, args, context, info) => {
-      const result = await client.mutate(generateSerial({
-        actions: [insertMutation('nodes', { objects: { type_id: await deep.id('@deep-foundation/core', 'User') } })],
-        name: 'INSERT_LINK',
-      }));
-      const linkId = result?.data?.m0?.returning?.[0]?.id;
+      const { data: [{ id }] } = await deep.insert({ type_id: await deep.id('@deep-foundation/core', 'User') });
       const token = jwt({
         secret: jwt_secret.key,
-        linkId,
+        linkId: id,
       });
-      return { token, linkId };
+      return { token, linkId: id };
     },
   }
 };

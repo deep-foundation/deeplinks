@@ -6,7 +6,7 @@ import { ApolloServer } from 'apollo-server-express';
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
 
-const typeDefs = gql`
+export const typeDefsString = `
   type Query {
     jwt(input: JWTInput): JWTOutput
   }
@@ -18,6 +18,8 @@ const typeDefs = gql`
     linkId: Int
   }
 `;
+
+export const typeDefs = gql`${typeDefsString}`;
 
 const resolvers = {
   Query: {

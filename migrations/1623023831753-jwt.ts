@@ -1,5 +1,7 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import Debug from 'debug';
+import { typeDefsString as gs } from '../imports/router/guest';
+import { typeDefsString as js } from '../imports/router/jwt';
 
 const debug = Debug('deeplinks:migrations:jwt');
 
@@ -34,6 +36,46 @@ export const up = async () => {
         timeout_seconds: 60
       },
     }
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
+      remote_schema: 'guest',
+      role: 'anonymous',
+      definition: {
+        schema: gs,
+      },
+    },
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
+      remote_schema: 'guest',
+      role: 'link',
+      definition: {
+        schema: gs,
+      },
+    },
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
+      remote_schema: 'jwt',
+      role: 'anonymous',
+      definition: {
+        schema: js,
+      },
+    },
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
+      remote_schema: 'jwt',
+      role: 'link',
+      definition: {
+        schema: js,
+      },
+    },
   });
 };
 

@@ -1,14 +1,12 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import Debug from 'debug';
-import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
-import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
-import { up as upPerms, down as downPerms } from '@deep-foundation/materialized-path/permissions';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
-import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { generatePermissionWhere, permissions } from '../imports/permission';
-import { sql } from '@deep-foundation/hasura/sql';
 import { HasuraApi } from '@deep-foundation/hasura/api';
-import { GLOBAL_ID_ANY } from '../imports/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { sql } from '@deep-foundation/hasura/sql';
+import { down as downRels, up as upRels } from '@deep-foundation/materialized-path/relationships';
+import { down as downTable, up as upTable } from '@deep-foundation/materialized-path/table';
+import { Trigger } from '@deep-foundation/materialized-path/trigger';
+import Debug from 'debug';
+import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_ID_INCLUDE_UP, GLOBAL_ID_TREE } from '../imports/client';
+import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
 
@@ -35,15 +33,15 @@ const trigger = Trigger({
   iteratorDeleteArgumentGet: 'groupRow RECORD',
   iteratorInsertBegin: `FOR groupRow IN (
     SELECT
-    mpGroup.*
+    DISTINCT mpGroup."id"
     FROM
     ${LINKS_TABLE_NAME} as mpGroup,
     ${LINKS_TABLE_NAME} as mpInclude
     WHERE
-    mpInclude."type_id" IN (22,23,24) AND
-    mpInclude."to_id" = NEW.type_id AND
+    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    mpInclude."to_id" IN (NEW.type_id, ${GLOBAL_ID_ANY}) AND
     mpInclude."from_id" = mpGroup."id" AND
-    mpGroup."type_id" = 21 AND
+    mpGroup."type_id" = ${GLOBAL_ID_TREE} AND
     ((groupid != 0 AND groupid = mpGroup."id") OR groupid = 0)
     ) LOOP`,
   iteratorInsertEnd: 'END LOOP;',
@@ -56,10 +54,10 @@ const trigger = Trigger({
     ${LINKS_TABLE_NAME} as mpGroup,
     ${LINKS_TABLE_NAME} as mpInclude
     WHERE
-    mpInclude."type_id" IN (22,23,24) AND
-    mpInclude."to_id" = OLD.type_id AND
+    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    mpInclude."to_id" IN (OLD.type_id, ${GLOBAL_ID_ANY}) AND
     mpInclude."from_id" = mpGroup."id" AND
-    mpGroup."type_id" = 21
+    mpGroup."type_id" = ${GLOBAL_ID_TREE}
   ) LOOP`,
   iteratorDeleteEnd: 'END LOOP;',
   groupDelete: 'groupRow."id"',
@@ -67,45 +65,45 @@ const trigger = Trigger({
   // TODO optimize duplicating equal selects
 
   isAllowSpreadFromCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (22,23,24) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
     l.from_id = groupRow.id AND
-    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
+    l.to_id IN (CURRENT.type_id)
   )`,
   isAllowSpreadCurrentTo: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (22,23,24) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
     l.from_id = groupRow.id AND
-    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
+    l.to_id IN (CURRENT.type_id)
   )`,
 
   isAllowSpreadToCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
     l.from_id = groupRow.id AND
-    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
+    l.to_id IN (CURRENT.type_id)
   )`,
   isAllowSpreadCurrentFrom: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
     l.from_id = groupRow.id AND
-    l.to_id IN (CURRENT.type_id, ${GLOBAL_ID_ANY})
+    l.to_id IN (CURRENT.type_id)
   )`,
 
   isAllowSpreadToInCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 22 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_DOWN} AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentFromOut: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 22 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_DOWN} AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
 
   isAllowSpreadFromOutCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentToIn: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = 23 AND
+    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
@@ -123,22 +121,12 @@ export const up = async () => {
     GRAPH_TABLE: LINKS_TABLE_NAME,
     api,
   });
-  await permissions(api, MP_TABLE_NAME);
-  await permissions(api, LINKS_TABLE_NAME, {
-    select: {},
-    insert: {},
-    update: {},
-    delete: {},
-
-    columns: ['id','from_id','to_id','type_id'],
-    computed_fields: ['value'],
-  });
   await api.sql(trigger.upFunctionInsertNode());
   await api.sql(trigger.upFunctionDeleteNode());
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
-    IF (NEW."type_id" IN (22,23,24)) THEN
+    IF (NEW."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
       PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
     END IF;
@@ -148,8 +136,8 @@ export const up = async () => {
   DECLARE groupRow RECORD;
   BEGIN
     -- if delete link - is group include link
-    IF (OLD."type_id" IN (22,23,24)) THEN
-      SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = 21;
+    IF (OLD."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
+      SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = ${GLOBAL_ID_TREE};
       PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
     END IF;
