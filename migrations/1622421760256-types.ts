@@ -82,69 +82,72 @@ const corePckg: PackagerPackage = {
     { id: 'Delete', type: 'Operation' }, // 29
     { id: 'Select', type: 'Operation' }, // 30
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 31
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Type', to: 'Operation' }, // 32
+    { id: 'File', type: 'Type' }, // 31
+    { id: 'SyncTextFile', type: 'File' }, // 32
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 33
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 33
-    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 34
-    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 35
-    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 36
+    { id: 'ExecutionProvider', type: 'Type' }, // 34
+    { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 35
 
-    { id: 'userTree', type: 'Tree' }, // 37
-    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 38
-    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 39
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 36
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 37
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 40
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 38
+    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 39
+    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 40
+    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 41
 
-    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 41
+    { id: 'userTree', type: 'Tree' }, // 42
+    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 43
+    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 44
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 42
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 45
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 43
-    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 44
+    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 46
 
-    { id: 'SyncTextFile', type: 'Type' }, // 45
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 46
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 47
 
-    { id: 'JSExecutionProvider', type: 'Type' }, // 47
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 48
+    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 49
 
-    { id: 'HandleInsert', type: 'Type' }, // 48
-    { id: 'HandleUpdate', type: 'Type' }, // 49
-    { id: 'HandleDelete', type: 'Type' }, // 50
+    { id: 'HandleOperation', type: 'Type' }, // 50
+    { id: 'HandleInsert', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 51
+    { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 52
+    { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 53
 
-    { id: 'PromiseResult', type: 'Type' }, // 51
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 52
-    { id: 'PromiseReason', type: 'Type' }, // 53
+    { id: 'PromiseResult', type: 'Type' }, // 54
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 55
+    { id: 'PromiseReason', type: 'Type', from: 'Any', to: 'Any' }, // 56
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 54
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 55
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 56
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 61
-    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 62
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 57
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 58
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 59
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 60
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 61
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 62
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 63
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 64
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 65
 
-    { id: 'Auth', type: 'Operation' }, // 63
+    { id: 'Auth', type: 'Operation' }, // 66
 
     { 
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
-    },
+    }, // 67
     { 
       id: 'adminContainerUserHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'adminContainUser'
-    },
+    }, // 68
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'adminContainerUserHandler'
-    },
+    }, // 69
   ],
   errors: [],
   strict: true,
