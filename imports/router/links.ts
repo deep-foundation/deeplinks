@@ -96,7 +96,10 @@ const UseRunner = async ({ code, link }) => {
   console.log(7);
   try {
     const result = await axios.post(`http://localhost:${port}/call`,  { params: { link, }});
-    return(result.data);
+    if(result?.data?.resolved) {
+      return result.data.resolved;
+    }
+    return Promise.reject(result?.data?.rejected);
   } catch (e) {
     console.log('e', e);
   }
@@ -208,7 +211,7 @@ export default async (req, res) => {
             const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
             if (code) {
               try {
-                promises.push(UseRunner({ code, link: newRow}));
+                promises.push(() => UseRunner({ code, link: newRow}));
                 handleInsertsIds.push(handleInsertId);
               } catch(error) {
                 debug('error', error);
@@ -262,7 +265,8 @@ export default async (req, res) => {
             console.log("promises.length: ", promises.length);
 
             // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-            Promise.allSettled(promises)
+            // Promise.allSettled(promises)
+            Promise.allSettled(promises.map((p) => p() as Promise<any>))
             .then(async values => {
               console.log("values: ", values);
               for (let i = 0; i < values.length; i++)
