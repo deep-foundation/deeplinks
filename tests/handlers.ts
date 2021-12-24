@@ -102,8 +102,8 @@ describe('sync function handle by type with resolve', () => {
     console.log(linkInsert);
     assert.equal(freeId, linkInsert.id);
 
-    // await deep.await(freeId);
-    await delay(30000);
+    await deep.await(freeId);
+    // await delay(30000);
 
     const client = deep.apolloClient;
     const resultLinks = (await client.query({

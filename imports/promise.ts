@@ -79,7 +79,7 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
               }
               else if (thenRejected) {
                 debug('rejected');
-                return rej(false);
+                return res(false);
               } else {
                 debug('waiting');
               }
