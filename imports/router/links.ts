@@ -282,14 +282,15 @@ export default async (req, res) => {
                   let promiseResult = (await deep.insert({
                     from_id: 0,
                     type_id: promiseResultTypeId,
-                    to_id: 0
+                    to_id: 0,
+                    object: { data: { value: result } }
                   }, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
                   // await deep.insert(insertedLink, { name: 'IMPORT_PROMISE_RESULT' });
 
-                  await deep.insert({
-                    link_id: promiseResult?.id,
-                    value: result
-                  }, { table: 'objects' });
+                  // await deep.insert({
+                  //   link_id: promiseResult?.id,
+                  //   value: result
+                  // }, { table: 'objects' });
 
                   // await deep.update(insertedLink.id, { value: result });
 
