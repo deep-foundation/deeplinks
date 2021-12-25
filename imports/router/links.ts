@@ -283,7 +283,7 @@ export default async (req, res) => {
 
             // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
             // Promise.allSettled(promises)
-            Promise.allSettled(promises.map((p) => p() as Promise<any>))
+            await Promise.allSettled(promises.map((p) => p() as Promise<any>))
             .then(async values => {
               console.log("values: ", values);
               const promiseResults = [];
