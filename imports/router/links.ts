@@ -37,6 +37,25 @@ const deep = new DeepClient({
 const portHash = {};
 const containerHash = {};
 
+export function makePromiseResult(promise: any, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
+  return {
+    from: {
+      data: {
+        from_id: promise.id,
+        type_id: resolvedTypeId,
+        to: {
+          data: {
+            type_id: promiseResultTypeId,
+            object: { data: { value: result } },
+          }
+        }
+      }
+    },
+    type_id: promiseReasonTypeId,
+    to_id: handleInsertId
+  };
+};
+
 const UseRunner = async ({ code, link }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
@@ -189,8 +208,6 @@ export default async (req, res) => {
         const promises: any[] = [];
         const handleInsertsIds: any[] = [];
           
-
-
         const handlersWithCode = handleStringResult?.data?.links as any[];
         if (handlersWithCode?.length > 0)
         {
@@ -259,9 +276,9 @@ export default async (req, res) => {
             Resolved: resolvedTypeId,
             Rejected: rejectedTypeId,
           });
+          console.log('promise: ', promise);
           if (promise)
           {
-            console.log('promise: ', promise);
             console.log("promises.length: ", promises.length);
 
             // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
@@ -269,6 +286,7 @@ export default async (req, res) => {
             Promise.allSettled(promises.map((p) => p() as Promise<any>))
             .then(async values => {
               console.log("values: ", values);
+              const promiseResults = [];
               for (let i = 0; i < values.length; i++)
               {
                 const value = values[i];
@@ -276,64 +294,19 @@ export default async (req, res) => {
                 if (value.status == 'fulfilled')
                 {
                   const result = value.value;
-
                   console.log("result: ", result);
-
-                  let promiseResult = (await deep.insert({
-                    from_id: 0,
-                    type_id: promiseResultTypeId,
-                    to_id: 0,
-                    object: { data: { value: result } }
-                  }, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
-                  // await deep.insert(insertedLink, { name: 'IMPORT_PROMISE_RESULT' });
-
-                  // await deep.insert({
-                  //   link_id: promiseResult?.id,
-                  //   value: result
-                  // }, { table: 'objects' });
-
-                  // await deep.update(insertedLink.id, { value: result });
-
-                  // await deep.update({ link_id: { _eq: insertedLink.id } }, { value: {} }, { table: 'objects' });
-
-                  const resolveLink = (await deep.insert({
-                    from_id: promise.id,
-                    type_id: resolvedTypeId,
-                    to_id: promiseResult.id
-                  }, { name: 'IMPORT_RESOLVE_LINK' })).data[0];
-
-                  const promiseReason = (await deep.insert({
-                    from_id: resolveLink.id,
-                    type_id: promiseReasonTypeId,
-                    to_id: handleInsertId
-                  }, { name: 'IMPORT_PROMISE_REASON' })).data[0];
+                  const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+                  promiseResults.push(promiseResult);
                 }
                 if (value.status == 'rejected')
                 {
                   const error = value.reason;
-
                   console.log("error: ", error);
-
-                  let insertedLink = (await deep.insert({ 
-                    type_id: promiseResultTypeId,
-                  }, { name: 'IMPORT_PROMISE_RESULT' })).data[0];
-
-                  // TODO: Store errors
-                  await deep.insert({
-                    link_id: insertedLink?.id,
-                    value: error
-                  }, { table: 'objects' });
-
-                  // linkToInsert = { from_id: promise.id, type_id: resolvedTypeId, to_id: insertedLink.id };
-                  insertedLink = (await deep.insert({
-                    from_id: promise.id,
-                    type_id: rejectedTypeId,
-                    to_id: insertedLink.id
-                  }, { name: 'IMPORT_REJECT_LINK' })).data[0];
-
-
+                  const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+                  promiseResults.push(promiseResult);
                 }
               }
+              await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
             });
           }
         }
