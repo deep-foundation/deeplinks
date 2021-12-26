@@ -115,17 +115,20 @@ describe('sync function handle by type with resolve', () => {
       }`,
     }))?.data?.links;
 
-    const resolvedLinkId = resultLinks?.[0]?.in?.[0]?.id;
-    const thenLinkId = resultLinks?.[0]?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = resultLinks?.[0]?.object?.id;
-    const promiseResultId = resultLinks?.[0]?.id;
-    const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
+    const promiseResult = resultLinks.find(link => link.object?.value?.result === numberToReturn);
+
+    assert.isTrue(!!promiseResult);
+
+    const resolvedLinkId = promiseResult?.in?.[0]?.id;
+    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
+    const valueId = promiseResult?.object?.id;
+    const promiseResultId = promiseResult?.id;
+    const promiseId = promiseResult?.in?.[0]?.from?.id;
     
     // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
 
     // console.log(JSON.stringify(resultLinks, null, 2));
-
-    assert.isTrue(resultLinks.some(link => link.object?.value?.result === numberToReturn));
+   
     // assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
 
     await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
@@ -185,17 +188,21 @@ describe('sync function handle by type with resolve', () => {
       }`,
     }))?.data?.links;
 
-    const resolvedLinkId = resultLinks?.[0]?.in?.[0]?.id;
-    const thenLinkId = resultLinks?.[0]?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = resultLinks?.[0]?.object?.id;
-    const promiseResultId = resultLinks?.[0]?.id;
-    const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
+    const promiseResult = resultLinks.find(link => link.object?.value?.result === numberToReturn);
+
+    assert.isTrue(!!promiseResult);
+
+    const resolvedLinkId = promiseResult?.in?.[0]?.id;
+    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
+    const valueId = promiseResult?.object?.id;
+    const promiseResultId = promiseResult?.id;
+    const promiseId = promiseResult?.in?.[0]?.from?.id;
     
     // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
 
     // console.log(JSON.stringify(resultLinks, null, 2));
 
-    assert.isTrue(resultLinks.some(link => link.object?.value?.result === numberToReturn));
+    // assert.isTrue(resultLinks.some(link => link.object?.value?.result === numberToReturn));
     // assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
 
     await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
@@ -256,17 +263,21 @@ describe('sync function handle by type with reject', () => {
       }`,
     }))?.data?.links;
 
-    const rejectedLinkId = resultLinks?.[0]?.in?.[0]?.id;
-    const thenLinkId = resultLinks?.[0]?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = resultLinks?.[0]?.object?.id;
-    const promiseResultId = resultLinks?.[0]?.id;
-    const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
+    const promiseResult = resultLinks.find(link => link.object?.value === numberToThrow);
+
+    assert.isTrue(!!promiseResult);
+
+    const rejectedLinkId = promiseResult?.in?.[0]?.id;
+    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
+    const valueId = promiseResult?.object?.id;
+    const promiseResultId = promiseResult?.id;
+    const promiseId = promiseResult?.in?.[0]?.from?.id;
     
     // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
 
     // console.log(JSON.stringify(resultLinks, null, 2));
 
-    assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
+    // assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
     // assert.equal(resultLinks [0]?.object?.value, numberToReturn);
 
     await deep.delete({ id: { _in: [rejectedLinkId, thenLinkId]}}, { table: 'links' });
@@ -327,17 +338,21 @@ describe('async function handle by type with reject', () => {
       }`,
     }))?.data?.links;
 
-    const rejectedLinkId = resultLinks?.[0]?.in?.[0]?.id;
-    const thenLinkId = resultLinks?.[0]?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = resultLinks?.[0]?.object?.id;
-    const promiseResultId = resultLinks?.[0]?.id;
-    const promiseId = resultLinks?.[0]?.in?.[0]?.from?.id;
+    const promiseResult = resultLinks.find(link => link.object?.value === numberToThrow);
+
+    assert.isTrue(!!promiseResult);
+
+    const rejectedLinkId = promiseResult?.in?.[0]?.id;
+    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
+    const valueId = promiseResult?.object?.id;
+    const promiseResultId = promiseResult?.id;
+    const promiseId = promiseResult?.in?.[0]?.from?.id;
     
     // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
 
     // console.log(JSON.stringify(resultLinks, null, 2));
 
-    assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
+    // assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
     // assert.equal(resultLinks [0]?.object?.value, numberToReturn);
 
     await deep.delete({ id: { _in: [rejectedLinkId, thenLinkId]}}, { table: 'links' });
