@@ -71,7 +71,8 @@ export async function ensureLinkIsCreated(typeId: number) {
   return freeId;
 }
 
-export async function getPromiseResults(client, rejectedTypeId: number, promiseTypeId: number, thenTypeId: number, linkId: any) {
+export async function getPromiseResults(deep, rejectedTypeId: number, promiseTypeId: number, thenTypeId: number, linkId: any) {
+  const client = deep.apolloClient;
   return (await client.query({
     query: gql`{
         links(where: { 
@@ -128,8 +129,7 @@ describe('sync function handle by type with resolve', () => {
     await deep.await(linkId);
     // await delay(30000);
 
-    const client = deep.apolloClient;
-    const promiseResults = await getPromiseResults(client, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
 
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
@@ -157,8 +157,7 @@ describe('sync function handle by type with resolve', () => {
     await deep.await(linkId);
     // await delay(30000);
 
-    const client = deep.apolloClient;
-    const promiseResults = await getPromiseResults(client, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
 
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
@@ -187,8 +186,7 @@ describe('sync function handle by type with reject', () => {
     await deep.await(linkId);
     // await delay(2000);
 
-    const client = deep.apolloClient;
-    const promiseResults = await getPromiseResults(client, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
 
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
@@ -217,8 +215,7 @@ describe('async function handle by type with reject', () => {
     await deep.await(linkId);
     // await delay(2000);
 
-    const client = deep.apolloClient;
-    const promiseResults = await getPromiseResults(client, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
 
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
