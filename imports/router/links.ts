@@ -276,7 +276,7 @@ export default async (req, res) => {
         } else if(operation === 'UPDATE') {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
-          // await handleOperation('Delete', typeId, oldRow, newRow);
+          await handleOperation('Delete', oldRow, newRow);
         }
 
         console.log("done");
