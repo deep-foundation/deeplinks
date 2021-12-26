@@ -40,7 +40,19 @@ const insertOperationHandlerForType = async (handleOperationTypeId: number, type
   };
 };
 
-const deleteHandler = async (handler) => {
+export async function deletePromiseResult(promiseResult: any, linkId: any) {
+  const resultLinkId = promiseResult?.in?.[0]?.id;
+  const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
+  const valueId = promiseResult?.object?.id;
+  const promiseResultId = promiseResult?.id;
+  const promiseId = promiseResult?.in?.[0]?.from?.id;
+
+  await deep.delete({ id: { _in: [resultLinkId, thenLinkId] } }, { table: 'links' });
+  await deep.delete({ id: { _in: [promiseResultId, promiseId, linkId] } }, { table: 'links' });
+  await deep.delete({ id: { _eq: valueId } }, { table: 'objects' });
+}
+
+export const deleteHandler = async (handler) => {
   await deep.delete({ id: { _in: [handler.handlerJSFileId, handler.handlerId, handler.handleInsertId]}});
   await deep.delete({ id: { _eq: handler.handlerJSFileValueId}}, { table: 'strings' });
 };
@@ -123,21 +135,7 @@ describe('sync function handle by type with resolve', () => {
 
     assert.isTrue(!!promiseResult);
 
-    const resolvedLinkId = promiseResult?.in?.[0]?.id;
-    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = promiseResult?.object?.id;
-    const promiseResultId = promiseResult?.id;
-    const promiseId = promiseResult?.in?.[0]?.from?.id;
-    
-    // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
-
-    // console.log(JSON.stringify(resultLinks, null, 2));
-   
-    // assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
-
-    await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
-    await deep.delete({ id: { _in: [promiseResultId, promiseId, linkId]}}, { table: 'links' });
-    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    await deletePromiseResult(promiseResult, linkId);
 
     await deleteHandler(handler);
   });
@@ -166,22 +164,7 @@ describe('sync function handle by type with resolve', () => {
 
     assert.isTrue(!!promiseResult);
 
-    const resolvedLinkId = promiseResult?.in?.[0]?.id;
-    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = promiseResult?.object?.id;
-    const promiseResultId = promiseResult?.id;
-    const promiseId = promiseResult?.in?.[0]?.from?.id;
-    
-    // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
-
-    // console.log(JSON.stringify(resultLinks, null, 2));
-
-    // assert.isTrue(resultLinks.some(link => link.object?.value?.result === numberToReturn));
-    // assert.equal(resultLinks[0]?.object?.value?.result, numberToReturn);
-
-    await deep.delete({ id: { _in: [resolvedLinkId, thenLinkId]}}, { table: 'links' });
-    await deep.delete({ id: { _in: [promiseResultId, promiseId, linkId]}}, { table: 'links' });
-    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    await deletePromiseResult(promiseResult, linkId);
 
     await deleteHandler(handler);
   });
@@ -211,22 +194,7 @@ describe('sync function handle by type with reject', () => {
 
     assert.isTrue(!!promiseResult);
 
-    const rejectedLinkId = promiseResult?.in?.[0]?.id;
-    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = promiseResult?.object?.id;
-    const promiseResultId = promiseResult?.id;
-    const promiseId = promiseResult?.in?.[0]?.from?.id;
-    
-    // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
-
-    // console.log(JSON.stringify(resultLinks, null, 2));
-
-    // assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
-    // assert.equal(resultLinks [0]?.object?.value, numberToReturn);
-
-    await deep.delete({ id: { _in: [rejectedLinkId, thenLinkId]}}, { table: 'links' });
-    await deep.delete({ id: { _in: [promiseResultId, promiseId, linkId]}}, { table: 'links' });
-    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    await deletePromiseResult(promiseResult, linkId);
 
     await deleteHandler(handler);
   });
@@ -256,22 +224,7 @@ describe('async function handle by type with reject', () => {
 
     assert.isTrue(!!promiseResult);
 
-    const rejectedLinkId = promiseResult?.in?.[0]?.id;
-    const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
-    const valueId = promiseResult?.object?.id;
-    const promiseResultId = promiseResult?.id;
-    const promiseId = promiseResult?.in?.[0]?.from?.id;
-    
-    // console.log(resolvedLinkId, thenLinkId, valueId, promiseResultId, promiseId);
-
-    // console.log(JSON.stringify(resultLinks, null, 2));
-
-    // assert.isTrue(resultLinks.some(link => link.object?.value === numberToThrow));
-    // assert.equal(resultLinks [0]?.object?.value, numberToReturn);
-
-    await deep.delete({ id: { _in: [rejectedLinkId, thenLinkId]}}, { table: 'links' });
-    await deep.delete({ id: { _in: [promiseResultId, promiseId, linkId]}}, { table: 'links' });
-    await deep.delete({ id: { _eq: valueId }}, { table: 'objects' });
+    await deletePromiseResult(promiseResult, linkId);
 
     await deleteHandler(handler);
   });
