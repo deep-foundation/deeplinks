@@ -59,6 +59,40 @@ export async function ensureLinkIsCreated(typeId: number) {
   return freeId;
 }
 
+export async function getPromiseResults(client, rejectedTypeId: number, promiseTypeId: number, thenTypeId: number, linkId: any) {
+  return (await client.query({
+    query: gql`{
+        links(where: { 
+          in: {
+            type_id: { _eq: ${rejectedTypeId} }, # Resolved
+            from: { 
+              type_id: { _eq: ${promiseTypeId} }, # Promise
+              in: { 
+                type_id: { _eq: ${thenTypeId} } # Then
+                from_id: { _eq: ${linkId} } # linkId
+              }
+            }
+          },
+        }) {
+          id
+          object {
+            id
+            value
+          }
+          in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
+            id
+            from {
+              id
+              in(where: { type_id: { _eq: ${thenTypeId} } }) {
+                id
+              }
+            }
+          }
+        }
+      }`,
+  }))?.data?.links;
+}
+
 jest.setTimeout(60000);
 
 function randomInteger(min, max) {
@@ -83,39 +117,9 @@ describe('sync function handle by type with resolve', () => {
     // await delay(30000);
 
     const client = deep.apolloClient;
-    const resultLinks = (await client.query({
-      query: gql`{
-        links(where: { 
-          in: {
-            type_id: { _eq: ${resolvedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${linkId} } # linkId
-              }
-            }
-          },
-        }) {
-          id
-          object {
-            id
-            value
-          }
-          in(where: { type_id: { _eq: ${resolvedTypeId} } }) {
-            id
-            from {
-              id
-              in(where: { type_id: { _eq: ${thenTypeId} } }) {
-                id
-              }
-            }
-          }
-        }
-      }`,
-    }))?.data?.links;
+    const promiseResults = await getPromiseResults(client, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
 
-    const promiseResult = resultLinks.find(link => link.object?.value?.result === numberToReturn);
+    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
     assert.isTrue(!!promiseResult);
 
@@ -156,39 +160,9 @@ describe('sync function handle by type with resolve', () => {
     // await delay(30000);
 
     const client = deep.apolloClient;
-    const resultLinks = (await client.query({
-      query: gql`{
-        links(where: { 
-          in: {
-            type_id: { _eq: ${resolvedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${linkId} } # linkId
-              }
-            }
-          },
-        }) {
-          id
-          object {
-            id
-            value
-          }
-          in(where: { type_id: { _eq: ${resolvedTypeId} } }) {
-            id
-            from {
-              id
-              in(where: { type_id: { _eq: ${thenTypeId} } }) {
-                id
-              }
-            }
-          }
-        }
-      }`,
-    }))?.data?.links;
+    const promiseResults = await getPromiseResults(client, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
 
-    const promiseResult = resultLinks.find(link => link.object?.value?.result === numberToReturn);
+    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
     assert.isTrue(!!promiseResult);
 
@@ -231,39 +205,9 @@ describe('sync function handle by type with reject', () => {
     // await delay(2000);
 
     const client = deep.apolloClient;
-    const resultLinks = (await client.query({
-      query: gql`{
-        links(where: { 
-          in: {
-            type_id: { _eq: ${rejectedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${linkId} } # linkId
-              }
-            }
-          },
-        }) {
-          id
-          object {
-            id
-            value
-          }
-          in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
-            id
-            from {
-              id
-              in(where: { type_id: { _eq: ${thenTypeId} } }) {
-                id
-              }
-            }
-          }
-        }
-      }`,
-    }))?.data?.links;
+    const promiseResults = await getPromiseResults(client, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
 
-    const promiseResult = resultLinks.find(link => link.object?.value === numberToThrow);
+    const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
     assert.isTrue(!!promiseResult);
 
@@ -306,39 +250,9 @@ describe('async function handle by type with reject', () => {
     // await delay(2000);
 
     const client = deep.apolloClient;
-    const resultLinks = (await client.query({
-      query: gql`{
-        links(where: { 
-          in: {
-            type_id: { _eq: ${rejectedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${linkId} } # linkId
-              }
-            }
-          },
-        }) {
-          id
-          object {
-            id
-            value
-          }
-          in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
-            id
-            from {
-              id
-              in(where: { type_id: { _eq: ${thenTypeId} } }) {
-                id
-              }
-            }
-          }
-        }
-      }`,
-    }))?.data?.links;
+    const promiseResults = await getPromiseResults(client, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
 
-    const promiseResult = resultLinks.find(link => link.object?.value === numberToThrow);
+    const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
     assert.isTrue(!!promiseResult);
 
