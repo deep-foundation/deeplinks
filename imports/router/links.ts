@@ -258,17 +258,39 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
+    console.log('event: ', JSON.stringify(event, null, 2));
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       const oldRow = event?.data?.old;
       const newRow = event?.data?.new;
 
-      console.log('oldRow: ', oldRow);
-      console.log('newRow: ', newRow);
+      // select value into oldRow
+      if(oldRow) {
+        const queryResult = await deep.select({
+          id: { _eq: oldRow.id },
+        }, {
+          returning: `value`,
+        });
+        // console.log("old queryResult: ", queryResult);
+        oldRow.value = queryResult.data?.[0]?.value;
+      }
+      // select value into newRow
+      if(newRow) {
+        const queryResult = await deep.select({
+          id: { _eq: newRow.id },
+        }, {
+          returning: `value`,
+        });
+        // console.log("new queryResult: ", queryResult);
+        newRow.value = queryResult.data?.[0]?.value;
+      }
+
+      // console.log('oldRow: ', oldRow);
+      // console.log('newRow: ', newRow);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
-      console.log('current', current, typeId);
+      // console.log('current', current, typeId);
 
       try {
         if(operation === 'INSERT') {
@@ -279,7 +301,7 @@ export default async (req, res) => {
           await handleOperation('Delete', oldRow, newRow);
         }
 
-        console.log("done");
+        // console.log("done");
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);
