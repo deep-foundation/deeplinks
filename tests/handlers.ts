@@ -71,7 +71,9 @@ export async function ensureLinkIsCreated(typeId: number) {
   return freeId;
 }
 
-export async function getPromiseResults(deep, rejectedTypeId: number, promiseTypeId: number, thenTypeId: number, linkId: any) {
+export async function getPromiseResults(deep, rejectedTypeId: number, linkId: any) {
+  const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+  const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const client = deep.apolloClient;
   return (await client.query({
     query: gql`{
@@ -116,21 +118,15 @@ describe('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
-    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-    var handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
     const linkId = await ensureLinkIsCreated(typeId);
-
     await deep.await(linkId);
-    // await delay(30000);
 
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
-
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
     assert.isTrue(!!promiseResult);
@@ -142,23 +138,16 @@ describe('sync function handle by type with resolve', () => {
   it(`handle delete`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
-    const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
     const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+    const handler = await insertOperationHandlerForType(handleDeleteTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-    var handler = await insertOperationHandlerForType(handleDeleteTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
     const linkId = await ensureLinkIsCreated(typeId);
-
     await deep.delete({ id: { _eq: linkId }}, { table: 'links' });
-
     await deep.await(linkId);
-    // await delay(30000);
 
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, promiseTypeId, thenTypeId, linkId);
-
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
     assert.isTrue(!!promiseResult);
@@ -173,21 +162,37 @@ describe('sync function handle by type with reject', () => {
   it(`handle insert`, async () => {
     const numberToThrow = randomInteger(5000000, 9999999999);
 
-    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `(arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
-    var handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `(arg)=>{ throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
-
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
     const linkId = await ensureLinkIsCreated(typeId);
 
     await deep.await(linkId);
-    // await delay(2000);
 
-    const promiseResults = await getPromiseResults(deep, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
+    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
+    const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
+    assert.isTrue(!!promiseResult);
+
+    await deletePromiseResult(promiseResult, linkId);
+
+    await deleteHandler(handler);
+  });
+  it(`handle delete`, async () => {
+    const numberToThrow = randomInteger(5000000, 9999999999);
+
+    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+    const handler = await insertOperationHandlerForType(handleDeleteTypeId, typeId, `(arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
+
+    const linkId = await ensureLinkIsCreated(typeId);
+    await deep.delete({ id: { _eq: linkId }}, { table: 'links' });
+    await deep.await(linkId);
+
+    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
     assert.isTrue(!!promiseResult);
@@ -202,21 +207,37 @@ describe('async function handle by type with reject', () => {
   it(`handle insert`, async () => {
     const numberToThrow = randomInteger(5000000, 9999999999);
 
-    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
-    var handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
-
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
     const linkId = await ensureLinkIsCreated(typeId);
 
     await deep.await(linkId);
-    // await delay(2000);
 
-    const promiseResults = await getPromiseResults(deep, rejectedTypeId, promiseTypeId, thenTypeId, linkId);
+    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
+    const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
+    assert.isTrue(!!promiseResult);
+
+    await deletePromiseResult(promiseResult, linkId);
+
+    await deleteHandler(handler);
+  });
+  it(`handle delete`, async () => {
+    const numberToThrow = randomInteger(5000000, 9999999999);
+
+    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+    const handler = await insertOperationHandlerForType(handleDeleteTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
+
+    const linkId = await ensureLinkIsCreated(typeId);
+    await deep.delete({ id: { _eq: linkId }}, { table: 'links' });
+    await deep.await(linkId);
+
+    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+    const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
 
     assert.isTrue(!!promiseResult);
@@ -257,7 +278,7 @@ describe('async function handle by type with reject', () => {
 //     console.log(link);
 
 //     await deep.await(link.id);
-//     // await delay(2000);
+//  
 
 //     const client = deep.apolloClient;
 //     const result = await client.query({
