@@ -130,14 +130,14 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  console.log('currentLinkId', currentLinkId);
-  console.log('currentTypeId', currentTypeId);
+  // console.log('currentLinkId', currentLinkId);
+  // console.log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
 
-  console.log('handlerTypeId', handlerTypeId);
-  console.log('handleInsertTypeId', handleInsertTypeId);
+  // console.log('handlerTypeId', handlerTypeId);
+  // console.log('handleInsertTypeId', handleInsertTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -258,7 +258,6 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
-    console.log('event: ', JSON.stringify(event, null, 2));
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       const oldRow = event?.data?.old;
@@ -285,8 +284,9 @@ export default async (req, res) => {
         newRow.value = queryResult.data?.[0]?.value;
       }
 
-      // console.log('oldRow: ', oldRow);
-      // console.log('newRow: ', newRow);
+      console.log('event: ', JSON.stringify(event, null, 2));
+      console.log('oldRow: ', oldRow);
+      console.log('newRow: ', newRow);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
