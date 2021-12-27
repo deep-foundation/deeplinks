@@ -82,6 +82,26 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
     update: {}, // generatePermissionWhere(17),
     delete: {},
   });
+  await api.query({
+    type: 'create_event_trigger',
+    args: {
+      name: tableName,
+      table: tableName,
+      webhook: `${process.env.DEEPLINKS_URL}/api/values`,
+      insert: {
+        columns: "*",
+        payload: '*',
+      },
+      update: {
+        columns: '*',
+        payload: '*',
+      },
+      delete: {
+        columns: '*'
+      },
+      replace: false,
+    },
+  });
 };
 
 export const generateDown = (options: ITypeTableStringOptions) => async () => {
