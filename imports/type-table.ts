@@ -43,9 +43,11 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
           WHERE
               updated_link.id = NEW."link_id"
           AND handle_update.from_id = updated_link."type_id"
-          AND handle_update.type_id = ${handleUpdateTypeId}
+          AND handle_update.type_id = 52 -- ${handleUpdateTypeId}
         )
     ) THEN
+    --  INSERT INTO links ("type_id", "from_id", "to_id") VALUES (777, NEW."link_id", ${thenTypeId} + 1);
+
     -- INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
     -- INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
     END IF;
