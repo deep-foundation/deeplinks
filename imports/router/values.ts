@@ -271,6 +271,9 @@ export default async (req, res) => {
           returning: `id from_id type_id to_id`,
         });
         oldRow = { ...queryResult.data?.[0], value: oldRow };
+        if (!newRow) {
+          newRow = queryResult.data?.[0];
+        }
       }
       // select value into newRow
       if(newRow) {
@@ -280,51 +283,45 @@ export default async (req, res) => {
           returning: `id from_id type_id to_id`,
         });
         newRow = { ...queryResult.data?.[0], value: newRow };
+        if (!oldRow) {
+          oldRow = queryResult.data?.[0];
+        }
       }
 
       console.log('event: ', JSON.stringify(event, null, 2));
       console.log('oldRow: ', oldRow);
       console.log('newRow: ', newRow);
 
-      // const current = operation === 'DELETE' ? oldRow : newRow;
-      // const typeId = current.type_id;
-      // // console.log('current', current, typeId);
+      try {
+        await handleOperation('Update', oldRow, newRow);
+        
+        // console.log("done");
 
-      // try {
-      //   if(operation === 'INSERT') {
-      //     await handleOperation('Insert', oldRow, newRow);
-      //   } else if(operation === 'UPDATE') {
-      //     // await handleInsert(typeId, newRow);
-      //   } else if(operation === 'DELETE') {
-      //     await handleOperation('Delete', oldRow, newRow);
-      //   }
-
-      //   // console.log("done");
-
-      //   if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-      //     debug('resolve', current.id);
-      //     await resolve({
-      //       id: current.id, client,
-      //       Then: await deep.id('@deep-foundation/core', 'Then'),
-      //       Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      //       Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-      //       Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
-      //     });
-      //   }
-      //   return res.status(200).json({});
-      // } catch(error) {
-      //   debug('error', error);
-      //   if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-      //     debug('reject', current.id);
-      //     await reject({
-      //       id: current.id, client,
-      //       Then: await deep.id('@deep-foundation/core', 'Then'),
-      //       Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      //       Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-      //       Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
-      //     });
-      //   }
-      // }
+        // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
+        //   debug('resolve', current.id);
+        //   await resolve({
+        //     id: current.id, client,
+        //     Then: await deep.id('@deep-foundation/core', 'Then'),
+        //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
+        //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
+        //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+        //   });
+        // }
+        return res.status(200).json({});
+      } catch(error) {
+        debug('error', error);
+        throw error;
+        // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
+        //   debug('reject', current.id);
+        //   await reject({
+        //     id: current.id, client,
+        //     Then: await deep.id('@deep-foundation/core', 'Then'),
+        //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
+        //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
+        //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+        //   });
+        // }
+      }
 
       return res.status(500).json({ error: 'notexplained' });
     }
