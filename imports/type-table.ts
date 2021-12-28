@@ -1,6 +1,7 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
+import { DeepClient } from './client';
 import { permissions } from './permission';
 
 export interface ITypeTableStringOptions {
@@ -12,10 +13,11 @@ export interface ITypeTableStringOptions {
   linkRelation: string;
   linksTableName: string;
   api: HasuraApi;
+  deep: DeepClient;
 }
 
 export const generateUp = (options: ITypeTableStringOptions) => async () => {
-  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api } = options;
+  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api, deep } = options;
 
   await api.sql(sql`
     CREATE TABLE ${schemaName}."${tableName}" (id bigint PRIMARY KEY, link_id bigint, ${customColumnsSql ? customColumnsSql : `value ${valueType}`});
@@ -29,6 +31,27 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
     ${/* Should we add customIndexesSql? */ customColumnsSql ? /*customColumnsSql*/ '' : `CREATE INDEX IF NOT EXISTS ${tableName}__value_btree ON ${tableName} USING btree (value);`}
     ${customAfterSql}
   `);
+  // const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+  // const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+  // const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+  // await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  // BEGIN
+  //   IF (
+  //       EXISTS(
+  //         SELECT 1
+  //         FROM links handle_update, links updated_link
+  //         WHERE
+  //             updated_link.id = NEW."link_id"
+  //         AND handle_update.from_id = updated_link."type_id"
+  //         AND handle_update.type_id = ${handleUpdateTypeId}
+  //       )
+  //   ) THEN
+  //   INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+  //   INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+  //   END IF;
+  //   RETURN NEW;
+  // END; $trigger$ LANGUAGE plpgsql;`);
+  // await api.sql(sql`CREATE TRIGGER ${tableName}__promise__insert__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__insert__function();`);
   await api.query({
     type: 'track_table',
     args: {
@@ -105,7 +128,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
 };
 
 export const generateDown = (options: ITypeTableStringOptions) => async () => {
-  const { schemaName, tableName, linkRelation, linksTableName, api } = options;
+  const { schemaName, tableName, linkRelation, linksTableName, api, deep } = options;
 
   await api.query({
     type: 'drop_relationship',
@@ -130,6 +153,8 @@ export const generateDown = (options: ITypeTableStringOptions) => async () => {
       },
     },
   });
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__insert__trigger ON "${tableName}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__insert__function CASCADE;`);
   await api.sql(sql`
     DROP TABLE ${schemaName}."${tableName}";
   `);

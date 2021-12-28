@@ -1,10 +1,22 @@
 import Debug from 'debug';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { DeepClient } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:type-table-bool-exp');
 
 export const TABLE_NAME = 'bool_exp';
+
+const client = generateApolloClient({
+  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  secret: process.env.MIGRATIONS_HASURA_SECRET,
+});
+
+const deep = new DeepClient({
+  apolloClient: client,
+})
 
 export const up = async () => {
   debug('up');
@@ -15,6 +27,7 @@ export const up = async () => {
     linkRelation: 'bool_exp',
     linksTableName: LINKS_TABLE_NAME,
     api,
+    deep,
   })());
   await api.query({
     type: 'create_event_trigger',
@@ -53,5 +66,6 @@ export const down = async () => {
     linkRelation: 'bool_exp',
     linksTableName: LINKS_TABLE_NAME,
     api,
+    deep,
   })());
 };

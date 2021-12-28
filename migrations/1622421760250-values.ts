@@ -24,7 +24,7 @@ export const api = new HasuraApi({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-const client = new DeepClient({ apolloClient });
+const deep = new DeepClient({ apolloClient });
 
 export const up = async () => {
   debug('up');
@@ -36,6 +36,7 @@ export const up = async () => {
     linkRelation: 'string',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateUp({
     schemaName: 'public',
@@ -45,6 +46,7 @@ export const up = async () => {
     linkRelation: 'number',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateUp({
     schemaName: 'public',
@@ -54,6 +56,7 @@ export const up = async () => {
     linkRelation: 'object',
     linksTableName: 'links',
     api,
+    deep,
   })());
 };
 
@@ -67,6 +70,7 @@ export const down = async () => {
     linkRelation: 'string',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateDown({
     schemaName: 'public',
@@ -76,6 +80,7 @@ export const down = async () => {
     linkRelation: 'number',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateDown({
     schemaName: 'public',
@@ -85,5 +90,6 @@ export const down = async () => {
     linkRelation: 'object',
     linksTableName: 'links',
     api,
+    deep,
   })());
 };
