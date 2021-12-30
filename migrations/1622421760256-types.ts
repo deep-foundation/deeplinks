@@ -115,41 +115,41 @@ const corePckg: PackagerPackage = {
     { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 52
     { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 53
 
-    { id: 'PromiseResult', type: 'Type' }, // 51
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 52
-    { id: 'PromiseReason', type: 'Type' }, // 53
+    { id: 'PromiseResult', type: 'Type' }, // 54
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 55
+    { id: 'PromiseReason', type: 'Type', from: 'Any', to: 'Any' }, // 56
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 54
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 55
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 56
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 61
-    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 62
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 57
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 58
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 59
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 60
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 61
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 62
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 63
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 64
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 65
 
-    { id: 'Auth', type: 'Operation' }, // 63
+    { id: 'Auth', type: 'Operation' }, // 66
 
-    { id: 'guests', type: 'Any' }, // 64
-    { id: 'Join', type: 'Type' }, // 65
+    { id: 'guests', type: 'Any' }, // 67
+    { id: 'Join', type: 'Type' }, // 68
     { 
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
-    }, // 66
+    }, // 69
     { 
       id: 'adminContainerUserHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'adminContainUser'
-    }, // 67
+    }, // 70
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'adminContainerUserHandler'
-    }, // 68
+    }, // 71
   ],
   errors: [],
   strict: true,
