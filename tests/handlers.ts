@@ -108,7 +108,7 @@ export async function getPromiseResults(deep, rejectedTypeId: number, linkId: an
   }))?.data?.links;
 }
 
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 
 function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;

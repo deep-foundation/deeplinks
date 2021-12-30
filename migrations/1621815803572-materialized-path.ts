@@ -125,10 +125,11 @@ export const up = async () => {
   await api.sql(trigger.upFunctionDeleteNode());
   await api.sql(trigger.upTriggerDelete());
   await api.sql(trigger.upTriggerInsert());
+  await api.sql(sql`select create_btree_indexes_for_all_columns('${SCHEMA}', '${MP_TABLE_NAME}');`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
     IF (NEW."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
       PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
-      FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id";
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id" OR NEW."to_id"=${GLOBAL_ID_ANY};
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
@@ -139,7 +140,7 @@ export const up = async () => {
     IF (OLD."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
       SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = ${GLOBAL_ID_TREE};
       PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
-      FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id";
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id" OR OLD."to_id"=${GLOBAL_ID_ANY};
     END IF;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);

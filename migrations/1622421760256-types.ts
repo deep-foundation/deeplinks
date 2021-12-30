@@ -32,7 +32,7 @@ const corePckg: PackagerPackage = {
 
     { id: 'String', type: 'Type' }, // 5
     { id: 'Number', type: 'Type' }, // 6
-    { id: 'JSON', type: 'Type' }, // 7
+    { id: 'Object', type: 'Type' }, // 7
     { id: 'Any', type: 'Type' }, // 8
     { id: 'Promise', type: 'Type' }, // 9
     { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' }, // 10
@@ -42,7 +42,7 @@ const corePckg: PackagerPackage = {
     // ===
 
     { id: 'typeValue', type: 'Value', from: 'Type', to: 'String' }, // 13
-    { id: 'columnValue', type: 'Value', from: 'Column', to: 'String' }, // 14
+    { id: 'TEEEEMP', type: 'Any' }, // 14
     { id: 'packageValue', type: 'Value', from: 'Package', to: 'String' }, // 15
 
     // ===
@@ -116,7 +116,7 @@ const corePckg: PackagerPackage = {
     { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 53
 
     { id: 'PromiseResult', type: 'Type' }, // 54
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'JSON' }, // 55
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 55
     { id: 'PromiseReason', type: 'Type', from: 'Any', to: 'Any' }, // 56
 
     { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 57
@@ -131,23 +131,25 @@ const corePckg: PackagerPackage = {
 
     { id: 'Auth', type: 'Operation' }, // 66
 
+    { id: 'guests', type: 'Any' }, // 67
+    { id: 'Join', type: 'Type' }, // 68
     { 
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
-    }, // 67
+    }, // 69
     { 
       id: 'adminContainerUserHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'adminContainUser'
-    }, // 68
+    }, // 70
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'adminContainerUserHandler'
-    }, // 69
+    }, // 71
   ],
   errors: [],
   strict: true,

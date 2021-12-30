@@ -5,26 +5,192 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bool-exp';
 import { permissions } from '../imports/permission';
-import { GLOBAL_ID_ANY } from '../imports/client';
+import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 
 const debug = Debug('deeplinks:migrations:model-permissions');
 
 export const TABLE_NAME = 'links';
 export const REPLACE_PATTERN_ID = '777777777777';
 
+const client = generateApolloClient({
+  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  secret: process.env.MIGRATIONS_HASURA_SECRET,
+});
+
+const deep = new DeepClient({
+  apolloClient: client,
+})
+
 export const up = async () => {
   debug('up');
   debug('hasura permissions');
   await permissions(api, MP_TABLE_NAME);
   await permissions(api, LINKS_TABLE_NAME, {
-    select: {},
-    insert: {
-      type: {
-        id: { _is_null: false }
-      }
+    select: {
+      // _or: [
+      //   { type_id: { _in: [
+      //     await deep.id('@deep-foundation/core', 'User'),
+      //     await deep.id('@deep-foundation/core', 'Type'),
+      //     await deep.id('@deep-foundation/core', 'Package'),
+      //     await deep.id('@deep-foundation/core', 'PackageActive'),
+      //     await deep.id('@deep-foundation/core', 'PackageVersion'),
+      //     await deep.id('@deep-foundation/core', 'PackageNamespace'),
+      //   ] } },
+      //   {
+      //     _by_item: { // parents
+      //       path_item: { // each
+      //         id: { _eq: 'X-Hasura-User-Id' },
+      //       },
+      //     },
+      //   },
+      //   {
+      //     _by_item: { // package
+      //       path_item: { // each
+      //         type_id: { _eq: await deep.id('@deep-foundation/core', 'Package') },
+      //       },
+      //     },
+      //   },
+      //   {
+      //     _by_item: { // parents
+      //       path_item: { // each
+      //         in: { // selection
+      //           type_id: { _eq: await deep.id('@deep-foundation/core', 'Selection') },
+      //           from: { // selector
+      //             // TODO add tree specify link to selector
+      //             in: { // object
+      //               type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleObject') },
+      //               from: { // rule
+      //                 _and: [
+      //                   { type_id: { _eq: await deep.id('@deep-foundation/core', 'Rule') } },
+      //                   {
+      //                     out: {
+      //                       type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleAction') },
+      //                       to: { out: { to_id: { _eq: await deep.id('@deep-foundation/core', 'Select') } } },
+      //                     },
+      //                   },
+      //                   {
+      //                     out: {
+      //                       type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleSubject') },
+      //                       to: { out: { to_id: { _eq: 'X-Hasura-User-Id' } } },
+      //                     },
+      //                   },
+      //                 ],
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // ],
     },
-    update: {},
-    delete: {},
+    insert: {
+      // type: {
+      //   _by_item: { // parents
+      //     path_item: { // each
+      //       in: { // selection
+      //         type_id: { _eq: await deep.id('@deep-foundation/core', 'Selection') },
+      //         from: { // selector
+      //           TODO add tree specify link to selector
+      //           in: { // object
+      //             type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleObject') },
+      //             from: { // rule
+      //               _and: [
+      //                 { type_id: { _eq: await deep.id('@deep-foundation/core', 'Rule') } },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleAction') },
+      //                     to: { out: { to_id: { _eq: await deep.id('@deep-foundation/core', 'Insert') } } },
+      //                   },
+      //                 },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleSubject') },
+      //                     to: { out: { to_id: { _eq: 'X-Hasura-User-Id' } } },
+      //                   },
+      //                 },
+      //               ],
+      //             },
+      //           },
+      //           type_id: { _eq: await deep.id('@deep-foundation/core', 'Selector') },
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+    },
+    update: {
+      // type: {
+      //   _by_item: { // parents
+      //     path_item: { // each
+      //       in: { // selection
+      //         from: { // selector
+      //           // TODO add tree specify link to selector
+      //           in: { // object
+      //             type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleObject') },
+      //             from: { // rule
+      //               _and: [
+      //                 { type_id: { _eq: await deep.id('@deep-foundation/core', 'Rule') } },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleAction') },
+      //                     to: { out: { to_id: { _eq: await deep.id('@deep-foundation/core', 'Insert') } } },
+      //                   },
+      //                 },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleSubject') },
+      //                     to: { out: { to_id: { _eq: 'X-Hasura-User-Id' } } },
+      //                   },
+      //                 },
+      //               ],
+      //             },
+      //           },
+      //           type_id: { _eq: await deep.id('@deep-foundation/core', 'Selector') },
+      //         },
+      //         type_id: { _eq: await deep.id('@deep-foundation/core', 'Selection') },
+      //       },
+      //     },
+      //   },
+      // },
+    },
+    delete: {
+      // type: {
+      //   _by_item: { // parents
+      //     path_item: { // each
+      //       in: { // selection
+      //         from: { // selector
+      //           // TODO add tree specify link to selector
+      //           in: { // object
+      //             type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleObject') },
+      //             from: { // rule
+      //               _and: [
+      //                 { type_id: { _eq: await deep.id('@deep-foundation/core', 'Rule') } },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleAction') },
+      //                     to: { out: { to_id: { _eq: await deep.id('@deep-foundation/core', 'Delete') } } },
+      //                   },
+      //                 },
+      //                 {
+      //                   out: {
+      //                     type_id: { _eq: await deep.id('@deep-foundation/core', 'RuleSubject') },
+      //                     to: { out: { to_id: { _eq: 'X-Hasura-User-Id' } } },
+      //                   },
+      //                 },
+      //               ],
+      //             },
+      //           },
+      //           type_id: { _eq: await deep.id('@deep-foundation/core', 'Selector') },
+      //         },
+      //         type_id: { _eq: await deep.id('@deep-foundation/core', 'Selection') },
+      //       },
+      //     },
+      //   },
+      // },
+    },
 
     columns: ['id','from_id','to_id','type_id'],
     computed_fields: ['value'],
@@ -61,15 +227,15 @@ export const up = async () => {
 
         IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
           IF (typeLink."from_id" != ${GLOBAL_ID_ANY} AND typeLink."from_id" != fromLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { id: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
           END IF;
           IF (typeLink."to_id" != ${GLOBAL_ID_ANY} AND typeLink."to_id" != toLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;

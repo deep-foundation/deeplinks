@@ -62,7 +62,7 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   // for now jwt only admin. In future jwt of client created event.
   const runnerPort = 3020;
   const runnerImageAndTag = 'konard/deep-runner-js:main';
-  const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjM5In0sImlhdCI6MTYzNzAzMjQwNn0.EtYolslSV66xKe7Bx4x3MkS-dQL5hPqaUqE0eStH3KE';
+  const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
   const data = jwt + code;
   
   const containerName = crypto.createHash('md5').update(data).digest("hex");
@@ -249,7 +249,15 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
               promiseResults.push(promiseResult);
             }
           }
-          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          console.log("promiseResults: ", promiseResults);
+          try
+          {
+            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          }
+          catch(e)
+          {
+            console.log('promiseResults insert error: ', e?.message ?? e);
+          }
         });
     }
   }
