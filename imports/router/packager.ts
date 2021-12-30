@@ -144,7 +144,6 @@ const resolvers = {
         }, { value: nextVersion }, { table: 'strings' });
         fs.writeFileSync(npmPckgPath, JSON.stringify(npmPckg), { encoding: 'utf-8' });
         const deepPckgContent = await packager.export({ packageLinkId: id });
-        console.log(JSON.stringify(deepPckgContent, null, 2));
         fs.writeFileSync([pckgDir,'deep.json'].join('/'), JSON.stringify(deepPckgContent), { encoding: 'utf-8' });
         child_process.execSync(`cd ${pckgDir}; npm publish;`,{stdio:[0,1,2]});
         fs.rmSync(dir, { recursive: true, force: true });
