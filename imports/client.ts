@@ -21,14 +21,15 @@ export const GLOBAL_ID_PROMISE=9;
 export const GLOBAL_ID_THEN=10;
 export const GLOBAL_ID_RESOLVED=11;
 export const GLOBAL_ID_REJECTED=12;
+export const GLOBAL_ID_TREE=37;
+export const GLOBAL_ID_INCLUDE_DOWN=38;
+export const GLOBAL_ID_INCLUDE_UP=39;
+export const GLOBAL_ID_INCLUDE_NODE=40;
+export const GLOBAL_ID_PACKAGE_NAMESPACE=44;
+export const GLOBAL_ID_PACKAGE_ACTIVE=46;
+export const GLOBAL_ID_PACKAGE_VERSION=47;
+
 export const GLOBAL_ID_ADMIN=24;
-export const GLOBAL_ID_TREE=38;
-export const GLOBAL_ID_INCLUDE_DOWN=39;
-export const GLOBAL_ID_INCLUDE_UP=40;
-export const GLOBAL_ID_INCLUDE_NODE=41;
-export const GLOBAL_ID_PACKAGE_NAMESPACE=45;
-export const GLOBAL_ID_PACKAGE_ACTIVE=47;
-export const GLOBAL_ID_PACKAGE_VERSION=48;
 
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
@@ -36,7 +37,6 @@ export interface DeepClientOptions<L = Link<number>> {
   handleAuth?: (linkId?: number, token?: string) => any;
 
   deep?: DeepClientInstance<L>;
-  auth?: DeepClientAuthResult;
 
   apolloClient?: ApolloClient<any>;
   minilinks?: MinilinksResult<L>;
@@ -173,14 +173,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   defaultDeleteName?: string;
 
   constructor(options: DeepClientOptions<L>) {
-
     this.deep = options.deep;
 
-    if (options.deep && options.auth) {
+    if (!this.apolloClient && !options.apolloClient && options.token) {
       this.apolloClient = generateApolloClient({
         path: `${process.env.HASURA_PATH}/v1/graphql`,
         ssl: !!+process.env.HASURA_SSL,
-        token: options.auth.token,
+        token: options.token,
       });
     }
 

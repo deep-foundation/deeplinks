@@ -18,8 +18,8 @@ describe('permissions', () => {
     it(`user contain range`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
-      const d1 = new DeepClient({ deep, auth: a1 });
-      const d2 = new DeepClient({ deep, auth: a2 });
+      const d1 = new DeepClient({ deep, ...a1 });
+      const d2 = new DeepClient({ deep, ...a2 });
       const { data: [{ id }] } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
         in: { data: {
@@ -36,9 +36,9 @@ describe('permissions', () => {
     //   const a1 = await deep.guest({});
     //   const a2 = await deep.guest({});
     //   const a3 = await deep.guest({});
-    //   const d1 = new DeepClient({ deep, auth: a1 });
-    //   const d2 = new DeepClient({ deep, auth: a2 });
-    //   const d3 = new DeepClient({ deep, auth: a3 });
+    //   const d1 = new DeepClient({ deep, ...a1 });
+    //   const d2 = new DeepClient({ deep, ...a2 });
+    //   const d3 = new DeepClient({ deep, ...a3 });
     //   const { data: [{ id }] } = await deep.insert({
     //     type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
     //     in: { data: {
@@ -92,9 +92,9 @@ describe('permissions', () => {
     //   const a1 = await deep.guest({});
     //   const a2 = await deep.guest({});
     //   const a3 = await deep.guest({});
-    //   const d1 = new DeepClient({ deep, auth: a1 });
-    //   const d2 = new DeepClient({ deep, auth: a2 });
-    //   const d3 = new DeepClient({ deep, auth: a3 });
+    //   const d1 = new DeepClient({ deep, ...a1 });
+    //   const d2 = new DeepClient({ deep, ...a2 });
+    //   const d3 = new DeepClient({ deep, ...a3 });
     //   const { data: [{ id }] } = await deep.insert({
     //     type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
     //     in: { data: {
@@ -154,7 +154,7 @@ describe('permissions', () => {
   describe('insert', () => {
     // it(`guest cant insert`, async () => {
     //   const a1 = await deep.guest({});
-    //   const d1 = new DeepClient({ deep, auth: a1 });
+    //   const d1 = new DeepClient({ deep, ...a1 });
     //   await deep.insert({
     //     type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
     //   });

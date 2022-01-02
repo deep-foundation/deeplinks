@@ -5,17 +5,26 @@ import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import times from 'lodash/times';
 import { time } from 'console';
 import { Packager, PackagerPackage } from '../imports/packager';
-import { DeepClient } from '../imports/client';
+import { DeepClient, GLOBAL_ID_ADMIN } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:types');
 
-const apolloClient = generateApolloClient({
+export const TABLE_NAME = 'links';
+export const REPLACE_PATTERN_ID = '777777777777';
+
+const rootClient = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-const client = new DeepClient({ apolloClient });
+const root = new DeepClient({
+  apolloClient: rootClient,
+})
+
+// const adminToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA`;
+
+// const client = new DeepClient({ linkId: GLOBAL_ID_ADMIN, token: adminToken });
 
 const corePckg: PackagerPackage = {
   package: {
@@ -28,7 +37,9 @@ const corePckg: PackagerPackage = {
     { id: 'Type', type: 'Type', from: 'Any', to: 'Any' }, // 1
     { id: 'Package', type: 'Type' }, // 2
     { id: 'Contain', type: 'Type', from: 'Any', to: 'Any' }, // 3
-    { id: 'Value', type: 'Type', from: 'Type', to: 'Type' }, // 4
+
+    // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
+    { id: 'Value', type: 'Type', from: 'Any', to: 'Type' }, // 4
 
     { id: 'String', type: 'Type' }, // 5
     { id: 'Number', type: 'Type' }, // 6
@@ -71,85 +82,90 @@ const corePckg: PackagerPackage = {
     { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 22
 
     { id: 'User', type: 'Type', value: { value: 'User' } }, // 23
-    { id: 'admin', type: 'User' }, // 24
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 25
+    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 24
 
-    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 26
+    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 25
 
-    { id: 'Insert', type: 'Operation' }, // 27
-    { id: 'Update', type: 'Operation' }, // 28
-    { id: 'Delete', type: 'Operation' }, // 29
-    { id: 'Select', type: 'Operation' }, // 30
+    { id: 'Insert', type: 'Operation' }, // 26
+    { id: 'Update', type: 'Operation' }, // 27
+    { id: 'Delete', type: 'Operation' }, // 28
+    { id: 'Select', type: 'Operation' }, // 29
 
-    { id: 'File', type: 'Type' }, // 31
-    { id: 'SyncTextFile', type: 'File' }, // 32
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 33
+    { id: 'File', type: 'Type' }, // 30
+    { id: 'SyncTextFile', type: 'File' }, // 31
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 32
 
-    { id: 'ExecutionProvider', type: 'Type' }, // 34
-    { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 35
+    { id: 'ExecutionProvider', type: 'Type' }, // 33
+    { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 34
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 36
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 37
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 35
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 36
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 38
-    { id: 'TreeIncludeDown', type: 'Type', value: { value: 'TreeIncludeDown' } }, // 39
-    { id: 'TreeIncludeUp', type: 'Type', value: { value: 'TreeIncludeUp' } }, // 40
-    { id: 'TreeIncludeNode', type: 'Type', value: { value: 'TreeIncludeNode' } }, // 41
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 37
+    // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
+    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeDown' } }, // 38
+    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeUp' } }, // 39
+    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeNode' } }, // 40
 
-    { id: 'userTree', type: 'Tree' }, // 42
-    { id: 'userTreeContain', type: 'TreeIncludeDown', from: 'userTree', to: 'Contain' }, // 43
-    { id: 'userTreeAny', type: 'TreeIncludeNode', from: 'userTree', to: 'Any' }, // 44
+    { id: 'containTree', type: 'Tree' }, // 41
+    { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' }, // 42
+    { id: 'containTreeAny', type: 'TreeIncludeNode', from: 'containTree', to: 'Any' }, // 43
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 45
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 44
 
-    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 46
+    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 45
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 47
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 46
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 48
-    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 49
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 47
+    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 48
 
-    { id: 'HandleOperation', type: 'Type' }, // 50
-    { id: 'HandleInsert', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 51
-    { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 52
-    { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 53
+    { id: 'HandleOperation', type: 'Type', from: 'Type', to: 'Type' }, // 49
+    { id: 'HandleInsert', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 50
+    { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 51
+    { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 52
 
-    { id: 'PromiseResult', type: 'Type' }, // 51
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 52
-    { id: 'PromiseReason', type: 'Type' }, // 53
+    { id: 'PromiseResult', type: 'Type' }, // 53
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 54
+    { id: 'PromiseReason', type: 'Type' }, // 55
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 54
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 55
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 56
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 57
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 58
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 59
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 60
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 61
-    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 62
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 56
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 57
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 58
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 59
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 60
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 61
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 62
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 63
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 64
 
-    { id: 'Auth', type: 'Operation' }, // 63
+    { id: 'Auth', type: 'Operation' }, // 65
 
-    { id: 'guests', type: 'Any' }, // 64
-    { id: 'Join', type: 'Type' }, // 65
+    { id: 'guests', type: 'Any' }, // 66
+    { id: 'Join', type: 'Type' }, // 67
+
+    { id: 'joinTree', type: 'Tree' }, // 68
+    { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 69
+    { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 70
+
     { 
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
-    }, // 66
+    }, // 71
     { 
       id: 'adminContainerUserHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'adminContainUser'
-    }, // 67
+    }, // 72
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'adminContainerUserHandler'
-    }, // 68
+    }, // 73
   ],
   errors: [],
   strict: true,
@@ -157,15 +173,29 @@ const corePckg: PackagerPackage = {
 
 export const up = async () => {
   debug('up');
-  const packager = new Packager(client);
-  const { errors } = await packager.import(corePckg);
+  const packager = new Packager(root);
+  const { errors, packageId, namespaceId } = await packager.import(corePckg);
   if (errors.length) {
-    console.log(JSON.stringify(errors, null, 2));
+    console.log(errors);
     throw new Error('Import error');
+  } else {
+    await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'User'),
+      out: { data: [
+        {
+          type_id: await root.id('@deep-foundation/core', 'Contain'),
+          to_id: packageId,
+        },
+        {
+          type_id: await root.id('@deep-foundation/core', 'Contain'),
+          to_id: namespaceId,
+        },
+      ] },
+    });
   }
 };
 
 export const down = async () => {
   debug('down');
-  await client.delete({}, { name: 'DELETE_TYPE_TYPE' });
+  await root.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };
