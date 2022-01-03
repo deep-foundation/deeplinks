@@ -29,8 +29,6 @@ export const GLOBAL_ID_PACKAGE_NAMESPACE=44;
 export const GLOBAL_ID_PACKAGE_ACTIVE=46;
 export const GLOBAL_ID_PACKAGE_VERSION=47;
 
-export const GLOBAL_ID_ADMIN=24;
-
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
   token?: string;
@@ -411,7 +409,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   async guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult> {
     const result = await this.apolloClient.query({ query: GUEST });
-    const { linkId, token, error } = result?.data?.guest;
+    const { linkId, token, error } = result?.data?.guest || {};
     if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
       if (this?.handleAuth) this?.handleAuth(linkId, token);
     }

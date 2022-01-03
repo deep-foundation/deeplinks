@@ -61,7 +61,7 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   console.log("handler4: ");
   // for now jwt only admin. In future jwt of client created event.
   const runnerPort = 3020;
-  const runnerImageAndTag = 'menzorg/deep-runner-js:main';
+  const runnerImageAndTag = 'konard/deep-runner-js:main';
   const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
   const data = jwt + code;
   
@@ -130,14 +130,14 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  console.log('currentLinkId', currentLinkId);
-  console.log('currentTypeId', currentTypeId);
+  // console.log('currentLinkId', currentLinkId);
+  // console.log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
 
-  console.log('handlerTypeId', handlerTypeId);
-  console.log('handleInsertTypeId', handleInsertTypeId);
+  // console.log('handlerTypeId', handlerTypeId);
+  // console.log('handleInsertTypeId', handleInsertTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -249,7 +249,15 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
               promiseResults.push(promiseResult);
             }
           }
-          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          console.log("promiseResults: ", promiseResults);
+          try
+          {
+            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          }
+          catch(e)
+          {
+            console.log('promiseResults insert error: ', e?.message ?? e);
+          }
         });
     }
   }
@@ -263,12 +271,34 @@ export default async (req, res) => {
       const oldRow = event?.data?.old;
       const newRow = event?.data?.new;
 
+      // select value into oldRow
+      if(oldRow) {
+        const queryResult = await deep.select({
+          id: { _eq: oldRow.id },
+        }, {
+          returning: `value`,
+        });
+        // console.log("old queryResult: ", queryResult);
+        oldRow.value = queryResult.data?.[0]?.value;
+      }
+      // select value into newRow
+      if(newRow) {
+        const queryResult = await deep.select({
+          id: { _eq: newRow.id },
+        }, {
+          returning: `value`,
+        });
+        // console.log("new queryResult: ", queryResult);
+        newRow.value = queryResult.data?.[0]?.value;
+      }
+
+      console.log('event: ', JSON.stringify(event, null, 2));
       console.log('oldRow: ', oldRow);
       console.log('newRow: ', newRow);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
-      console.log('current', current, typeId);
+      // console.log('current', current, typeId);
 
       try {
         if(operation === 'INSERT') {
@@ -279,7 +309,7 @@ export default async (req, res) => {
           await handleOperation('Delete', oldRow, newRow);
         }
 
-        console.log("done");
+        // console.log("done");
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           debug('resolve', current.id);

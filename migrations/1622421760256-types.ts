@@ -5,7 +5,7 @@ import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import times from 'lodash/times';
 import { time } from 'console';
 import { Packager, PackagerPackage } from '../imports/packager';
-import { DeepClient, GLOBAL_ID_ADMIN } from '../imports/client';
+import { DeepClient } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:types');
 
@@ -20,11 +20,7 @@ const rootClient = generateApolloClient({
 
 const root = new DeepClient({
   apolloClient: rootClient,
-})
-
-// const adminToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA`;
-
-// const client = new DeepClient({ linkId: GLOBAL_ID_ADMIN, token: adminToken });
+});
 
 const corePckg: PackagerPackage = {
   package: {
@@ -149,7 +145,7 @@ const corePckg: PackagerPackage = {
     { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 69
     { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 70
 
-    { 
+    {
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
