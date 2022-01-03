@@ -49,8 +49,7 @@ const corePckg: PackagerPackage = {
     // ===
 
     { id: 'typeValue', type: 'Value', from: 'Type', to: 'String' }, // 13
-    { id: 'TEEEEMP', type: 'Any' }, // 14
-    { id: 'packageValue', type: 'Value', from: 'Package', to: 'String' }, // 15
+    { id: 'packageValue', type: 'Value', from: 'Package', to: 'String' }, // 14
 
     // ===
 
@@ -67,101 +66,101 @@ const corePckg: PackagerPackage = {
     { id: 'Rejected', value: { value: 'Rejected' } },
     // /ign
 
-    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 16
-    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' }, // 17
+    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 15
+    { id: 'Selection', type: 'Type', value: { value: 'Selection' }, from: 'Selector', to: 'Any' }, // 16
     
-    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 18
-    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 19
-    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 20
-    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 21
+    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 17
+    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 18
+    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 19
+    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 20
 
-    { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 22
+    { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 21
 
-    { id: 'User', type: 'Type', value: { value: 'User' } }, // 23
+    { id: 'User', type: 'Type', value: { value: 'User' } }, // 22
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 24
+    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 23
 
-    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 25
+    { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 24
 
-    { id: 'Insert', type: 'Operation' }, // 26
-    { id: 'Update', type: 'Operation' }, // 27
-    { id: 'Delete', type: 'Operation' }, // 28
-    { id: 'Select', type: 'Operation' }, // 29
+    { id: 'Insert', type: 'Operation' }, // 25
+    { id: 'Update', type: 'Operation' }, // 26
+    { id: 'Delete', type: 'Operation' }, // 27
+    { id: 'Select', type: 'Operation' }, // 28
 
-    { id: 'File', type: 'Type' }, // 30
-    { id: 'SyncTextFile', type: 'File' }, // 31
-    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 32
+    { id: 'File', type: 'Type' }, // 29
+    { id: 'SyncTextFile', type: 'File' }, // 30
+    { id: 'syncTextFileValueRelationTable', type: 'Value', from: 'SyncTextFile', to: 'String' }, // 31
 
-    { id: 'ExecutionProvider', type: 'Type' }, // 33
-    { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 34
+    { id: 'ExecutionProvider', type: 'Type' }, // 32
+    { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 33
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 35
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 36
+    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 34
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 35
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 37
+    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 36
     // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
-    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeDown' } }, // 38
-    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeUp' } }, // 39
-    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeNode' } }, // 40
+    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeDown' } }, // 37
+    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeUp' } }, // 38
+    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeNode' } }, // 39
 
-    { id: 'containTree', type: 'Tree' }, // 41
-    { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' }, // 42
-    { id: 'containTreeAny', type: 'TreeIncludeNode', from: 'containTree', to: 'Any' }, // 43
+    { id: 'containTree', type: 'Tree' }, // 40
+    { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' }, // 41
+    { id: 'containTreeAny', type: 'TreeIncludeNode', from: 'containTree', to: 'Any' }, // 42
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 44
+    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 43
 
-    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 45
+    { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 44
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 46
+    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 45
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 47
-    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 48
+    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 46
+    { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 47
 
-    { id: 'HandleOperation', type: 'Type', from: 'Type', to: 'Type' }, // 49
-    { id: 'HandleInsert', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 50
-    { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 51
-    { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 52
+    { id: 'HandleOperation', type: 'Type', from: 'Type', to: 'Type' }, // 48
+    { id: 'HandleInsert', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 49
+    { id: 'HandleUpdate', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 50
+    { id: 'HandleDelete', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 51
 
-    { id: 'PromiseResult', type: 'Type' }, // 53
-    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 54
-    { id: 'PromiseReason', type: 'Type' }, // 55
+    { id: 'PromiseResult', type: 'Type' }, // 52
+    { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 53
+    { id: 'PromiseReason', type: 'Type' }, // 54
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 56
-    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 57
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 58
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 59
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 60
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 61
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 62
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 63
-    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 64
+    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 55
+    { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 56
+    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 57
+    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 58
+    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 59
+    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 60
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 61
+    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 62
+    { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 63
 
-    { id: 'Auth', type: 'Operation' }, // 65
+    { id: 'Auth', type: 'Operation' }, // 64
 
-    { id: 'guests', type: 'Any' }, // 66
-    { id: 'Join', type: 'Type' }, // 67
+    { id: 'guests', type: 'Any' }, // 65
+    { id: 'Join', type: 'Type' }, // 66
 
-    { id: 'joinTree', type: 'Tree' }, // 68
-    { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 69
-    { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 70
+    { id: 'joinTree', type: 'Tree' }, // 67
+    { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
+    { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 69
 
     {
       id: 'adminContainUser',
       type: 'SyncTextFile',
       value: { value: "console.log('User created');" }
-    }, // 71
+    }, // 70
     { 
       id: 'adminContainerUserHandler',
       from: 'JSExecutionProvider',
       type: 'Handler',
       to: 'adminContainUser'
-    }, // 72
+    }, // 71
     { 
       id: 'helloWorldInsertHandler',
       from: 'Type',
       type: 'HandleInsert',
       to: 'adminContainerUserHandler'
-    }, // 73
+    }, // 72
   ],
   errors: [],
   strict: true,

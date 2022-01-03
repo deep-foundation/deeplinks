@@ -21,13 +21,13 @@ export const GLOBAL_ID_PROMISE=9;
 export const GLOBAL_ID_THEN=10;
 export const GLOBAL_ID_RESOLVED=11;
 export const GLOBAL_ID_REJECTED=12;
-export const GLOBAL_ID_TREE=37;
-export const GLOBAL_ID_INCLUDE_DOWN=38;
-export const GLOBAL_ID_INCLUDE_UP=39;
-export const GLOBAL_ID_INCLUDE_NODE=40;
-export const GLOBAL_ID_PACKAGE_NAMESPACE=44;
-export const GLOBAL_ID_PACKAGE_ACTIVE=46;
-export const GLOBAL_ID_PACKAGE_VERSION=47;
+export const GLOBAL_ID_TREE=36;
+export const GLOBAL_ID_INCLUDE_DOWN=37;
+export const GLOBAL_ID_INCLUDE_UP=38;
+export const GLOBAL_ID_INCLUDE_NODE=39;
+export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
+export const GLOBAL_ID_PACKAGE_ACTIVE=45;
+export const GLOBAL_ID_PACKAGE_VERSION=46;
 
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
