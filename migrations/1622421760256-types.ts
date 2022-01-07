@@ -123,7 +123,7 @@ const corePckg: PackagerPackage = {
 
     { id: 'PromiseResult', type: 'Type' }, // 52
     { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 53
-    { id: 'PromiseReason', type: 'Type' }, // 54
+    { id: 'PromiseReason', type: 'Type', from: 'Any', to: 'Any' }, // 54
 
     { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 55
     { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 56
