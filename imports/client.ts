@@ -28,6 +28,22 @@ export const GLOBAL_ID_INCLUDE_NODE=39;
 export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
+export const GLOBAL_ID_HANDLE_UPDATE=50;
+
+const _ids = {
+  '@deep-foundation/core': {
+    'Contain': GLOBAL_ID_CONTAIN,
+    'Package': GLOBAL_ID_PACKAGE,
+    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
+    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
+    'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
+    'Promise': GLOBAL_ID_PROMISE,
+    'Then': GLOBAL_ID_THEN,
+    'Resolved': GLOBAL_ID_RESOLVED,
+    'Rejected': GLOBAL_ID_REJECTED,
+    'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
+  },
+};
 
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
@@ -404,6 +420,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (q.error) throw q.error;
     // @ts-ignore
     const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
+    if (!result) throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
     return result;
   };
 
@@ -418,7 +435,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   async jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
     const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
-    const { linkId, token, error } = result?.data?.guest || {};
+    const { linkId, token, error } = result?.data?.jwt || {};
     if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
       if (this?.handleAuth) this?.handleAuth(linkId, token);
     }
@@ -449,20 +466,6 @@ export const GUEST = gql`query GUEST {
   }
 }`;
 
-const _ids = {
-  '@deep-foundation/core': {
-    'Contain': GLOBAL_ID_CONTAIN,
-    'Package': GLOBAL_ID_PACKAGE,
-    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
-    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
-    'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
-    'Promise': GLOBAL_ID_PROMISE,
-    'Then': GLOBAL_ID_THEN,
-    'Resolved': GLOBAL_ID_RESOLVED,
-    'Rejected': GLOBAL_ID_REJECTED,
-  },
-};
-
 export function useAuthNode() {
   return useLocalStore('use_auth_link_id', 0);
 }
@@ -478,8 +481,6 @@ export function useDeep(apolloClientProps?: ApolloClient<any>) {
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {
-        setToken('');
-        setLinkId(0);
         setToken(token);
         setLinkId(linkId);
       },
