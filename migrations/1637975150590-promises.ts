@@ -7,6 +7,7 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
 import { DeepClient } from '../imports/client';
+import { promiseTriggerUp, promiseTriggerDown } from '../imports/type-table';
 
 const debug = Debug('deeplinks:migrations:promises');
 
@@ -88,10 +89,72 @@ export const up = async () => {
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER links__promise__delete__trigger BEFORE DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__delete__function();`);
+
+  await (promiseTriggerUp({
+    schemaName: 'public',
+    tableName: 'strings',
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
+    linkRelation: 'string',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (promiseTriggerUp({
+    schemaName: 'public',
+    tableName: 'numbers',
+    valueType: 'float8',
+    customColumnsSql: 'value bigint',
+    linkRelation: 'number',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (promiseTriggerUp({
+    schemaName: 'public',
+    tableName: 'objects',
+    valueType: 'jsonb',
+    customColumnsSql: 'value jsonb',
+    linkRelation: 'object',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
 };
 
 export const down = async () => {
   debug('down');
+  await (promiseTriggerDown({
+    schemaName: 'public',
+    tableName: 'strings',
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
+    linkRelation: 'string',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (promiseTriggerDown({
+    schemaName: 'public',
+    tableName: 'numbers',
+    valueType: 'float8',
+    customColumnsSql: 'value bigint',
+    linkRelation: 'number',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (promiseTriggerDown({
+    schemaName: 'public',
+    tableName: 'objects',
+    valueType: 'jsonb',
+    customColumnsSql: 'value jsonb',
+    linkRelation: 'object',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__trigger ON "${LINKS_TABLE_NAME}";`);
