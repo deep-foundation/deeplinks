@@ -78,12 +78,6 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       },
     },
   });
-  await permissions(api, tableName, {
-    select: {},
-    insert: {}, // generatePermissionWhere(16),
-    update: {}, // generatePermissionWhere(17),
-    delete: {},
-  });
   await api.query({
     type: 'create_event_trigger',
     args: {
