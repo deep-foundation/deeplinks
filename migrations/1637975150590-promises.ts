@@ -7,7 +7,7 @@ import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-lin
 import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
 import { DeepClient } from '../imports/client';
-import { promiseTriggerUp, promiseTriggerDown } from '../imports/type-table';
+import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table';
 
 const debug = Debug('deeplinks:migrations:promises');
 
@@ -90,7 +90,7 @@ export const up = async () => {
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER links__promise__delete__trigger BEFORE DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__delete__function();`);
 
-  await (promiseTriggerUp({
+  await (promiseTriggersUp({
     schemaName: 'public',
     tableName: 'strings',
     valueType: 'TEXT',
@@ -100,7 +100,7 @@ export const up = async () => {
     api,
     deep,
   })());
-  await (promiseTriggerUp({
+  await (promiseTriggersUp({
     schemaName: 'public',
     tableName: 'numbers',
     valueType: 'float8',
@@ -110,7 +110,7 @@ export const up = async () => {
     api,
     deep,
   })());
-  await (promiseTriggerUp({
+  await (promiseTriggersUp({
     schemaName: 'public',
     tableName: 'objects',
     valueType: 'jsonb',
@@ -124,7 +124,7 @@ export const up = async () => {
 
 export const down = async () => {
   debug('down');
-  await (promiseTriggerDown({
+  await (promiseTriggersDown({
     schemaName: 'public',
     tableName: 'strings',
     valueType: 'TEXT',
@@ -134,7 +134,7 @@ export const down = async () => {
     api,
     deep,
   })());
-  await (promiseTriggerDown({
+  await (promiseTriggersDown({
     schemaName: 'public',
     tableName: 'numbers',
     valueType: 'float8',
@@ -144,7 +144,7 @@ export const down = async () => {
     api,
     deep,
   })());
-  await (promiseTriggerDown({
+  await (promiseTriggersDown({
     schemaName: 'public',
     tableName: 'objects',
     valueType: 'jsonb',

@@ -134,7 +134,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
   // console.log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const handleInsertTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
 
   // console.log('handlerTypeId', handlerTypeId);
   // console.log('handleInsertTypeId', handleInsertTypeId);
@@ -152,7 +152,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
                   }
                 },
               ],
-              type_id: { _eq: ${handleInsertTypeId} },
+              type_id: { _eq: ${handleOperationTypeId} },
             }
           }
         }) {
@@ -160,7 +160,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
           value
           in(where: { type_id: { _eq: ${handlerTypeId} } }) {
             id
-            in(where: { type_id: { _eq: ${handleInsertTypeId} } }) {
+            in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
               id
             }
           }
@@ -175,19 +175,23 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
         //   #    }
         //   #  }
         //   #}
+  // console.log('queryString', queryString);
 
   const query = gql`${queryString}`;
+  // console.log('query', query);
 
-  const handleStringResult = await client.query({
-    query, variables: {
-      typeId: currentTypeId
-    }
-  });
+  const variables = {
+    typeId: currentTypeId
+  };
+  // console.log('variables', JSON.stringify(variables));
+
+  const handlersResult = await client.query({ query, variables });
 
   const promises: any[] = [];
   const handleInsertsIds: any[] = [];
 
-  const handlersWithCode = handleStringResult?.data?.links as any[];
+  const handlersWithCode = handlersResult?.data?.links as any[];
+  // console.log('handlersWithCode.length', handlersWithCode?.length);
   if (handlersWithCode?.length > 0) {
     // console.log(queryString);
     // console.log(query);
