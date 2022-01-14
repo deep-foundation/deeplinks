@@ -257,7 +257,7 @@ describe('async function handle by type with reject', () => {
 
 //     // selector -- selection -> link (concrete)
 //     const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-//     const selectionTypeId = await deep.id('@deep-foundation/core', 'Selection');
+//     const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
 
 //     const userTypeId = await deep.id('@deep-foundation/core', 'User');
     

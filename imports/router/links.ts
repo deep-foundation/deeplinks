@@ -170,7 +170,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
         //   #  from: {
         //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
         //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selection')} },
+        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Include')} },
         //   #      to_id: { _eq: $linkId },
         //   #    }
         //   #  }

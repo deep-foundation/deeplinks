@@ -1,12 +1,7 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import Debug from 'debug';
-import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
-import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { MP_TABLE_NAME } from './1621815803572-materialized-path';
-import { generatePermissionWhere, permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
+import Debug from 'debug';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 
 const debug = Debug('deeplinks:migrations:up-down');
 

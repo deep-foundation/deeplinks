@@ -66,6 +66,8 @@ export interface DeepClientOptions<L = Link<number>> {
   defaultInsertName?: string;
   defaultUpdateName?: string;
   defaultDeleteName?: string;
+
+  silent?: boolean;
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
@@ -186,6 +188,11 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   defaultUpdateName?: string;
   defaultDeleteName?: string;
 
+  silent: boolean;
+  _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
+    return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
+  }
+
   constructor(options: DeepClientOptions<L>) {
     this.deep = options.deep;
 
@@ -215,6 +222,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.defaultInsertName = options.defaultInsertName || 'INSERT';
     this.defaultUpdateName = options.defaultUpdateName || 'UPDATE';
     this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
+    
+    this.silent = options.silent || false;
   }
 
   stringify(any?: any): string {
@@ -267,7 +276,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
-    let q;
+    let q: any = {};
     try {
       q = await this.apolloClient.mutate(generateSerial({
         actions: [insertMutation(table, { ...variables, objects: objects }, { tableName: table, operation: 'insert', returning })],
@@ -276,7 +285,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(error) {
       const sqlError = error?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) error.message = sqlError.message;
-      if (!options?.silent) throw error;
+      if (!this._silent(options)) throw new Error(error?.message);
       return { ...q, data: (q)?.data?.m0?.returning, error };
     }
     // @ts-ignore

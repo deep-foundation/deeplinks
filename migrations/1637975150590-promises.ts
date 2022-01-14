@@ -4,7 +4,7 @@ import { up as upTable, down as downTable } from '@deep-foundation/materialized-
 import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
 import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { generatePermissionWhere, permissions } from '../imports/permission';
+import { permissions } from '../imports/permission';
 import { sql } from '@deep-foundation/hasura/sql';
 import { DeepClient } from '../imports/client';
 
@@ -26,7 +26,7 @@ export const up = async () => {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-  const selectionTypeId = await deep.id('@deep-foundation/core', 'Selection');
+  const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
   
   await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
   BEGIN
