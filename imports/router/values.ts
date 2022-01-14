@@ -47,30 +47,22 @@ export default async (req, res) => {
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       let oldRow = event?.data?.old;
       let newRow = event?.data?.new;
+      const baseLinkId = newRow?.link_id ?? oldRow?.link_id;
+      const baseLink = (await deep.select({
+        id: { _eq: baseLinkId },
+      }, {
+        returning: `id from_id type_id to_id`,
+      }))?.data?.[0];
 
-      // select value into oldRow
-      if(oldRow) {
-        const queryResult = await deep.select({
-          id: { _eq: oldRow.link_id },
-        }, {
-          returning: `id from_id type_id to_id`,
-        });
-        oldRow = { ...queryResult.data?.[0], value: oldRow };
-        if (!newRow) {
-          newRow = queryResult.data?.[0];
-        }
-      }
-      // select value into newRow
-      if(newRow) {
-        const queryResult = await deep.select({
-          id: { _eq: newRow.link_id },
-        }, {
-          returning: `id from_id type_id to_id`,
-        });
-        newRow = { ...queryResult.data?.[0], value: newRow };
-        if (!oldRow) {
-          oldRow = queryResult.data?.[0];
-        }
+      if (oldRow && newRow) {
+        oldRow = { ...baseLink, value: oldRow };
+        newRow = { ...baseLink, value: newRow };
+      } else if(oldRow) {
+        oldRow = { ...baseLink, value: oldRow };
+        newRow = baseLink;
+      } else if(newRow) {
+        oldRow = baseLink;
+        newRow = { ...baseLink, value: newRow };
       }
 
       console.log('event: ', JSON.stringify(event, null, 2));
