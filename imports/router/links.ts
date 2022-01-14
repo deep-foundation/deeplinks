@@ -125,7 +125,19 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   // TODO: add action if hash has info about container which is not exists or not works fine
 }
 
-export async function handleOperation(operation: string, oldLink: any, newLink: any) {
+type HandlerOperations = {
+  Insert: string;
+  Update: string;
+  Delete: string;
+}
+
+export const handlerOperations : HandlerOperations = {
+  Insert: 'HandleInsert',
+  Update: 'HandleUpdate',
+  Delete: 'HandleDelete',
+};
+
+export async function handleOperation(operation: keyof HandlerOperations, oldLink: any, newLink: any) {
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
@@ -134,7 +146,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
   // console.log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
   // console.log('handlerTypeId', handlerTypeId);
   // console.log('handleInsertTypeId', handleInsertTypeId);
