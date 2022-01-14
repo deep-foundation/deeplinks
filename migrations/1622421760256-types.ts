@@ -9,9 +9,6 @@ import { DeepClient } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:types');
 
-export const TABLE_NAME = 'links';
-export const REPLACE_PATTERN_ID = '777777777777';
-
 const rootClient = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
@@ -144,12 +141,12 @@ const corePckg: PackagerPackage = {
     { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
     { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 69
 
-    { id: 'SelectorTree', type: 'Type', value: { value: 'SelectorTree' }, from: 'Selector', to: 'Tree' }, // 70
+    { id: 'SelectorTree', type: 'Type', value: { value: 'SelectorTree' }, from: 'Any', to: 'Tree' }, // 70
 
     { id: 'system', type: 'Type', value: { value: 'system' } }, // 71
 
     { id: 'Exclude', type: 'Type', value: { value: 'Exclude' }, from: 'Selector', to: 'Any' }, // 72
-
+    
     { id: 'DenyInsert', type: 'Operation' }, // 73
     { id: 'DenyUpdate', type: 'Operation' }, // 74
     { id: 'DenyDelete', type: 'Operation' }, // 75

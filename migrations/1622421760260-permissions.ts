@@ -8,7 +8,7 @@ import { permissions } from '../imports/permission';
 import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 
-const debug = Debug('deeplinks:migrations:model-permissions');
+const debug = Debug('deeplinks:migrations:permissions');
 
 export const TABLE_NAME = 'links';
 export const REPLACE_PATTERN_ID = '777777777777';
