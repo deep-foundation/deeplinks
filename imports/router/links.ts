@@ -125,19 +125,13 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   // TODO: add action if hash has info about container which is not exists or not works fine
 }
 
-type HandlerOperations = {
-  Insert: string;
-  Update: string;
-  Delete: string;
-}
-
-export const handlerOperations : HandlerOperations = {
+export const handlerOperations = {
   Insert: 'HandleInsert',
   Update: 'HandleUpdate',
   Delete: 'HandleDelete',
 };
 
-export async function handleOperation(operation: keyof HandlerOperations, oldLink: any, newLink: any) {
+export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
