@@ -72,7 +72,6 @@ export async function call (options: IOptions) {
     if (options.operation === 'run') {
       let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz --timeout 10000` : ''}&& npm run migrate`;
       const { stdout, stderr } = await execP(str);
-      await axios.get(`http://${NEXT_PUBLIC_HASURA_PATH}/v1/metadata`, { headers: { 'X-Hasura-Admin-Secret': 'myadminsecretkey'}, data: '{"type": "reload_metadata", "args": {}}' });
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
