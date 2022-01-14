@@ -175,6 +175,10 @@ export const up = async () => {
         },
         {
           type_id: await root.id('@deep-foundation/core', 'Include'),
+          out: { data: {
+            type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+            to_id: await root.id('@deep-foundation/core', 'containTree'),
+          } },
           from: { data: {
             type_id: await root.id('@deep-foundation/core', 'Selector'),
             in: { data: {
@@ -195,18 +199,34 @@ export const up = async () => {
                           {
                             type_id: await root.id('@deep-foundation/core', 'Include'),
                             to_id: await root.id('@deep-foundation/core', 'AllowSelect'),
+                            out: { data: {
+                              type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                              to_id: await root.id('@deep-foundation/core', 'containTree'),
+                            } },
                           },
                           {
                             type_id: await root.id('@deep-foundation/core', 'Include'),
                             to_id: await root.id('@deep-foundation/core', 'AllowInsert'),
+                            out: { data: {
+                              type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                              to_id: await root.id('@deep-foundation/core', 'containTree'),
+                            } },
                           },
                           {
                             type_id: await root.id('@deep-foundation/core', 'Include'),
                             to_id: await root.id('@deep-foundation/core', 'AllowUpdate'),
+                            out: { data: {
+                              type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                              to_id: await root.id('@deep-foundation/core', 'containTree'),
+                            } },
                           },
                           {
                             type_id: await root.id('@deep-foundation/core', 'Include'),
                             to_id: await root.id('@deep-foundation/core', 'AllowDelete'),
+                            out: { data: {
+                              type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                              to_id: await root.id('@deep-foundation/core', 'containTree'),
+                            } },
                           },
                         ] },
                       } }
