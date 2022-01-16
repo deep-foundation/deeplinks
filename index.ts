@@ -5,13 +5,34 @@ import generateGuestServer from './imports/router/guest';
 import generatePackagerServer from './imports/router/packager';
 import axios from 'axios';
 import http from 'http';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import expressPlayground from 'graphql-playground-middleware-express';
 
 const NEXT_PUBLIC_HASURA_PATH = process.env.NEXT_PUBLIC_HASURA_PATH || 'localhost:8080';
-const NEXT_PUBLIC_HASURA_SSL = process.env.NEXT_PUBLIC_HASURA_PATH || 0;
+const NEXT_PUBLIC_HASURA_SSL = process.env.NEXT_PUBLIC_HASURA_SSL || 0;
 const HASURA_SECRET = process.env.HASURA_SECRET || 'myadminsecretkey';
 
 const app = express();
 const httpServer = http.createServer(app);
+
+app.get('/gql', expressPlayground({
+  tabs: [{ 
+    endpoint: '/gql/proxy',
+    query: '{ links(limit: 1) { id } }',
+    headers: {
+      'x-hasura-admin-secret': HASURA_SECRET
+    }
+  }]
+}));
+
+app.use('/gql/proxy', createProxyMiddleware({
+  target: `http${NEXT_PUBLIC_HASURA_SSL === '1' ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}`,
+  changeOrigin: true,
+  ws: true,
+  pathRewrite: {
+    "/gql/proxy": "/v1/graphql",
+  }
+}));
 
 app.use(express.json());
 app.use('/', router);
@@ -29,8 +50,13 @@ const start = async () => {
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   console.log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
-    await axios.get(`http${NEXT_PUBLIC_HASURA_SSL ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}/v1/metadata`, { headers: { 'X-Hasura-Admin-Secret': HASURA_SECRET}, data: '{"type": "reload_metadata", "args": {}}' });
-  } catch(e) {
+    await axios({
+      method: 'post',
+      url: `http${NEXT_PUBLIC_HASURA_SSL === '1' ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}/v1/metadata`,
+      headers: { 'x-hasura-admin-secret': HASURA_SECRET, 'Content-Type': 'application/json'},
+      data: { type: 'reload_metadata', args: {}}
+    });
+  } catch(e){
     console.error(e);
   }
 }
