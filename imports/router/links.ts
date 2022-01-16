@@ -232,6 +232,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       Promise: await deep.id('@deep-foundation/core', 'Promise'),
       Resolved: resolvedTypeId,
       Rejected: rejectedTypeId,
+      Results: false,
     });
     console.log('promise: ', promise);
     if (promise) {
@@ -259,10 +260,10 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
               promiseResults.push(promiseResult);
             }
           }
-          console.log("promiseResults: ", promiseResults);
           try
           {
             await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+            console.log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
           }
           catch(e)
           {
@@ -329,6 +330,7 @@ export default async (req, res) => {
             Promise: await deep.id('@deep-foundation/core', 'Promise'),
             Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
             Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Results: false,
           });
         }
         return res.status(200).json({});
@@ -342,6 +344,7 @@ export default async (req, res) => {
             Promise: await deep.id('@deep-foundation/core', 'Promise'),
             Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
             Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Results: false,
           });
         }
       }

@@ -325,13 +325,14 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return reserve({ count, client: this.apolloClient });
   };
 
-  async await(id: number): Promise<boolean> {
+  async await(id: number, results: boolean = false): Promise<any> {
     return awaitPromise({
       id, client: this.apolloClient,
       Then: await this.id('@deep-foundation/core', 'Then'),
       Promise: await this.id('@deep-foundation/core', 'Promise'),
       Resolved: await this.id('@deep-foundation/core', 'Resolved'),
       Rejected: await this.id('@deep-foundation/core', 'Rejected'),
+      Results: results
     });
   };
 

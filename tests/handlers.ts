@@ -79,36 +79,38 @@ export async function getPromiseResults(deep, rejectedTypeId: number, linkId: an
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const client = deep.apolloClient;
-  return (await client.query({
-    query: gql`{
-        links(where: { 
-          in: {
-            type_id: { _eq: ${rejectedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${linkId} } # linkId
-              }
-            }
-          },
-        }) {
-          id
-          object {
-            id
-            value
-          }
-          in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
-            id
-            from {
-              id
-              in(where: { type_id: { _eq: ${thenTypeId} } }) {
-                id
-              }
-            }
+  const queryString = `{
+    links(where: { 
+      in: {
+        type_id: { _eq: ${rejectedTypeId} }, # Resolved
+        from: { 
+          type_id: { _eq: ${promiseTypeId} }, # Promise
+          in: { 
+            type_id: { _eq: ${thenTypeId} } # Then
+            from_id: { _eq: ${linkId} } # linkId
           }
         }
-      }`,
+      },
+    }) {
+      id
+      object {
+        id
+        value
+      }
+      in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
+        id
+        from {
+          id
+          in(where: { type_id: { _eq: ${thenTypeId} } }) {
+            id
+          }
+        }
+      }
+    }
+  }`;
+  console.log(queryString);
+  return (await client.query({
+    query: gql`${queryString}`,
   }))?.data?.links;
 }
 
@@ -176,7 +178,9 @@ describe('sync function handle by type with resolve', () => {
 
     // Trigger link update by deleting the value
     await deep.delete({ link_id: { _eq: linkId } }, { table: 'numbers' });
+
     await deep.await(linkId);
+    // await delay(40000);
 
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
