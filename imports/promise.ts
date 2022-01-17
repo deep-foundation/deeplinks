@@ -81,31 +81,29 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
                 if (link?.type?.id === options.Then) promises[link?.to_id] = true;
               }
             }
-            let resolves = {};
-            let rejects = {};
+            let promiseResolves = {};
+            let promiseRejects = {};
             for (let l = 0; l < links.length; l++) {
               const link = links[l];
-              if (link?.type?.id === options.Resolved) resolves[link?.from_id] = true;
-              else if (link?.type?.id === options.Rejected) rejects[link?.from_id] = true;
+              if (link?.type?.id === options.Resolved) promiseResolves[link?.from_id] = true;
+              else if (link?.type?.id === options.Rejected) promiseRejects[link?.from_id] = true;
             }
             
-            let thenExists = Object.keys(promises).length > 0;
+            let promisesCount = Object.keys(promises).length;
+            let thenExists = promisesCount > 0;
             debug('analized', { thenExists });
 
             if (thenExists) {
-
-              let thenResolved: any = [];
-              let thenRejected: any = [];
+              let thenResolvedByPromise: any = [];
+              let thenRejectedByPromise: any = [];
               for (let key in promises) {
-                if (promises[key]) {
-                  thenResolved.push(!!resolves[key]);
-                  thenRejected.push(!!rejects[key]);
-                }
+                thenResolvedByPromise.push(!!promiseResolves[key]);
+                thenRejectedByPromise.push(!!promiseRejects[key]);
               }
-              thenResolved = thenResolved.every(r => r);
-              thenRejected = thenRejected.every(r => r);
+              const thenResolved: boolean = thenResolvedByPromise.length == promisesCount && thenResolvedByPromise.some(r => r);
+              const thenRejected: boolean = thenRejectedByPromise.length == promisesCount && thenRejectedByPromise.some(r => r);
               debug('analized', { thenResolved, thenRejected });
-  
+
               const filteredLinks = links.filter(l => 
                 l?.id === id ||
                 l?.type?.id === options.Then ||
@@ -132,13 +130,13 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
           }
         } catch(error) {
           debug('error', error);
-          return rej(error);
+          return rej(options.Results ? error : false);
         }
         await delay(timeout);
       }
     } catch(error) {
       debug('error', error);
-      return rej(error);
+      return rej(options.Results ? error : false);
     }
   });
 };

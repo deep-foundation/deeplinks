@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import { 
   handleOperation,
 } from './links';
+// import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
@@ -45,25 +46,29 @@ export default async (req, res) => {
     const event = req?.body?.event;
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
-      let oldRow = event?.data?.old;
-      let newRow = event?.data?.new;
-      const baseLinkId = newRow?.link_id ?? oldRow?.link_id;
-      const baseLink = (await deep.select({
-        id: { _eq: baseLinkId },
+      let oldValueRow = event?.data?.old;
+      let newValueRow = event?.data?.new;
+
+      const linkId = newValueRow?.link_id ?? oldValueRow?.link_id;
+      const linkRow = (await deep.select({
+        id: { _eq: linkId },
       }, {
         returning: `id from_id type_id to_id`,
       }))?.data?.[0];
 
-      if (oldRow && newRow) {
-        oldRow = { ...baseLink, value: oldRow };
-        newRow = { ...baseLink, value: newRow };
-      } else if(oldRow) {
-        oldRow = { ...baseLink, value: oldRow };
-        newRow = baseLink;
-      } else if(newRow) {
-        oldRow = baseLink;
-        newRow = { ...baseLink, value: newRow };
-      }
+      // if(oldValueRow && !newValueRow) {
+      //     // delete bool_exp trash
+      //     await deep.delete({
+      //       link_id: { _eq: oldValueRow.link_id },
+      //     }, { table: 'bool_exp' });
+      // }
+      // if(newValueRow && linkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+      //     // generate new bool_exp sql version
+      //     await boolExpToSQL(linkRow.id, linkRow?.value?.value);
+      // }
+      
+      const oldRow = { ...linkRow, value: oldValueRow };
+      const newRow = { ...linkRow, value: newValueRow };
 
       console.log('event: ', JSON.stringify(event, null, 2));
       console.log('oldRow: ', oldRow);
