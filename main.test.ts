@@ -1,9 +1,12 @@
 require('dotenv').config();
 
-// import './tests/client';
-// import './tests/join-insert';
+jest.setTimeout(30000);
+
+import './tests/client';
+import './tests/join-insert';
 // import './tests/typing';
-// import './tests/permissions';
+import './tests/selectors';
+import './tests/permissions';
 import './tests/handlers';
 
 // import './tests/packager';

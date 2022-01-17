@@ -320,7 +320,7 @@ describe('sync function handle by type with resolve', () => {
 
 //     // selector -- selection -> link (concrete)
 //     const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-//     const selectionTypeId = await deep.id('@deep-foundation/core', 'Selection');
+//     const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
 
 //     const userTypeId = await deep.id('@deep-foundation/core', 'User');
     
