@@ -57,7 +57,6 @@ export const up = async () => {
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER links__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
-  await api.sql(sql`CREATE TRIGGER links__promise__update__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
 
   const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
 

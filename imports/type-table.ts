@@ -155,6 +155,24 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${tableName}__promise__insert__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__insert__function();`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__update__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  BEGIN
+    IF (
+        EXISTS(
+          SELECT 1
+          FROM links handle_update, links updated_link
+          WHERE
+              updated_link.id = NEW."link_id"
+          AND handle_update.from_id = updated_link."type_id"
+          AND handle_update.type_id = ${handleUpdateTypeId}
+        )
+    ) THEN
+      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+    END IF;
+    RETURN NEW;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
   BEGIN
     IF (
@@ -180,6 +198,8 @@ export const promiseTriggersDown = (options: ITypeTableStringOptions) => async (
   
   await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__insert__trigger ON "${tableName}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__insert__function CASCADE;`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__update__trigger ON "${tableName}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__update__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__delete__trigger ON "${tableName}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__delete__function CASCADE;`);
 };
