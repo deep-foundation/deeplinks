@@ -125,7 +125,13 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   // TODO: add action if hash has info about container which is not exists or not works fine
 }
 
-export async function handleOperation(operation: string, oldLink: any, newLink: any) {
+export const handlerOperations = {
+  Insert: 'HandleInsert',
+  Update: 'HandleUpdate',
+  Delete: 'HandleDelete',
+};
+
+export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
@@ -134,7 +140,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
   // console.log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const handleInsertTypeId = await deep.id('@deep-foundation/core', `Handle${operation}`);
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
   // console.log('handlerTypeId', handlerTypeId);
   // console.log('handleInsertTypeId', handleInsertTypeId);
@@ -152,7 +158,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
                   }
                 },
               ],
-              type_id: { _eq: ${handleInsertTypeId} },
+              type_id: { _eq: ${handleOperationTypeId} },
             }
           }
         }) {
@@ -160,7 +166,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
           value
           in(where: { type_id: { _eq: ${handlerTypeId} } }) {
             id
-            in(where: { type_id: { _eq: ${handleInsertTypeId} } }) {
+            in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
               id
             }
           }
@@ -175,19 +181,23 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
         //   #    }
         //   #  }
         //   #}
+  // console.log('queryString', queryString);
 
   const query = gql`${queryString}`;
+  // console.log('query', query);
 
-  const handleStringResult = await client.query({
-    query, variables: {
-      typeId: currentTypeId
-    }
-  });
+  const variables = {
+    typeId: currentTypeId
+  };
+  // console.log('variables', JSON.stringify(variables));
+
+  const handlersResult = await client.query({ query, variables });
 
   const promises: any[] = [];
   const handleInsertsIds: any[] = [];
 
-  const handlersWithCode = handleStringResult?.data?.links as any[];
+  const handlersWithCode = handlersResult?.data?.links as any[];
+  // console.log('handlersWithCode.length', handlersWithCode?.length);
   if (handlersWithCode?.length > 0) {
     // console.log(queryString);
     // console.log(query);
@@ -222,6 +232,7 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
       Promise: await deep.id('@deep-foundation/core', 'Promise'),
       Resolved: resolvedTypeId,
       Rejected: rejectedTypeId,
+      Results: false,
     });
     console.log('promise: ', promise);
     if (promise) {
@@ -249,10 +260,10 @@ export async function handleOperation(operation: string, oldLink: any, newLink: 
               promiseResults.push(promiseResult);
             }
           }
-          console.log("promiseResults: ", promiseResults);
           try
           {
             await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+            console.log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
           }
           catch(e)
           {
@@ -319,6 +330,7 @@ export default async (req, res) => {
             Promise: await deep.id('@deep-foundation/core', 'Promise'),
             Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
             Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Results: false,
           });
         }
         return res.status(200).json({});
@@ -332,6 +344,7 @@ export default async (req, res) => {
             Promise: await deep.id('@deep-foundation/core', 'Promise'),
             Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
             Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Results: false,
           });
         }
       }

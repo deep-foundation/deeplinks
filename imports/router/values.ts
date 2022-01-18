@@ -17,7 +17,6 @@ import {
   handleOperation,
 } from './links';
 import { boolExpToSQL } from '../bool_exp';
-// import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
