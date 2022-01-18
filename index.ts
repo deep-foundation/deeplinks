@@ -17,7 +17,7 @@ const httpServer = http.createServer(app);
 
 app.get('/gql', expressPlayground({
   tabs: [{ 
-    endpoint: '/gql/proxy',
+    endpoint: '/gql',
     query: '{ links(limit: 1) { id } }',
     headers: {
       'x-hasura-admin-secret': HASURA_SECRET
@@ -25,12 +25,12 @@ app.get('/gql', expressPlayground({
   }]
 }));
 
-app.use('/gql/proxy', createProxyMiddleware({
+app.post('/gql', createProxyMiddleware({
   target: `http${NEXT_PUBLIC_HASURA_SSL === '1' ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
   pathRewrite: {
-    "/gql/proxy": "/v1/graphql",
+    "/gql": "/v1/graphql",
   }
 }));
 
