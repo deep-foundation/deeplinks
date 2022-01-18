@@ -17,6 +17,7 @@ import {
   handleOperation,
 } from './links';
 import { boolExpToSQL } from '../bool_exp';
+// import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
@@ -48,48 +49,34 @@ export default async (req, res) => {
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       let oldValueRow = event?.data?.old;
       let newValueRow = event?.data?.new;
-      let oldLinkRow;
-      let newLinkRow;
 
-      // select value into oldRow
-      if(oldValueRow) {
-        const queryResult = await deep.select({
-          id: { _eq: oldValueRow.link_id },
-        }, {
-          returning: `id from_id type_id to_id`,
-        });
-        oldLinkRow = { ...queryResult.data?.[0], value: oldValueRow };
-        if (!newValueRow) {
-          newLinkRow = queryResult.data?.[0];
+      const linkId = newValueRow?.link_id ?? oldValueRow?.link_id;
+      const linkRow = (await deep.select({
+        id: { _eq: linkId },
+      }, {
+        returning: `id from_id type_id to_id`,
+      }))?.data?.[0];
+
+      if(oldValueRow && !newValueRow) {
           // delete bool_exp trash
           await deep.delete({
             link_id: { _eq: oldValueRow.link_id },
           }, { table: 'bool_exp' });
-        }
       }
-      // select value into newRow
-      if(newValueRow) {
-        const queryResult = await deep.select({
-          id: { _eq: newValueRow.link_id },
-        }, {
-          returning: `id from_id type_id to_id`,
-        });
-        newLinkRow = { ...queryResult.data?.[0], value: newValueRow };
-        if (!oldValueRow) {
-          oldLinkRow = queryResult.data?.[0];
-        }
-        if (newLinkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+      if(newValueRow && linkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
           // generate new bool_exp sql version
-          await boolExpToSQL(newLinkRow.id, newLinkRow?.value?.value);
-        }
+          await boolExpToSQL(linkRow.id, linkRow?.value?.value);
       }
+      
+      const oldRow = { ...linkRow, value: oldValueRow };
+      const newRow = { ...linkRow, value: newValueRow };
 
       console.log('event: ', JSON.stringify(event, null, 2));
-      console.log('oldRow: ', oldLinkRow);
-      console.log('newRow: ', newLinkRow);
+      console.log('oldRow: ', oldRow);
+      console.log('newRow: ', newRow);
 
       try {
-        await handleOperation('Update', oldLinkRow, newLinkRow);
+        await handleOperation('Update', oldRow, newRow);
         
         // console.log("done");
 
