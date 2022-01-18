@@ -104,7 +104,7 @@ export const down = async () => {
   })());
   await (generateDown({
     schemaName: 'public',
-    tableName: 'objects',
+    tableName: 'bool_exp',
     valueType: 'jsonb',
     customColumnsSql: 'value jsonb',
     linkRelation: 'object',
