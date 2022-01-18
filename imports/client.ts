@@ -285,7 +285,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(error) {
       const sqlError = error?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) error.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(error?.message);
+      if (!this._silent(options)) throw error;
       return { ...q, data: (q)?.data?.m0?.returning, error };
     }
     // @ts-ignore

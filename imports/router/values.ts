@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import { 
   handleOperation,
 } from './links';
+import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
@@ -45,40 +46,50 @@ export default async (req, res) => {
     const event = req?.body?.event;
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
-      let oldRow = event?.data?.old;
-      let newRow = event?.data?.new;
+      let oldValueRow = event?.data?.old;
+      let newValueRow = event?.data?.new;
+      let oldLinkRow;
+      let newLinkRow;
 
       // select value into oldRow
-      if(oldRow) {
+      if(oldValueRow) {
         const queryResult = await deep.select({
-          id: { _eq: oldRow.link_id },
+          id: { _eq: oldValueRow.link_id },
         }, {
           returning: `id from_id type_id to_id`,
         });
-        oldRow = { ...queryResult.data?.[0], value: oldRow };
-        if (!newRow) {
-          newRow = queryResult.data?.[0];
+        oldLinkRow = { ...queryResult.data?.[0], value: oldValueRow };
+        if (!newValueRow) {
+          newLinkRow = queryResult.data?.[0];
+          // delete bool_exp trash
+          await deep.delete({
+            link_id: { _eq: oldValueRow.link_id },
+          }, { table: 'bool_exp' });
         }
       }
       // select value into newRow
-      if(newRow) {
+      if(newValueRow) {
         const queryResult = await deep.select({
-          id: { _eq: newRow.link_id },
+          id: { _eq: newValueRow.link_id },
         }, {
           returning: `id from_id type_id to_id`,
         });
-        newRow = { ...queryResult.data?.[0], value: newRow };
-        if (!oldRow) {
-          oldRow = queryResult.data?.[0];
+        newLinkRow = { ...queryResult.data?.[0], value: newValueRow };
+        if (!oldValueRow) {
+          oldLinkRow = queryResult.data?.[0];
+        }
+        if (newLinkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+          // generate new bool_exp sql version
+          await boolExpToSQL(newLinkRow.id, newLinkRow?.value?.value);
         }
       }
 
       console.log('event: ', JSON.stringify(event, null, 2));
-      console.log('oldRow: ', oldRow);
-      console.log('newRow: ', newRow);
+      console.log('oldRow: ', oldLinkRow);
+      console.log('newRow: ', newLinkRow);
 
       try {
-        await handleOperation('Update', oldRow, newRow);
+        await handleOperation('Update', oldLinkRow, newLinkRow);
         
         // console.log("done");
 
