@@ -8,9 +8,9 @@ import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import expressPlayground from 'graphql-playground-middleware-express';
 
-const NEXT_PUBLIC_HASURA_PATH = process.env.NEXT_PUBLIC_HASURA_PATH || 'localhost:8080';
-const NEXT_PUBLIC_HASURA_SSL = process.env.NEXT_PUBLIC_HASURA_SSL || 0;
-const HASURA_SECRET = process.env.HASURA_SECRET || 'myadminsecretkey';
+const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
+const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
+const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -18,20 +18,21 @@ const httpServer = http.createServer(app);
 app.get('/gql', expressPlayground({
   tabs: [{ 
     endpoint: '/gql',
-    query: '{ links(limit: 1) { id } }',
-    headers: {
-      'x-hasura-admin-secret': HASURA_SECRET
-    }
-  }]
+    query: `query MyQuery {
+      links(limit: 1) {
+        id
+      }
+    }`
+  }],
 }));
 
-app.post('/gql', createProxyMiddleware({
-  target: `http${NEXT_PUBLIC_HASURA_SSL === '1' ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}`,
+app.use('/gql', createProxyMiddleware({
+  target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
   pathRewrite: {
     "/gql": "/v1/graphql",
-  }
+  },
 }));
 
 app.use(express.json());
@@ -52,8 +53,8 @@ const start = async () => {
   try {
     await axios({
       method: 'post',
-      url: `http${NEXT_PUBLIC_HASURA_SSL === '1' ? 's' : ''}://${NEXT_PUBLIC_HASURA_PATH}/v1/metadata`,
-      headers: { 'x-hasura-admin-secret': HASURA_SECRET, 'Content-Type': 'application/json'},
+      url: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}/v1/metadata`,
+      headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
       data: { type: 'reload_metadata', args: {}}
     });
   } catch(e){

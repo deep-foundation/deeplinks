@@ -5,9 +5,7 @@ import internalIp from 'internal-ip';
 import axios from 'axios';
 
 const execP = promisify(exec);
-const NEXT_PUBLIC_DEEPLINKS_URL = process.env.NEXT_PUBLIC_DEEPLINKS_URL || 'http://localhost:3006';
-const NEXT_PUBLIC_HASURA_PATH = process.env.NEXT_PUBLIC_HASURA_PATH || 'http://localhost:8080';
-
+const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
 export interface IOptions {
   operation: 'run' | 'sleep' | 'reset';
   envs: { [key: string]: string; };
@@ -57,7 +55,7 @@ const generateEnvs = (options) => {
 const checkStatus = async () => {
   let result;
   try {
-    result = await axios.get(`${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
+    result = await axios.get(`${DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
   } catch (error){
     console.log(error);
   }
@@ -70,7 +68,7 @@ export async function call (options: IOptions) {
   let envsString = generateEnvs({ envs, isDocker});
   try {
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz --timeout 10000` : ''}&& npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''}&& npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
