@@ -297,6 +297,10 @@ export const up = async () => {
             out: { data: [
               {
                 type_id: await root.id('@deep-foundation/core', 'Include'),
+                to_id: await root.id('@deep-foundation/core', 'AllowSelect'),
+              },
+              {
+                type_id: await root.id('@deep-foundation/core', 'Include'),
                 to_id: await root.id('@deep-foundation/core', 'AllowInsert'),
               },
               {
