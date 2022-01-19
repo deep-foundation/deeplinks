@@ -16,7 +16,7 @@ export const up = async () => {
     args: {
       name: 'packager',
       definition: {
-        url: `${process.env.DEEPLINKS_URL}/api/packager`,
+        url: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/packager`,
         headers: [{ name: 'x-hasura-client', value: 'deeplinks-packager' }],
         forward_client_headers: true,
         timeout_seconds: 60
