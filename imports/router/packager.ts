@@ -10,6 +10,8 @@ import os from 'os';
 import { v4 as uuid } from 'uuid';
 import child_process from 'child_process';
 import * as semver from 'semver';
+import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+
 
 const tmpdir = os.tmpdir();
 
@@ -157,6 +159,16 @@ const context = ({ req }) => {
   return { headers: req.headers };
 };
 
-const apolloServer = new ApolloServer({ introspection: true, typeDefs, resolvers, context });
+const generateApolloServer = (httpServer) => {
+  return new ApolloServer({ 
+    introspection: true,
+    typeDefs, 
+    resolvers,
+    context,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground()
+    ]});
+  }
 
-export default apolloServer;
+export default generateApolloServer;

@@ -8,7 +8,7 @@ const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_RL_TABLE = process.env.MIGRATIONS_RL_TABLE || 'rl_example__links__reserved';
 const DEFAULT_DATE_TYPE_SQL = process.env.MIGRATIONS_DATE_TYPE_SQL || 'timestamp';
 const DEFAULT_RL_CRON_SHEDULE = process.env.DEFAULT_RL_CRON_SHEDULE || '0 * * * *';
-const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
+const MIGRATIONS_DEEPLINKS_URL = process.env.MIGRATIONS_DEEPLINKS_URL || 'http://localhost:3006';
 
 export const RL_TABLE_NAME = 'reserved';
 
@@ -75,7 +75,7 @@ export const up = async () => {
     type: 'create_cron_trigger',
     args: {
       name: 'reserved_links_cleaner',
-      webhook: `${DEEPLINKS_URL}/api/reserved-cleaner`,
+      webhook: `${MIGRATIONS_DEEPLINKS_URL}/api/reserved-cleaner`,
       schedule: DEFAULT_RL_CRON_SHEDULE,
       include_in_metadata: true,
       payload: {},
@@ -125,7 +125,7 @@ export const up = async () => {
           },
         ],
         output_type: 'reserveResponse',
-        handler: `${DEEPLINKS_URL}/api/reserved`
+        handler: `${MIGRATIONS_DEEPLINKS_URL}/api/reserved`
       }
     }
   });

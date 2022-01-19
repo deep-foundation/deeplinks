@@ -84,7 +84,7 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       args: {
         name: tableName,
         table: tableName,
-        webhook: `${process.env.DEEPLINKS_URL}/api/values`,
+        webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/values`,
         insert: {
           columns: "*",
           payload: '*',
