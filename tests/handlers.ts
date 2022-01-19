@@ -178,7 +178,6 @@ describe('sync function handle by type with resolve', () => {
 
     // Trigger link update by updating the value
     await deep.update({ link_id: linkId }, { value: numberToReturn+1 }, { table: 'numbers' });
-
     await deep.await(linkId);
 
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
