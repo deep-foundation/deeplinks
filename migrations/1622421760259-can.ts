@@ -10,7 +10,6 @@ const debug = Debug('deeplinks:migrations:can');
 
 export const CAN_TABLE_NAME = 'can';
 export const TABLE_NAME = 'links';
-export const REPLACE_PATTERN_ID = '777777777777';
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,

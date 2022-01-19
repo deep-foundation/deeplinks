@@ -10,6 +10,8 @@ import { HasuraApi } from '@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import { generateUp, generateDown } from '../imports/type-table';
 
+export const BOOL_EXP_TABLE_NAME = 'bool_exp';
+
 const debug = Debug('deeplinks:migrations:values');
 
 const apolloClient = generateApolloClient({
@@ -58,6 +60,14 @@ export const up = async () => {
     api,
     deep,
   })());
+  await (generateUp({
+    schemaName: 'public',
+    tableName: BOOL_EXP_TABLE_NAME,
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
+    api,
+    deep,
+  })());
 };
 
 export const down = async () => {
@@ -89,6 +99,24 @@ export const down = async () => {
     customColumnsSql: 'value jsonb',
     linkRelation: 'object',
     linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (generateDown({
+    schemaName: 'public',
+    tableName: 'bool_exp',
+    valueType: 'jsonb',
+    customColumnsSql: 'value jsonb',
+    linkRelation: 'object',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (generateDown({
+    schemaName: 'public',
+    tableName: BOOL_EXP_TABLE_NAME,
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
     api,
     deep,
   })());

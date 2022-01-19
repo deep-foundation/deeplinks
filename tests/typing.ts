@@ -2,15 +2,22 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 
-const adminToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA`;
-
 const apolloClient = generateApolloClient({
   path: `${process.env.HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.HASURA_SSL,
-  token: adminToken,
+  secret: process.env.HASURA_SECRET,
 });
 
-const deep = new DeepClient({ apolloClient });
+const root = new DeepClient({ apolloClient });
+
+let adminToken: string;
+let deep: any;
+
+beforeAll(async () => {
+  const { linkId, token } = await root.jwt({ linkId: await root.id('@deep-foundation/core', 'system', 'admin') });
+  adminToken = token;
+  deep = new DeepClient({ deep: root, token: adminToken, linkId });
+});
 
 describe('typing', () => {
   it(`type required`, async () => {

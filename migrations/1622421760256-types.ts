@@ -151,6 +151,11 @@ const corePckg: PackagerPackage = {
     { id: 'DenyUpdate', type: 'Operation' }, // 74
     { id: 'DenyDelete', type: 'Operation' }, // 75
     { id: 'DenySelect', type: 'Operation' }, // 76
+
+    { id: 'BoolExp', type: 'Type', value: { value: 'BoolExp' } }, // 77
+    { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 78
+
+    { id: 'SelectorCriteria', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 79
   ],
   errors: [],
   strict: true,
@@ -290,6 +295,10 @@ export const up = async () => {
           to: { data: {
             type_id: await root.id('@deep-foundation/core', 'Selector'),
             out: { data: [
+              {
+                type_id: await root.id('@deep-foundation/core', 'Include'),
+                to_id: await root.id('@deep-foundation/core', 'AllowSelect'),
+              },
               {
                 type_id: await root.id('@deep-foundation/core', 'Include'),
                 to_id: await root.id('@deep-foundation/core', 'AllowInsert'),

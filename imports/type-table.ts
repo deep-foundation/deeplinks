@@ -10,8 +10,8 @@ export interface ITypeTableStringOptions {
   valueType?: string;
   customColumnsSql?: string;
   customAfterSql?: string;
-  linkRelation: string;
-  linksTableName: string;
+  linkRelation?: string;
+  linksTableName?: string;
   api: HasuraApi;
   deep: DeepClient;
 }
@@ -38,66 +38,68 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       name: tableName,
     },
   });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: tableName,
-      name: 'link',
-      type: 'one_to_one',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: schemaName,
-            name: linksTableName,
+  if (linkRelation && linksTableName) {
+    await api.query({
+      type: 'create_object_relationship',
+      args: {
+        table: tableName,
+        name: 'link',
+        type: 'one_to_one',
+        using: {
+          manual_configuration: {
+            remote_table: {
+              schema: schemaName,
+              name: linksTableName,
+            },
+            column_mapping: {
+              link_id: 'id',
+            },
+            insertion_order: 'after_parent',
           },
-          column_mapping: {
-            link_id: 'id',
-          },
-          insertion_order: 'after_parent',
         },
       },
-    },
-  });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: linksTableName,
-      name: linkRelation,
-      type: 'one_to_one',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: schemaName,
-            name: tableName,
+    });
+    await api.query({
+      type: 'create_object_relationship',
+      args: {
+        table: linksTableName,
+        name: linkRelation,
+        type: 'one_to_one',
+        using: {
+          manual_configuration: {
+            remote_table: {
+              schema: schemaName,
+              name: tableName,
+            },
+            column_mapping: {
+              id: 'link_id',
+            },
+            insertion_order: 'after_parent',
           },
-          column_mapping: {
-            id: 'link_id',
-          },
-          insertion_order: 'after_parent',
         },
       },
-    },
-  });
-  await api.query({
-    type: 'create_event_trigger',
-    args: {
-      name: tableName,
-      table: tableName,
-      webhook: `${process.env.DEEPLINKS_URL}/api/values`,
-      insert: {
-        columns: "*",
-        payload: '*',
+    });
+    await api.query({
+      type: 'create_event_trigger',
+      args: {
+        name: tableName,
+        table: tableName,
+        webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/values`,
+        insert: {
+          columns: "*",
+          payload: '*',
+        },
+        update: {
+          columns: '*',
+          payload: '*',
+        },
+        delete: {
+          columns: '*'
+        },
+        replace: false,
       },
-      update: {
-        columns: '*',
-        payload: '*',
-      },
-      delete: {
-        columns: '*'
-      },
-      replace: false,
-    },
-  });
+    });
+  }
 };
 
 export const generateDown = (options: ITypeTableStringOptions) => async () => {

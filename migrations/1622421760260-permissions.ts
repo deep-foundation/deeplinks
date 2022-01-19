@@ -3,11 +3,11 @@ import Debug from 'debug';
 import { generateDown, generateUp } from '../imports/type-table';
 import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
-import { TABLE_NAME as BOOL_EXP_TABLE_NAME } from './1616701513790-type-table-bool-exp';
 import { permissions } from '../imports/permission';
 import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { SELECTORS_TABLE_NAME } from './1622421760258-selectors';
+import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
 
 const debug = Debug('deeplinks:migrations:permissions');
 
@@ -31,15 +31,34 @@ export const up = async () => {
   await permissions(api, SELECTORS_TABLE_NAME);
   const linksPermissions = async (self) => ({
     select: {
-      _not: {
-        can_object: {
-          action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
-          _or: [
-            { subject_id: { _eq: 'X-Hasura-User-Id' } },
-            { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-          ],
+      _and: [
+        {
+          _not: {
+            can_object: {
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
+            },
+          },
         },
-      },
+        {
+          _not: {
+            _exists: {
+              _table: 'can',
+              _where: {
+                _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
+                action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
+              },
+            },
+          }
+        },
+      ],
       _or: [
         { type_id: { _in: [
           await deep.id('@deep-foundation/core', 'User'),
@@ -70,7 +89,7 @@ export const up = async () => {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
             _or: [
               { subject_id: { _eq: 'X-Hasura-User-Id' } },
-              { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
             ],
           },
         },
@@ -79,56 +98,33 @@ export const up = async () => {
             _table: 'can',
             _where: {
               _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
             },
           },
         },
-        {
-          _not: {
-            _exists: {
-              _table: 'can',
-              _where: {
-                _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-                subject_id: { _eq: 'X-Hasura-User-Id' },
-                action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
-              },
-            },
-          }
-        },
       ],
     },
     insert: {
-      _not: {
-        type: {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyInsert') },
-            _or: [
-              { subject_id: { _eq: 'X-Hasura-User-Id' } },
-              { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-            ],
-          },
-        },
-      },
-      _or: [
-        {
+      _and: [
+        { 
           type: {
-            can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
-              _or: [
-                { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-              ],
-            },
+            id: { _is_null: false },
           },
         },
         {
-          _exists: {
-            _table: 'can',
-            _where: {
-              _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
+          _not: {
+            type: {
+              can_object: {
+                action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyInsert') },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
+              },
             },
           },
         },
@@ -138,34 +134,24 @@ export const up = async () => {
               _table: 'can',
               _where: {
                 _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-                subject_id: { _eq: 'X-Hasura-User-Id' },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
                 action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyInsert') },
               },
             },
           }
         },
       ],
-    },
-    update: {
-      _not: {
-        type: {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyUpdate') },
-            _or: [
-              { subject_id: { _eq: 'X-Hasura-User-Id' } },
-              { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-            ],
-          },
-        },
-      },
       _or: [
         {
           type: {
             can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
               _or: [
                 { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
               ],
             },
           },
@@ -175,8 +161,28 @@ export const up = async () => {
             _table: 'can',
             _where: {
               _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
+            },
+          },
+        },
+      ],
+    },
+    update: {
+      _and: [
+        {
+          _not: {
+            type: {
+              can_object: {
+                action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyUpdate') },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
+              },
             },
           },
         },
@@ -186,34 +192,24 @@ export const up = async () => {
               _table: 'can',
               _where: {
                 _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-                subject_id: { _eq: 'X-Hasura-User-Id' },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
                 action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyUpdate') },
               },
             },
           }
         },
-      ]
-    },
-    delete: {
-      _not: {
-        type: {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyDelete') },
-            _or: [
-              { subject_id: { _eq: 'X-Hasura-User-Id' } },
-              { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-            ],
-          },
-        },
-      },
+      ],
       _or: [
         {
           type: {
             can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
               _or: [
                 { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                { subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
               ],
             },
           },
@@ -223,8 +219,28 @@ export const up = async () => {
             _table: 'can',
             _where: {
               _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+            },
+          },
+        },
+      ]
+    },
+    delete: {
+      _and: [
+        {
+          _not: {
+            type: {
+              can_object: {
+                action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyDelete') },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
+              },
             },
           },
         },
@@ -234,11 +250,40 @@ export const up = async () => {
               _table: 'can',
               _where: {
                 _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-                subject_id: { _eq: 'X-Hasura-User-Id' },
+                _or: [
+                  { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                  { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+                ],
                 action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyDelete') },
               },
             },
           }
+        },
+      ],
+      _or: [
+        {
+          type: {
+            can_object: {
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
+            },
+          },
+        },
+        {
+          _exists: {
+            _table: 'can',
+            _where: {
+              _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
+              _or: [
+                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
+              ],
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+            },
+          },
         },
       ],
     },
@@ -271,7 +316,7 @@ export const up = async () => {
   debug('postgresql triggers');
   debug('insert');
   await api.sql(sql`
-    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__model_permissions__insert_links__function()
+    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__insert_links__function()
     RETURNS trigger
     LANGUAGE plpgsql
     AS $function$
@@ -327,11 +372,11 @@ export const up = async () => {
         RETURN NEW;
       END;
     $function$;
-    CREATE TRIGGER ${TABLE_NAME}__model_permissions__insert_links__trigger AFTER INSERT ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__model_permissions__insert_links__function();
+    CREATE TRIGGER ${TABLE_NAME}__permissions__insert_links__trigger AFTER INSERT ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__insert_links__function();
   `);
   debug('delete');
   await api.sql(sql`
-    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__model_permissions__delete_links__function()
+    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__delete_links__function()
     RETURNS trigger
     LANGUAGE plpgsql
     AS $function$
@@ -351,7 +396,7 @@ export const up = async () => {
         RETURN OLD;
       END;
     $function$;
-    CREATE TRIGGER ${TABLE_NAME}__model_permissions__delete_links__trigger BEFORE DELETE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__model_permissions__delete_links__function();
+    CREATE TRIGGER ${TABLE_NAME}__permissions__delete_links__trigger BEFORE DELETE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__delete_links__function();
   `);
 };
 
@@ -359,12 +404,12 @@ export const down = async () => {
   debug('down');
   debug('insert');
   await api.sql(sql`
-    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__trigger ON ${TABLE_NAME} CASCADE;
-    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__insert_links__function() CASCADE;
+    DROP TRIGGER IF EXISTS ${TABLE_NAME}__permissions__insert_links__trigger ON ${TABLE_NAME} CASCADE;
+    DROP FUNCTION IF EXISTS ${TABLE_NAME}__permissions__insert_links__function() CASCADE;
   `);
   debug('delete');
   await api.sql(sql`
-    DROP TRIGGER IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__trigger ON ${TABLE_NAME} CASCADE;
-    DROP FUNCTION IF EXISTS ${TABLE_NAME}__model_permissions__delete_links__function() CASCADE;
+    DROP TRIGGER IF EXISTS ${TABLE_NAME}__permissions__delete_links__trigger ON ${TABLE_NAME} CASCADE;
+    DROP FUNCTION IF EXISTS ${TABLE_NAME}__permissions__delete_links__function() CASCADE;
   `);
 };

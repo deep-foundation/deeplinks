@@ -16,7 +16,7 @@ import crypto from 'crypto';
 import { 
   handleOperation,
 } from './links';
-// import { boolExpToSQL } from '../bool_exp';
+import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
@@ -56,16 +56,16 @@ export default async (req, res) => {
         returning: `id from_id type_id to_id`,
       }))?.data?.[0];
 
-      // if(oldValueRow && !newValueRow) {
-      //     // delete bool_exp trash
-      //     await deep.delete({
-      //       link_id: { _eq: oldValueRow.link_id },
-      //     }, { table: 'bool_exp' });
-      // }
-      // if(newValueRow && linkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
-      //     // generate new bool_exp sql version
-      //     await boolExpToSQL(linkRow.id, linkRow?.value?.value);
-      // }
+      if(oldValueRow && !newValueRow) {
+          // delete bool_exp trash
+          await deep.delete({
+            link_id: { _eq: oldValueRow.link_id },
+          }, { table: 'bool_exp' });
+      }
+      if(newValueRow && linkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+          // generate new bool_exp sql version
+          await boolExpToSQL(linkRow.id, linkRow?.value?.value);
+      }
       
       const oldRow = { ...linkRow, value: oldValueRow };
       const newRow = { ...linkRow, value: newValueRow };
