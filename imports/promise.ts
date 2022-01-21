@@ -102,7 +102,6 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
               for (let key in promises)
               {
                 debug('key', key);
-                if(!!promises[key])
                 {
                   thenResolvedByPromise.push(!!promiseResolves[key]);
                   thenRejectedByPromise.push(!!promiseRejects[key]);
@@ -111,8 +110,8 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
               debug('promisesCount', promisesCount);
               debug('thenResolvedByPromise.length', thenResolvedByPromise.length);
               debug('thenResolvedByPromise.some(r => r)', thenResolvedByPromise.some(r => r));
-              const thenResolved: boolean = thenResolvedByPromise.length == promisesCount && thenResolvedByPromise.some(r => r);
-              const thenRejected: boolean = thenRejectedByPromise.length == promisesCount && thenRejectedByPromise.some(r => r);
+              const thenResolved: boolean = thenResolvedByPromise.some(r => r);
+              const thenRejected: boolean = thenRejectedByPromise.some(r => r);
               debug('thenResolvedByPromise', thenResolvedByPromise);
               debug('thenRejectedByPromise', thenRejectedByPromise);
               debug('analized', { thenResolved, thenRejected });
