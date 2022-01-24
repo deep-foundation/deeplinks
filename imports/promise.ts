@@ -94,27 +94,15 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
             debug('analized', { thenExists });
 
             if (thenExists) {
-              debug('promises', promises);
-              debug('promiseResolves', promiseResolves);
-              debug('promiseRejects', promiseRejects);
               let thenResolvedByPromise: boolean[] = [];
               let thenRejectedByPromise: boolean[] = [];
               for (let key in promises)
               {
-                debug('key', key);
-                if(!!promises[key])
-                {
-                  thenResolvedByPromise.push(!!promiseResolves[key]);
-                  thenRejectedByPromise.push(!!promiseRejects[key]);
-                }
+                thenResolvedByPromise.push(!!promiseResolves[key]);
+                thenRejectedByPromise.push(!!promiseRejects[key]);
               }
-              debug('promisesCount', promisesCount);
-              debug('thenResolvedByPromise.length', thenResolvedByPromise.length);
-              debug('thenResolvedByPromise.some(r => r)', thenResolvedByPromise.some(r => r));
-              const thenResolved: boolean = thenResolvedByPromise.length == promisesCount && thenResolvedByPromise.some(r => r);
-              const thenRejected: boolean = thenRejectedByPromise.length == promisesCount && thenRejectedByPromise.some(r => r);
-              debug('thenResolvedByPromise', thenResolvedByPromise);
-              debug('thenRejectedByPromise', thenRejectedByPromise);
+              const thenResolved = thenResolvedByPromise.some(r => r);
+              const thenRejected = thenRejectedByPromise.some(r => r);
               debug('analized', { thenResolved, thenRejected });
 
               const filteredLinks = links.filter(l => 
@@ -124,7 +112,7 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
                 (l?.type?.id === options.Resolved && promises[l?.from_id]) ||
                 (l?.type?.id === options.Rejected && promises[l?.from_id])
               );
-              // debug('filteredLinks', JSON.stringify(filteredLinks, null, 2));
+              debug('filteredLinks', JSON.stringify(filteredLinks, null, 2));
 
               if (thenResolved && !thenRejected) {
                 debug('resolved');
