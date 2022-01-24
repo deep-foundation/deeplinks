@@ -5,7 +5,7 @@ import { DeepClient } from '../imports/client';
 import { api, SCHEMA } from './1616701513782-links';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
-import { replaceSymbol } from '../imports/bool_exp';
+import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp';
 
 const debug = Debug('deeplinks:migrations:selectors');
 
@@ -30,7 +30,7 @@ export const up = async () => {
     CREATE VIEW ${SELECTORS_TABLE_NAME} AS
     SELECT mp1."item_id" as "item_id", si_sr."id" as "selector_id", (
       SELECT "to_id" FROM ${TABLE_NAME} WHERE
-      "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorCriteria')} AND
+      "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
       "from_id" = si_sr."id"
     ) as "bool_exp_id"
     FROM
@@ -44,9 +44,17 @@ export const up = async () => {
     up_si."id" = si."to_id" AND
     si."type_id" = ${await deep.id('@deep-foundation/core', 'Include')} AND
     si."from_id" = si_sr."id" AND
-    si_t."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
-    si_t."from_id" = si."id" AND
-    si_t."to_id" = mp1."group_id" AND
+    (
+      (
+        si_t."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
+        si_t."from_id" = si."id" AND
+        si_t."to_id" = mp1."group_id"
+      ) OR NOT EXISTS (
+        SELECT * FROM links WHERE
+        "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
+        "from_id" = si."id"
+      )
+    ) AND
     si_sr."type_id" = ${await deep.id('@deep-foundation/core', 'Selector')} AND
     NOT EXISTS (
       SELECT mp2.*
@@ -67,7 +75,7 @@ export const up = async () => {
     );
   `);
   await api.sql(sql`
-    CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint) RETURNS BOOL AS $trigger$ DECLARE
+    CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint, user_id bigint) RETURNS BOOL AS $trigger$ DECLARE
       boolExp RECORD;
       sqlResult INT;
     BEGIN
@@ -75,7 +83,7 @@ export const up = async () => {
       FROM "${BOOL_EXP_TABLE_NAME}" as be
       WHERE be.link_id=bool_exp_link_id;
       IF boolExp IS NOT NULL THEN
-        EXECUTE (SELECT REPLACE(boolExp.value, '${replaceSymbol}', target_link_id::text)) INTO sqlResult;
+        EXECUTE (SELECT REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text)) INTO sqlResult;
         IF sqlResult = 0 THEN
           RETURN FALSE;
         END IF;
@@ -84,10 +92,17 @@ export const up = async () => {
       RETURN NULL;
     END; $trigger$ LANGUAGE plpgsql;
   `);
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${BOOL_EXP_COMPUTED_FIELD}(link ${TABLE_NAME}, link_id bigint) RETURNS BOOL STABLE AS $function$ DECLARE RESULT BOOL;
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${BOOL_EXP_COMPUTED_FIELD}(link ${TABLE_NAME}, link_id bigint, hasura_session json) RETURNS SETOF links STABLE AS $function$ DECLARE
+    RESULT BOOLEAN;
+    user_id bigint;
   BEGIN
-    SELECT INTO RESULT bool_exp_execute(link_id, link.id);
-    RETURN RESULT;
+    user_id := hasura_session::json->>'x-hasura-user-id';
+    SELECT INTO RESULT bool_exp_execute(link_id, link.id, user_id);
+    IF RESULT THEN
+      RETURN QUERY SELECT * FROM links WHERE id=link_id LIMIT 1;
+    ELSE
+      RETURN;
+    END IF;
   END; $function$ LANGUAGE plpgsql;`);
   await api.query({
     type: 'add_computed_field',
@@ -101,6 +116,7 @@ export const up = async () => {
           schema: 'public',
         },
         table_argument: 'link',
+        session_argument: 'hasura_session',
       }
     },
   });

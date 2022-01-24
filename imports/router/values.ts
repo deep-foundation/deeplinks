@@ -55,6 +55,14 @@ export default async (req, res) => {
       }, {
         returning: `id from_id type_id to_id`,
       }))?.data?.[0];
+      
+      const oldRow = { ...linkRow, value: oldValueRow };
+      const newRow = { ...linkRow, value: newValueRow };
+
+      debug('operation', operation);
+      debug('oldValueRow', oldValueRow);
+      debug('newValueRow', newValueRow);
+      debug('oldRow', oldRow);
 
       if(oldValueRow && !newValueRow) {
           // delete bool_exp trash
@@ -62,17 +70,10 @@ export default async (req, res) => {
             link_id: { _eq: oldValueRow.link_id },
           }, { table: 'bool_exp' });
       }
-      if(newValueRow && linkRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+      if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
           // generate new bool_exp sql version
-          await boolExpToSQL(linkRow.id, linkRow?.value?.value);
+          await boolExpToSQL(newRow.id, newRow?.value?.value);
       }
-      
-      const oldRow = { ...linkRow, value: oldValueRow };
-      const newRow = { ...linkRow, value: newValueRow };
-
-      console.log('event: ', JSON.stringify(event, null, 2));
-      console.log('oldRow: ', oldRow);
-      console.log('newRow: ', newRow);
 
       try {
         await handleOperation('Update', oldRow, newRow);

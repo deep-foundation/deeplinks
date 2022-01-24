@@ -303,9 +303,9 @@ export default async (req, res) => {
         newRow.value = queryResult.data?.[0]?.value;
       }
 
-      console.log('event: ', JSON.stringify(event, null, 2));
-      console.log('oldRow: ', oldRow);
-      console.log('newRow: ', newRow);
+      debug('event', JSON.stringify(event, null, 2));
+      debug('oldRow', oldRow);
+      debug('newRow', newRow);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;

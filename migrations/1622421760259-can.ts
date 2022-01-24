@@ -26,7 +26,7 @@ export const up = async () => {
   debug('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
-    SELECT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id", o."to_id" as "_object_id", s."to_id" as "_subject_id", a."to_id" as "_action_id"
+    SELECT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
     FROM
     ${TABLE_NAME} as r,
     ${TABLE_NAME} as o,

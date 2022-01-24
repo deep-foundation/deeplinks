@@ -108,7 +108,6 @@ export async function getPromiseResults(deep, rejectedTypeId: number, linkId: an
       }
     }
   }`;
-  console.log(queryString);
   return (await client.query({
     query: gql`${queryString}`,
   }))?.data?.links;

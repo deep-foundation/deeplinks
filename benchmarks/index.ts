@@ -1,6 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { Suite } from 'benchmark';
 import { DeepClient } from '../imports/client';
+import _ from 'lodash';
 
 const delay = time => new Promise(res => setTimeout(res, time));
 
@@ -14,22 +15,108 @@ const deep = new DeepClient({ apolloClient });
 
 (async () => {
   var suite = new Suite();
+  const admin = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+  const deepAdmin = new DeepClient({ deep: deep, token: admin.token, linkId: admin.linkId });
+  const Query = await deep.id('@deep-foundation/core', 'Query');
+  const guest = await deep.guest({});
+  const deepGuest = new DeepClient({ deep: deepAdmin, ...guest });
 
-  suite.add('3000', { defer: true, fn: async function(deferred) {
-    await delay(3000);
-    deferred.resolve();
-  } });
-  suite.add('deepClient.id', { defer: true, fn: async function(deferred) {
-    await deep.id('@deep-foundation/core', 'Promise');
-    deferred.resolve();
-  } });
+  await deepAdmin.insert({
+    type_id: await deep.id('@deep-foundation/core', 'Rule'),
+    out: { data: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+        to: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          out: { data: [
+            {
+              type_id: await deep.id('@deep-foundation/core', 'Include'),
+              to_id: guest.linkId,
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                to_id: await deep.id('@deep-foundation/core', 'containTree'),
+              } },
+            },
+          ] }
+        } }
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+        to: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          out: { data: {
+            type_id: await deep.id('@deep-foundation/core', 'Include'),
+            to_id: await deep.id('@deep-foundation/core'),
+            out: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+              to_id: await deep.id('@deep-foundation/core', 'containTree'),
+            } },
+          } }
+        } }
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+        to: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          out: { data: {
+            type_id: await deep.id('@deep-foundation/core', 'Include'),
+            to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
+            out: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+              to_id: await deep.id('@deep-foundation/core', 'containTree'),
+            } },
+          } }
+        } }
+      },
+    ] },
+  });
 
-  suite.on('cycle', function(event) {
-    console.log(String(event.target));
-  });
-  suite.on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').map('name'));
-  });
-  // run async
-  suite.run({ 'async': false });
+  await (new Promise((res) => {
+    suite.add('3000', { defer: true, fn: async function(deferred) {
+      await delay(3000);
+      deferred.resolve();
+    } });
+    suite.add('by deepRoot.id', { defer: true, fn: async function(deferred) {
+      await deep.id('@deep-foundation/core', 'Promise');
+      deferred.resolve();
+    } });
+    // suite.add('by deepGuest.id', { defer: true, fn: async function(deferred) {
+    //   await deepGuest.id('@deep-foundation/core', 'Promise');
+    //   deferred.resolve();
+    // } });
+    suite.add('deepAdmin.insert { type: Any } x1/1tr', { defer: true, fn: async function(deferred) {
+      await deepAdmin.insert({ type_id: Query });
+      deferred.resolve();
+    } });
+    suite.add('deepAdmin.insert { type: Any } x100/1tr', { defer: true, fn: async function(deferred) {
+      await deepAdmin.insert(_.times(100, (t) => ({ type_id: Query })));
+      deferred.resolve();
+    } });
+    suite.add('deepAdmin.insert { type: Any } x1000/1tr', { defer: true, fn: async function(deferred) {
+      await deepAdmin.insert(_.times(1000, (t) => ({ type_id: Query })));
+      deferred.resolve();
+    } });
+    // suite.add('deepGuest.insert { type: Any } x1/1tr', { defer: true, fn: async function(deferred) {
+    //   await deepGuest.insert({ type_id: Query });
+    //   deferred.resolve();
+    // } });
+    // suite.add('deepGuest.insert { type: Any } x100/1tr', { defer: true, fn: async function(deferred) {
+    //   await deepGuest.insert(_.times(100, (t) => ({ type_id: Query })));
+    //   deferred.resolve();
+    // } });
+    // suite.add('deepGuest.insert { type: Any } x1000/1tr', { defer: true, fn: async function(deferred) {
+    //   await deepGuest.insert(_.times(1000, (t) => ({ type_id: Query })));
+    //   deferred.resolve();
+    // } });
+  
+    suite.on('cycle', function(event) {
+      console.log(String(event.target));
+    });
+    suite.on('complete', function() {
+      console.log('Fastest is ' + this.filter('fastest').map('name'));
+      res(undefined);
+    });
+    // run async
+    suite.run({ 'async': false });
+  }));
 })();

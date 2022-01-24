@@ -1,7 +1,7 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { assert, expect } from 'chai';
-import { applyBoolExpToLink } from "../imports/bool_exp";
+import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp";
 import { DeepClient } from "../imports/client";
 import { delay } from "../imports/promise";
 
@@ -26,6 +26,15 @@ const apolloClient = generateApolloClient({
 });
 
 const deep = new DeepClient({ apolloClient });
+
+let adminToken: string;
+let admin: any;
+
+beforeAll(async () => {
+  const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+  adminToken = token;
+  admin = new DeepClient({ deep, token: adminToken, linkId });
+});
 
 describe('bool_exp', () => {
   describe('value convertation', () => {
@@ -123,6 +132,41 @@ describe('bool_exp', () => {
         link_id: { _eq: boolExpId },
       }, { table: 'bool_exp', returning: 'id link_id value' });
       expect(data).to.be.empty;
+    });
+    it(`X-Deep-User-Id`, async () => {
+      const g1 = await deep.guest({});
+      const { data: [{ id: boolExpId }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        object: { data: { value: { id: { _eq: 'X-Deep-User-Id' } } } },
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Contain'),
+          from_id: g1.linkId,
+        } },
+      });
+      await deep.await(boolExpId);
+      await delay(2000);
+      const d1s = await deep.select({
+        id: { _eq: boolExpId },
+      }, { returning: `exec_bool_exp(args: { link_id: ${g1.linkId} }) { id }` });
+      expect(d1s?.data?.[0]?.exec_bool_exp).to.be.undefined;
+      const deep1 = new DeepClient({ deep, ...g1 });
+      const g1s = await deep1.select({
+        id: { _eq: boolExpId },
+      }, { returning: `exec_bool_exp(args: { link_id: ${g1.linkId} }) { id }` });
+      expect(g1s?.data?.[0]?.exec_bool_exp).to.not.be.empty;
+      expect(g1s?.data?.[0]?.exec_bool_exp?.[0]?.id).to.be.equal(g1.linkId);
+    });
+    it(`X-Deep-Item-Id`, async () => {
+      const { data: [{ id: boolExpId }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        object: { data: { value: { id: { _eq: 'X-Deep-Item-Id' } } } },
+      });
+      await deep.await(boolExpId);
+      await delay(2000);
+      const d1s = await admin.select({
+        id: { _eq: boolExpId },
+      }, { returning: `exec_bool_exp(args: { link_id: ${boolExpId} }) { id }` });
+      expect(d1s?.data?.[0]?.exec_bool_exp?.[0]?.id).to.be.equal(boolExpId);
     });
   });
 });
