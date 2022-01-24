@@ -21,32 +21,32 @@ const deep = new DeepClient({
   apolloClient: client,
 });
 
-const insertRule = async (options: {
+const insertRule = async (admin, options: {
   subject: any;
   object: any;
   action: any;
 }) => {
-  await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Rule'),
+  await admin.insert({
+    type_id: await admin.id('@deep-foundation/core', 'Rule'),
     out: { data: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+        type_id: await admin.id('@deep-foundation/core', 'RuleSubject'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: await admin.id('@deep-foundation/core', 'Selector'),
           out: { data: options.subject }
         } }
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+        type_id: await admin.id('@deep-foundation/core', 'RuleObject'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: await admin.id('@deep-foundation/core', 'Selector'),
           out: { data: options.object },
         } }
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+        type_id: await admin.id('@deep-foundation/core', 'RuleAction'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: await admin.id('@deep-foundation/core', 'Selector'),
           out: { data: options.action, }
         } }
       },
@@ -56,44 +56,33 @@ const insertRule = async (options: {
 
 export const up = async () => {
   debug('up');
-  // const users = {
-  //   type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //   to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
-  //   out: { data: {
-  //     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-  //     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-  //   } },
-  // };
-  // await insertRule({
-  //   subject: users,
-  //   object: [
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Focus'),
-  //     },
-  //     {
-  //       from: {  }
-  //     },
-  //   ],
-  //   action: [
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowUpdate'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
-  //     },
-  //   ],
-  // });
+
+  const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+  const admin = new DeepClient({ deep, token, linkId });
+
+  const users = {
+    type_id: await deep.id('@deep-foundation/core', 'Include'),
+    to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
+    out: { data: {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+    } },
+  };
+  await insertRule(admin, {
+    subject: users,
+    object: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'system', 'admin'),
+      },
+    ],
+    action: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+      },
+    ],
+  });
   // insertRule({
   //   subject: {
   //     type_id: await deep.id('@deep-foundation/core', 'Include'),
