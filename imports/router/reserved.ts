@@ -41,6 +41,7 @@ export default async (req, res) => {
     if (!mutateLinksResult.data['m0']?.returning?.[0]?.id) res.status(500).json({ error: 'insert resrved error' });
     return res.json({ ids });
   } catch(error) {
+    console.log(error);
     return res.status(500).json({ error: error.toString() });
   }
 };
