@@ -69,7 +69,7 @@ export async function call (options: IOptions) {
   let envsString = generateEnvs({ envs, isDocker});
   try {
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz` : ''} --timeout 10000 && npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& ${ process.platform === "win32" ? 'COMPOSE_CONVERT_WINDOWS_PATHS=1' : ''} npm run start-deeplinks-docker && npx -q wait-on ${NEXT_PUBLIC_DEEPLINKS_URL}/api/healthz --timeout 10000` : ''} && ${ process.platform === "win32" ? 'MIGRATIONS_DIR=.migrate' : 'MIGRATIONS_DIR=/tmp/.deep-migrate'} npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }

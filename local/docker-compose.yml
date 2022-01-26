@@ -2,6 +2,8 @@ version: '3.6'
 services:
   deeplinks-docker:
     image: menzorg/deeplinks:main
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
     ports:
       - 3006:3006
