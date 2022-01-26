@@ -156,6 +156,12 @@ const corePckg: PackagerPackage = {
     { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 78
 
     { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 79
+
+    { id: 'HandleSchedule', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 80
+
+    { id: 'Schedule', type: 'Type' }, // 81
+
+    { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 82
   ],
   errors: [],
   strict: true,
