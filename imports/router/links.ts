@@ -18,7 +18,9 @@ const SCHEMA = 'public';
 
 const debug = Debug('deepcase:eh');
 
-const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
+// const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
+
+const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -282,7 +284,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   if (operation == 'INSERT') {
     // get schedule
     const schedule = await deep.select({
-      typeId: await deep.id('@deep-foundation/core', 'Schedule'),
+      type_id: await deep.id('@deep-foundation/core', 'Schedule'),
       out: {
         id: { _eq: handleScheduleLink.id },
       },
@@ -290,13 +292,16 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
       table: 'links',
       returning: 'id value',
     });
+    console.log(schedule);
     const scheduleId = schedule?.data?.[0]?.id;
-    const scheduleValue = schedule?.data?.[0]?.value;
+    const scheduleValue = schedule?.data?.[0]?.value.value;
+    console.log('scheduleId', scheduleId);
+    console.log('scheduleValue', scheduleValue);
     await api.query({
       type: 'create_cron_trigger',
       args: {
         name: `handle_schedule_${handleScheduleLink?.id}`,
-        webhook: `${DEEPLINKS_URL}/api/scheduler`,
+        webhook: `${DEEPLINKS_PUBLIC_URL}/api/scheduler`,
         schedule: scheduleValue,
         include_in_metadata: true,
         payload: {

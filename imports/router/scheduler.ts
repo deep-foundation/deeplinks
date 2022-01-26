@@ -40,7 +40,7 @@ const deep = new DeepClient({
 
 export default async (req, res) => {
   try {
-    const event = req?.body?.event;
+    const event = req?.body;
     const operation = event?.op;
 
     console.log(`event`, event);

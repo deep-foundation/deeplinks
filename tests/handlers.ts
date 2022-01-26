@@ -55,12 +55,13 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
-  const scheduleId = (await deep.insert({
+  const scheduleNode = (await deep.insert({
     type_id: scheduleTypeId,
   }, { name: 'IMPORT_SCHEDULE' })).data[0];
-  const scheduleValue = (await deep.insert({ link_id: scheduleId, value: schedule }, { table: 'strings' })).data[0];
+  console.log(typeof schedule)
+  const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
   const handleOperation = (await deep.insert({
-    from_id: scheduleId,
+    from_id: scheduleNode?.id,
     type_id: handleScheduleTypeId,
     to_id: handler?.id,
   }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
@@ -69,7 +70,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     handleInsertId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
-    scheduleId: scheduleId?.id,
+    scheduleId: scheduleNode?.id,
     scheduleValueId: scheduleValue?.id,
   };
 };
@@ -385,7 +386,7 @@ describe('sync function handle by schedule with resolve', () => {
   it(`handle schedule`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
-    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    // const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
     // const linkId = await ensureLinkIsCreated(typeId);
