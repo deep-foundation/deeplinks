@@ -258,7 +258,6 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     for (let l = 0; l < linksArray.length; l++) {
       const link = linksArray[l];
       const old = byId[link.id];
-      console.log('link', link, 'old', old);
       if (!old) toAdd.push(link);
       else if (!options.equal(old, link)) {
         toUpdate.push(link);
