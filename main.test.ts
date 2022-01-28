@@ -9,7 +9,7 @@ jest.setTimeout(30000);
 // import './tests/bool_exp';
 // import './tests/permissions';
 import './tests/handlers';
-import './tests/minilinks';
+// import './tests/minilinks';
 
 // import './tests/packager';
 // TODO error if duplicates
