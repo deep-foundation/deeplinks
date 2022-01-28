@@ -55,7 +55,7 @@ const generateEnvs = (options) => {
 const checkStatus = async () => {
   let result;
   try {
-    result = await axios.get(`${DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => status === 404 || status === 200 });
+    result = await axios.get(`${DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
   } catch (error){
     console.log(error);
   }
@@ -68,7 +68,7 @@ export async function call (options: IOptions) {
   let envsString = generateEnvs({ envs, isDocker});
   try {
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''}&& npm run migrate`;
+      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
