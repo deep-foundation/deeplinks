@@ -1,6 +1,7 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
+import { DeepClient } from './client';
 import { permissions } from './permission';
 
 export interface ITypeTableStringOptions {
@@ -9,13 +10,14 @@ export interface ITypeTableStringOptions {
   valueType?: string;
   customColumnsSql?: string;
   customAfterSql?: string;
-  linkRelation: string;
-  linksTableName: string;
+  linkRelation?: string;
+  linksTableName?: string;
   api: HasuraApi;
+  deep: DeepClient;
 }
 
 export const generateUp = (options: ITypeTableStringOptions) => async () => {
-  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api } = options;
+  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api, deep } = options;
 
   await api.sql(sql`
     CREATE TABLE ${schemaName}."${tableName}" (id bigint PRIMARY KEY, link_id bigint, ${customColumnsSql ? customColumnsSql : `value ${valueType}`});
@@ -36,52 +38,72 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
       name: tableName,
     },
   });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: tableName,
-      name: 'link',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: schemaName,
-            name: linksTableName,
-          },
-          column_mapping: {
-            link_id: 'id',
-          },
-        },
-      },
-    },
-  });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: linksTableName,
-      name: linkRelation,
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: schemaName,
-            name: tableName,
-          },
-          column_mapping: {
-            id: 'link_id',
+  if (linkRelation && linksTableName) {
+    await api.query({
+      type: 'create_object_relationship',
+      args: {
+        table: tableName,
+        name: 'link',
+        type: 'one_to_one',
+        using: {
+          manual_configuration: {
+            remote_table: {
+              schema: schemaName,
+              name: linksTableName,
+            },
+            column_mapping: {
+              link_id: 'id',
+            },
+            insertion_order: 'after_parent',
           },
         },
       },
-    },
-  });
-  await permissions(api, tableName, {
-    select: {},
-    insert: {}, // generatePermissionWhere(16),
-    update: {}, // generatePermissionWhere(17),
-    delete: {},
-  });
+    });
+    await api.query({
+      type: 'create_object_relationship',
+      args: {
+        table: linksTableName,
+        name: linkRelation,
+        type: 'one_to_one',
+        using: {
+          manual_configuration: {
+            remote_table: {
+              schema: schemaName,
+              name: tableName,
+            },
+            column_mapping: {
+              id: 'link_id',
+            },
+            insertion_order: 'after_parent',
+          },
+        },
+      },
+    });
+    await api.query({
+      type: 'create_event_trigger',
+      args: {
+        name: tableName,
+        table: tableName,
+        webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/values`,
+        insert: {
+          columns: "*",
+          payload: '*',
+        },
+        update: {
+          columns: '*',
+          payload: '*',
+        },
+        delete: {
+          columns: '*'
+        },
+        replace: false,
+      },
+    });
+  }
 };
 
 export const generateDown = (options: ITypeTableStringOptions) => async () => {
-  const { schemaName, tableName, linkRelation, linksTableName, api } = options;
+  const { schemaName, tableName, linkRelation, linksTableName, api, deep } = options;
 
   await api.query({
     type: 'drop_relationship',
@@ -109,4 +131,77 @@ export const generateDown = (options: ITypeTableStringOptions) => async () => {
   await api.sql(sql`
     DROP TABLE ${schemaName}."${tableName}";
   `);
+};
+
+export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () => {
+  const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api, deep } = options;
+
+  const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+  const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+  const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  BEGIN
+    IF (
+        EXISTS(
+          SELECT 1
+          FROM links handle_update, links updated_link
+          WHERE
+              updated_link.id = NEW."link_id"
+          AND handle_update.from_id = updated_link."type_id"
+          AND handle_update.type_id = ${handleUpdateTypeId}
+        )
+    ) THEN
+      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+    END IF;
+    RETURN NEW;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__insert__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__insert__function();`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__update__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  BEGIN
+    IF (
+        EXISTS(
+          SELECT 1
+          FROM links handle_update, links updated_link
+          WHERE
+              updated_link.id = NEW."link_id"
+          AND handle_update.from_id = updated_link."type_id"
+          AND handle_update.type_id = ${handleUpdateTypeId}
+        )
+    ) THEN
+      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+    END IF;
+    RETURN NEW;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  BEGIN
+    IF (
+        EXISTS(
+          SELECT 1
+          FROM links handle_update, links updated_link
+          WHERE
+              updated_link.id = OLD."link_id"
+          AND handle_update.from_id = updated_link."type_id"
+          AND handle_update.type_id = ${handleUpdateTypeId}
+        )
+    ) THEN
+      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."link_id",PROMISE);
+    END IF;
+    RETURN OLD;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__delete__trigger BEFORE DELETE ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__delete__function();`);
+};
+
+export const promiseTriggersDown = (options: ITypeTableStringOptions) => async () => {
+  const { schemaName, tableName, linkRelation, linksTableName, api, deep } = options;
+  
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__insert__trigger ON "${tableName}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__insert__function CASCADE;`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__update__trigger ON "${tableName}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__update__function CASCADE;`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${tableName}__promise__delete__trigger ON "${tableName}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${tableName}__promise__delete__function CASCADE;`);
 };

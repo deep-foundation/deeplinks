@@ -10,6 +10,8 @@ import os from 'os';
 import { v4 as uuid } from 'uuid';
 import child_process from 'child_process';
 import * as semver from 'semver';
+import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+
 
 const tmpdir = os.tmpdir();
 
@@ -80,7 +82,13 @@ const resolvers = {
         fs.mkdirSync(dir);
         let selector = address;
         if (version) selector += '@' + version;
-        child_process.execSync(`cd ${dir}; npm install ${selector};`,{stdio:[0,1,2]});
+        try {
+          child_process.execSync(`cd ${dir}; npm install --no-cache ${selector};`,{stdio:[0,1,2]});
+        } catch(error) {
+          errors.push(error);
+          errors.push('istallation failed');
+          return { errors };
+        }
         const npmPckgContent = fs.readFileSync([dir,'node_modules',address,'package.json'].join('/'), { encoding: 'utf-8' });
         const deepPckgContent = fs.readFileSync([dir,'node_modules',address,'deep.json'].join('/'), { encoding: 'utf-8' });
         if (deepPckgContent) {
@@ -112,17 +120,31 @@ const resolvers = {
         const dir = [tmpdir,dirid].join('/');
         const pckgDir = [tmpdir,dirid,'node_modules',address].join('/');
         fs.mkdirSync(dir);
-        child_process.execSync(`cd ${dir}; npm install ${address};`,{stdio:[0,1,2]});
-        const npmPckgJson = [pckgDir,'package.json'].join('/');
-        const npmPckg = JSON.parse(fs.readFileSync(npmPckgJson, { encoding: 'utf-8' }));
-        npmPckg.version = semver.inc(npmPckg?.version || '0.0.0', 'patch');
-        console.log(await deep.update({
+        try {
+          child_process.execSync(`cd ${dir}; npm install --no-cache ${address};`,{stdio:[0,1,2]});
+        } catch(error) {
+          errors.push(error);
+          errors.push('installation failed');
+          return { errors };
+        }
+        const npmPckgPath = [pckgDir,'package.json'].join('/');
+        const npmPckgJSON = fs.readFileSync(npmPckgPath, { encoding: 'utf-8' });
+        let npmPckg;
+        let nextVersion;
+        if (!npmPckgJSON) {
+          errors.push('package.json not founded in installed package');
+          return { errors };
+        } else {
+          npmPckg = JSON.parse(npmPckgJSON);
+          npmPckg.version = nextVersion = semver.inc(npmPckg?.version || '0.0.0', 'patch');
+        }
+        await deep.update({
           link: {
             type_id: { _eq: GLOBAL_ID_PACKAGE_VERSION },
             to_id: { _eq: id },
           },
-        }, { value: npmPckg.version }, { table: 'strings' }));
-        fs.writeFileSync(npmPckgJson, JSON.stringify(npmPckg), { encoding: 'utf-8' });
+        }, { value: nextVersion }, { table: 'strings' });
+        fs.writeFileSync(npmPckgPath, JSON.stringify(npmPckg), { encoding: 'utf-8' });
         const deepPckgContent = await packager.export({ packageLinkId: id });
         fs.writeFileSync([pckgDir,'deep.json'].join('/'), JSON.stringify(deepPckgContent), { encoding: 'utf-8' });
         child_process.execSync(`cd ${pckgDir}; npm publish;`,{stdio:[0,1,2]});
@@ -137,6 +159,16 @@ const context = ({ req }) => {
   return { headers: req.headers };
 };
 
-const apolloServer = new ApolloServer({ introspection: true, typeDefs, resolvers, context });
+const generateApolloServer = (httpServer) => {
+  return new ApolloServer({ 
+    introspection: true,
+    typeDefs, 
+    resolvers,
+    context,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground()
+    ]});
+  }
 
-export default apolloServer;
+export default generateApolloServer;

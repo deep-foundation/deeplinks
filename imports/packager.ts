@@ -45,6 +45,8 @@ export type PackagerError = any;
 export interface PackagerImportResult {
   errors?: PackagerError[];
   ids?: number[];
+  packageId?: number;
+  namespaceId?: number;
 }
 
 export type PackagerMutated = { [index: number]: boolean };
@@ -57,11 +59,19 @@ export interface PackagerLink extends Link<any> {
   value?: any;
 }
 
+const corePackage = '@deep-foundation/core';
+
 /** Generate inserting order for links and values. */
 export function sort(
   pckg: PackagerPackage,
-  data: PackagerPackageItem[],
+  data: any[],
   errors: PackagerError[] = [],
+  references: {
+    id: string;
+    from: string;
+    to: string;
+    type: string;
+  }
 ) {
   let sorted = [];
   if (pckg.strict) {
@@ -69,8 +79,8 @@ export function sort(
   } else {
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
-      if (item.value && !item.type) {
-        const max = sorted.reduce((p, l, index) => l.id == item.id ? index : p, 0);
+      if (item.value && !item[references.type]) {
+        const max = sorted.reduce((p, l, index) => l[references.id] == item[references.id] ? index : p, 0);
         sorted.splice((max) + 1, 0, item);
       } else if (item.package) {
         sorted.splice(0, 0, item);
@@ -78,13 +88,13 @@ export function sort(
         // @ts-ignore
         const _ = item?._;
         const firstDependIndex = sorted.findIndex((l, index) => {
-          return l.from == item.id || l.to == item.id || (
+          return l[references.from] == item[references.id] || l[references.to] == item[references.id] || (
             // @ts-ignore
-            (l.type == item.id) && !l._
+            (l[references.type] == item[references.id]) && !l._
           );
         });
         const maxDependIndex = sorted.reduce((p, l, index) => {
-          return ((l.id == item.type) && !_) || l.id == item.from || l.id === item.to ? index : p;
+          return ((l[references.id] == item[references.type]) && !_) || l[references.id] == item[references.from] || l[references.id] === item[references.to] ? index : p;
         }, 0);
         const _index = (!!~firstDependIndex && firstDependIndex < maxDependIndex ? firstDependIndex : maxDependIndex)
         sorted.splice(_index + 1, 0, item);
@@ -202,6 +212,7 @@ export class Packager<L extends Link<any>> {
     errors: PackagerError[] = [],
     mutated: { [index: number]: boolean } = {},
   ): Promise<any> {
+    // console.log('insertItems', data);
     try {
       for (let i = 0; i < dependedLinks.length; i++) {
         const item = dependedLinks[i];
@@ -224,7 +235,8 @@ export class Packager<L extends Link<any>> {
     return;
   }
 
-  async globalizeIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]): Promise<{ global: PackagerPackageItem[] }> {
+  async globalizeIds(pckg: PackagerPackage, ids: number[], links: PackagerPackageItem[]): Promise<{ global: PackagerPackageItem[], difference: { [id:number]:number; } }> {
+    const difference = {};
     const global = links.map(l => ({ ...l }));
     let idsIndex = 0;
     for (let l = 0; l < links.length; l++) {
@@ -233,10 +245,10 @@ export class Packager<L extends Link<any>> {
       let newId;
       if (item.package) {
         newId = await this.client.id(pckg.dependencies[item.package.dependencyId].name, item.package.containValue);
-        item.id = newId;
       } else if (item.type) {
         newId = ids[idsIndex++];
       }
+      if (oldId && newId) difference[oldId] = newId;
       if (item.type || item.package) {
         for (let l = 0; l < links.length; l++) {
           const link = links[l];
@@ -254,8 +266,9 @@ export class Packager<L extends Link<any>> {
           }
         }
       }
+      // console.log(item, global[l]);
     }
-    return { global };
+    return { global, difference };
   }
 
   /**
@@ -266,16 +279,21 @@ export class Packager<L extends Link<any>> {
     try {
       if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
       if (!pckg?.package?.version) throw new Error(`!pckg?.package?.version`);
-      const { data, counter, dependedLinks } = await this.deserialize(pckg, errors);
+      const { data, counter, dependedLinks, packageId, namespaceId } = await this.deserialize(pckg, errors);
       if (errors.length) return { errors };
-      const { sorted } = sort(pckg, data, errors);
+      const { sorted } = sort(pckg, data, errors, {
+        id: 'id',
+        from: 'from',
+        to: 'to',
+        type: 'type',
+      });
       if (errors.length) return { errors };
       const mutated = {};
-      const ids = await this.client.reserve(counter + 5);
-      const { global } = await this.globalizeIds(pckg, ids, sorted);
+      const ids = await this.client.reserve(counter + 7);
+      const { global, difference } = await this.globalizeIds(pckg, ids, sorted);
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
-      return { ids, errors };
+      return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId] };
     } catch(error) {
       debug('import error');
       errors.push(error);
@@ -286,11 +304,13 @@ export class Packager<L extends Link<any>> {
   async selectLinks(options: PackagerExportOptions): Promise<MinilinksResult<PackagerLink>> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
     const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
     const result = await this.client.select({
       _or: [
         { id: { _eq: options.packageLinkId } },
         { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } },
         { in: { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } } },
+        { type_id: { _eq: PackageVersion }, to: { id: { _eq: options.packageLinkId } } },
       ]
     }, {
       name: 'LOAD_PACKAGE_LINKS',
@@ -337,6 +357,8 @@ export class Packager<L extends Link<any>> {
     errors?: PackagerError[];
     counter: number;
     dependedLinks: PackagerPackageItem[];
+    packageId: number;
+    namespaceId: number;
   }> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
     const Package = await this.client.id('@deep-foundation/core', 'Package');
@@ -344,52 +366,86 @@ export class Packager<L extends Link<any>> {
     const Active = await this.client.id('@deep-foundation/core', 'PackageActive');
     const Version = await this.client.id('@deep-foundation/core', 'PackageVersion');
     // clone for now hert pckg object
-    const data: PackagerPackageItem[] = pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined }));
     const containsHash: { [key: string]: number } = {};
     let counter = 0;
     const dependedLinks = [];
+    let packageId;
+    const data: PackagerPackageItem[] = [];
+    if (pckg.package.name !== corePackage) {
+      packageId = 'package';
+      containsHash[packageId] = ++counter;
+      // package
+      data.push({
+        id: packageId,
+        type: Package,
+        value: { value: pckg.package.name },
+        // @ts-ignore
+        _: true,
+      });
+    }
+    data.push(...pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined })));
+    // console.log(data);
     // string id field to numeric ids
     for (let l = 0; l < data.length; l++) {
       const item = data[l];
       const local = item.id;
       if (containsHash[local]) item.id = containsHash[local];
-      else containsHash[local] = item.id = ++counter;
+      else containsHash[local] = (item.id = ++counter);
       if (item.package) dependedLinks.push(item);
     }
+    // console.log(data);
     // type, from, to fields to numeric ids
     for (let l = 0; l < data.length; l++) {
       const item = data[l];
-      if (item.type) item.type = containsHash[item.type];
-      if (item.from) item.from = containsHash[item.from] || 0;
-      if (item.to) item.to = containsHash[item.to] || 0;
+      if (item.type && !item._) {
+        if (!containsHash[item.type]) errors.push(`${item.id} type ${item.type} !contain ${containsHash[item.type]}`);
+        item.type = containsHash[item.type];
+      }
+      if (item.from) {
+        if (!containsHash[item.from]) errors.push(`${item.id} from ${item.from} !contain ${containsHash[item.from]}`);
+        item.from = containsHash[item.from];
+      }
+      if (item.to) {
+        if (!containsHash[item.to]) errors.push(`${item.id} to ${item.to} !contain ${containsHash[item.to]}`);
+        item.to = containsHash[item.to];
+      }
     }
-    const packageId = ++counter;
-    data.push({
-      id: packageId,
-      type: Package,
-      value: { value: pckg.package.name },
-      // @ts-ignore
-      _: true,
-    });
+    // console.log(data);
+    if (pckg.package.name === corePackage) {
+      packageId = 'package';
+      containsHash[packageId] = ++counter;
+      // package
+      data.push({
+        id: packageId,
+        type: Package,
+        value: { value: pckg.package.name },
+        // @ts-ignore
+        _: true,
+      });
+    }
     // create contains links
     const containsArray = Object.keys(containsHash);
     for (let c = 0; c < containsArray.length; c++) {
       const contain = containsArray[c];
-      data.push({
-        id: ++counter,
-        type: Contain,
-        from: packageId,
-        to: containsHash[contain],
-        value: { value: contain },
-        // @ts-ignore
-        _: true,
-      });
+      // each contain to package value
+      if (containsHash[contain] != containsHash[packageId]) {
+        data.push({
+          id: ++counter,
+          type: Contain,
+          from: containsHash[packageId],
+          to: containsHash[contain],
+          value: { value: contain },
+          // @ts-ignore
+          _: true,
+        });
+      }
     }
     const n = await this.fetchPackageNamespaceId(pckg.package.name);
     if (n.error) errors.push(n.error);
     let namespaceId = n.namespaceId;
     if (!namespaceId) {
       namespaceId = ++counter;
+      // namespace it self
       data.push({
         id: namespaceId,
         type: PackageNamespace,
@@ -397,33 +453,54 @@ export class Packager<L extends Link<any>> {
         // @ts-ignore
         _: true,
       });
+      // user contain package namespace
+      if (this.client.linkId) data.push({
+        id: ++counter,
+        type: Contain,
+        from: this.client.linkId,
+        to: namespaceId,
+        // @ts-ignore
+        _: true,
+      });
+      // active link if first in namespace
       data.push({
         id: ++counter,
         type: Active,
-        to: packageId,
+        to: containsHash[packageId],
         from: namespaceId,
         // @ts-ignore
         _: true,
       });
     }
+    // version link
     data.push({
       id: ++counter,
       type: Version,
-      to: packageId,
+      to: containsHash[packageId],
       from: namespaceId,
       value: { value: pckg.package.version },
       // @ts-ignore
       _: true,
     });
+    // contain link
     data.push({
       id: ++counter,
       type: Contain,
       from: namespaceId,
-      to: packageId,
+      to: containsHash[packageId],
       // @ts-ignore
       _: true,
     });
-    return { data, errors, counter, dependedLinks };
+    // user contain package
+    if (this.client.linkId) data.push({
+      id: ++counter,
+      type: Contain,
+      from: this.client.linkId,
+      to: containsHash[packageId],
+      // @ts-ignore
+      _: true,
+    });
+    return { data, errors, counter, dependedLinks, packageId, namespaceId };
   }
 
   async serialize(globalLinks: MinilinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {
@@ -437,15 +514,19 @@ export class Packager<L extends Link<any>> {
     const links = [];
     for (let l = 0; l < globalLinks.links.length; l++) {
       const link = globalLinks.links[l];
-      if (!!link.type_id && !globalLinks.byId[link.type_id] && !(
+      await debug('link1', link);
+      if (
+        !!link.type_id && !globalLinks.byId[link.type_id] && !(
         // NOT contain in ( package |- contain -> * )
-        link?.type_id === Contain && link?.from?.id === options.packageLinkId
+          link?.type_id === Contain && link?.from?.id === options.packageLinkId
         ) && !(
-        // NOT package
-        link?.id === options.packageLinkId
-      )) {
+          // NOT package
+          link?.id === options.packageLinkId
+        )
+      ) {
         const name = link?.type?.contains?.[0]?.package?.value?.value;
         const foundedDep = dependencedPackages[name];
+        await debug('dep', link, handledDepLinks, foundedDep, name);
         if (!!name && !foundedDep) {
           const depPack = { name: name };
           const index = dependenciesCounter++;
@@ -456,13 +537,14 @@ export class Packager<L extends Link<any>> {
           const containValue = link?.type?.contains?.[0]?.value?.value;
           if (!containValue) pckg.errors.push(`Link contain from package to ${link?.type?.id} does not have value.`);
           links.push({
-            id: counter++,
+            id: link.type_id,
             package: { dependencyId: dependencedPackages[name], containValue },
           });
           handledDepLinks[link.type_id] = true;
         }
       }
       if (!!link.from_id && !globalLinks.byId[link.from_id]) {
+        await debug('from_id', link);
         const name = link?.from?.contains?.[0]?.package?.value?.value;
         const foundedDep = dependencedPackages[name];
         if (!!name && !foundedDep) {
@@ -475,13 +557,14 @@ export class Packager<L extends Link<any>> {
           const containValue = link?.from?.contains?.[0]?.value?.value;
           if (!containValue) pckg.errors.push(`Link contain from package to ${link?.from?.id} does not have value.`);
           links.push({
-            id: counter++,
+            id: link.from_id,
             package: { dependencyId: dependencedPackages[name], containValue },
           });
           handledDepLinks[link.from_id] = true;
         }
       }
       if (!!link.to_id && !globalLinks.byId[link.to_id]) {
+        await debug('from_id', link);
         const name = link?.to?.contains?.[0]?.package?.value?.value;
         const foundedDep = dependencedPackages[name];
         if (!!name && !foundedDep) {
@@ -494,12 +577,13 @@ export class Packager<L extends Link<any>> {
           const containValue = link?.to?.contains?.[0]?.value?.value;
           if (!containValue) pckg.errors.push(`Link contain from package to ${link?.to?.id} does not have value.`);
           links.push({
-            id: counter++,
+            id: link.to_id,
             package: { dependencyId: dependencedPackages[name], containValue },
           });
           handledDepLinks[link.to_id] = true;
         }
       }
+      await debug('link2', link);
     }
     pckg.dependencies = dependencies;
     for (let l = 0; l < globalLinks.links.length; l++) {
@@ -512,6 +596,7 @@ export class Packager<L extends Link<any>> {
     }
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
+      if (link.id === options.packageLinkId) continue;
       link._id = link.id;
       if (!link.package) {
         link.id = containsByTo[+link.id]?.value?.value ? containsByTo[+link.id].value.value : counter++;
@@ -543,9 +628,15 @@ export class Packager<L extends Link<any>> {
         pckg.data.push(newLink);
       } else {
         const newLink: PackagerPackageItem = {
-          id: link.id,
+          id: counter++,
           package: link.package,
         };
+        for (let li = 0; li < links?.length; li++) {
+          const _link = links[li];
+          if (_link?.from_id === link?.id) _link.from_id = newLink?.id;
+          if (_link?.to_id === link?.id) _link.to_id = newLink?.id;
+          if (_link?.type_id === link?.id && !_link._) _link.type_id = newLink?.id;
+        }
         pckg.data.push(newLink);
       }
     }
@@ -556,16 +647,28 @@ export class Packager<L extends Link<any>> {
    */
   async export(options: PackagerExportOptions): Promise<PackagerPackage> {
     const globalLinks = await this.selectLinks(options);
+    // console.log('globalLinks', globalLinks.links);
     const Package = await this.client.id('@deep-foundation/core', 'Package');
-    const packageLink = globalLinks.links?.find(l => l?.type?.value?.value === Package);
-    const packageName = packageLink?.value?.value;
+    const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
+    const version: any = globalLinks.types[PackageVersion]?.[0];
+    const pack: any = globalLinks.types[Package]?.[0];
     const pckg = {
-      package: { name: packageName },
+      package: { name: pack?.value?.value, version: version?.value?.value },
       data: [],
       strict: false,
       errors: [],
     };
-    await this.serialize(globalLinks, options, pckg);
+    const ml = minilinks(globalLinks.links.filter(l => l.id !== version?.id));
+    const { sorted } = sort(pckg, ml.links, pckg.errors, {
+      id: 'id',
+      from: 'from_id',
+      to: 'to_id',
+      type: 'type_id',
+    });
+    ml.links = sorted;
+    // console.log('pckg1', JSON.stringify(pckg));
+    await this.serialize(ml, options, pckg);
+    // console.log('pckg2', JSON.stringify(pckg));
     return pckg;
   }
 }

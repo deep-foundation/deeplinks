@@ -10,6 +10,8 @@ import { HasuraApi } from '@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import { generateUp, generateDown } from '../imports/type-table';
 
+export const BOOL_EXP_TABLE_NAME = 'bool_exp';
+
 const debug = Debug('deeplinks:migrations:values');
 
 const apolloClient = generateApolloClient({
@@ -24,7 +26,7 @@ export const api = new HasuraApi({
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
-const client = new DeepClient({ apolloClient });
+const deep = new DeepClient({ apolloClient });
 
 export const up = async () => {
   debug('up');
@@ -36,6 +38,7 @@ export const up = async () => {
     linkRelation: 'string',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateUp({
     schemaName: 'public',
@@ -45,6 +48,7 @@ export const up = async () => {
     linkRelation: 'number',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateUp({
     schemaName: 'public',
@@ -54,6 +58,15 @@ export const up = async () => {
     linkRelation: 'object',
     linksTableName: 'links',
     api,
+    deep,
+  })());
+  await (generateUp({
+    schemaName: 'public',
+    tableName: BOOL_EXP_TABLE_NAME,
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
+    api,
+    deep,
   })());
 };
 
@@ -67,6 +80,7 @@ export const down = async () => {
     linkRelation: 'string',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateDown({
     schemaName: 'public',
@@ -76,6 +90,7 @@ export const down = async () => {
     linkRelation: 'number',
     linksTableName: 'links',
     api,
+    deep,
   })());
   await (generateDown({
     schemaName: 'public',
@@ -85,5 +100,24 @@ export const down = async () => {
     linkRelation: 'object',
     linksTableName: 'links',
     api,
+    deep,
+  })());
+  await (generateDown({
+    schemaName: 'public',
+    tableName: 'bool_exp',
+    valueType: 'jsonb',
+    customColumnsSql: 'value jsonb',
+    linkRelation: 'object',
+    linksTableName: 'links',
+    api,
+    deep,
+  })());
+  await (generateDown({
+    schemaName: 'public',
+    tableName: BOOL_EXP_TABLE_NAME,
+    valueType: 'TEXT',
+    customColumnsSql: 'value text',
+    api,
+    deep,
   })());
 };

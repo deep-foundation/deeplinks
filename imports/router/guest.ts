@@ -4,11 +4,12 @@ import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql';
 import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client';
+import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
 
-const typeDefs = gql`
+export const typeDefsString = `
   type Query {
     guest: GuestOutput
   }
@@ -17,6 +18,7 @@ const typeDefs = gql`
     linkId: Int
   }
 `;
+export const typeDefs = gql`${typeDefsString}`;
 
 const client = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -31,16 +33,63 @@ const deep = new DeepClient({
 const resolvers = {
   Query: {
     guest: async (source, args, context, info) => {
-      const result = await client.mutate(generateSerial({
-        actions: [insertMutation('nodes', { objects: { type_id: await deep.id('@deep-foundation/core', 'User') } })],
-        name: 'INSERT_LINK',
-      }));
-      const linkId = result?.data?.m0?.returning?.[0]?.id;
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'User'),
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Contain'),
+          from_id: await deep.id('@deep-foundation/core', 'system', 'users')
+        } },
+      });
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                to_id: id,
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                to_id: id,
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+                },
+              ], }
+            } }
+          },
+        ] },
+      });
       const token = jwt({
         secret: jwt_secret.key,
-        linkId,
+        linkId: id,
       });
-      return { token, linkId };
+      return { token, linkId: id };
     },
   }
 };
@@ -49,6 +98,16 @@ const context = ({ req }) => {
   return { headers: req.headers };
 };
 
-const apolloServer = new ApolloServer({ introspection: true, typeDefs, resolvers, context });
+const generateApolloServer = (httpServer) => {
+  return new ApolloServer({ 
+    introspection: true,
+    typeDefs, 
+    resolvers,
+    context,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground()
+    ]});
+  }
 
-export default apolloServer;
+export default generateApolloServer;

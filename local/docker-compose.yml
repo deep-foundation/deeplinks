@@ -13,3 +13,5 @@ services:
       DEEPLINKS_HASURA_SSL: '${DEEPLINKS_HASURA_SSL}'
       DEEPLINKS_HASURA_SECRET: '${DEEPLINKS_HASURA_SECRET}'
       JWT_SECRET: '${JWT_SECRET}'
+volumes:
+  docker_socket: '${SOCKET_PATH}'

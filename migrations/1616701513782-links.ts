@@ -84,7 +84,7 @@ export const up = async () => {
     args: {
       name: TABLE_NAME,
       table: TABLE_NAME,
-      webhook: `${process.env.DEEPLINKS_URL}/api/links`,
+      webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/links`,
       insert: {
         columns: "*",
         payload: '*',
@@ -113,6 +113,7 @@ export const up = async () => {
           column_mapping: {
             from_id: 'id',
           },
+          insertion_order: 'before_parent',
         },
       },
     },
@@ -131,6 +132,7 @@ export const up = async () => {
           column_mapping: {
             to_id: 'id',
           },
+          insertion_order: 'before_parent',
         },
       },
     },
@@ -149,6 +151,7 @@ export const up = async () => {
           column_mapping: {
             type_id: 'id',
           },
+          insertion_order: 'before_parent',
         },
       },
     },
@@ -167,6 +170,7 @@ export const up = async () => {
           column_mapping: {
             id: 'to_id',
           },
+          insertion_order: 'after_parent',
         },
       },
     },
@@ -185,6 +189,7 @@ export const up = async () => {
           column_mapping: {
             id: 'from_id',
           },
+          insertion_order: 'after_parent',
         },
       },
     },
@@ -203,6 +208,7 @@ export const up = async () => {
           column_mapping: {
             id: 'type_id',
           },
+          insertion_order: 'after_parent',
         },
       },
     },

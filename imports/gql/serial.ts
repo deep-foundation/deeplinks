@@ -7,6 +7,7 @@ export interface ISerialOptions {
   actions: any[];
   name: string;
   alias?: string;
+  [key: string]: any;
 };
 
 export interface ISerialResult {
@@ -19,6 +20,7 @@ export const generateSerial = ({
   actions = [],
   name = 'SERIAL',
   alias = 'm',
+  ...options
 }: ISerialOptions): ISerialResult => {
   debug('generateSerial', { name, alias, actions });
   const calledActions = actions.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
@@ -39,6 +41,7 @@ export const generateSerial = ({
     mutation,
     variables,
     mutationString,
+    ...options
   };
   debug('generateSerialResult', JSON.stringify({ mutation: mutationString, variables }, null, 2));
   return result;

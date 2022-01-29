@@ -15,9 +15,10 @@ export interface PromiseOptions {
   Promise: number;
   Resolved: number;
   Rejected: number;
+  Results: boolean;
 }
 
-export function awaitPromise(options: PromiseOptions): Promise<boolean> {
+export function awaitPromise(options: PromiseOptions): Promise<any> {
   const id = options.id;
   const timeout = options.timeout || 1000; // @TODO todo dynamic timeout based on handlers avg runtime
   const client: ApolloClient<any> = options.client;
@@ -27,26 +28,37 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
       debug('!id', { id: options.id });
       return rej('options.id must be defined!');
     }
-    let observing;
+    let promises = null;
     try {
       while (true) {
         const result = await client.query(generateQuery({
           queries: [generateQueryData({ tableName: 'links', returning: `
-          id type { id value }
+          id type { id value } from_id to_id
           `, variables: {
             where: {
               _or: [
                 { id: { _eq: id } },
-                { from_id: { _eq: id }, type_id: { _eq: options.Then } },
+                { 
+                  from_id: { _eq: id },
+                  type_id: { _eq: options.Then },
+                  to: {
+                    _not: {
+                      out: {
+                        type_id: { _in: [options.Resolved, options.Rejected] }
+                      }
+                    }
+                  }
+                },
+                {
+                  type_id: { _eq: options.Promise },
+                  in: { type_id: { _eq: options.Then }, from_id: { _eq: id } },
+                },
                 {
                   from: {
                     type_id: { _eq: options.Promise },
                     in: { type_id: { _eq: options.Then }, from_id: { _eq: id } },
                   },
-                  _or: [
-                    { type_id: { _eq: options.Resolved } },
-                    { type_id: { _eq: options.Rejected } },
-                  ],
+                  type_id: { _in: [options.Resolved, options.Rejected] },
                 },
               ],
             },
@@ -60,43 +72,72 @@ export function awaitPromise(options: PromiseOptions): Promise<boolean> {
             return rej(result?.errors);
           }
           else if (result?.data) {
-            debug('data', result.data);
             const links = result.data?.q0;
-            let thenExists = false;
-            let thenResolved = false;
-            let thenRejected = false;
+            debug('data', JSON.stringify(links, null, 2));
+            if (promises === null) {
+              promises = {};
+              for (let l = 0; l < links.length; l++) {
+                const link = links[l];
+                if (link?.type?.id === options.Then) promises[link?.to_id] = true;
+              }
+            }
+            let promiseResolves = {};
+            let promiseRejects = {};
             for (let l = 0; l < links.length; l++) {
               const link = links[l];
-              if (link?.type?.id === options.Then) thenExists = true;
-              else if (link?.type?.id === options.Resolved) thenResolved = true;
-              else if (link?.type?.id === options.Rejected) thenRejected = true;
+              if (link?.type?.id === options.Resolved) promiseResolves[link?.from_id] = true;
+              else if (link?.type?.id === options.Rejected) promiseRejects[link?.from_id] = true;
             }
-            debug('analized', { thenExists, thenResolved, thenRejected });
+            
+            let promisesCount = Object.keys(promises).length;
+            let thenExists = promisesCount > 0;
+            debug('analized', { thenExists });
+
             if (thenExists) {
+              let thenResolvedByPromise: boolean[] = [];
+              let thenRejectedByPromise: boolean[] = [];
+              for (let key in promises)
+              {
+                thenResolvedByPromise.push(!!promiseResolves[key]);
+                thenRejectedByPromise.push(!!promiseRejects[key]);
+              }
+              const thenResolved = thenResolvedByPromise.some(r => r);
+              const thenRejected = thenRejectedByPromise.some(r => r);
+              debug('analized', { thenResolved, thenRejected });
+
+              const filteredLinks = links.filter(l => 
+                l?.id === id ||
+                l?.type?.id === options.Then ||
+                (l?.type?.id === options.Promise && promises[l?.id]) ||
+                (l?.type?.id === options.Resolved && promises[l?.from_id]) ||
+                (l?.type?.id === options.Rejected && promises[l?.from_id])
+              );
+              debug('filteredLinks', JSON.stringify(filteredLinks, null, 2));
+
               if (thenResolved && !thenRejected) {
                 debug('resolved');
-                return res(true);
+                return res(options.Results ? filteredLinks : true);
               }
               else if (thenRejected) {
                 debug('rejected');
-                return rej(false);
+                return res(options.Results ? filteredLinks : false);
               } else {
                 debug('waiting');
               }
             } else {
               debug('!then');
-              return res(true);
+              return res(options.Results ? [] : true);
             }
           }
         } catch(error) {
           debug('error', error);
-          return rej(false);
+          return rej(options.Results ? error : false);
         }
         await delay(timeout);
       }
     } catch(error) {
       debug('error', error);
-      return rej(false);
+      return rej(options.Results ? error : false);
     }
   });
 };
@@ -109,6 +150,13 @@ export async function findPromiseLink(options: PromiseOptions) {
         in: {
           type_id: { _eq: options.Then },
           from_id: { _eq: options.id },
+          to: {
+            _not: {
+              out: {
+                type_id: { _in: [options.Resolved, options.Rejected] }
+              }
+            }
+          }
         },
       } } }),
     ],

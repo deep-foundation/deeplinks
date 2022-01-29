@@ -1,49 +1,57 @@
-import { ApolloClient, ApolloQueryResult } from "@apollo/client";
-import { inherits } from "util";
+import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
+import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { useLocalStore } from "@deep-foundation/store/local";
+import { useMemo } from "react";
+import { deprecate, inherits } from "util";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
 import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
 import { awaitPromise } from "./promise";
+import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
 
 export const ALLOWED_IDS = [5];
 export const DENIED_IDS = [0, 10, 11, 12, 13];
 export const GLOBAL_ID_PACKAGE=2;
-export const GLOBAL_ID_PACKAGE_ACTIVE=44;
-export const GLOBAL_ID_PACKAGE_VERSION=45;
 export const GLOBAL_ID_CONTAIN=3;
+export const GLOBAL_ID_STRING=5;
+export const GLOBAL_ID_NUMBER=6;
+export const GLOBAL_ID_OBJECT=7;
 export const GLOBAL_ID_ANY=8;
 export const GLOBAL_ID_PROMISE=9;
 export const GLOBAL_ID_THEN=10;
 export const GLOBAL_ID_RESOLVED=11;
 export const GLOBAL_ID_REJECTED=12;
+export const GLOBAL_ID_TREE=36;
+export const GLOBAL_ID_INCLUDE_DOWN=37;
+export const GLOBAL_ID_INCLUDE_UP=38;
+export const GLOBAL_ID_INCLUDE_NODE=39;
+export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
+export const GLOBAL_ID_PACKAGE_ACTIVE=45;
+export const GLOBAL_ID_PACKAGE_VERSION=46;
+export const GLOBAL_ID_HANDLE_UPDATE=50;
+
+const _ids = {
+  '@deep-foundation/core': {
+    'Contain': GLOBAL_ID_CONTAIN,
+    'Package': GLOBAL_ID_PACKAGE,
+    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
+    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
+    'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
+    'Promise': GLOBAL_ID_PROMISE,
+    'Then': GLOBAL_ID_THEN,
+    'Resolved': GLOBAL_ID_RESOLVED,
+    'Rejected': GLOBAL_ID_REJECTED,
+    'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
+  },
+};
 
 export interface DeepClientOptions<L = Link<number>> {
-  apolloClient: ApolloClient<any>;
-  minilinks?: MinilinksResult<L>;
-  table?: string;
-  returning?: string;
+  linkId?: number;
+  token?: string;
+  handleAuth?: (linkId?: number, token?: string) => any;
 
-  selectReturning?: string;
-  insertReturning?: string;
-  updateReturning?: string;
-  deleteReturning?: string;
+  deep?: DeepClientInstance<L>;
 
-  defaultSelectName?: string;
-  defaultInsertName?: string;
-  defaultUpdateName?: string;
-  defaultDeleteName?: string;
-}
-
-export interface DeepClientResult<R> extends ApolloQueryResult<R> {}
-
-export type DeepClientPackageSelector = string;
-export type DeepClientPackageContain = string;
-export type DeepClientLinkId = number;
-// export type DeepClientBoolExp = number;
-export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
-export type DeepClientPathItem = DeepClientPackageContain;
-
-export interface DeepClientInstance<L = Link<number>> {
   apolloClient?: ApolloClient<any>;
   minilinks?: MinilinksResult<L>;
   table?: string;
@@ -58,6 +66,44 @@ export interface DeepClientInstance<L = Link<number>> {
   defaultInsertName?: string;
   defaultUpdateName?: string;
   defaultDeleteName?: string;
+
+  silent?: boolean;
+}
+
+export interface DeepClientResult<R> extends ApolloQueryResult<R> {
+  error?: ApolloError;
+}
+
+export type DeepClientPackageSelector = string;
+export type DeepClientPackageContain = string;
+export type DeepClientLinkId = number;
+// export type DeepClientBoolExp = number;
+export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
+export type DeepClientPathItem = DeepClientPackageContain;
+
+export interface DeepClientInstance<L = Link<number>> {
+  linkId?: number;
+  token?: string;
+  handleAuth?: (linkId?: number, token?: string) => any;
+
+  deep: DeepClientInstance<L>;
+
+  apolloClient?: ApolloClient<any>;
+  minilinks?: MinilinksResult<L>;
+  table?: string;
+  returning?: string;
+
+  selectReturning?: string;
+  insertReturning?: string;
+  updateReturning?: string;
+  deleteReturning?: string;
+
+  defaultSelectName?: string;
+  defaultInsertName?: string;
+  defaultUpdateName?: string;
+  defaultDeleteName?: string;
+
+  stringify(any?: any): string;
 
   select<LL = L>(exp: any, options?: {
     table?: string;
@@ -91,10 +137,42 @@ export interface DeepClientInstance<L = Link<number>> {
 
   await(id: number): Promise<boolean>;
 
+  serializeWhere(exp: any, env?: string): any;
+  serializeQuery(exp: any, env?: string): any;
+
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number>;
+
+  guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
+
+  jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult>;
+
+  login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult>;
+
+  logout(): Promise<DeepClientAuthResult>;
+}
+
+export interface DeepClientAuthResult {
+  linkId?: number;
+  token?: string;
+  error?: any;
+}
+
+export interface DeepClientGuestOptions {
+  relogin?: boolean;
+}
+
+export interface DeepClientJWTOptions {
+  linkId?: number;
+  relogin?: boolean;
 }
 
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
+  linkId?: number;
+  token?: string;
+  handleAuth?: (linkId?: number, token?: string) => any;
+
+  deep: DeepClientInstance<L>;
+
   apolloClient?: ApolloClient<any>;
   minilinks?: MinilinksResult<L>;
   table?: string;
@@ -110,11 +188,30 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   defaultUpdateName?: string;
   defaultDeleteName?: string;
 
+  silent: boolean;
+  _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
+    return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
+  }
+
   constructor(options: DeepClientOptions<L>) {
+    this.deep = options.deep;
+
+    if (!this.apolloClient && !options.apolloClient && options.token) {
+      this.apolloClient = generateApolloClient({
+        path: `${process.env.HASURA_PATH}/v1/graphql`,
+        ssl: !!+process.env.HASURA_SSL,
+        token: options.token,
+      });
+    }
+
     // @ts-ignore
     this.minilinks = options.minilinks || minilinks([]);
-    this.apolloClient = options.apolloClient;
+    if (!this.apolloClient) this.apolloClient = options.apolloClient;
     this.table = options.table || 'links';
+
+    this.linkId = options.linkId;
+    this.token = options.token;
+    this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
 
     this.selectReturning = options.selectReturning || 'id type_id from_id to_id value';
     this.insertReturning = options.insertReturning || 'id';
@@ -125,6 +222,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.defaultInsertName = options.defaultInsertName || 'INSERT';
     this.defaultUpdateName = options.defaultUpdateName || 'UPDATE';
     this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
+    
+    this.silent = options.silent || false;
+  }
+
+  stringify(any?: any): string {
+    if (typeof(any) === 'string') {
+      let json;
+      try { json = JSON.parse(any); } catch(error) {}
+      return json ? JSON.stringify(json, null, 2) : any.toString();
+    } else if (typeof(any) === 'object') {
+      return JSON.stringify(any, null, 2);
+    }
+    return any;
   }
 
   async select<LL = L>(exp: any, options?: {
@@ -133,7 +243,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -159,16 +269,25 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     returning?: string;
     variables?: any;
     name?: string;
+    silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
-    const q = await this.apolloClient.mutate(generateSerial({
-      actions: [insertMutation(table, { ...variables, objects: objects }, { tableName: table, operation: 'insert', returning })],
-      name: name,
-    }));
+    let q: any = {};
+    try {
+      q = await this.apolloClient.mutate(generateSerial({
+        actions: [insertMutation(table, { ...variables, objects: objects }, { tableName: table, operation: 'insert', returning })],
+        name: name,
+      }));
+    } catch(error) {
+      const sqlError = error?.graphQLErrors?.[0]?.extensions?.internal?.error;
+      if (sqlError?.message) error.message = sqlError.message;
+      if (!this._silent(options)) throw error;
+      return { ...q, data: (q)?.data?.m0?.returning, error };
+    }
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
   };
@@ -179,13 +298,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
     const q = await this.apolloClient.mutate(generateSerial({
-      actions: [updateMutation(table, { ...variables, where: exp, _set: value }, { tableName: table, operation: 'update', returning })],
+      actions: [updateMutation(table, { ...variables, where, _set: value }, { tableName: table, operation: 'update', returning })],
       name: name,
     }));
     // @ts-ignore
@@ -198,13 +317,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serialize(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultDeleteName;
     const q = await this.apolloClient.mutate(generateSerial({
-      actions: [deleteMutation(table, { ...variables, where: exp, returning }, { tableName: table, operation: 'delete', returning })],
+      actions: [deleteMutation(table, { ...variables, where, returning }, { tableName: table, operation: 'delete', returning })],
       name: name,
     }));
     // @ts-ignore
@@ -215,13 +334,14 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return reserve({ count, client: this.apolloClient });
   };
 
-  async await(id: number): Promise<boolean> {
+  async await(id: number, options: { results: boolean } = { results: false } ): Promise<any> {
     return awaitPromise({
       id, client: this.apolloClient,
       Then: await this.id('@deep-foundation/core', 'Then'),
       Promise: await this.id('@deep-foundation/core', 'Promise'),
       Resolved: await this.id('@deep-foundation/core', 'Resolved'),
       Rejected: await this.id('@deep-foundation/core', 'Rejected'),
+      Results: options.results
     });
   };
 
@@ -247,13 +367,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     },
   };
 
+  _boolExpFields = {
+    _and: true,
+    _not: true,
+    _or: true,
+  };
+
   /**
    * Watch relations to links and values.
    * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
    * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
    */
-  serialize(exp: any, env: string = 'link'): any {
-    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map(this.serialize);
+  serializeWhere(exp: any, env: string = 'link'): any {
+    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => this.serializeWhere(e, env));
     else if (typeof(exp) === 'object') {
       const keys = Object.keys(exp);
       const result = {};
@@ -268,19 +394,27 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
             } else {
               setted = result[key] = { _eq: exp[key] };
             }
+          } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+            // @ts-ignore
+            setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
           }
         } else if (env === 'value') {
           if (type === 'string' || type === 'number') {
             setted = result[key] = { _eq: exp[key] };
           }
         }
-        if (!setted) result[key] = this._serialize?.[env]?.relations?.[key] ? this.serialize(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
+        if (!setted) result[key] = this._boolExpFields[key] ? this.serializeWhere(exp[key], env) : this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
       }
       return result;
     } else return exp;
   };
 
-  async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+  serializeQuery(exp: any, env: string = 'link'): any {
+    const { limit, order_by, offset, distinct_on, ...where } = exp;
+    return { limit, order_by, offset, distinct_on, where: this.serializeWhere(where, env) };
+  }
+
+  pathToWhere(start: DeepClientStartItem, ...path: DeepClientPathItem[]): any {
     const pckg = { type_id: GLOBAL_ID_PACKAGE, value: start };
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
@@ -288,22 +422,101 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
       where = nextWhere;
     }
-    const q = await this.select(where);
+    return where;
+  }
+
+  async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+    const q = await this.select(this.pathToWhere(start, ...path));
     if (q.error) throw q.error;
     // @ts-ignore
-    return (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
+    const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
+    if (!result) throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
+    return result;
+  };
+
+  async guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult> {
+    const result = await this.apolloClient.query({ query: GUEST });
+    const { linkId, token, error } = result?.data?.guest || {};
+    if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+      if (this?.handleAuth) this?.handleAuth(linkId, token);
+    }
+    return { linkId, token, error };
+  };
+
+  async jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
+    const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
+    const { linkId, token, error } = result?.data?.jwt || {};
+    if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+      if (this?.handleAuth) this?.handleAuth(linkId, token);
+    }
+    return { linkId, token, error };
+  };
+
+  async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
+    return await this.jwt({ ...options, relogin: true });
+  };
+
+  async logout(): Promise<DeepClientAuthResult> {
+    if (this?.handleAuth) this?.handleAuth(0, '');
+    return { linkId: 0, token: '' };
   };
 }
 
-const _ids = {
-  '@deep-foundation/core': {
-    'Contain': GLOBAL_ID_CONTAIN,
-    'Package': GLOBAL_ID_PACKAGE,
-    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
-    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
-    'Promise': GLOBAL_ID_PROMISE,
-    'Then': GLOBAL_ID_THEN,
-    'Resolved': GLOBAL_ID_RESOLVED,
-    'Rejected': GLOBAL_ID_REJECTED,
-  },
-};
+export const JWT = gql`query JWT($linkId: Int) {
+  jwt(input: {linkId: $linkId}) {
+    linkId
+    token
+  }
+}`;
+
+export const GUEST = gql`query GUEST {
+  guest {
+    linkId
+    token
+  }
+}`;
+
+export function useAuthNode() {
+  return useLocalStore('use_auth_link_id', 0);
+}
+
+export function useDeep(apolloClientProps?: ApolloClient<any>) {
+  const apolloClientHook = useApolloClient();
+  const apolloClient = apolloClientProps || apolloClientHook;
+
+  const [linkId, setLinkId] = useAuthNode();
+  const [token, setToken] = useTokenController();
+
+  const deep = useMemo(() => {
+    return new DeepClient({
+      apolloClient, linkId, token,
+      handleAuth: (linkId, token) => {
+        setToken(token);
+        setLinkId(linkId);
+      },
+    });
+  }, [apolloClient]);
+  return deep;
+}
+
+export function useDeepQuery(query: any, options?: any): any {
+  const deep = useDeep();
+  const wq = useMemo(() => {
+    const sq = deep.serializeQuery(query);
+    return generateQuery({
+      operation: 'query',
+      queries: [generateQueryData({
+        tableName: 'links',
+        returning: `
+          id type_id from_id to_id value
+          string { id value }
+          number { id value }
+          object { id value }
+        `,
+        variables: { ...sq, ...options?.variables }
+      })],
+      name: options?.name || 'USE_DEEP_QUERY',
+    });
+  }, []);
+  return useQuery(wq.query, { variables: wq?.variables });
+}
