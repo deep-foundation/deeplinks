@@ -189,6 +189,35 @@ export const up = async () => {
       },
     ],
   });
+  await insertRule(admin, {
+    subject: users,
+    object: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'Focus'),
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+        to: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+          object: { data: { value: {
+            from: {
+              _by_item: {
+                group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+                path_item_id: { _eq: 'X-Deep-User-Id' },
+              },
+            },
+          } } }
+        } },
+      },
+    ],
+    action: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
+      },
+    ],
+  });
   console.log('done');
   // insertRule({
   //   subject: {

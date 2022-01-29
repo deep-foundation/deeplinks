@@ -169,14 +169,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         if (byFrom[link[options.id]]?.length) {
           for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
             const dep = byFrom[link[options.id]][i];
-            dep.from = link;
+            dep[options.from] = link;
             link[options.out].push(dep);
           }
         }
         if (byTo[link[options.id]]?.length) {
           for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
             const dep = byTo[link[options.id]][i];
-            dep.to = link;
+            dep[options.to] = link;
             link[options.in].push(dep);
           }
         }
@@ -225,17 +225,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         const dep = byFrom?.[id]?.[i];
         dep[options.from] = undefined;
       }
-      delete byFrom?.[id];
       for (let i = 0; i < byTo?.[id]?.length; i++) {
         const dep = byTo?.[id]?.[i];
         dep[options.to] = undefined;
       }
-      delete byTo?.[id];
       for (let i = 0; i < byType?.[id]?.length; i++) {
         const dep = byType?.[id]?.[i];
         dep[options.type] = undefined;
       }
-      delete byType?.[id];
       delete byId?.[id];
       if (!this._updating) this.emitter.emit('removed', id);
     }
