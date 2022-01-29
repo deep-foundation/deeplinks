@@ -178,7 +178,7 @@ export const up = async () => {
       } },
     });
     // System
-    await root.insert({
+    const { data: [{ id: adminId }] } = await root.insert({
       type_id: await root.id('@deep-foundation/core', 'User'),
       in: { data: [
         {
@@ -188,6 +188,7 @@ export const up = async () => {
         },
       ], },
     });
+    console.log({ adminId });
   }
 };
 

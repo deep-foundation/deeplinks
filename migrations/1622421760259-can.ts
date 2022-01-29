@@ -26,7 +26,7 @@ export const up = async () => {
   debug('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
-    SELECT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
+    SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
     FROM
     ${TABLE_NAME} as r,
     ${TABLE_NAME} as o,
@@ -40,9 +40,11 @@ export const up = async () => {
     o."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
     o."from_id" = r."id" AND
     (o."to_id" = sr_o."selector_id" OR o."to_id" = ${await deep.id('@deep-foundation/core', 'Any')}) AND
+
     s."type_id" = ${await deep.id('@deep-foundation/core', 'RuleSubject')} AND
     s."from_id" = r."id" AND
     (s."to_id" = sr_s."selector_id" OR s."to_id" = ${await deep.id('@deep-foundation/core', 'Any')}) AND
+
     a."type_id" = ${await deep.id('@deep-foundation/core', 'RuleAction')} AND
     a."from_id" = r."id" AND
     (a."to_id" = sr_a."selector_id" OR a."to_id" = ${await deep.id('@deep-foundation/core', 'Any')})
