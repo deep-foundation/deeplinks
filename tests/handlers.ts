@@ -389,8 +389,7 @@ describe('sync function handle by schedule with resolve', () => {
     // const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-    // const linkId = await ensureLinkIsCreated(typeId);
-    // await deep.await(linkId);
+    await deep.await(handler.scheduleId);
 
     // const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     // const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);

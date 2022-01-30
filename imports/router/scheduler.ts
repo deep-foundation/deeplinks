@@ -146,7 +146,16 @@ export async function handleScheduleMomemt(moment: any) {
     const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
     const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-    const promise = await insertPromise(scheduleId);
+    const promise = await findPromiseLink({
+      id: scheduleId, client: deep.apolloClient,
+      Then: await deep.id('@deep-foundation/core', 'Then'),
+      Promise: await deep.id('@deep-foundation/core', 'Promise'),
+      Resolved: resolvedTypeId,
+      Rejected: rejectedTypeId,
+      Results: false,
+    });
+    // const promise = 
+    await insertPromise(scheduleId);
     console.log('promise: ', promise);
     if (promise) {
       console.log("promises.length: ", promises.length);

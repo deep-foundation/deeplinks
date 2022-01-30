@@ -27,9 +27,13 @@ export const up = async () => {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
   
-  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
+  DECLARE 
+    PROMISE bigint;
+    SCHEDULE bigint;
   BEGIN
     IF (
         EXISTS(
@@ -53,6 +57,12 @@ export const up = async () => {
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."id",PROMISE);
+    END IF;
+    IF (
+      NEW."type_id" = ${handleScheduleTypeId}
+    ) THEN
+    INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW.from_id,PROMISE);
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
