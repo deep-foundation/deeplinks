@@ -434,7 +434,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return result;
   };
 
-  async guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult> {
+  async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
     const result = await this.apolloClient.query({ query: GUEST });
     const { linkId, token, error } = result?.data?.guest || {};
     if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
