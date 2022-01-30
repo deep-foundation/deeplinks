@@ -169,14 +169,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         if (byFrom[link[options.id]]?.length) {
           for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
             const dep = byFrom[link[options.id]][i];
-            dep.from = link;
+            dep[options.from] = link;
             link[options.out].push(dep);
           }
         }
         if (byTo[link[options.id]]?.length) {
           for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
             const dep = byTo[link[options.id]][i];
-            dep.to = link;
+            dep[options.to] = link;
             link[options.in].push(dep);
           }
         }
@@ -225,17 +225,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         const dep = byFrom?.[id]?.[i];
         dep[options.from] = undefined;
       }
-      delete byFrom?.[id];
       for (let i = 0; i < byTo?.[id]?.length; i++) {
         const dep = byTo?.[id]?.[i];
         dep[options.to] = undefined;
       }
-      delete byTo?.[id];
       for (let i = 0; i < byType?.[id]?.length; i++) {
         const dep = byType?.[id]?.[i];
         dep[options.type] = undefined;
       }
-      delete byType?.[id];
       delete byId?.[id];
       if (!this._updating) this.emitter.emit('removed', id);
     }
@@ -253,6 +250,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const toAdd = [];
     const toUpdate = [];
+    const beforeUpdate = {};
     const toRemove = [];
     const _byId: any = {};
     for (let l = 0; l < linksArray.length; l++) {
@@ -261,7 +259,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (!old) toAdd.push(link);
       else if (!options.equal(old, link)) {
         toUpdate.push(link);
-        this.emitter.emit('updated', old, link);
+        beforeUpdate[link.id] = old;
       }
       _byId[link.id] = link;
     }
@@ -274,6 +272,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     this._updating = true;
     const r2 = this.remove(toUpdate.map(l => l[options.id]));
     const a2 = this.add(toUpdate);
+    for (let i = 0; i < toUpdate.length; i++) {
+      const l = toUpdate[i];
+      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
+    }
     this._updating = false;
     return { errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors], anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies] };
   }
