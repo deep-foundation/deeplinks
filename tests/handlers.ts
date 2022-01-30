@@ -34,7 +34,7 @@ const insertOperationHandlerForType = async (handleOperationTypeId: number, type
   }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
   return {
     handlerId: handler?.id,
-    handleInsertId: handleOperation?.id,
+    handleOperationId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
   };
@@ -67,7 +67,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
   }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
   return {
     handlerId: handler?.id,
-    handleInsertId: handleOperation?.id,
+    handleOperationId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
     scheduleId: scheduleNode?.id,
@@ -92,13 +92,13 @@ export async function deletePromiseResult(promiseResult: any, linkId: any = null
 }
 
 export const deleteHandler = async (handler) => {
-  await deep.delete({ id: { _in: [handler.handlerJSFileId, handler.handlerId, handler.handleInsertId]}});
+  await deep.delete({ id: { _in: [handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]}});
   await deep.delete({ id: { _eq: handler.handlerJSFileValueId}}, { table: 'strings' });
 };
 
 export const deleteScheduleHandler = async (handler) => {
-  await deep.delete({ id: { _in: [handler.scheduleId, handler.scheduleValueId]}});
   await deleteHandler(handler);
+  await deep.delete({ id: { _in: [handler.scheduleId, handler.scheduleValueId]}});
 };
 
 export async function ensureLinkIsCreated(typeId: number) {
@@ -391,15 +391,15 @@ describe('sync function handle by schedule with resolve', () => {
 
     await deep.await(handler.scheduleId);
 
-    // const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    // const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
-    // const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, handler.scheduleId);
+    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
-    // assert.isTrue(!!promiseResult);
+    assert.isTrue(!!promiseResult);
 
-    // await deletePromiseResult(promiseResult, linkId);
+    await deletePromiseResult(promiseResult, handler.scheduleId);
 
-    // await deleteHandler(handler);
+    await deleteScheduleHandler(handler);
   });
 });
 
