@@ -60,7 +60,7 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-export const useRunner = async ({ code, beforeLink, afterLink }) => {
+export const useRunner = async ({ code, beforeLink, afterLink, moment } : { code: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
   // for now jwt only admin. In future jwt of client created event.
@@ -109,7 +109,7 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
       }
     }
     console.log(5);
-    const initResult = await axios.post(`http://localhost:${port}/init`, { params: { code, jwt } }); // code
+    const initResult = await axios.post(`http://localhost:${port}/init`, { params: {  } });
     console.log('initResult', initResult.data);
     console.log(6);
   // if all ok and hash has container
@@ -118,7 +118,7 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   }
   console.log(7);
   try {
-    const result = await axios.post(`http://localhost:${port}/call`,  { params: { beforeLink, afterLink }});
+    const result = await axios.post(`http://localhost:${port}/call`,  { params: { code, jwt, beforeLink, afterLink, moment }});
     if(result?.data?.resolved) {
       return result.data.resolved;
     }
