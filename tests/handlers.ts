@@ -27,16 +27,51 @@ const insertOperationHandlerForType = async (handleOperationTypeId: number, type
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
-  const handleInsert = (await deep.insert({
+  const handleOperation = (await deep.insert({
     from_id: typeId,
     type_id: handleOperationTypeId,
     to_id: handler?.id,
   }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
   return {
     handlerId: handler?.id,
-    handleInsertId: handleInsert?.id,
+    handleOperationId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
+  };
+};
+
+const insertOperationHandlerForSchedule = async (schedule: string, code: string) => {
+  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+  const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
+  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+  const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+  const jsExecutionProviderId = await deep.id('@deep-foundation/core', 'JSExecutionProvider');
+  const handlerJSFile = (await deep.insert({ 
+    type_id: syncTextFileTypeId,
+  }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
+  const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
+  const handler = (await deep.insert({
+    from_id: jsExecutionProviderId,
+    type_id: handlerTypeId,
+    to_id: handlerJSFile?.id,
+  }, { name: 'IMPORT_HANDLER' })).data[0];
+  const scheduleNode = (await deep.insert({
+    type_id: scheduleTypeId,
+  }, { name: 'IMPORT_SCHEDULE' })).data[0];
+  console.log(typeof schedule)
+  const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
+  const handleOperation = (await deep.insert({
+    from_id: scheduleNode?.id,
+    type_id: handleScheduleTypeId,
+    to_id: handler?.id,
+  }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
+  return {
+    handlerId: handler?.id,
+    handleOperationId: handleOperation?.id,
+    handlerJSFileId: handlerJSFile?.id,
+    handlerJSFileValueId: handlerJSFileValue?.id,
+    scheduleId: scheduleNode?.id,
+    scheduleValueId: scheduleValue?.id,
   };
 };
 
@@ -57,8 +92,13 @@ export async function deletePromiseResult(promiseResult: any, linkId: any = null
 }
 
 export const deleteHandler = async (handler) => {
-  await deep.delete({ id: { _in: [handler.handlerJSFileId, handler.handlerId, handler.handleInsertId]}});
+  await deep.delete({ id: { _in: [handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]}});
   await deep.delete({ id: { _eq: handler.handlerJSFileValueId}}, { table: 'strings' });
+};
+
+export const deleteScheduleHandler = async (handler) => {
+  await deleteHandler(handler);
+  await deep.delete({ id: { _in: [handler.scheduleId, handler.scheduleValueId]}});
 };
 
 export async function ensureLinkIsCreated(typeId: number) {
@@ -339,6 +379,27 @@ describe('async function handle by type with reject', () => {
     await deletePromiseResult(promiseResult, linkId);
 
     await deleteHandler(handler);
+  });
+});
+
+describe('sync function handle by schedule with resolve', () => {
+  it(`handle schedule`, async () => {
+    const numberToReturn = randomInteger(5000000, 9999999999);
+
+    // const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+
+    await deep.await(handler.scheduleId);
+
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, handler.scheduleId);
+    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+
+    assert.isTrue(!!promiseResult);
+
+    await deletePromiseResult(promiseResult, handler.scheduleId);
+
+    await deleteScheduleHandler(handler);
   });
 });
 

@@ -18,6 +18,10 @@ const SCHEMA = 'public';
 
 const debug = Debug('deepcase:eh');
 
+// const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
+
+const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
+
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
@@ -53,7 +57,7 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-export const useRunner = async ({ code, beforeLink, afterLink }) => {
+export const useRunner = async ({ code, beforeLink, afterLink, moment } : { code: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
   // for now jwt only admin. In future jwt of client created event.
@@ -239,6 +243,58 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   }
 }
 
+export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT' | 'DELETE') {
+  console.log('handleScheduleLink', handleScheduleLink);
+  console.log('operation', operation);
+  if (operation == 'INSERT') {
+    // get schedule
+    const schedule = await deep.select({
+      type_id: await deep.id('@deep-foundation/core', 'Schedule'),
+      out: {
+        id: { _eq: handleScheduleLink.id },
+      },
+    }, {
+      table: 'links',
+      returning: 'id value',
+    });
+    console.log(schedule);
+    const scheduleId = schedule?.data?.[0]?.id;
+    const scheduleValue = schedule?.data?.[0]?.value.value;
+    console.log('scheduleId', scheduleId);
+    console.log('scheduleValue', scheduleValue);
+    await api.query({
+      type: 'create_cron_trigger',
+      args: {
+        name: `handle_schedule_${handleScheduleLink?.id}`,
+        webhook: `${DEEPLINKS_PUBLIC_URL}/api/scheduler`,
+        schedule: scheduleValue,
+        include_in_metadata: true,
+        payload: {
+          scheduleId,
+          schedule: scheduleValue,
+          handleScheduleLinkId: handleScheduleLink?.id,
+        },
+        retry_conf: {
+          num_retries: 3,
+          timeout_seconds: 120,
+          tolerance_seconds: 21675,
+          retry_interval_seconds: 12
+        },
+        comment: `Event trigger for handle schedule link ${handleScheduleLink?.id} with cron schedule definition ${scheduleValue} of ${scheduleId} schedule.`,
+      }
+    });
+    console.log('cron trigger created');
+  } else if (operation == 'DELETE') {
+    await api.query({
+      type: 'delete_cron_trigger',
+      args: {
+        name: `handle_schedule_${handleScheduleLink?.id}`,
+      }
+    });
+    console.log('cron trigger deleted');
+  }
+}
+
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
@@ -283,6 +339,11 @@ export default async (req, res) => {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
           await handleOperation('Delete', oldRow, newRow);
+        }
+
+        const handleScheduleId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+        if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
+          await handleSchedule(current, operation);
         }
 
         // console.log("done");

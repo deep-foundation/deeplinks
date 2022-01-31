@@ -156,6 +156,12 @@ const corePckg: PackagerPackage = {
     { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 78
 
     { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 79
+
+    { id: 'HandleSchedule', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 80
+
+    { id: 'Schedule', type: 'Type' }, // 81
+
+    { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 82
   ],
   errors: [],
   strict: true,
@@ -194,7 +200,15 @@ export const up = async () => {
   }
 };
 
+const delay = time => new Promise(res => setTimeout(res, time));
+
 export const down = async () => {
   debug('down');
+  const handleScheduleId = await root.id('@deep-foundation/core', 'HandleSchedule');
+  const deletedHandlers = await root.delete({ 
+    type_id: handleScheduleId,
+  }, { name: 'DELETE_SCHEDULE_HANDLERS' });
+  console.log(JSON.stringify(deletedHandlers, null, 2));
+  await delay(10000);
   await root.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };
