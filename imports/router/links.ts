@@ -34,9 +34,6 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-const portHash = {};
-const containerHash = {};
-
 export function makePromiseResult(promise: any, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
   return {
     from: {
@@ -63,58 +60,26 @@ export const useRunner = async ({ code, beforeLink, afterLink }) => {
   const runnerPort = 3020;
   const runnerImageAndTag = 'konard/deep-runner-js:main';
   const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
-  const data = jwt + code;
-  
+  const data = runnerImageAndTag;
   const containerName = crypto.createHash('md5').update(data).digest("hex");
-  let port;
-  if (!portHash[containerName]){
-    // port form 1000 to 2000
-    port = Math.floor(Math.random() * 1000) + 1000;
-    // check hash
-    portHash[containerName] = port;
-    containerHash[port] = containerName;
-    const startDocker = `docker run --name ${containerName} -p ${port}:${runnerPort} -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${port}/healthz`;
-    let startResult;
-    try {
-      startResult = await execSync(startDocker).toString();
-    } catch (e){
-      startResult = e.stderr;
-    }
-    console.log('startResult', startResult.toString());
-    //if hash not contain somethin in port retry start runner on other port
-    console.log(1);
-    while (startResult.indexOf('port is already arllocated') !== -1) {
-      console.log(2);
-      // fix hash that this port is busy
-      containerHash[port] = 'broken';
-      port = Math.floor(Math.random() * 1000) + 1000;
-      containerHash[port] = containerName;
-      const REstartDocker = `docker run --name ${containerName} -p ${port}:3020 -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${port}/healthz`;
-      const startResult = await execSync(REstartDocker).toString();
-      console.log('REstartResult', startResult);
-    }
-    console.log(3);
-    // if container for this code and jwt exists recreate container becouse we can not verify container port (or here may be ask docker to tell port instead)
-    if (startResult.indexOf('is already in use by container') !== -1){
-      console.log(4);
-      const REstartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run --name ${containerName} -p ${port}:3020 -d ${runnerImageAndTag} && npx -q wait-on --timeout 10000 http://localhost:${port}/healthz`;
-      try {
-        await execSync(REstartDocker).toString();
-      } catch (e){
-        console.log(e?.status);
-      }
-    }
-    console.log(5);
-    const initResult = await axios.post(`http://localhost:${port}/init`, { params: { code, jwt } }); // code
-    console.log('initResult', initResult.data);
-    console.log(6);
-  // if all ok and hash has container
-  } else {
-    port = portHash[containerName];
-  }
-  console.log(7);
+  const startDocker = `docker run --name ${containerName} -p ${runnerPort}:${runnerPort} -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${runnerPort}/healthz`;
+
+  let startResult;
   try {
-    const result = await axios.post(`http://localhost:${port}/call`,  { params: { beforeLink, afterLink }});
+    const initResult = await axios.post(`http://localhost:${runnerPort}/init`); // code
+    console.log('initResult.status', initResult.status);
+    if (initResult.status !== 200){
+      startResult = await execSync(startDocker).toString();
+    } else {
+      startResult = 'ok';
+    }
+  } catch (e){
+    startResult = e.stderr;
+  }
+  console.log(startResult);
+
+  try {
+    const result = await axios.post(`http://localhost:${runnerPort}/call`,  { params: { beforeLink, afterLink, code, jwt }});
     if(result?.data?.resolved) {
       return result.data.resolved;
     }
