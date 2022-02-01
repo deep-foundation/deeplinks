@@ -78,47 +78,8 @@ export interface MinilinksInstance<L extends Link<number>>{
 
 export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<number>>(options: MGO): MinilinksInstance<L> {
   return function minilinks<L>(linksArray = [], memory: any = {}): MinilinksResult<L> {
-    if (!memory.options) memory.options = options;
-    const types: { [id: number]: L[] } = memory.types || {};
-    const byId: { [id: number]: L } = memory.byId || {};
-    const links: L[] = memory.links || [];
-    const newLinks: L[] = [];
-    for (let l = 0; l < linksArray.length; l++) {
-      if (byId[linksArray[l][options.id]]) {
-        if (options.handler) options.handler(byId[linksArray[l][options.id]], memory);
-      } else {
-        const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
-        byId[link[options.id]] = link;
-        types[link[options.type_id]] = types[link[options.type_id]] || [];
-        types[link[options.type_id]].push(link);
-        links.push(link);
-        newLinks.push(link);
-      }
-    }
-    for (let l = 0; l < newLinks.length; l++) {
-      const link = newLinks[l];
-      if (byId[link[options.type_id]]) {
-        link[options.type] = byId[link[options.type_id]];
-        byId[link[options.type_id]][options.typed].push(link);
-      }
-      if (byId[link[options.from_id]]) {
-        link[options.from] = byId[link[options.from_id]];
-        byId[link[options.from_id]][options.out].push(link);
-        byId[link[options.from_id]][options.outByType][link[options.type_id]] = byId[link[options.from_id]][options.outByType][link[options.type_id]] || [];
-        byId[link[options.from_id]][options.outByType][link[options.type_id]].push(link);
-      }
-      if (byId[link[options.to_id]]) {
-        link[options.to] = byId[link[options.to_id]];
-        byId[link[options.to_id]][options.in].push(link);
-        byId[link[options.to_id]][options.inByType][link[options.type_id]] = byId[link[options.to_id]][options.inByType][link[options.type_id]] || [];
-        byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
-      }
-      if (options.handler) options.handler(link, memory);
-    }
-    if (!memory.types) memory.types = types;
-    if (!memory.byId) memory.byId = byId;
-    if (!memory.links) memory.links = links;
-    return memory;
+    // @ts-ignore
+    return new MinilinkCollection<MGO, L>(options, memory);
   }
 }
 
@@ -203,6 +164,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
       } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not founded`));
       if (options.handler) options.handler(link, this);
+    }
+    for (let l = 0; l < newLinks.length; l++) {
+      const link: L = newLinks[l];
       if (!this._updating) this.emitter.emit('added', link);
     }
     return {
@@ -217,9 +181,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const anomalies = [];
     const errors = [];
-    const newLinks: L[] = [];
+    const oldLinks: L[] = [];
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
+      oldLinks.push(byId[id]);
       if (!byId[id]) errors.push(new Error(`${id} can't delete because not exists in collection`));
       for (let i = 0; i < byFrom?.[id]?.length; i++) {
         const dep = byFrom?.[id]?.[i];
@@ -234,9 +199,12 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         dep[options.type] = undefined;
       }
       delete byId?.[id];
-      if (!this._updating) this.emitter.emit('removed', id);
     }
     _remove(links, l => idsArray.includes(l[options.id]));
+    for (let l = 0; l < oldLinks.length; l++) {
+      const link = oldLinks[l];
+      if (!this._updating) this.emitter.emit('removed', link);
+    }
     return {
       anomalies,
       errors,
