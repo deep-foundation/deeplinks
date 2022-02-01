@@ -85,14 +85,14 @@ export const up = async () => {
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
         } },
       },
-      // {
-      //   type_id: await deep.id('@deep-foundation/core', 'Exclude'),
-      //   to_id: await deep.id('@deep-foundation/core', 'system'),
-      //   out: { data: {
-      //     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-      //     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-      //   } },
-      // }
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+        to_id: await deep.id('@deep-foundation/core', 'system'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      }
     ],
     action: [
       {
