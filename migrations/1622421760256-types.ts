@@ -132,7 +132,7 @@ const corePckg: PackagerPackage = {
     { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 62
     { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 63
 
-    { id: 'Auth', type: 'Operation' }, // 64
+    { id: 'AllowLogin', type: 'Operation' }, // 64
 
     { id: 'guests', type: 'Any' }, // 65
     { id: 'Join', type: 'Type' }, // 66
@@ -146,22 +146,17 @@ const corePckg: PackagerPackage = {
     { id: 'system', type: 'Type', value: { value: 'system' } }, // 71
 
     { id: 'Exclude', type: 'Type', value: { value: 'Exclude' }, from: 'Selector', to: 'Any' }, // 72
-    
-    { id: 'DenyInsert', type: 'Operation' }, // 73
-    { id: 'DenyUpdate', type: 'Operation' }, // 74
-    { id: 'DenyDelete', type: 'Operation' }, // 75
-    { id: 'DenySelect', type: 'Operation' }, // 76
 
-    { id: 'BoolExp', type: 'Type', value: { value: 'BoolExp' } }, // 77
-    { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 78
+    { id: 'BoolExp', type: 'Type', value: { value: 'BoolExp' } }, // 73
+    { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 74
 
-    { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 79
+    { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 75
 
-    { id: 'HandleSchedule', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 80
+    { id: 'HandleSchedule', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 76
 
-    { id: 'Schedule', type: 'Type' }, // 81
+    { id: 'Schedule', type: 'Type' }, // 77
 
-    { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 82
+    { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 78
   ],
   errors: [],
   strict: true,

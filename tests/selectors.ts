@@ -8,17 +8,6 @@ const apolloClient = generateApolloClient({
   path: `${process.env.HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.HASURA_SSL,
   secret: process.env.HASURA_SECRET,
-}, {
-  ApolloClient: {
-    defaultOptions: {
-      query: {
-        errorPolicy: 'all',
-      },
-      watchQuery: {
-        errorPolicy: 'all',
-      },
-    },
-  },
 });
 
 const deep = new DeepClient({ apolloClient });
@@ -156,23 +145,23 @@ describe('selectors', () => {
     const n1 = await deep.select({
       item_id: { _eq: id2 }, selector_id: { _eq: s1 }
     }, { table: 'selectors', returning: 'item_id selector_id' });
-    assert.lengthOf(n1?.data, 1);
+    assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${s1}`);
     const n2 = await deep.select({
       item_id: { _eq: id3 }, selector_id: { _eq: s1 }
     }, { table: 'selectors', returning: 'item_id selector_id' });
-    assert.lengthOf(n2?.data, 0);
+    assert.lengthOf(n2?.data, 0, `item_id ${id3} must not be in selector_id ${s1}`);
     const n3 = await deep.select({
       item_id: { _eq: id4 }, selector_id: { _eq: s1 }
     }, { table: 'selectors', returning: 'item_id selector_id' });
-    assert.lengthOf(n3?.data, 0);
+    assert.lengthOf(n3?.data, 0, `item_id ${id4} must not be in selector_id ${s1}`);
     const n4 = await deep.select({
       item_id: { _eq: id5 }, selector_id: { _eq: s1 }
     }, { table: 'selectors', returning: 'item_id selector_id' });
-    assert.lengthOf(n4?.data, 0);
+    assert.lengthOf(n4?.data, 0, `item_id ${id5} must not be in selector_id ${s1}`);
     const n5 = await deep.select({
       item_id: { _eq: id5 }, selector_id: { _eq: s2 }
     }, { table: 'selectors', returning: 'item_id selector_id' });
-    assert.lengthOf(n5?.data, 1);
+    assert.lengthOf(n5?.data, 1, `item_id ${id5} must be in selector_id ${s2}`);
   });
   describe('criteria', () => {
     it(`selector include exclude boolExp`, async () => {

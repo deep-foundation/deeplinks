@@ -149,6 +149,8 @@ export interface DeepClientInstance<L = Link<number>> {
   login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult>;
 
   logout(): Promise<DeepClientAuthResult>;
+
+  can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
 }
 
 export interface DeepClientAuthResult {
@@ -460,6 +462,15 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (this?.handleAuth) this?.handleAuth(0, '');
     return { linkId: 0, token: '' };
   };
+
+  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[]) {
+    const result = await this.select({
+      object_id: typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds },
+      subject_id: typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds },
+      action_id: typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds },
+    }, { table: 'can', returning: 'rule_id' });
+    return !!result?.data?.length;
+  }
 }
 
 export const JWT = gql`query JWT($linkId: Int) {
