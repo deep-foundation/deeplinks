@@ -11,8 +11,7 @@ import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { execSync } from 'child_process';
-import axios from 'axios';
-import crypto from 'crypto';
+import { RunnerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
@@ -57,41 +56,16 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-export const useRunner = async ({ code, beforeLink, afterLink, moment } : { code: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
+const runnerController = new RunnerController()
+
+export const useRunner = async ({ code, isolation, beforeLink, afterLink, moment } : { code: string, isolation: { type: string, value: any }, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
   // for now jwt only admin. In future jwt of client created event.
-  const runnerPort = 3020;
-  const runnerImageAndTag = 'konard/deep-runner-js:main';
+  const handler = isolation.value;
   const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
-  const data = runnerImageAndTag;
-  const containerName = crypto.createHash('md5').update(data).digest("hex");
-  const startDocker = `docker run --name ${containerName} -p ${runnerPort}:${runnerPort} -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${runnerPort}/healthz`;
-
-  let startResult;
-  try {
-    const initResult = await axios.post(`http://localhost:${runnerPort}/init`); // code
-    console.log('initResult.status', initResult.status);
-    if (initResult.status !== 200){
-      startResult = await execSync(startDocker).toString();
-    } else {
-      startResult = 'ok';
-    }
-  } catch (e){
-    startResult = e.stderr;
-  }
-  console.log(startResult);
-
-  try {
-    const result = await axios.post(`http://localhost:${runnerPort}/call`,  { params: { beforeLink, afterLink, code, jwt }});
-    if(result?.data?.resolved) {
-      return result.data.resolved;
-    }
-    return Promise.reject(result?.data?.rejected);
-  } catch (e) {
-    console.log('e', e);
-  }
-  // TODO: add action if hash has info about container which is not exists or not works fine
+  const useResult = runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
+  console.log(useResult);
 }
 
 export const handlerOperations = {
@@ -182,7 +156,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
