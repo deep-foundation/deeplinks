@@ -11,13 +11,11 @@ const apolloClient = generateApolloClient({
 
 const root = new DeepClient({ apolloClient });
 
-let adminToken: string;
 let admin: any;
 
 beforeAll(async () => {
-  const { linkId, token } = await root.jwt({ linkId: await root.id('@deep-foundation/core', 'system', 'admin') });
-  adminToken = token;
-  admin = new DeepClient({ deep: root, token: adminToken, linkId });
+  const { linkId, token, error } = await root.jwt({ linkId: await root.id('@deep-foundation/core', 'system', 'admin') });
+  admin = new DeepClient({ deep, token, linkId });
 });
 
 let deep = root;
@@ -37,11 +35,11 @@ describe('permissions', () => {
         } }
       });
       const n1 = await d1.select({ id });
-      assert.lengthOf(n1?.data, 1);
+      assert.lengthOf(n1?.data, 1, `item_id ${id} must be selectable by ${a1.linkId}`);
       const n2 = await d2.select({ id });
-      assert.lengthOf(n2?.data, 0);
+      assert.lengthOf(n2?.data, 0, `item_id ${id} must not be selectable by ${a2.linkId}`);
       const n3 = await admin.select({ id });
-      assert.lengthOf(n3?.data, 1);
+      assert.lengthOf(n3?.data, 1, `item_id ${id} must be selectable by ${admin.linkId}`);
     });
     it(`rule select include 1 depth but exclude 2 depth`, async () => {
       const a1 = await deep.guest({});
@@ -488,6 +486,71 @@ describe('permissions', () => {
       await d3.delete(id3);
       const n3 = await deep.select({ id: id3 });
       assert.lengthOf(n3?.data, 1);
+    });
+  });
+  describe('login', () => {
+    it(`login permission can be granted`, async () => {
+      const a1 = await deep.guest({});
+      const a2 = await deep.guest({});
+      const a3 = await deep.guest({});
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] },
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                to_id: a1.linkId,
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowLogin'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+
+      const d1 = new DeepClient({ deep, ...a1 });
+      await d1.can(a1.linkId, a1.linkId, await deep.id('@deep-foundation/core', 'AllowLogin'));
+
+      const d2 = new DeepClient({ deep, ...a2 });
+      await d2.can(a1.linkId, a2.linkId, await deep.id('@deep-foundation/core', 'AllowLogin'));
+
+      const d3 = new DeepClient({ deep, ...a3 });
+      await d3.can(a1.linkId, a3.linkId, await deep.id('@deep-foundation/core', 'AllowLogin'));
     });
   });
 });

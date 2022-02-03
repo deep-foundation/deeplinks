@@ -28,54 +28,34 @@ export const up = async () => {
   debug('view');
   await api.sql(sql`
     CREATE VIEW ${SELECTORS_TABLE_NAME} AS
-    SELECT DISTINCT mp."item_id" as "item_id", selector."id" as "selector_id", (
+    SELECT 
+      mp_include."item_id" as "item_id",
+      include_link."from_id" as "selector_id", (
       SELECT "to_id" FROM ${TABLE_NAME} WHERE
       "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
-      "from_id" = selector."id"
+      "from_id" = include_link."from_id"
     ) as "bool_exp_id"
     FROM
-    ${MP_TABLE_NAME} as mp,
-    ${TABLE_NAME} as includeLink,
-    ${TABLE_NAME} as treeLink,
-    ${TABLE_NAME} as selector
+      ${MP_TABLE_NAME} as mp_include,
+      ${TABLE_NAME} as include_link,
+      ${TABLE_NAME} as include_tree_link
     WHERE
-    -- Ищем includeLink
-    -- Для каждого include по селектору? нееет
-    includeLink."from_id" = selector."id" AND
-    includeLink."type_id" = ${await deep.id('@deep-foundation/core', 'Include')} AND
-    -- Ищем все пометки НИЖЕ цели includeTo связи
-    -- Как убрать дубликаты?
-    mp."path_item_id" = includeLink."to_id" AND
-    (
-      EXISTS (
-        SELECT * FROM links WHERE
-        treeLink."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
-        treeLink."from_id" = includeLink."id" AND
-        treeLink."to_id" = mp."group_id"
-        LIMIT 1
-      ) OR NOT EXISTS (
-        SELECT * FROM links WHERE
-        "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
-        "from_id" = includeLink."id"
-        LIMIT 1
-      )
-    ) AND
-    selector."type_id" = ${await deep.id('@deep-foundation/core', 'Selector')} AND
-    NOT EXISTS (
-      SELECT mp2.*
-      FROM
-      ${TABLE_NAME} as si_sr_se,
-      ${TABLE_NAME} as si_sr_se_t,
-      ${MP_TABLE_NAME} as mp2
-      WHERE
-      si_sr_se."type_id" = ${await deep.id('@deep-foundation/core', 'Exclude')} AND
-      si_sr_se."from_id" = selector."id" AND
-      si_sr_se_t."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')} AND
-      si_sr_se_t."from_id" = si_sr_se."id" AND
-      si_sr_se_t."to_id" = mp2."group_id" AND
-      si_sr_se."to_id" = mp2."path_item_id" AND
-      mp."item_id" = mp2."item_id"
-    );
+      (include_link."type_id" = ${await deep.id('@deep-foundation/core', 'Include')}) AND
+      (mp_include."path_item_id" = include_link."to_id") AND
+      (mp_include."group_id" = include_tree_link."to_id" AND include_tree_link."from_id" = include_link."id" AND include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
+      NOT EXISTS (
+        SELECT mp_exclude."id"
+        FROM
+        ${TABLE_NAME} as exclude_link,
+        ${TABLE_NAME} as exclude_tree_link,
+        ${MP_TABLE_NAME} as mp_exclude
+        WHERE
+          (exclude_link."type_id" = ${await deep.id('@deep-foundation/core', 'Exclude')}) AND
+          (exclude_link."from_id" = include_link."from_id") AND
+          (mp_exclude."item_id" = mp_include."item_id") AND 
+          (mp_exclude."path_item_id" = exclude_link."to_id") AND 
+          (mp_exclude."group_id" = exclude_tree_link."to_id" AND exclude_tree_link."from_id" = exclude_link."id" AND exclude_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')})
+      );
   `);
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint, user_id bigint) RETURNS BOOL AS $trigger$ DECLARE

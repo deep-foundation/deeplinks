@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.36",
+  "version": "0.0.38",
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 PORT=3006 npm run launch",
     "launch": "ts-node ./index.ts;",
@@ -12,8 +12,8 @@
     "migrate": "npx migrate up --compiler=ts:./compiler/index.js",
     "unmigrate": "npx migrate down --compiler=ts:./compiler/index.js",
     "start-engine-docker": "cross-env JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" npm run start-engine-docker-core",
-    "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose up -d",
-    "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose down",
+    "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep up -d ",
+    "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep down",
     "start-deeplinks-docker": "cd local && docker-compose up -d",
     "stop-deeplinks-docker": "cd local && docker-compose down"
   },
