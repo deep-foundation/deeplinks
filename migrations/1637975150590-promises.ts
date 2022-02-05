@@ -28,12 +28,13 @@ export const up = async () => {
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+  const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
   
   await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
   DECLARE 
     PROMISE bigint;
-    SCHEDULE bigint;
+    PROMISES bigint;
   BEGIN
     IF (
         EXISTS(
@@ -63,6 +64,20 @@ export const up = async () => {
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW.from_id,PROMISE);
+    END IF;
+    SELECT COUNT(*) INTO PROMISES FROM (
+        SELECT DISTINCT s.selector_id, h.id
+        FROM selectors s, links h
+        WHERE
+            s.item_id = NEW."id"
+        AND s.selector_id = h.from_id
+        AND h.type_id = ${handleSelectorTypeId}
+    ) AS distict_selectors;
+    IF (PROMISES > 0) THEN
+      FOR i IN 1..PROMISES LOOP
+        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."id",PROMISE);
+      END LOOP;
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);

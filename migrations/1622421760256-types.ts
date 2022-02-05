@@ -157,6 +157,8 @@ const corePckg: PackagerPackage = {
     { id: 'Schedule', type: 'Type' }, // 77
 
     { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 78
+
+    { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79
   ],
   errors: [],
   strict: true,
