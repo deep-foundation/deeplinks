@@ -4,12 +4,13 @@ import axios from 'axios';
 import getPort from 'get-port';
 import Debug from 'debug';
 
-const debug = Debug('deeplinks:imports:runner-controller');
+const debug = Debug('deeplinks:runner-controller');
 
 export interface runnerControllerOptions {
   network: string;
-  portsHash: any;
-  handlersHash: any;
+  portsHash?: any;
+  handlersHash?: any;
+  docker: number;
 }
 
 export interface handlerOptions {
@@ -21,61 +22,79 @@ export interface handlerOptions {
 }
 
 export const runnerControllerOptionsDefault: runnerControllerOptions = {
-  network: 'deep-network',
+  network: 'deep_network',
   portsHash: {},
-  handlersHash: {}
+  handlersHash: {},
+  docker: 0
 };
 
 export class RunnerController {
   network: string;
-
+  docker: number;
   portsHash: { [id: number]: string } = {};
   handlersHash: { [id: string]: number } = {};
   constructor(options?: runnerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
+    this.docker = options?.docker || runnerControllerOptionsDefault.docker;
     this.portsHash = options?.portsHash || runnerControllerOptionsDefault.portsHash;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
   async useHandler( options: handlerOptions ): Promise<{ error?: string; }> {
     const { handler, port } = options;
-    const { network, handlersHash, portsHash } = this;
-    if (handlersHash[handler] && portsHash[handlersHash[handler]] !== 'broken') return this.callHandler(options);
+    const { network, handlersHash, portsHash, docker } = this;
+    console.log({ handlersHash, portsHash });
     const containerName = crypto.createHash('md5').update(handler).digest("hex");
+    if (handlersHash[containerName] && portsHash[handlersHash[containerName]] !== 'broken') return this.callHandler({ ...options, port: handlersHash[containerName] });
     let dockerPort = port || await getPort();
     while (portsHash[port]) {
       dockerPort = await getPort();
     }
-    portsHash[dockerPort] = handler;
-    handlersHash[handler] = dockerPort;
-    const startDocker = `docker run -e PORT=${dockerPort} --name ${containerName} --expose ${dockerPort} --net ${network} -d ${handler} && npx -q wait-on --timeout 20000 ${containerName}:${dockerPort}/healthz`;
+    portsHash[dockerPort] = containerName;
+    handlersHash[containerName] = dockerPort;
+    const startDocker = `docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks-docker_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? portsHash[dockerPort] : 'localhost'}:${dockerPort}/healthz`;
+    console.log('startDocker', { startDocker });
     let startResult;
     try {
       startResult = await execSync(startDocker).toString();
     } catch (e){
       startResult = e.stderr;
     }
-    debug('startResult', { startResult });
+    console.log('startResult', { startResult: startResult.toString() });
 
     while (startResult.indexOf('port is already arllocated') !== -1) {
       // fix hash that this port is busy
       portsHash[port] = 'broken';
       dockerPort = await getPort();
       portsHash[dockerPort] = containerName;
-      const RestartDocker = `docker run -e PORT=${dockerPort} --name ${containerName} --expose ${dockerPort} --net ${network} -d ${handler} && npx -q wait-on --timeout 20000 ${containerName}:${dockerPort}/healthz`;
+      const RestartDocker = `docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+      console.log('already arllocated, RestartDocker', { startDocker });
       const startResult = await execSync(RestartDocker).toString();
-      debug('RestartResult', { startResult });
+      console.log('RestartResult', { startResult });
+    }
+    if (startResult.indexOf('is already in use by container') !== -1){
+      const RestartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks-docker_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+      console.log('already in use, RestartDocker', { startDocker });
+      try {
+        await execSync(RestartDocker).toString();
+        console.log('RestartResult', { startResult: startResult.toString() });
+      } catch (e){
+        console.log('error', e);
+        return ({ error: e });
+      }
     }
     return await this.initHandler({...options, port: dockerPort});
   }
   async initHandler( options: handlerOptions ): Promise<{ error?: string; }> {
-    const { portsHash } = this;
+    const { portsHash, docker } = this;
     const { port } = options;
     let initResult;
     try {
-      initResult = await axios.post(`http://${portsHash[port]}:${port}/init`);
-      debug('initResult', { initResult });
+      const initRunner = `http://${docker ? portsHash[port] : 'localhost'}:${port}/init`
+      console.log('initRunner', { initRunner })
+      initResult = await axios.post(initRunner);
+      console.log('initResult', { initResult: initResult.toString() });
     } catch (e) {
-      debug('error', e);
+      console.log('error', e);
       return ({ error: e });
     }
     if (initResult?.data?.error) return { error: initResult?.data?.error};
@@ -83,16 +102,18 @@ export class RunnerController {
   }
   async callHandler( options: handlerOptions ): Promise<{ error?: string; }> {
     const { port, data, code, jwt } = options;
-    const { portsHash } = this;
+    const { portsHash, docker } = this;
     try {
-      const result = await axios.post(`http://${portsHash[port]}:${port}/call`,  { params: { data, code, jwt, }});
+      const callRunner = `http://${docker ? portsHash[port] : 'localhost'}:${port}/call`
+      console.log('callRunner', { callRunner, params: { data, code, jwt } })
+      const result = await axios.post(callRunner,  { params: { data, code, jwt }});
       if (result?.data?.error) return { error: result?.data?.error};
       if(result?.data?.resolved) {
         return result.data.resolved;
       }
       return Promise.reject(result?.data?.rejected);
     } catch (e) {
-      debug('error', e);
+      console.log('error', e);
       return ({ error: e });
     }
   }

@@ -20,6 +20,7 @@ const debug = Debug('deepcase:eh');
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
+const DOCKER = process.env.DOCKER || 0;
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -56,7 +57,12 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-const runnerController = new RunnerController()
+const runnerController = new RunnerController({
+  network: 'deep_network',
+  portsHash: {},
+  handlersHash: {},
+  docker: +DOCKER
+})
 
 export const useRunner = async ({ code, isolation, beforeLink, afterLink, moment } : { code: string, isolation: { type: string, value: any }, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
@@ -64,8 +70,9 @@ export const useRunner = async ({ code, isolation, beforeLink, afterLink, moment
   // for now jwt only admin. In future jwt of client created event.
   const handler = isolation.value;
   const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
-  const useResult = runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
-  console.log(useResult);
+  const useResult = await runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
+  console.log('useResult', useResult);
+  return useResult;
 }
 
 export const handlerOperations = {
@@ -156,7 +163,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => await useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);

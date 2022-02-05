@@ -1,6 +1,6 @@
 version: '3.6'
 services:
-  deeplinks-docker:
+  deeplinks:
     image: menzorg/deeplinks:main
     networks:
       - network
