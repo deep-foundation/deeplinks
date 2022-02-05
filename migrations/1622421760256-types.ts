@@ -167,7 +167,9 @@ export const up = async () => {
   const packager = new Packager(root);
   const { errors, packageId, namespaceId } = await packager.import(corePckg);
   if (errors.length) {
-    console.log(errors);
+    console.log(errors[0]?.graphQLErrors[0]?.message);
+    console.log(errors[0]?.graphQLErrors[0]?.extensions?.internal);
+    console.log(errors[0]?.graphQLErrors[0]?.extensions?.internal?.request);
     throw new Error('Import error');
   } else {
     await root.insert({

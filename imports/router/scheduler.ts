@@ -133,7 +133,7 @@ export async function handleScheduleMomemt(moment: any) {
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, moment }));
+          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, moment }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);

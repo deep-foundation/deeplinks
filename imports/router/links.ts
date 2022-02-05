@@ -11,8 +11,7 @@ import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { execSync } from 'child_process';
-import axios from 'axios';
-import crypto from 'crypto';
+import { RunnerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
@@ -21,6 +20,7 @@ const debug = Debug('deepcase:eh');
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
+const DOCKER = process.env.DOCKER || 0;
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -37,9 +37,6 @@ const client = generateApolloClient({
 const deep = new DeepClient({
   apolloClient: client,
 })
-
-const portHash = {};
-const containerHash = {};
 
 export function makePromiseResult(promise: any, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
   return {
@@ -60,73 +57,22 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-export const useRunner = async ({ code, beforeLink, afterLink, moment } : { code: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
+const runnerController = new RunnerController({
+  network: 'deep_network',
+  portsHash: {},
+  handlersHash: {},
+  docker: +DOCKER
+})
+
+export const useRunner = async ({ code, isolation, beforeLink, afterLink, moment } : { code: string, isolation: { type: string, value: any }, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
   // for now jwt only admin. In future jwt of client created event.
-  const runnerPort = 3020;
-  const runnerImageAndTag = 'konard/deep-runner-js:main';
+  const handler = isolation.value;
   const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
-  const data = jwt + code;
-  
-  const containerName = crypto.createHash('md5').update(data).digest("hex");
-  let port;
-  if (!portHash[containerName]){
-    // port form 1000 to 2000
-    port = Math.floor(Math.random() * 1000) + 1000;
-    // check hash
-    portHash[containerName] = port;
-    containerHash[port] = containerName;
-    const startDocker = `docker run --name ${containerName} -p ${port}:${runnerPort} -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${port}/healthz`;
-    let startResult;
-    try {
-      startResult = await execSync(startDocker).toString();
-    } catch (e){
-      startResult = e.stderr;
-    }
-    console.log('startResult', startResult.toString());
-    //if hash not contain somethin in port retry start runner on other port
-    console.log(1);
-    while (startResult.indexOf('port is already arllocated') !== -1) {
-      console.log(2);
-      // fix hash that this port is busy
-      containerHash[port] = 'broken';
-      port = Math.floor(Math.random() * 1000) + 1000;
-      containerHash[port] = containerName;
-      const REstartDocker = `docker run --name ${containerName} -p ${port}:3020 -d ${runnerImageAndTag} && npx -q wait-on --timeout 20000 http://localhost:${port}/healthz`;
-      const startResult = await execSync(REstartDocker).toString();
-      console.log('REstartResult', startResult);
-    }
-    console.log(3);
-    // if container for this code and jwt exists recreate container becouse we can not verify container port (or here may be ask docker to tell port instead)
-    if (startResult.indexOf('is already in use by container') !== -1){
-      console.log(4);
-      const REstartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run --name ${containerName} -p ${port}:3020 -d ${runnerImageAndTag} && npx -q wait-on --timeout 10000 http://localhost:${port}/healthz`;
-      try {
-        await execSync(REstartDocker).toString();
-      } catch (e){
-        console.log(e?.status);
-      }
-    }
-    console.log(5);
-    const initResult = await axios.post(`http://localhost:${port}/init`, { params: {  } });
-    console.log('initResult', initResult.data);
-    console.log(6);
-  // if all ok and hash has container
-  } else {
-    port = portHash[containerName];
-  }
-  console.log(7);
-  try {
-    const result = await axios.post(`http://localhost:${port}/call`,  { params: { code, jwt, beforeLink, afterLink, moment }});
-    if(result?.data?.resolved) {
-      return result.data.resolved;
-    }
-    return Promise.reject(result?.data?.rejected);
-  } catch (e) {
-    console.log('e', e);
-  }
-  // TODO: add action if hash has info about container which is not exists or not works fine
+  const useResult = await runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
+  console.log('useResult', useResult);
+  return useResult;
 }
 
 export const handlerOperations = {
@@ -217,7 +163,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => await useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
