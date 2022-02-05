@@ -7,6 +7,7 @@ import Debug from 'debug';
 const debug = Debug('deeplinks:runner-controller');
 
 export interface runnerControllerOptions {
+  gqlURN: string;
   network: string;
   portsHash?: any;
   handlersHash?: any;
@@ -22,6 +23,7 @@ export interface handlerOptions {
 }
 
 export const runnerControllerOptionsDefault: runnerControllerOptions = {
+  gqlURN: 'deep_deeplinks_1:3006',
   network: 'deep_network',
   portsHash: {},
   handlersHash: {},
@@ -29,19 +31,21 @@ export const runnerControllerOptionsDefault: runnerControllerOptions = {
 };
 
 export class RunnerController {
+  gqlURN: string;
   network: string;
   docker: number;
   portsHash: { [id: number]: string } = {};
   handlersHash: { [id: string]: number } = {};
   constructor(options?: runnerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
+    this.gqlURN = options?.gqlURN || runnerControllerOptionsDefault.gqlURN;
     this.docker = options?.docker || runnerControllerOptionsDefault.docker;
     this.portsHash = options?.portsHash || runnerControllerOptionsDefault.portsHash;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
   async useHandler( options: handlerOptions ): Promise<{ error?: string; }> {
     const { handler, port } = options;
-    const { network, handlersHash, portsHash, docker } = this;
+    const { network, handlersHash, portsHash, docker, gqlURN } = this;
     console.log({ handlersHash, portsHash });
     const containerName = crypto.createHash('md5').update(handler).digest("hex");
     if (handlersHash[containerName] && portsHash[handlersHash[containerName]] !== 'broken') return this.callHandler({ ...options, port: handlersHash[containerName] });
@@ -51,7 +55,7 @@ export class RunnerController {
     }
     portsHash[dockerPort] = containerName;
     handlersHash[containerName] = dockerPort;
-    const startDocker = `docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks-docker_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? portsHash[dockerPort] : 'localhost'}:${dockerPort}/healthz`;
+    const startDocker = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? portsHash[dockerPort] : 'localhost'}:${dockerPort}/healthz`;
     console.log('startDocker', { startDocker });
     let startResult;
     try {
@@ -66,14 +70,14 @@ export class RunnerController {
       portsHash[port] = 'broken';
       dockerPort = await getPort();
       portsHash[dockerPort] = containerName;
-      const RestartDocker = `docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
-      console.log('already arllocated, RestartDocker', { startDocker });
+      const RestartDocker = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+      console.log('already arllocated, RestartDocker', { RestartDocker });
       const startResult = await execSync(RestartDocker).toString();
       console.log('RestartResult', { startResult });
     }
     if (startResult.indexOf('is already in use by container') !== -1){
-      const RestartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run -e PORT=${dockerPort} -e GQL_PATH=${docker ? 'deep_deeplinks-docker_1:3006/gql' : 'localhost:3006/gql'} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
-      console.log('already in use, RestartDocker', { startDocker });
+      const RestartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+      console.log('already in use, RestartDocker', { RestartDocker });
       try {
         await execSync(RestartDocker).toString();
         console.log('RestartResult', { startResult: startResult.toString() });
