@@ -66,24 +66,25 @@ export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   const isDocker = await checkStatus();
   let envsString = generateEnvs({ envs, isDocker});
+  let str;
   try {
     if (options.operation === 'run') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& npm run start-deeplinks-docker && npx -q wait-on ${DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate`;
+      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on tcp:8080 && cd ${_deeplinks} ${isDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on ${DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && ${ process.platform === "win32" ? 'set MIGRATIONS_DIR .migrate &&' : 'export MIGRATIONS_DIR=/tmp/.deep-migrate &&'} rm -rf $MIGRATIONS_DIR && npm run migrate -- -f $MIGRATIONS_DIR`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down ${isDocker ? '--remove-orphans' : ''}`;
+      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down ${isDocker ? '--remove-orphans' : ''}`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      let str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down ${isDocker || isDocker===undefined ? '--remove-orphans' : ''} && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
+      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose down ${isDocker || isDocker===undefined ? '--remove-orphans' : ''} && docker container prune -f && docker system prune --volumes -f && cd ${_deeplinks} && npx rimraf .migrate`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
   } catch(error) {
-    return { ...options, envs, error };
+    return { ...options, str, envs, error };
   }
   return options;
 };

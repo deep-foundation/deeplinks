@@ -173,12 +173,10 @@ describe('sync function handle by type with resolve', () => {
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
   it(`handle update when value is inserted`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
@@ -196,12 +194,10 @@ describe('sync function handle by type with resolve', () => {
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     let promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
   it(`handle update when value is updated`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
@@ -223,17 +219,17 @@ describe('sync function handle by type with resolve', () => {
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
 
-    assert.isTrue(!!matchedPromiseResults);
-    assert.equal(matchedPromiseResults.length, 2);
-
     for (const promiseResult of matchedPromiseResults)
     {
       await deletePromiseResult(promiseResult);
     }
 
     await deep.delete({ id: { _eq: linkId } }, { table: 'links' });
-
     await deleteHandler(handler);
+
+    assert.isTrue(!!matchedPromiseResults);
+    assert.equal(matchedPromiseResults.length, 2);
+
   });
   it(`handle update when value is deleted`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
@@ -249,7 +245,6 @@ describe('sync function handle by type with resolve', () => {
 
     // Trigger link update by deleting the value
     await deep.delete({ link_id: { _eq: linkId } }, { table: 'numbers' });
-
     await deep.await(linkId);
     // await delay(40000);
 
@@ -257,17 +252,16 @@ describe('sync function handle by type with resolve', () => {
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
 
-    assert.isTrue(!!matchedPromiseResults);
-    assert.equal(matchedPromiseResults.length, 2);
-
     for (const promiseResult of matchedPromiseResults)
     {
       await deletePromiseResult(promiseResult);
     }
 
     await deep.delete({ id: { _eq: linkId } }, { table: 'links' });
-
     await deleteHandler(handler);
+
+    assert.isTrue(!!matchedPromiseResults);
+    assert.equal(matchedPromiseResults.length, 2);
   });
   it(`handle delete`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
@@ -284,11 +278,10 @@ describe('sync function handle by type with resolve', () => {
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
-    assert.isTrue(!!promiseResult);
-
     await deletePromiseResult(promiseResult, linkId);
-
     await deleteHandler(handler);
+
+    assert.isTrue(!!promiseResult);
   });
 });
 
@@ -307,12 +300,10 @@ describe('sync function handle by type with reject', () => {
     const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
     const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
   it(`handle delete`, async () => {
     const numberToThrow = randomInteger(5000000, 9999999999);
@@ -328,12 +319,10 @@ describe('sync function handle by type with reject', () => {
     const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
     const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
 });
 
@@ -352,12 +341,10 @@ describe('async function handle by type with reject', () => {
     const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
     const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
   it(`handle delete`, async () => {
     const numberToThrow = randomInteger(5000000, 9999999999);
@@ -373,35 +360,32 @@ describe('async function handle by type with reject', () => {
     const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
     const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
-
-    assert.isTrue(!!promiseResult);
-
     await deletePromiseResult(promiseResult, linkId);
-
     await deleteHandler(handler);
-  });
-});
-
-describe('sync function handle by schedule with resolve', () => {
-  it(`handle schedule`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
-
-    // const typeId = await deep.id('@deep-foundation/core', 'Type');
-    const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-
-    await deep.await(handler.scheduleId);
-
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, handler.scheduleId);
-    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
     assert.isTrue(!!promiseResult);
-
-    await deletePromiseResult(promiseResult, handler.scheduleId);
-
-    await deleteScheduleHandler(handler);
   });
 });
+
+// describe('sync function handle by schedule with resolve', () => {
+//   it(`handle schedule`, async () => {
+//     const numberToReturn = randomInteger(5000000, 9999999999);
+
+//     // const typeId = await deep.id('@deep-foundation/core', 'Type');
+//     const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+
+//     await deep.await(handler.scheduleId);
+
+//     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+//     const promiseResults = await getPromiseResults(deep, resolvedTypeId, handler.scheduleId);
+//     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+//     await deletePromiseResult(promiseResult, handler.scheduleId);
+//     await deleteScheduleHandler(handler);
+
+//     assert.isTrue(!!promiseResult);
+
+//   });
+// });
 
 // describe('handle by selector', () => {
 //   it(`handle insert`, async () => {
