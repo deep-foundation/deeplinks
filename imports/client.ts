@@ -25,6 +25,7 @@ export const GLOBAL_ID_TREE=36;
 export const GLOBAL_ID_INCLUDE_DOWN=37;
 export const GLOBAL_ID_INCLUDE_UP=38;
 export const GLOBAL_ID_INCLUDE_NODE=39;
+export const GLOBAL_ID_CONTAIN_TREE=40;
 export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
@@ -33,6 +34,7 @@ export const GLOBAL_ID_HANDLE_UPDATE=50;
 const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
+    'containTree': GLOBAL_ID_CONTAIN_TREE,
     'Package': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
     'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
