@@ -45,6 +45,16 @@ const _ids = {
   },
 };
 
+// https://stackoverflow.com/a/38552302/4448999
+export function parseJwt (token) {
+  var base64Url = token.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+
+  return JSON.parse(jsonPayload);
+};
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
   token?: string;
@@ -165,6 +175,7 @@ export interface DeepClientGuestOptions {
 
 export interface DeepClientJWTOptions {
   linkId?: number;
+  token?: string;
   relogin?: boolean;
 }
 
@@ -440,18 +451,32 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const result = await this.apolloClient.query({ query: GUEST });
     const { linkId, token, error } = result?.data?.guest || {};
     if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
-      if (this?.handleAuth) this?.handleAuth(linkId, token);
+      if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
     }
     return { linkId, token, error };
   };
 
   async jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
-    const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
-    const { linkId, token, error } = result?.data?.jwt || {};
-    if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
-      if (this?.handleAuth) this?.handleAuth(linkId, token);
-    }
-    return { linkId, token, error };
+    if (options?.token) {
+      try {
+        const token = options?.token;
+        const decoded = parseJwt(token);
+        const linkId = decoded?.[`https://hasura.io/jwt/claims`]?.['x-hasura-user-id'];
+        if (!!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+          if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
+        }
+        return { linkId, token, error: undefined };
+      } catch(error) {
+        return { error };
+      }
+    } else if (options?.linkId) {
+      const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
+      const { linkId, token, error } = result?.data?.jwt || {};
+      if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+        if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
+      }
+      return { linkId, token, error };
+    } else return { error: `linkId or token must be provided` };
   };
 
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
@@ -459,7 +484,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   };
 
   async logout(): Promise<DeepClientAuthResult> {
-    if (this?.handleAuth) this?.handleAuth(0, '');
+    if (this?.handleAuth) setTimeout(() => this?.handleAuth(0, ''), 0);
     return { linkId: 0, token: '' };
   };
 

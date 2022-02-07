@@ -1,9 +1,11 @@
 version: '3.6'
 services:
-  deeplinks-docker:
+  deeplinks:
     image: menzorg/deeplinks:main
+    networks:
+      - network
     volumes:
-    - docker_socket:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
     ports:
       - 3006:3006
@@ -13,5 +15,6 @@ services:
       DEEPLINKS_HASURA_SSL: '${DEEPLINKS_HASURA_SSL}'
       DEEPLINKS_HASURA_SECRET: '${DEEPLINKS_HASURA_SECRET}'
       JWT_SECRET: '${JWT_SECRET}'
-volumes:
-  docker_socket: '${SOCKET_PATH}'
+networks:
+  network:
+    driver: bridge

@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.38",
+  "version": "0.0.40",
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 PORT=3006 npm run launch",
     "launch": "ts-node ./index.ts;",
@@ -33,7 +33,9 @@
     "body-parser": "^1.19.0",
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
+    "debug": "^4.3.3",
     "dotenv": "^8.2.0",
+    "get-port": "^5.1.1",
     "gists": "^2.0.0",
     "graphql": "^15.5.0",
     "graphql-playground-middleware-express": "^1.7.23",

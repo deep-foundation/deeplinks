@@ -1,7 +1,7 @@
 import _remove from 'lodash/remove';
 import _isEqual from 'lodash/isEqual';
 import EventEmitter from 'events';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 export interface LinkPlain<Ref extends number> {
   id: Ref;
   type_id: Ref;
@@ -108,18 +108,26 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       } else {
         const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
         byId[link[options.id]] = link;
+
+        // byFrom[link.from_id]: link[]; // XXX
         if (link[options.from_id]) {
           if (byFrom[link[options.from_id]]) byFrom[link[options.from_id]].push(link);
           else byFrom[link[options.from_id]] = [link]
         }
+
+        // byTo[link.to_id]: link[]; // XXX
         if (link[options.to_id]) {
           if (byTo[link[options.to_id]]) byTo[link[options.to_id]].push(link);
           else byTo[link[options.to_id]] = [link]
         }
+
+        // byType[link.type_id]: link[]; // XXX
         if (link[options.type_id]) {
           if (byType[link[options.type_id]]) byType[link[options.type_id]].push(link);
           else byType[link[options.type_id]] = [link]
         }
+
+        // link.typed += byType[link.id]
         if (byType[link[options.id]]?.length) {
           for (let i = 0; i < byType[link[options.id]]?.length; i++) {
             const dep = byType[link[options.id]][i];
@@ -127,18 +135,26 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
             link[options.typed].push(dep);
           }
         }
+        // link.out += byFrom[link.id]
         if (byFrom[link[options.id]]?.length) {
           for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
             const dep = byFrom[link[options.id]][i];
             dep[options.from] = link;
             link[options.out].push(dep);
+            // link.outByType[dep.type_id] += dep; // XXX
+            link[options.outByType][dep[options.type_id]] = link[options.outByType][dep[options.type_id]] || [];
+            link[options.outByType][dep[options.type_id]].push(dep);
           }
         }
+        // link.in += byTo[link.id]
         if (byTo[link[options.id]]?.length) {
           for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
             const dep = byTo[link[options.id]][i];
             dep[options.to] = link;
             link[options.in].push(dep);
+            // link.inByType[dep.type_id] += dep; // XXX
+            link[options.inByType][dep[options.type_id]] = link[options.inByType][dep[options.type_id]] || [];
+            link[options.inByType][dep[options.type_id]].push(dep);
           }
         }
         links.push(link);
@@ -147,21 +163,32 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     }
     for (let l = 0; l < newLinks.length; l++) {
       const link: L = newLinks[l];
-      if (byId[link[options.type_id]]) {
-        link[options.type] = byId[link[options.type_id]];
-        byId[link[options.type_id]][options.typed].push(link);
+      const type = byId[link[options.type_id]];
+      const from = byId[link[options.from_id]];
+      const to = byId[link[options.to_id]];
+      if (type) {
+        // link.type = byId[link.type_id] // XXX
+        link[options.type] = type;
+        // type.typed += link;
+        type[options.typed].push(link);
       } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not founded`));
-      if (byId[link[options.from_id]]) {
-        link[options.from] = byId[link[options.from_id]];
-        byId[link[options.from_id]][options.out].push(link);
-        byId[link[options.from_id]][options.outByType][link[options.type_id]] = byId[link[options.from_id]][options.outByType][link[options.type_id]] || [];
-        byId[link[options.from_id]][options.outByType][link[options.type_id]].push(link);
+      if (from) {
+        // link.from = byId[link.from_id] // XXX
+        link[options.from] = from;
+        // from.out += link;
+        from[options.out].push(link);
+        // from.outByType[link.type_id] += link; // XXX
+        from[options.outByType][link[options.type_id]] = from[options.outByType][link[options.type_id]] || [];
+        from[options.outByType][link[options.type_id]].push(link);
       } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not founded`));
-      if (byId[link[options.to_id]]) {
-        link[options.to] = byId[link[options.to_id]];
-        byId[link[options.to_id]][options.in].push(link);
-        byId[link[options.to_id]][options.inByType][link[options.type_id]] = byId[link[options.to_id]][options.inByType][link[options.type_id]] || [];
-        byId[link[options.to_id]][options.inByType][link[options.type_id]].push(link);
+      if (to) {
+        // link.to = byId[link.to_id] // XXX
+        link[options.to] = to;
+        // to.in += link;
+        to[options.in].push(link);
+        // to.inByType[link.type_id] += link;
+        to[options.inByType][link[options.type_id]] = to[options.inByType][link[options.type_id]] || [];
+        to[options.inByType][link[options.type_id]].push(link);
       } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not founded`));
       if (options.handler) options.handler(link, this);
     }
@@ -184,20 +211,43 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     const oldLinks: L[] = [];
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
-      oldLinks.push(byId[id]);
-      if (!byId[id]) errors.push(new Error(`${id} can't delete because not exists in collection`));
+      const link = byId[id]
+      oldLinks.push(link);
+      if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
+
+      // byFrom[link.from_id]: link[]; // XXX
+      _remove(byFrom?.[link?.[options.from_id]] || [], r => r.id === id);
+
+      // byTo[link.to_id]: link[]; // XXX
+      _remove(byTo?.[link?.[options.to_id]] || [], r => r.id === id);
+
+      // byType[link.type_id]: link[]; // XXX
+      _remove(byType?.[link?.[options.type_id]] || [], r => r.id === id);
+
+      // from.outByType[link.type_id] += link; // XXX
+      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], r => r.id = id)
+
+      // to.inByType[link.type_id] += link; // XXX
+      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], r => r.id = id)
+
       for (let i = 0; i < byFrom?.[id]?.length; i++) {
         const dep = byFrom?.[id]?.[i];
+        // link.from = byId[link.from_id] // XXX
         dep[options.from] = undefined;
       }
+
       for (let i = 0; i < byTo?.[id]?.length; i++) {
         const dep = byTo?.[id]?.[i];
+        // link.to = byId[link.to_id] // XXX
         dep[options.to] = undefined;
       }
+
       for (let i = 0; i < byType?.[id]?.length; i++) {
         const dep = byType?.[id]?.[i];
+        // link.type = byId[link.type_id] // XXX
         dep[options.type] = undefined;
       }
+
       delete byId?.[id];
     }
     _remove(links, l => idsArray.includes(l[options.id]));
