@@ -441,6 +441,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
     const q = await this.select(this.pathToWhere(start, ...path));
     if (q.error) throw q.error;
+    // console.log(JSON.stringify(q, null, 2));
     // @ts-ignore
     const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
     if (!result) throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
