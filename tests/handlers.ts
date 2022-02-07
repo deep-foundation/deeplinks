@@ -402,10 +402,12 @@ describe('async function handle by type with resolve', () => {
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
     const handler = await insertOperationHandlerForType(handleInsertTypeId, typeId, `async (arg) => {
        const deep = arg.deep;
-       const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
-       const queryId = await deep.insert({ type_id: queryTypeId }).data[0].id;
+      //  const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
+      //  const queryId = (await deep.insert({ type_id: queryTypeId }))?.data?.[0]?.id;
+       const queryId = (await deep.insert({ type_id: ${queryTypeId} }))?.data?.[0]?.id;
        return { queryId, result: ${numberToReturn}}
     }`);
 
@@ -416,7 +418,6 @@ describe('async function handle by type with resolve', () => {
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
-    const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
     console.log(JSON.stringify(promiseResults, null, 2));
     const queryId = promiseResult?.object?.value?.queryId;
     const query = (await deep.select({ id: { _eq: queryId }})).data[0];
