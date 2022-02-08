@@ -159,6 +159,13 @@ const corePckg: PackagerPackage = {
     { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 78
 
     { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79
+
+    { id: 'IsolationProvider', type: 'Type' }, // 80
+    { id: 'DockerIsolationProvider', type: 'IsolationProvider', value: { value: 'DockerIsolationProvider' } }, // 81
+    { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 47
+    { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 82
+    { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 83
+    { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 84
   ],
   errors: [],
   strict: true,
