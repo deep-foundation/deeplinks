@@ -2,6 +2,10 @@ import _remove from 'lodash/remove';
 import _isEqual from 'lodash/isEqual';
 import EventEmitter from 'events';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:minilinks');
+
 export interface LinkPlain<Ref extends number> {
   id: Ref;
   type_id: Ref;
@@ -97,6 +101,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
+    debug('add', linksArray, this);
     const { byId, byFrom, byTo, byType, links, options } = this;
     const anomalies = [];
     const errors = [];
@@ -135,7 +140,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
             link[options.typed].push(dep);
           }
         }
-        // link.out += byFrom[link.id]
+        // link.out += byFrom[link.id] // XXX
         if (byFrom[link[options.id]]?.length) {
           for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
             const dep = byFrom[link[options.id]][i];
@@ -146,7 +151,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
             link[options.outByType][dep[options.type_id]].push(dep);
           }
         }
-        // link.in += byTo[link.id]
+        // link.in += byTo[link.id] // XXX
         if (byTo[link[options.id]]?.length) {
           for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
             const dep = byTo[link[options.id]][i];
@@ -205,15 +210,29 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
+    debug('remove', idsArray, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const anomalies = [];
     const errors = [];
-    const oldLinks: L[] = [];
+    const oldLinksArray: L[] = [];
+    const oldLinksObject: { [id:number]: L } = {};
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
-      const link = byId[id]
-      oldLinks.push(link);
+      const link = byId[id];
+      debug('remove old l:', l, 'id:', id, 'link:', link);
+      oldLinksArray.push(link);
+      oldLinksObject[id] = link;
+    }
+    debug('emit removed before', idsArray, JSON.stringify(oldLinksArray.map(l => l.id), null, 2), JSON.stringify(Object.values(oldLinksObject).map(l => l.id), null, 2));
+    for (let l = 0; l < idsArray.length; l++) {
+      const id = idsArray[l];
+      const link = oldLinksArray[l];
       if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
+
+      // link.in += byTo[link.id] // XXX
+      _remove(link?.[options.to]?.[options.in], (r) => r.id === id);
+      // link.out += byFrom[link.id] // XXX
+      _remove(link?.[options.from]?.[options.out], (r) => r.id === id);
 
       // byFrom[link.from_id]: link[]; // XXX
       _remove(byFrom?.[link?.[options.from_id]] || [], r => r.id === id);
@@ -225,10 +244,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       _remove(byType?.[link?.[options.type_id]] || [], r => r.id === id);
 
       // from.outByType[link.type_id] += link; // XXX
-      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], r => r.id = id)
+      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], r => r.id === id)
 
       // to.inByType[link.type_id] += link; // XXX
-      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], r => r.id = id)
+      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], r => r.id === id)
 
       for (let i = 0; i < byFrom?.[id]?.length; i++) {
         const dep = byFrom?.[id]?.[i];
@@ -251,8 +270,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       delete byId?.[id];
     }
     _remove(links, l => idsArray.includes(l[options.id]));
-    for (let l = 0; l < oldLinks.length; l++) {
-      const link = oldLinks[l];
+    debug('emit removed after', idsArray, JSON.stringify(oldLinksArray.map(l => l.id), null, 2), JSON.stringify(Object.values(oldLinksObject).map(l => l.id), null, 2));
+    for (let l = 0; l < oldLinksArray.length; l++) {
+      const link = oldLinksArray[l];
+      debug('emit removed link', link, '_updating', this._updating);
       if (!this._updating) this.emitter.emit('removed', link);
     }
     return {
@@ -265,6 +286,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
+    debug('apply', linksArray, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const toAdd = [];
     const toUpdate = [];
