@@ -92,7 +92,7 @@ const corePckg: PackagerPackage = {
     { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 33
 
     { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 34
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'ExecutionProvider', to: 'Any' }, // 35
+    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Supports', to: 'Any' }, // 35
 
     { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 36
     // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
@@ -162,10 +162,10 @@ const corePckg: PackagerPackage = {
 
     { id: 'IsolationProvider', type: 'Type' }, // 80
     { id: 'DockerIsolationProvider', type: 'IsolationProvider', value: { value: 'DockerIsolationProvider' } }, // 81
-    { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 47
-    { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 82
-    { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 83
-    { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 84
+    { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
+    { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 83
+    { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
+    { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
   ],
   errors: [],
   strict: true,

@@ -70,7 +70,7 @@ export async function handleScheduleMomemt(moment: any) {
   const queryString = `query SELECT_CODE($scheduleId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
           in: {
-            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'JSExecutionProvider')} },
+            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
               _or: [

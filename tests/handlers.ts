@@ -17,13 +17,13 @@ const delay = time => new Promise(res => setTimeout(res, time));
 const insertOperationHandlerForType = async (handleOperationTypeId: number, typeId: number, code: string) => {
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
-  const jsExecutionProviderId = await deep.id('@deep-foundation/core', 'JSExecutionProvider');
+  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
   const handler = (await deep.insert({
-    from_id: jsExecutionProviderId,
+    from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
@@ -45,13 +45,13 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
   const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
-  const jsExecutionProviderId = await deep.id('@deep-foundation/core', 'JSExecutionProvider');
+  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
   const handler = (await deep.insert({
-    from_id: jsExecutionProviderId,
+    from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
