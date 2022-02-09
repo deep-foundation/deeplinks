@@ -155,7 +155,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     // console.log(query);
     // console.log(JSON.stringify(query, null, 2));
     console.log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    console.log(handlersWithCode?.length);
+    console.log("handlersWithCode?.length: ", handlersWithCode?.length);
 
     // console.log(handleStringResult);
     // console.log(JSON.stringify(handleStringResult, null, 2));
