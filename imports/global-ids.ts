@@ -40,9 +40,3 @@ export const DENIED_IDS = [0, 10, 11, 12, 13];
 
 // // SyncTextFile
 // export const GLOBAL_ID_SYNC_TEXT_FILE=62;
-
-// // JSExecutionProvider
-// export const GLOBAL_ID_JS_EXECUTION_PROVIDER=66;
-
-// // HandleInsert
-// export const GLOBAL_ID_HANDLE_INSERT=67;

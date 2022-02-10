@@ -41,7 +41,7 @@ export const up = async () => {
     string: { data: { value: `(arg) => {console.log(arg); return {result: 5}}` } },
     in: { data: {
       type_id: await deep.id('@deep-foundation/core', 'Handler'),
-      from_id: await deep.id('@deep-foundation/core', 'JSExecutionProvider'),
+      from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
       in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'HandleInsert'),
           from_id: await deep.id('@deep-foundation/core', 'Install'),
@@ -54,7 +54,7 @@ export const up = async () => {
     string: { data: { value: `(arg) => {console.log(arg); return {result: 7}}` } },
     in: { data: {
       type_id: await deep.id('@deep-foundation/core', 'Handler'),
-      from_id: await deep.id('@deep-foundation/core', 'JSExecutionProvider'),
+      from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
       in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'HandleInsert'),
           from_id: await deep.id('@deep-foundation/core', 'Publish'),
