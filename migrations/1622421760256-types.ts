@@ -162,10 +162,16 @@ const corePckg: PackagerPackage = {
 
     { id: 'IsolationProvider', type: 'Type' }, // 80
     { id: 'DockerIsolationProvider', type: 'IsolationProvider', value: { value: 'DockerIsolationProvider' } }, // 81
+
     { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
     { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 83
     { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
+
+    { id: 'Install', type: 'Type' }, // 86
+    { id: 'Publish', type: 'Type' }, // 87
+
+    { id: 'Active', type: 'Type', value: { value: 'Active' }, from: 'Any', to: 'Any' }, // 88
   ],
   errors: [],
   strict: true,
@@ -208,11 +214,15 @@ const delay = time => new Promise(res => setTimeout(res, time));
 
 export const down = async () => {
   debug('down');
-  const handleScheduleId = await root.id('@deep-foundation/core', 'HandleSchedule');
-  const deletedHandlers = await root.delete({ 
-    type_id: handleScheduleId,
-  }, { name: 'DELETE_SCHEDULE_HANDLERS' });
-  console.log(JSON.stringify(deletedHandlers, null, 2));
-  await delay(10000);
+  try {
+    const handleScheduleId = await root.id('@deep-foundation/core', 'HandleSchedule');
+    const deletedHandlers = await root.delete({ 
+      type_id: handleScheduleId,
+    }, { name: 'DELETE_SCHEDULE_HANDLERS' });
+    console.log(JSON.stringify(deletedHandlers, null, 2));
+    await delay(10000);
+  } catch(e) {
+    console.error(e);
+  }
   await root.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };

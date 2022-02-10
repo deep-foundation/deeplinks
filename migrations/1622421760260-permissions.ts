@@ -38,10 +38,6 @@ export const up = async () => {
           can_object: {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
             subject_id: { _eq: 'X-Hasura-User-Id' },
-            // _or: [
-              // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-              // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-            // ],
           },
         },
         {
@@ -56,84 +52,6 @@ export const up = async () => {
           },
         },
       ],
-      // _and: [
-      //   {
-      //     _not: {
-      //       can_object: {
-      //         action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
-      //         _or: [
-      //           { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //           // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //         ],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     _not: {
-      //       _exists: {
-      //         _table: 'can',
-      //         _where: {
-      //           _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenySelect') },
-      //         },
-      //       },
-      //     }
-      //   },
-      // ],
-      // _or: [
-        // { type_id: { _in: [
-        //   await deep.id('@deep-foundation/core', 'User'),
-        //   await deep.id('@deep-foundation/core', 'Type'),
-        //   await deep.id('@deep-foundation/core', 'Package'),
-        //   await deep.id('@deep-foundation/core', 'PackageActive'),
-        //   await deep.id('@deep-foundation/core', 'PackageVersion'),
-        //   await deep.id('@deep-foundation/core', 'PackageNamespace'),
-        // ] } },
-        // {
-        //   _by_item: { // parents
-        //     group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-        //     path_item: { // each
-        //       id: { _eq: 'X-Hasura-User-Id' },
-        //     },
-        //   },
-        // },
-        // {
-        //   _by_item: { // package
-        //     group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-        //     path_item: { // each
-        //       type_id: { _eq: await deep.id('@deep-foundation/core', 'Package') },
-        //     },
-        //   },
-        // },
-        // {
-        //   can_object: {
-        //     action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
-        //     subject_id: { _eq: 'X-Hasura-User-Id' },
-        //     // _or: [
-        //       // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-        //       // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-        //     // ],
-        //   },
-        // },
-        // {
-        //   _exists: {
-        //     _table: 'can',
-        //     _where: {
-        //       _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-        //       subject_id: { _eq: 'X-Hasura-User-Id' },
-        //       // _or: [
-        //         // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-        //         // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-        //       // ],
-        //       action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
-        //     },
-        //   },
-        // },
-      // ],
     },
     insert: {
       _or: [
@@ -142,10 +60,6 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
               subject_id: { _eq: 'X-Hasura-User-Id' },
-              // _or: [
-                // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-              // ],
             },
           },
         },
@@ -161,65 +75,6 @@ export const up = async () => {
           },
         },
       ]
-      // _and: [
-        // { 
-        // },
-      //   {
-      //     _not: {
-      //       type: {
-      //         can_object: {
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyInsert') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //         },
-      //       },
-      //     },
-      //   },
-      //   {
-      //     _not: {
-      //       _exists: {
-      //         _table: 'can',
-      //         _where: {
-      //           _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyInsert') },
-      //         },
-      //       },
-      //     }
-      //   },
-      // ],
-      // _or: [
-      //   {
-      //     type: {
-      //       can_object: {
-      //         action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
-      //         subject_id: { _eq: 'X-Hasura-User-Id' },
-      //         // _or: [
-      //           // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //           // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //         // ],
-      //       },
-      //     },
-      //   },
-      //   // {
-      //   //   _exists: {
-      //   //     _table: 'can',
-      //   //     _where: {
-      //   //       _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //   //       _or: [
-      //   //         { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //   //         // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //   //       ],
-      //   //       action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
-      //   //     },
-      //   //   },
-      //   // },
-      // ],
     },
     update: {
       _or: [
@@ -228,10 +83,6 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
               subject_id: { _eq: 'X-Hasura-User-Id' },
-              // _or: [
-                // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-              // ],
             },
           },
         },
@@ -247,64 +98,6 @@ export const up = async () => {
           },
         },
       ]
-      // _and: [
-      //   {
-      //     _not: {
-      //       type: {
-      //         can_object: {
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyUpdate') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //         },
-      //       },
-      //     },
-      //   },
-      //   {
-      //     _not: {
-      //       _exists: {
-      //         _table: 'can',
-      //         _where: {
-      //           _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyUpdate') },
-      //         },
-      //       },
-      //     }
-      //   },
-      // ],
-      // _or: [
-      //   {
-      //     type: {
-      //       can_object: {
-      //         action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
-      //         subject_id: { _eq: 'X-Hasura-User-Id' },
-      //         // _or: [
-      //           // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //           // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //         // ],
-      //       },
-      //     },
-      //   },
-      //   // {
-      //   //   _exists: {
-      //   //     _table: 'can',
-      //   //     _where: {
-      //   //       _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //   //       subject_id: { _eq: 'X-Hasura-User-Id' },
-      //   //       // _or: [
-      //   //         // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //   //         // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //   //       // ],
-      //   //       action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
-      //   //     },
-      //   //   },
-      //   // },
-      // ]
     },
     delete: {
       _or: [
@@ -315,7 +108,6 @@ export const up = async () => {
               subject_id: { _eq: 'X-Hasura-User-Id' },
               _or: [
                 { subject_id: { _eq: 'X-Hasura-User-Id' } },
-                // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
               ],
             },
           },
@@ -332,64 +124,6 @@ export const up = async () => {
           },
         },
       ]
-      // _and: [
-      //   {
-      //     _not: {
-      //       type: {
-      //         can_object: {
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyDelete') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //         },
-      //       },
-      //     },
-      //   },
-      //   {
-      //     _not: {
-      //       _exists: {
-      //         _table: 'can',
-      //         _where: {
-      //           _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //           _or: [
-      //             { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //             // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //           ],
-      //           action_id: { _eq: await deep.id('@deep-foundation/core', 'DenyDelete') },
-      //         },
-      //       },
-      //     }
-      //   },
-      // ],
-      // _or: [
-      //   {
-      //     type: {
-      //       can_object: {
-      //         action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
-      //         subject_id: { _eq: 'X-Hasura-User-Id' },
-      //         _or: [
-      //           { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //           // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //         ],
-      //       },
-      //     },
-      //   },
-      //   // {
-      //   //   _exists: {
-      //   //     _table: 'can',
-      //   //     _where: {
-      //   //       _object_id: { _eq: await deep.id('@deep-foundation/core', 'Any') },
-      //   //       subject_id: { _eq: 'X-Hasura-User-Id' },
-      //   //       // _or: [
-      //   //         // { subject_id: { _eq: 'X-Hasura-User-Id' } },
-      //   //         // { _subject_id: { _eq: await deep.id('@deep-foundation/core', 'Any') } },
-      //   //       // ],
-      //   //       action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
-      //   //     },
-      //   //   },
-      //   // },
-      // ],
     },
 
     columns: ['id','from_id','to_id','type_id'],

@@ -339,7 +339,7 @@ export interface MinilinksHookInstance<L extends Link<number>> {
   ref: { current: MinilinksResult<L>; };
 }
 
-export function useMinilinks<L extends Link<number>>(): MinilinksHookInstance<L> {
+export function useMinilinksConstruct<L extends Link<number>>(): MinilinksHookInstance<L> {
   // @ts-ignore
   const mlRef = useRef<MinilinksResult<L>>(useMemo(() => {
     // @ts-ignore
@@ -348,3 +348,27 @@ export function useMinilinks<L extends Link<number>>(): MinilinksHookInstance<L>
   const ml: MinilinksResult<L> = mlRef.current;
   return { ml, ref: mlRef };
 }
+
+export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => boolean, results: (l: L, ml) => L[]): L | L[] {
+  const [state, setState] = useState<L[]>([]);
+  useEffect(() => {
+    const addedListener = (ol, nl) => {
+      if (filter(nl)) setState(results(nl, ml));
+    };
+    ml.emitter.on('added', addedListener);
+    const updatedListener = (ol, nl) => {
+      if (filter(nl)) setState(results(nl, ml));
+    };
+    ml.emitter.on('updated', updatedListener);
+    const removedListener = (ol, nl) => {
+      if (filter(nl)) setState(results(ol, ml));
+    };
+    ml.emitter.on('removed', removedListener);
+    return () => {
+      ml.emitter.removeListener('added', addedListener);
+      ml.emitter.removeListener('updated', updatedListener);
+      ml.emitter.removeListener('removed', removedListener);
+    };
+  });
+  return state;
+};

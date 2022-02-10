@@ -114,6 +114,14 @@ export const up = async () => {
     object: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'Active'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
         to_id: await deep.id('@deep-foundation/core', 'Focus'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -152,26 +160,29 @@ export const up = async () => {
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
         } },
       },
-      // {
-      //   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
-      //   to: { data: {
-      //     type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
-      //     object: { data: {
-      //       _or: [
-      //         {
-      //           from: {
-      //             _by_item: {
-      //               group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-      //               path_item: {
-      //                 group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-      //               }
-      //             },
-      //           }
-      //         },
-      //       ],
-      //     } }
-      //   } },
-      // },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+        to: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+          object: { data: { value: {
+            _or: [
+              { to_id: { _eq: 0 } },
+              { to_id: { _eq: {
+                _by_item: {
+                  group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+                  path_item_id: { _eq: 'X-Deep-User-Id' },
+                },
+               } } },
+            ],
+            from: {
+              _by_item: {
+                group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+                path_item_id: { _eq: 'X-Deep-User-Id' },
+              },
+            },
+          } } }
+        } },
+      },
     ],
     action: [
       {
@@ -242,6 +253,14 @@ export const up = async () => {
       },
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'Active'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
         to_id: await deep.id('@deep-foundation/core', 'Query'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -282,82 +301,6 @@ export const up = async () => {
       },
     ],
   });
-  console.log('done');
-  // insertRule({
-  //   subject: {
-  //     type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //     to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
-  //     out: { data: {
-  //       type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-  //       to_id: await deep.id('@deep-foundation/core', 'containTree'),
-  //     } },
-  //   },
-  //   object: [
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Focus'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Unfocus'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Contain'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Any'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Space'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'Query'),
-  //     },
-  //     // {
-  //     //   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
-  //     //   to: { data: {
-  //     //     type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
-  //     //     object: { data: {
-  //     //       _or: [
-  //     //         {
-  //     //           from: {
-  //     //             _by_item: {
-  //     //               group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-  //     //               path_item: {
-  //     //                 group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-  //     //                 path_item_id: { _eq: '' },
-  //     //               }
-  //     //             },
-  //     //           }
-  //     //         },
-  //     //       ],
-  //     //     } }
-  //     //   } },
-  //     // },
-  //   ],
-  //   action: [
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowUpdate'),
-  //     },
-  //     {
-  //       type_id: await deep.id('@deep-foundation/core', 'Include'),
-  //       to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
-  //     },
-  //   ],
-  // });
 };
 
 export const down = async () => {

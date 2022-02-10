@@ -22,7 +22,10 @@ app.get('/gql', expressPlayground({
       links(limit: 1) {
         id
       }
-    }`
+    }`,
+    headers: {
+      Authorization: 'Bearer TOKEN',
+    },
   }],
 }));
 
