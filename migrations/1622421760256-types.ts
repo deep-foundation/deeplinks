@@ -172,6 +172,9 @@ const corePckg: PackagerPackage = {
     { id: 'Publish', type: 'Type' }, // 87
 
     { id: 'Active', type: 'Type', value: { value: 'Active' }, from: 'Any', to: 'Any' }, // 88
+
+    { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
+    { id: 'HandlePort', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 90
   ],
   errors: [],
   strict: true,
