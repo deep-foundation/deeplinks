@@ -21,7 +21,7 @@ import { makePromiseResult, useRunner } from './links';
 
 const SCHEMA = 'public';
 
-const debug = Debug('deepcase:eh');
+const debug = Debug('deeplinks:eh:scheduler');
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,

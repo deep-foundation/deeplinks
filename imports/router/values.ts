@@ -20,7 +20,7 @@ import { boolExpToSQL } from '../bool_exp';
 
 const SCHEMA = 'public';
 
-const debug = Debug('deepcase:eh');
+const debug = Debug('deeplinks:eh:values');
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,

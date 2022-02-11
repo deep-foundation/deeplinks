@@ -48,7 +48,7 @@ describe('bool_exp', () => {
       await delay(2000);
       const { data: [{ value: sql }], error } = await deep.select({
         link_id: { _eq: boolExpId },
-      }, { table: 'bool_exp', returning: 'id link_id value' });
+      }, { table: 'bool_exp', returning: 'link_id value' });
 
       const { data: d1 } = await api.sql(applyBoolExpToLink(sql, t1));
       expect(+d1?.result?.[1]?.[0]).to.equal(1);
@@ -70,7 +70,7 @@ describe('bool_exp', () => {
       await delay(2000);
       const { data: [{ value: sql }], error } = await deep.select({
         link_id: { _eq: boolExpId },
-      }, { table: 'bool_exp', returning: 'id link_id value' });
+      }, { table: 'bool_exp', returning: 'link_id value' });
 
       const { data: d1 } = await api.sql(applyBoolExpToLink(sql, t1));
       expect(+d1?.result?.[1]?.[0]).to.equal(1);
@@ -97,7 +97,7 @@ describe('bool_exp', () => {
       await delay(2000);
       const { data: [{ value: sql }], error } = await deep.select({
         link_id: { _eq: boolExpId },
-      }, { table: 'bool_exp', returning: 'id link_id value' });
+      }, { table: 'bool_exp', returning: 'link_id value' });
 
       const { data: d1 } = await api.sql(applyBoolExpToLink(sql, t1));
       expect(+d1?.result?.[1]?.[0]).to.equal(0);
@@ -122,7 +122,7 @@ describe('bool_exp', () => {
       await delay(2000);
       const { data, error } = await deep.select({
         link_id: { _eq: boolExpId },
-      }, { table: 'bool_exp', returning: 'id link_id value' });
+      }, { table: 'bool_exp', returning: 'link_id value' });
       expect(data).to.be.empty;
     });
     it(`X-Deep-User-Id`, async () => {

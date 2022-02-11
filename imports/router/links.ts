@@ -15,7 +15,7 @@ import { RunnerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
-const debug = Debug('deepcase:eh');
+const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
