@@ -51,31 +51,31 @@ const corePckg: PackagerPackage = {
     // ===
 
     // ign
-    { id: 'Type', value: { value: 'Type' } },
-    { id: 'Package', value: { value: 'Package' } },
-    { id: 'Contain', value: { value: 'Contain' } },
-    { id: 'Value', value: { value: 'Value' } },
-    { id: 'Any', value: { value: 'Any' } },
+    { id: 'Type' },
+    { id: 'Package' },
+    { id: 'Contain' },
+    { id: 'Value' },
+    { id: 'Any' },
     
-    { id: 'Promise', value: { value: 'Promise' } },
-    { id: 'Then', value: { value: 'Then' } },
-    { id: 'Resolved', value: { value: 'Resolved' } },
-    { id: 'Rejected', value: { value: 'Rejected' } },
+    { id: 'Promise' },
+    { id: 'Then' },
+    { id: 'Resolved' },
+    { id: 'Rejected' },
     // /ign
 
-    { id: 'Selector', type: 'Type', value: { value: 'Selector' } }, // 15
-    { id: 'Include', type: 'Type', value: { value: 'Include' }, from: 'Selector', to: 'Any' }, // 16
+    { id: 'Selector', type: 'Type' }, // 15
+    { id: 'Include', type: 'Type', from: 'Selector', to: 'Any' }, // 16
 
-    { id: 'Rule', type: 'Type', value: { value: 'Rule' } }, // 17
-    { id: 'RuleSubject', type: 'Type', value: { value: 'RuleSubject' }, from: 'Rule', to: 'Selector' }, // 18
-    { id: 'RuleObject', type: 'Type', value: { value: 'RuleObject' }, from: 'Rule', to: 'Selector' }, // 19
-    { id: 'RuleAction', type: 'Type', value: { value: 'RuleAction' }, from: 'Rule', to: 'Selector' }, // 20
+    { id: 'Rule', type: 'Type' }, // 17
+    { id: 'RuleSubject', type: 'Type', from: 'Rule', to: 'Selector' }, // 18
+    { id: 'RuleObject', type: 'Type', from: 'Rule', to: 'Selector' }, // 19
+    { id: 'RuleAction', type: 'Type', from: 'Rule', to: 'Selector' }, // 20
 
     { id: 'containValue', type: 'Value', from: 'Contain', to: 'String' }, // 21
 
-    { id: 'User', type: 'Type', value: { value: 'User' } }, // 22
+    { id: 'User', type: 'Type' }, // 22
 
-    { id: 'Operation', type: 'Type', value: { value: 'Operation' } }, // 23
+    { id: 'Operation', type: 'Type' }, // 23
 
     { id: 'operationValue', type: 'Value', from: 'Operation', to: 'String' }, // 24
 
@@ -91,26 +91,26 @@ const corePckg: PackagerPackage = {
     { id: 'ExecutionProvider', type: 'Type' }, // 32
     { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 33
 
-    { id: 'Allow', type: 'Type', value: { value: 'Allow' }, from: 'Type', to: 'Operation' }, // 34
-    { id: 'Handler', type: 'Type', value: { value: 'Handler' }, from: 'Supports', to: 'Any' }, // 35
+    { id: 'Allow', type: 'Type', from: 'Type', to: 'Operation' }, // 34
+    { id: 'Handler', type: 'Type', from: 'Supports', to: 'Any' }, // 35
 
-    { id: 'Tree', type: 'Type', value: { value: 'Tree' } }, // 36
+    { id: 'Tree', type: 'Type' }, // 36
     // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
-    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeDown' } }, // 37
-    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeUp' } }, // 38
-    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any', value: { value: 'TreeIncludeNode' } }, // 39
+    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any' }, // 37
+    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any' }, // 38
+    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any' }, // 39
 
     { id: 'containTree', type: 'Tree' }, // 40
     { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' }, // 41
     { id: 'containTreeAny', type: 'TreeIncludeNode', from: 'containTree', to: 'Any' }, // 42
 
-    { id: 'PackageNamespace', type: 'Type', value: { value: 'PackageNamespace' } }, // 43
+    { id: 'PackageNamespace', type: 'Type' }, // 43
 
     { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 44
 
-    { id: 'PackageActive', type: 'Type', value: { value: 'PackageActive' }, from: 'PackageNamespace', to: 'Package' }, // 45
+    { id: 'PackageActive', type: 'Type', from: 'PackageNamespace', to: 'Package' }, // 45
 
-    { id: 'PackageVersion', type: 'Type', value: { value: 'PackageVersion' }, from: 'PackageNamespace', to: 'Package' }, // 46
+    { id: 'PackageVersion', type: 'Type', from: 'PackageNamespace', to: 'Package' }, // 46
     { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 47
 
     { id: 'HandleOperation', type: 'Type', from: 'Type', to: 'Type' }, // 48
@@ -122,14 +122,14 @@ const corePckg: PackagerPackage = {
     { id: 'promiseResultValueRelationTable', type: 'Value', from: 'PromiseResult', to: 'Object' }, // 53
     { id: 'PromiseReason', type: 'Type', from: 'Any', to: 'Any' }, // 54
 
-    { id: 'Focus', type: 'Type', value: { value: 'Focus' }, from: 'Any', to: 'Any' }, // 55
+    { id: 'Focus', type: 'Type', from: 'Any', to: 'Any' }, // 55
     { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 56
-    { id: 'Unfocus', type: 'Type', value: { value: 'Unfocus' }, from: 'Focus', to: 'Focus' }, // 57
-    { id: 'Query', type: 'Type', value: { value: 'Query' } }, // 58
+    { id: 'Unfocus', type: 'Type', from: 'Focus', to: 'Focus' }, // 57
+    { id: 'Query', type: 'Type' }, // 58
     { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 59
-    { id: 'Fixed', type: 'Type', value: { value: 'Fixed' } }, // 60
+    { id: 'Fixed', type: 'Type' }, // 60
     { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 61
-    { id: 'Space', type: 'Type', value: { value: 'Space' } }, // 62
+    { id: 'Space', type: 'Type' }, // 62
     { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 63
 
     { id: 'AllowLogin', type: 'Operation' }, // 64
@@ -141,13 +141,13 @@ const corePckg: PackagerPackage = {
     { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
     { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 69
 
-    { id: 'SelectorTree', type: 'Type', value: { value: 'SelectorTree' }, from: 'Any', to: 'Tree' }, // 70
+    { id: 'SelectorTree', type: 'Type', from: 'Any', to: 'Tree' }, // 70
 
-    { id: 'system', type: 'Type', value: { value: 'system' } }, // 71
+    { id: 'system', type: 'Type' }, // 71
 
-    { id: 'Exclude', type: 'Type', value: { value: 'Exclude' }, from: 'Selector', to: 'Any' }, // 72
+    { id: 'Exclude', type: 'Type', from: 'Selector', to: 'Any' }, // 72
 
-    { id: 'BoolExp', type: 'Type', value: { value: 'BoolExp' } }, // 73
+    { id: 'BoolExp', type: 'Type' }, // 73
     { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 74
 
     { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 75
@@ -161,7 +161,7 @@ const corePckg: PackagerPackage = {
     { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79
 
     { id: 'IsolationProvider', type: 'Type' }, // 80
-    { id: 'DockerIsolationProvider', type: 'IsolationProvider', value: { value: 'DockerIsolationProvider' } }, // 81
+    { id: 'DockerIsolationProvider', type: 'IsolationProvider' }, // 81
 
     { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
     { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 83
@@ -171,7 +171,7 @@ const corePckg: PackagerPackage = {
     { id: 'Install', type: 'Type' }, // 86
     { id: 'Publish', type: 'Type' }, // 87
 
-    { id: 'Active', type: 'Type', value: { value: 'Active' }, from: 'Any', to: 'Any' }, // 88
+    { id: 'Active', type: 'Type', from: 'Any', to: 'Any' }, // 88
   ],
   errors: [],
   strict: true,

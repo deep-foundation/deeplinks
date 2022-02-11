@@ -145,7 +145,7 @@ export const up = async () => {
       link: (await linksPermissions(['$','link_id'])).delete,
     },
 
-    columns: ['id','link_id','value'],
+    columns: [/*'id',*/'link_id','value'],
     computed_fields: [],
   };
   await permissions(api, 'strings', valuesPermissions);
