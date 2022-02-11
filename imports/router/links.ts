@@ -65,12 +65,9 @@ const runnerController = new RunnerController({
   docker: +DOCKER
 })
 
-export const useRunner = async ({ code, isolation, beforeLink, afterLink, moment } : { code: string, isolation: { type: string, value: any }, beforeLink?: any, afterLink?: any, moment?: any }) => {
+export const useRunner = async ({ code, handler, beforeLink, afterLink, moment } : { code: string, handler: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   console.log("handler4: ");
-  // for now jwt only admin. In future jwt of client created event.
-  const handler = isolation.value;
-  // const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsibGluayJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJsaW5rIiwieC1oYXN1cmEtdXNlci1pZCI6IjI0In0sImlhdCI6MTY0MDM5MDY1N30.l8BHkbl0ne3yshcF73rgPVR-Sskr0hHECr_ZsJyCdxA';
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   const useResult = await runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
   console.log('useResult', useResult);
@@ -93,6 +90,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
+  const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
   // console.log('handlerTypeId', handlerTypeId);
   // console.log('handleInsertTypeId', handleInsertTypeId);
@@ -100,7 +98,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
           in: {
-            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
+            from_id: { _eq: ${dockerSupportsJsType} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
               _or: [
@@ -120,6 +118,13 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             id
             in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
               id
+            }
+            support: from {
+              id
+              isolation: from {
+                id
+                value
+              }
             }
           }
         } }`;
@@ -162,10 +167,11 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     // console.log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
+      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value;
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(async () => await useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => await useRunner({ code, handler: isolationValue, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
