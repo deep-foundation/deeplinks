@@ -350,7 +350,7 @@ export function useMinilinksConstruct<L extends Link<number>>(): MinilinksHookIn
 }
 
 export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => boolean, results: (l: L, ml) => L[]): L | L[] {
-  const [state, setState] = useState<L[]>([]);
+  const [state, setState] = useState<L|L[]>();
   useEffect(() => {
     const addedListener = (ol, nl) => {
       if (filter(nl)) setState(results(nl, ml));

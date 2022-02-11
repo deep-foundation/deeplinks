@@ -167,12 +167,12 @@ export const up = async () => {
           object: { data: { value: {
             _or: [
               { to_id: { _eq: 0 } },
-              { to_id: { _eq: {
+              { to: {
                 _by_item: {
                   group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
                   path_item_id: { _eq: 'X-Deep-User-Id' },
                 },
-               } } },
+               } },
             ],
             from: {
               _by_item: {
