@@ -15,7 +15,7 @@ import { RunnerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
-const debug = Debug('deepcase:eh');
+const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
@@ -95,7 +95,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
   // console.log('handlerTypeId', handlerTypeId);
-  // console.log('handleInsertTypeId', handleInsertTypeId);
+  // console.log('handleOperationTypeId', handleOperationTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -103,13 +103,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
-              _or: [
-                {
-                  from: {
-                    type_id: { _eq: $typeId },
-                  }
-                },
-              ],
+              from_id: { _eq: $typeId },
               type_id: { _eq: ${handleOperationTypeId} },
             }
           }
@@ -136,7 +130,6 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   // console.log('queryString', queryString);
 
   const query = gql`${queryString}`;
-  // console.log('query', query);
 
   const variables = {
     typeId: currentTypeId
@@ -165,7 +158,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(async () => await useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => await useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'deepf/js-docker-isolation-provider:main' }, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);

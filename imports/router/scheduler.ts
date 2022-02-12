@@ -21,7 +21,7 @@ import { makePromiseResult, useRunner } from './links';
 
 const SCHEMA = 'public';
 
-const debug = Debug('deepcase:eh');
+const debug = Debug('deeplinks:eh:scheduler');
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -73,11 +73,7 @@ export async function handleScheduleMomemt(moment: any) {
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
-              _or: [
-                {
-                  from_id: { _eq: $scheduleId },
-                },
-              ],
+              from_id: { _eq: $scheduleId },
               type_id: { _eq: ${handleOperationTypeId} },
             }
           }
@@ -133,7 +129,7 @@ export async function handleScheduleMomemt(moment: any) {
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'konard/deep-runner-js:main' }, moment }));
+          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'deepf/js-docker-isolation-provider:main' }, moment }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
