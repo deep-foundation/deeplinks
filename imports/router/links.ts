@@ -83,6 +83,54 @@ export const handlerOperations = {
   Delete: 'HandleDelete',
 };
 
+// More context for Copilot:
+//
+// async useHandler( options: handlerOptions ): Promise<{ error?: string; }> {
+//   const { handler, port } = options;
+//   const { network, handlersHash, portsHash, docker, gqlURN } = this;
+//   console.log({ handlersHash, portsHash });
+//   const containerName = crypto.createHash('md5').update(handler).digest("hex");
+//   if (handlersHash[containerName] && portsHash[handlersHash[containerName]] !== 'broken') return this.callHandler({ ...options, port: handlersHash[containerName] });
+//   let dockerPort = port || await getPort();
+//   while (portsHash[port]) {
+//     dockerPort = await getPort();
+//   }
+//   portsHash[dockerPort] = containerName;
+//   handlersHash[containerName] = dockerPort;
+//   const startDocker = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? portsHash[dockerPort] : 'localhost'}:${dockerPort}/healthz`;
+//   console.log('startDocker', { startDocker });
+//   let startResult;
+//   try {
+//     startResult = await execSync(startDocker).toString();
+//   } catch (e){
+//     startResult = e.stderr;
+//   }
+//   console.log('startResult', { startResult: startResult.toString() });
+
+//   while (startResult.indexOf('port is already arllocated') !== -1) {
+//     // fix hash that this port is busy
+//     portsHash[port] = 'broken';
+//     dockerPort = await getPort();
+//     portsHash[dockerPort] = containerName;
+//     const RestartDocker = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+//     console.log('already arllocated, RestartDocker', { RestartDocker });
+//     const startResult = await execSync(RestartDocker).toString();
+//     console.log('RestartResult', { startResult });
+//   }
+//   if (startResult.indexOf('is already in use by container') !== -1){
+//     const RestartDocker = `docker stop ${containerName} && docker rm ${containerName} && docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${docker ? `--expose ${dockerPort}` : `-p ${dockerPort}:${dockerPort}` } --net ${network} -d ${handler} && npx wait-on http://${docker ? containerName : 'localhost'}:${dockerPort}/healthz`;
+//     console.log('already in use, RestartDocker', { RestartDocker });
+//     try {
+//       await execSync(RestartDocker).toString();
+//       console.log('RestartResult', { startResult: startResult.toString() });
+//     } catch (e){
+//       console.log('error', e);
+//       return ({ error: e });
+//     }
+//   }
+//   return await this.initHandler({...options, port: dockerPort});
+// }
+
 export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
@@ -271,6 +319,70 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   }
 }
 
+export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DELETE') {
+  console.log('handlePortLink', handlePortLink);
+  console.log('operation', operation);
+  if (operation == 'INSERT') {
+    // get port
+    const port = await deep.select({
+      type_id: await deep.id('@deep-foundation/core', 'Port'),
+      out: {
+        id: { _eq: handlePortLink.id },
+      },
+    }, {
+      table: 'links',
+      returning: 'id value',
+    });
+    console.log(port);
+    const portId = port?.data?.[0]?.id;
+    const portValue = port?.data?.[0]?.value.value;
+    console.log('portId', portId);
+    console.log('portValue', portValue);
+
+    // an example to run a docker:
+    // docker run -p ${dockerPort}:${dockerPort} --name ${containerName} -d ${handler}
+
+    // isolation provider structure:
+    // { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
+    // { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'deepf/js-docker-isolation-provider:main' } }, // 83
+    // { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
+    // { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
+
+    // handle port structure:
+    // { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
+    // { id: 'portValue', type: 'Value', from: 'Port', to: 'String' }, // 90
+    // { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 91
+
+    // get dockerImage from isolation provider
+    const isolationProvider = await deep.select({
+      type_id: await deep.id('@deep-foundation/core', 'DockerIsolationProvider'),
+      in: {
+        type_id: await deep.id('@deep-foundation/core', 'HandlePort'),
+        from_id: { _eq: portId },
+      },
+    }, {
+      table: 'links',
+      returning: 'id value',
+    });
+    console.log(isolationProvider);
+    const dockerImage = isolationProvider?.data?.[0]?.value.value;
+
+    // start container
+    const containerName = `handle_port_${portValue}`;
+    const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
+    console.log('dockerCommand', dockerCommand);
+    const dockerOutput = await execSync(dockerCommand).toString();
+    console.log('dockerOutput', dockerOutput);
+    
+    console.log('tcp listener created');
+  } else if (operation == 'DELETE') {
+
+
+    
+    console.log('tcp listener deleted');
+  }
+}
+
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
@@ -320,6 +432,11 @@ export default async (req, res) => {
         const handleScheduleId = await deep.id('@deep-foundation/core', 'HandleSchedule');
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleSchedule(current, operation);
+        }
+
+        const handlePortId = await deep.id('@deep-foundation/core', 'HandlePort');
+        if (typeId === handlePortId && (operation === 'INSERT' || operation === 'DELETE')) {
+          await handlePort(current, operation);
         }
 
         // console.log("done");
