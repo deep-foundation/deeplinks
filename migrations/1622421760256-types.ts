@@ -164,7 +164,7 @@ const corePckg: PackagerPackage = {
     { id: 'DockerIsolationProvider', type: 'IsolationProvider' }, // 81
 
     { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
-    { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'konard/deep-runner-js:main' } }, // 83
+    { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'deepf/js-docker-isolation-provider:main' } }, // 83
     { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
 
