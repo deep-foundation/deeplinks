@@ -174,7 +174,7 @@ const corePckg: PackagerPackage = {
     { id: 'Active', type: 'Type', from: 'Any', to: 'Any' }, // 88
 
     { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
-    { id: 'portValue', type: 'Value', from: 'Port', to: 'String' }, // 90
+    { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 90
     { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 91
   ],
   errors: [],

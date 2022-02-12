@@ -350,7 +350,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 
     // handle port structure:
     // { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
-    // { id: 'portValue', type: 'Value', from: 'Port', to: 'String' }, // 90
+    // { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 90
     // { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 91
 
     // get dockerImage from isolation provider
