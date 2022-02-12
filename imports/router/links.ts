@@ -67,11 +67,16 @@ const runnerController = new RunnerController({
 
 export const useRunner = async ({ code, handler, beforeLink, afterLink, moment } : { code: string, handler: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
-  console.log("handler4: ");
+  debug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
-  const useResult = await runnerController.useHandler({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
-  console.log('useResult', useResult);
-  return useResult;
+  debug('jwt', jwt);
+  const portResult = await runnerController.findPort({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
+  debug('portResult', portResult);
+  const initResult = await runnerController.initHandler({ port: portResult?.port });
+  debug('initResult', initResult);
+  const callResult = await runnerController.callHandler({ code, port: portResult?.port, jwt, data: { beforeLink, afterLink, moment } });
+  debug('callResult', callResult);
+  return callResult;
 }
 
 export const handlerOperations = {
@@ -152,19 +157,19 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     // console.log(queryString);
     // console.log(query);
     // console.log(JSON.stringify(query, null, 2));
-    console.log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    console.log("handlersWithCode?.length: ", handlersWithCode?.length);
+    debug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+    debug("handlersWithCode?.length: ", handlersWithCode?.length);
 
     // console.log(handleStringResult);
     // console.log(JSON.stringify(handleStringResult, null, 2));
     // console.log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
-      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value;
+      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(async () => await useRunner({ code, handler: isolationValue, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => useRunner({ code, handler: isolationValue, beforeLink: oldLink, afterLink: newLink }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
@@ -185,28 +190,28 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       Rejected: rejectedTypeId,
       Results: false,
     });
-    console.log('promise: ', promise);
+    debug('promise: ', promise);
     if (promise) {
-      console.log("promises.length: ", promises.length);
+      debug("promises.length: ", promises.length);
 
       // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
       // Promise.allSettled(promises)
       await Promise.allSettled(promises.map((p) => p() as Promise<any>))
         .then(async (values) => {
-          console.log("values: ", values);
+          debug("values: ", values);
           const promiseResults = [];
           for (let i = 0; i < values.length; i++) {
             const value = values[i];
             const handleInsertId = handleInsertsIds[i];
             if (value.status == 'fulfilled') {
               const result = value.value;
-              console.log("result: ", result);
+              debug("result: ", result);
               const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
-              console.log("error: ", error);
+              debug("error: ", error);
               const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
@@ -214,11 +219,11 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
           try
           {
             await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            console.log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+            debug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
           }
           catch(e)
           {
-            console.log('promiseResults insert error: ', e?.message ?? e);
+            debug('promiseResults insert error: ', e?.message ?? e);
           }
         });
     }
@@ -226,8 +231,8 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 }
 
 export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT' | 'DELETE') {
-  console.log('handleScheduleLink', handleScheduleLink);
-  console.log('operation', operation);
+  debug('handleScheduleLink', handleScheduleLink);
+  debug('operation', operation);
   if (operation == 'INSERT') {
     // get schedule
     const schedule = await deep.select({
@@ -239,11 +244,11 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
       table: 'links',
       returning: 'id value',
     });
-    console.log(schedule);
+    debug(schedule);
     const scheduleId = schedule?.data?.[0]?.id;
     const scheduleValue = schedule?.data?.[0]?.value.value;
-    console.log('scheduleId', scheduleId);
-    console.log('scheduleValue', scheduleValue);
+    debug('scheduleId', scheduleId);
+    debug('scheduleValue', scheduleValue);
     await api.query({
       type: 'create_cron_trigger',
       args: {
@@ -265,7 +270,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
         comment: `Event trigger for handle schedule link ${handleScheduleLink?.id} with cron schedule definition ${scheduleValue} of ${scheduleId} schedule.`,
       }
     });
-    console.log('cron trigger created');
+    debug('cron trigger created');
   } else if (operation == 'DELETE') {
     await api.query({
       type: 'delete_cron_trigger',
@@ -273,7 +278,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
         name: `handle_schedule_${handleScheduleLink?.id}`,
       }
     });
-    console.log('cron trigger deleted');
+    debug('cron trigger deleted');
   }
 }
 

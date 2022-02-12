@@ -133,7 +133,7 @@ export async function handleScheduleMomemt(moment: any) {
     // console.log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
-      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value;
+      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
