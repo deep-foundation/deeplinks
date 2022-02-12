@@ -73,11 +73,7 @@ export async function handleScheduleMomemt(moment: any) {
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
-              _or: [
-                {
-                  from_id: { _eq: $scheduleId },
-                },
-              ],
+              from_id: { _eq: $scheduleId },
               type_id: { _eq: ${handleOperationTypeId} },
             }
           }

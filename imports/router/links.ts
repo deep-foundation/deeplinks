@@ -95,7 +95,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
   // console.log('handlerTypeId', handlerTypeId);
-  // console.log('handleInsertTypeId', handleInsertTypeId);
+  // console.log('handleOperationTypeId', handleOperationTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -103,13 +103,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
             type_id: { _eq: ${handlerTypeId} },
             in: {
-              _or: [
-                {
-                  from: {
-                    type_id: { _eq: $typeId },
-                  }
-                },
-              ],
+              from_id: { _eq: $typeId },
               type_id: { _eq: ${handleOperationTypeId} },
             }
           }
@@ -136,7 +130,6 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   // console.log('queryString', queryString);
 
   const query = gql`${queryString}`;
-  // console.log('query', query);
 
   const variables = {
     typeId: currentTypeId
