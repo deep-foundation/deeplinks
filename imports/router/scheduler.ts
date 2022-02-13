@@ -84,6 +84,13 @@ export async function handleScheduleMomemt(moment: any) {
             id
             in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
               id
+              support: from {
+                id
+                isolation: from {
+                  id
+                  value
+                }
+              }
             }
           }
         } }`;
@@ -126,10 +133,11 @@ export async function handleScheduleMomemt(moment: any) {
     // console.log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
+      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(() => useRunner({ code, isolation: { type: 'dockerJsIsolationProvider', value: 'deepf/js-docker-isolation-provider:main' }, moment }));
+          promises.push(() => useRunner({ code, handler: isolationValue, moment }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
