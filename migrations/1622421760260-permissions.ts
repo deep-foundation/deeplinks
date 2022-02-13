@@ -54,6 +54,7 @@ export const up = async () => {
       ],
     },
     insert: {
+      type: { id: { _neq: 0 } },
       _or: [
         {
           type: {
@@ -166,7 +167,7 @@ export const up = async () => {
         sqlResult INT;
       BEGIN
         IF (NEW."from_id" != NEW."to_id" AND (NEW."from_id" = 0 OR NEW."to_id" = 0)) THEN
-          RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %.', NEW."id", NEW."from_id", NEW."to_id";
+          RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %, type: %.', NEW."id", NEW."from_id", NEW."to_id", NEW."type_id";
         END IF;
 
         SELECT t.* into typeLink
@@ -180,10 +181,6 @@ export const up = async () => {
         SELECT t.* into toLink
         FROM "${TABLE_NAME}" as t
         WHERE t."id" = NEW."to_id";
-
-        IF (typeLink IS NULL) THEN
-          RAISE EXCEPTION 'Type id: % doest not exists', NEW."type_id";
-        END IF;
 
         IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
           IF (typeLink."from_id" != ${GLOBAL_ID_ANY} AND typeLink."from_id" != fromLink."type_id") THEN

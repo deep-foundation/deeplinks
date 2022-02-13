@@ -16,7 +16,7 @@ import crypto from 'crypto';
 import { 
   handleOperation,
 } from './links';
-import { boolExpToSQL } from '../bool_exp';
+import { boolExpToSQL } from '../bool_exp_to_sql';
 
 const SCHEMA = 'public';
 

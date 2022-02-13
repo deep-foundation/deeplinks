@@ -5,9 +5,9 @@ import { stringify } from "querystring";
 import { delay } from "../imports/promise";
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.HASURA_SSL,
-  secret: process.env.HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const deep = new DeepClient({ apolloClient });

@@ -500,7 +500,7 @@ export class Packager<L extends Link<any>> {
       // @ts-ignore
       _: true,
     });
-    return { data, errors, counter, dependedLinks, packageId, namespaceId };
+    return { data, errors, counter, dependedLinks, packageId: containsHash[packageId], namespaceId };
   }
 
   async serialize(globalLinks: MinilinksResult<PackagerLink>, options: PackagerExportOptions, pckg: PackagerPackage) {

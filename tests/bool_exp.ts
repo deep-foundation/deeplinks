@@ -1,20 +1,20 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { assert, expect } from 'chai';
-import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp";
+import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp_to_sql";
 import { DeepClient } from "../imports/client";
 import { delay } from "../imports/promise";
 
 export const api = new HasuraApi({
-  path: process.env.HASURA_PATH,
-  ssl: !!+process.env.HASURA_SSL,
-  secret: process.env.HASURA_SECRET,
+  path: process.env.DEEPLINKS_HASURA_PATH,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.HASURA_SSL,
-  secret: process.env.HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const deep = new DeepClient({ apolloClient });

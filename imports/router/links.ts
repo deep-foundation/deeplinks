@@ -58,23 +58,27 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 };
 
 const runnerController = new RunnerController({
-  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
+  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep-graphql-engine-1:8080/v1/graphql',
   network: 'deep_network',
   portsHash: {},
   handlersHash: {},
   docker: +DOCKER
 })
 
-export const useRunner = async ({ code, handler, beforeLink, afterLink, moment } : { code: string, handler: string, beforeLink?: any, afterLink?: any, moment?: any }) => {
+export const useRunner = async ({
+  code, handler, oldLink, newLink, moment, promiseId,
+} : {
+  code: string, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
+}) => {
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   debug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   debug('jwt', jwt);
-  const portResult = await runnerController.findPort({ handler, code, jwt, data: { beforeLink, afterLink, moment }});
+  const portResult = await runnerController.findPort({ handler, code, jwt, data: { oldLink, newLink, moment }});
   debug('portResult', portResult);
   const initResult = await runnerController.initHandler({ port: portResult?.port });
   debug('initResult', initResult);
-  const callResult = await runnerController.callHandler({ code, port: portResult?.port, jwt, data: { beforeLink, afterLink, moment } });
+  const callResult = await runnerController.callHandler({ code, port: portResult?.port, jwt, data: { oldLink, newLink, moment, promiseId } });
   debug('callResult', callResult);
   return callResult;
 }
@@ -153,6 +157,21 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 
   const handlersWithCode = handlersResult?.data?.links as any[];
   // console.log('handlersWithCode.length', handlersWithCode?.length);
+
+  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+  const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+
+  const promise = await findPromiseLink({
+    id: currentLinkId, client: deep.apolloClient,
+    Then: await deep.id('@deep-foundation/core', 'Then'),
+    Promise: await deep.id('@deep-foundation/core', 'Promise'),
+    Resolved: resolvedTypeId,
+    Rejected: rejectedTypeId,
+    Results: false,
+  });
+
   if (handlersWithCode?.length > 0) {
     // console.log(queryString);
     // console.log(query);
@@ -169,7 +188,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(async () => useRunner({ code, handler: isolationValue, beforeLink: oldLink, afterLink: newLink }));
+          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           debug('error', error);
@@ -177,19 +196,6 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       }
     }
 
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-    const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-    const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
-
-    const promise = await findPromiseLink({
-      id: currentLinkId, client: deep.apolloClient,
-      Then: await deep.id('@deep-foundation/core', 'Then'),
-      Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      Resolved: resolvedTypeId,
-      Rejected: rejectedTypeId,
-      Results: false,
-    });
     debug('promise: ', promise);
     if (promise) {
       debug("promises.length: ", promises.length);
