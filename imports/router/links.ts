@@ -58,7 +58,7 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 };
 
 const runnerController = new RunnerController({
-  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep-graphql-engine-1:8080/v1/graphql',
+  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
   network: 'deep_network',
   portsHash: {},
   handlersHash: {},
