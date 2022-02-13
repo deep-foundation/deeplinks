@@ -84,12 +84,12 @@ export async function handleScheduleMomemt(moment: any) {
             id
             in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
               id
-              support: from {
+            }
+            support: from {
+              id
+              isolation: from {
                 id
-                isolation: from {
-                  id
-                  value
-                }
+                value
               }
             }
           }
