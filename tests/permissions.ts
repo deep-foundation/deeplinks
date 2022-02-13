@@ -4,9 +4,9 @@ import { assert, expect } from 'chai';
 import { stringify } from "querystring";
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.HASURA_SSL,
-  secret: process.env.HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const root = new DeepClient({ apolloClient });

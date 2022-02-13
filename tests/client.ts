@@ -3,9 +3,9 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.HASURA_SSL,
-  secret: process.env.HASURA_SECRET,
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
 const deepClient = new DeepClient({ apolloClient });

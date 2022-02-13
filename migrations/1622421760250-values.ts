@@ -33,7 +33,7 @@ export const up = async () => {
   await (generateUp({
     schemaName: 'public',
     tableName: 'strings',
-    valueType: 'TEXT',
+    valueType: 'TEXT NOT NULL DEFAULT ""',
     customColumnsSql: 'value text',
     linkRelation: 'string',
     linksTableName: 'links',
@@ -43,7 +43,7 @@ export const up = async () => {
   await (generateUp({
     schemaName: 'public',
     tableName: 'numbers',
-    valueType: 'float8',
+    valueType: 'float8 NOT NULL DEFAULT 0',
     customColumnsSql: 'value bigint',
     linkRelation: 'number',
     linksTableName: 'links',
@@ -53,7 +53,7 @@ export const up = async () => {
   await (generateUp({
     schemaName: 'public',
     tableName: 'objects',
-    valueType: 'jsonb',
+    valueType: 'jsonb NOT NULL DEFAULT \'{}\'::jsonb',
     customColumnsSql: 'value jsonb',
     linkRelation: 'object',
     linksTableName: 'links',

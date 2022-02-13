@@ -3,6 +3,7 @@ import _isEqual from 'lodash/isEqual';
 import EventEmitter from 'events';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
+import { inherits } from 'util';
 
 const debug = Debug('deeplinks:minilinks');
 
@@ -41,6 +42,23 @@ export interface MinilinksResult<Link> {
   emitter: EventEmitter;
 }
 
+export class MinilinksLink<Ref extends number> {
+  id: Ref;
+  type_id: Ref;
+  from_id?: Ref;
+  to_id?: Ref;
+  typed: MinilinksLink<Ref>[];
+  type: MinilinksLink<Ref>;
+  in: MinilinksLink<Ref>[];
+  inByType: { [id: number]: MinilinksLink<Ref>[] };
+  out: MinilinksLink<Ref>[];
+  outByType: { [id: number]: MinilinksLink<Ref>[] };
+  from: MinilinksLink<Ref>;
+  to: MinilinksLink<Ref>;
+  constructor(link: any) {
+    Object.assign(this, link);
+  }
+}
 export interface MinilinksGeneratorOptions {
   id: any;
   type_id: any;
@@ -56,6 +74,7 @@ export interface MinilinksGeneratorOptions {
   outByType: any;
   handler?: (link, result: any) => any;
   equal: (oldLink: any, newLink: any) => boolean;
+  Link: any; // TODO
 }
 
 export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
@@ -74,6 +93,7 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   equal: (ol, nl) => {
     return ol.type_id == nl.type_id && ol.from_id == nl.from_id && ol.to_id == nl.to_id && _isEqual(ol.value, nl.value);
   },
+  Link: MinilinksLink,
 };
 
 export interface MinilinksInstance<L extends Link<number>>{
@@ -88,6 +108,7 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 }
 
 export interface MinilinkError extends Error {}
+
 export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends Link<number>> {
   types: { [id: number]: L[] } = {};
   byId: { [id: number]: L } = {};
@@ -111,7 +132,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (byId[linksArray[l][options.id]]) {
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
-        const link = { ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} };
+        const link = new this.options.Link({ ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} });
         byId[link[options.id]] = link;
 
         // byFrom[link.from_id]: link[]; // XXX
@@ -339,11 +360,11 @@ export interface MinilinksHookInstance<L extends Link<number>> {
   ref: { current: MinilinksResult<L>; };
 }
 
-export function useMinilinksConstruct<L extends Link<number>>(): MinilinksHookInstance<L> {
+export function useMinilinksConstruct<L extends Link<number>>(options?: any): MinilinksHookInstance<L> {
   // @ts-ignore
   const mlRef = useRef<MinilinksResult<L>>(useMemo(() => {
     // @ts-ignore
-    return new MinilinkCollection();
+    return new MinilinkCollection(options);
   }, []));
   const ml: MinilinksResult<L> = mlRef.current;
   return { ml, ref: mlRef };
@@ -364,6 +385,7 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
       if (filter(nl)) setState(results(ol, ml));
     };
     ml.emitter.on('removed', removedListener);
+    setState(results(undefined, ml));
     return () => {
       ml.emitter.removeListener('added', addedListener);
       ml.emitter.removeListener('updated', updatedListener);

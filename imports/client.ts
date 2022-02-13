@@ -213,8 +213,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
     if (!this.apolloClient && !options.apolloClient && options.token) {
       this.apolloClient = generateApolloClient({
-        path: `${process.env.HASURA_PATH}/v1/graphql`,
-        ssl: !!+process.env.HASURA_SSL,
+        path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+        ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
         token: options.token,
       });
     }
@@ -446,26 +446,31 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     // console.log(JSON.stringify(q, null, 2));
     // @ts-ignore
     const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
-    if (!result) throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
+    if (!result) {
+      console.log(JSON.stringify(q, null, 2), start, path, this.pathToWhere(start, ...path));
+      throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
+    }
     return result;
   };
 
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
+    const relogin = typeof(options.relogin) === 'boolean' ? options.relogin : true;
     const result = await this.apolloClient.query({ query: GUEST });
     const { linkId, token, error } = result?.data?.guest || {};
-    if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+    if (!error && !!token && relogin) {
       if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
     }
     return { linkId, token, error };
   };
 
   async jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
+    const relogin = typeof(options.relogin) === 'boolean' ? options.relogin : false;
     if (options?.token) {
       try {
         const token = options?.token;
         const decoded = parseJwt(token);
         const linkId = decoded?.[`https://hasura.io/jwt/claims`]?.['x-hasura-user-id'];
-        if (!!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+        if (!!token && relogin) {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
         return { linkId, token, error: undefined };
@@ -475,7 +480,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } else if (options?.linkId) {
       const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
       const { linkId, token, error } = result?.data?.jwt || {};
-      if (!error && !!token && typeof(options.relogin) === 'boolean' ? options.relogin : true) {
+      if (!error && !!token && relogin) {
         if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
       }
       return { linkId, token, error };

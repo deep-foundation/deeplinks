@@ -110,8 +110,8 @@ export class RunnerController {
     const { portsHash, docker } = this;
     try {
       const callRunner = `http://${docker ? portsHash[port] : 'localhost'}:${port}/call`
-      console.log('callRunner', { callRunner, params: { code, data, jwt } })
-      const result = await axios.post(callRunner,  { params: { code, data, jwt }});
+      console.log('callRunner', { callRunner, params: options })
+      const result = await axios.post(callRunner,  { params: options});
       if (result?.data?.error) return { error: result?.data?.error};
       if(result?.data?.resolved) {
         return result.data.resolved;

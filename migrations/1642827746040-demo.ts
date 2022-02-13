@@ -28,7 +28,6 @@ const insertRule = async (admin, options: {
   action: any;
 }) => {
   i++;
-  console.time(`${i}`);
   const { data: [{ id: ruleId }] } = await admin.insert({
     type_id: await admin.id('@deep-foundation/core', 'Rule'),
     out: { data: [
@@ -55,7 +54,6 @@ const insertRule = async (admin, options: {
       },
     ] },
   });
-  console.timeEnd(`${i}`);
 };
 
 export const up = async () => {
@@ -64,7 +62,7 @@ export const up = async () => {
   const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
   const admin = new DeepClient({ deep, token, linkId });
 
-  const users = {
+  const usersWhere = {
     type_id: await deep.id('@deep-foundation/core', 'Include'),
     to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
     out: { data: {
@@ -72,22 +70,42 @@ export const up = async () => {
       to_id: await deep.id('@deep-foundation/core', 'containTree'),
     } },
   };
-  console.log('visible');
-  console.log('Rule id', await admin.id('@deep-foundation/core', 'Rule')),
+  const adminWhere = {
+    type_id: await deep.id('@deep-foundation/core', 'Include'),
+    to_id: await deep.id('@deep-foundation/core', 'system', 'admin'),
+    out: { data: {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+    } },
+  };
   await insertRule(admin, {
-    subject: users,
-    object: [
+    subject: adminWhere,
+    object: adminWhere,
+    action: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
-        to_id: await deep.id('@deep-foundation/core'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Exclude'),
-        to_id: await deep.id('@deep-foundation/core', 'system'),
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+    ],
+  });
+  await insertRule(admin, {
+    subject: usersWhere,
+    object: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -105,12 +123,34 @@ export const up = async () => {
       },
     ],
   });
-  console.log('updatable');
+  await insertRule(admin, {
+    subject: usersWhere,
+    object: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'system', 'admin'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      }
+    ],
+    action: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowLogin'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+    ],
+  });
   console.log(admin.token, admin.linkId, {
     type_id: await admin.id('@deep-foundation/core', 'Rule'),
   });
   await insertRule(admin, {
-    subject: users,
+    subject: usersWhere,
     object: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
@@ -196,7 +236,7 @@ export const up = async () => {
     ],
   });
   await insertRule(admin, {
-    subject: users,
+    subject: usersWhere,
     object: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
@@ -241,7 +281,7 @@ export const up = async () => {
     ],
   });
   await insertRule(admin, {
-    subject: users,
+    subject: usersWhere,
     object: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),

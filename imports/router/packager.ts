@@ -11,14 +11,9 @@ import { v4 as uuid } from 'uuid';
 import child_process from 'child_process';
 import * as semver from 'semver';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-
+import url from 'url';
 
 const tmpdir = os.tmpdir();
-
-const gists = new Gists({
-  username: 'ivansglazunov', 
-  password: process?.env?.PASSWORD,
-});
 
 const client = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -30,87 +25,124 @@ const deep = new DeepClient({ apolloClient: client });
 
 const packager = new Packager(deep);
 
-const typeDefs = gql`
+export const typeDefsString = `
   type Query {
-    packagerInstall(input: PackagerInstallInput): PackagerInstallOutput
-    packagerPublish(input: PackagerPublishInput): PackagerPublishOutput
+    packager_install(input: PackagerInstallInput): PackagerInstallOutput
+    packager_publish(input: PackagerPublishInput): PackagerPublishOutput
   }
   input PackagerInstallInput {
-    name: String
-    version: String
     address: String
-    type: String
   }
   type PackagerInstallOutput {
     ids: [Int]
     errors: [String]
+    packageId: Int
   }
   input PackagerPublishInput {
     id: Int
     address: String
-    type: String
   }
   type PackagerPublishOutput {
     ids: [Int]
     errors: [String]
   }
 `;
+export const typeDefs = gql`${typeDefsString}`;
 
 const resolvers = {
   Query: {
-    packagerInstall: async (source, args, context, info) => {
-      const { name, version, address, type } = args.input;
+    packager_install: async (source, args, context, info) => {
       const errors = [];
-      if (type === 'gist') {
-        const result = await gists.get(address);
+      if (
+        context?.headers?.['x-hasura-role'] !== 'admin' &&
+        !await deep.can(
+          await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowPackagerInstall')
+        )
+      ) {
+        errors.push('cant');
+        return { errors };
+      }
+      const { address } = args.input;
+      const uri = new url.URL(address);
+
+      // gist.github.com/ivansglazunov/4cf14e3e58f4e96f7e7914b963ecdd29
+      const isGist = uri.hostname === 'gist.github.com';
+      const isNpm = uri.hostname === 'npmjs.com' || uri.hostname === 'www.npmjs.com';
+
+      if (isGist) {
+        const username = uri.username;
+        const password = uri.password;
+        const gistId = uri.pathname.split('/')[1];
+        if (!username || !password) {
+          errors.push('gist requires user and pass');
+        }
+        if (!username || !password) {
+          errors.push('gist valid address like http://gist.github.com/account/gist');
+        }
+        if (errors.length) return { errors };
+        // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
+        const gists = new Gists({ username, password });
+        const result = await gists.get(gistId);
         const files = result?.body?.files;
         const deepPckgContent = files?.['deep.json']?.content;
         if (deepPckgContent) {
           try {
             const deepPckg = JSON.parse(deepPckgContent);
-            const { ids, errors } = await packager.import(deepPckg);
-            return { ids, errors };
+            const { ids, errors, packageId } = await packager.import(deepPckg);
+            return { ids, errors, packageId };
           } catch(error) {
             errors.push(error);
           }
         } else {
           errors.push(`deep.json not founded in gist`);
         }
-      } else if (type === 'npm') {
-        const dirid = uuid();
-        const dir = [tmpdir,dirid].join('/');
-        fs.mkdirSync(dir);
-        let selector = address;
-        if (version) selector += '@' + version;
-        try {
-          child_process.execSync(`cd ${dir}; npm install --no-cache ${selector};`,{stdio:[0,1,2]});
-        } catch(error) {
-          errors.push(error);
-          errors.push('istallation failed');
-          return { errors };
-        }
-        const npmPckgContent = fs.readFileSync([dir,'node_modules',address,'package.json'].join('/'), { encoding: 'utf-8' });
-        const deepPckgContent = fs.readFileSync([dir,'node_modules',address,'deep.json'].join('/'), { encoding: 'utf-8' });
-        if (deepPckgContent) {
-          try {
-            const npmPckg = JSON.parse(npmPckgContent);
-            const deepPckg = JSON.parse(deepPckgContent);
-            const { ids, errors } = await packager.import(deepPckg);
-            fs.rmSync(dir, { recursive: true, force: true });
-            return { ids, errors };
-          } catch(error) {
-            errors.push(error);
-          }
-        } else {
-          errors.push(`deep.json not founded in gist`);
-        }
-        fs.rmSync(dir, { recursive: true, force: true });
+      } else if (isNpm) {
+        // const dirid = uuid();
+        // const dir = [tmpdir,dirid].join('/');
+        // fs.mkdirSync(dir);
+        // let selector = address;
+        // if (version) selector += '@' + version;
+        // try {
+        //   child_process.execSync(`cd ${dir}; npm install --no-cache ${selector};`,{stdio:[0,1,2]});
+        // } catch(error) {
+        //   errors.push(error);
+        //   errors.push('installation failed');
+        //   return { errors };
+        // }
+        // const npmPckgContent = fs.readFileSync([dir,'node_modules',address,'package.json'].join('/'), { encoding: 'utf-8' });
+        // const deepPckgContent = fs.readFileSync([dir,'node_modules',address,'deep.json'].join('/'), { encoding: 'utf-8' });
+        // if (deepPckgContent) {
+        //   try {
+        //     const npmPckg = JSON.parse(npmPckgContent);
+        //     const deepPckg = JSON.parse(deepPckgContent);
+        //     const { ids, errors, packageId } = await packager.import(deepPckg);
+        //     fs.rmSync(dir, { recursive: true, force: true });
+        //     return { ids, errors, packageId };
+        //   } catch(error) {
+        //     errors.push(error);
+        //   }
+        // } else {
+        //   errors.push(`deep.json not founded in gist`);
+        // }
+        // fs.rmSync(dir, { recursive: true, force: true });
       } else {
-        errors.push(`type ${type} is not valid`);
+        errors.push(`address is not valid`);
       }
       return { ids: [], errors };
     },
-    packagerPublish: async (source, args, context, info) => {
+    packager_publish: async (source, args, context, info) => {
+      if (
+        context?.headers?.['x-hasura-role'] !== 'admin' &&
+        !await deep.can(
+          await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
+        )
+      ) {
+        return { error: 'cant' };
+      }
       const { id, address, type } = args.input;
       const errors = [];
       if (type === 'gist') {

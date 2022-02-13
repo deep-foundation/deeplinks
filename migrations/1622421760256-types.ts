@@ -168,14 +168,24 @@ const corePckg: PackagerPackage = {
     { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
 
-    { id: 'Install', type: 'Type' }, // 86
-    { id: 'Publish', type: 'Type' }, // 87
+    { id: 'PackagerInstall', type: 'Type', from: 'Any', to: 'PackagerQuery' }, // 86
+    { id: 'PackagerPublish', type: 'Type', from: 'Any', to: 'Package' }, // 87
 
     { id: 'Active', type: 'Type', from: 'Any', to: 'Any' }, // 88
 
-    { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
-    { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 90
-    { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 91
+    { id: 'AllowPackagerInstall', type: 'Operation' }, // 89
+    { id: 'AllowPackagerPublish', type: 'Operation' }, // 90
+
+    { id: 'PromiseOut', type: 'Type', from: 'PromiseResult', to: 'Any' }, // 91
+    { id: 'promiseOutValue', type: 'Value', from: 'PromiseOut', to: 'String' }, // 92
+    
+    { id: 'PackagerQuery', type: 'Type' }, // 93
+    { id: 'packagerQueryValue', type: 'Value', from: 'PackagerQuery', to: 'String' }, // 94
+
+    { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 95
+    { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 96
+    { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 97
+
   ],
   errors: [],
   strict: true,
@@ -210,7 +220,6 @@ export const up = async () => {
         },
       ], },
     });
-    console.log({ adminId });
   }
 };
 
