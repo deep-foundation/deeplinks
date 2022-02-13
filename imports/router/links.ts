@@ -333,23 +333,24 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
 export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DELETE') {
   console.log('handlePortLink', handlePortLink);
   console.log('operation', operation);
-  if (operation == 'INSERT') {
-    // get port
-    const port = await deep.select({
-      type_id: await deep.id('@deep-foundation/core', 'Port'),
-      out: {
-        id: { _eq: handlePortLink.id },
-      },
-    }, {
-      table: 'links',
-      returning: 'id value',
-    });
-    console.log(port);
-    const portId = port?.data?.[0]?.id;
-    const portValue = port?.data?.[0]?.value.value;
-    console.log('portId', portId);
-    console.log('portValue', portValue);
 
+  // get port
+  const port = await deep.select({
+    type_id: await deep.id('@deep-foundation/core', 'Port'),
+    out: {
+      id: { _eq: handlePortLink.id },
+    },
+  }, {
+    table: 'links',
+    returning: 'id value',
+  });
+  console.log(port);
+  const portId = port?.data?.[0]?.id;
+  const portValue = port?.data?.[0]?.value.value;
+  console.log('portId', portId);
+  console.log('portValue', portValue);
+
+  if (operation == 'INSERT') {
     // an example to run a docker:
     // docker run -p ${dockerPort}:${dockerPort} --name ${containerName} -d ${handler}
 
@@ -368,8 +369,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     const isolationProvider = await deep.select({
       type_id: await deep.id('@deep-foundation/core', 'DockerIsolationProvider'),
       in: {
-        type_id: await deep.id('@deep-foundation/core', 'HandlePort'),
-        from_id: { _eq: portId },
+        id: { _eq: handlePortLink.id },
       },
     }, {
       table: 'links',
@@ -377,9 +377,11 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     });
     console.log(isolationProvider);
     const dockerImage = isolationProvider?.data?.[0]?.value.value;
+    console.log('dockerImage', dockerImage);
 
     // start container
     const containerName = `handle_port_${portValue}`;
+    console.log('containerName', containerName);
     const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
     console.log('dockerCommand', dockerCommand);
     const dockerOutput = await execSync(dockerCommand).toString();
@@ -388,7 +390,13 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     console.log('tcp listener created');
   } else if (operation == 'DELETE') {
 
-
+    // docker stop ${containerName} && docker rm ${containerName}
+    const containerName = `handle_port_${portValue}`;
+    console.log('containerName', containerName);
+    const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
+    console.log('dockerCommand', dockerCommand);
+    const dockerOutput = await execSync(dockerCommand).toString();
+    console.log('dockerOutput', dockerOutput);
     
     console.log('tcp listener deleted');
   }
