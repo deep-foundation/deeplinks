@@ -171,9 +171,6 @@ export const up = async () => {
       },
     ],
   });
-  console.log(admin.token, admin.linkId, {
-    type_id: await admin.id('@deep-foundation/core', 'Rule'),
-  });
   await insertRule(admin, {
     subject: usersWhere,
     object: [
