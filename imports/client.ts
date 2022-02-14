@@ -275,6 +275,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       ],
       name: name,
     }));
+
     // @ts-ignore
     return { ...q, data: (q)?.data?.q0 };
   };
@@ -332,6 +333,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
+    if (!exp) throw new Error('!exp');
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
@@ -421,7 +423,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         if (!setted) result[key] = this._boolExpFields[key] ? this.serializeWhere(exp[key], env) : this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
       }
       return result;
-    } else return exp;
+    } else {
+      if (typeof(exp) === 'undefined') throw new Error('undefined in query');
+      return exp;
+    }
   };
 
   serializeQuery(exp: any, env: string = 'link'): any {

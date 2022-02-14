@@ -74,7 +74,7 @@ const resolvers = {
       if (isGist) {
         const username = uri.username;
         const password = uri.password;
-        const gistId = uri.pathname.split('/')[1];
+        const gistId = uri.pathname.split('/')[2];
         if (!username || !password) {
           errors.push('gist requires user and pass');
         }
@@ -133,6 +133,7 @@ const resolvers = {
       return { ids: [], errors };
     },
     packager_publish: async (source, args, context, info) => {
+      const errors = [];
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
@@ -141,13 +142,28 @@ const resolvers = {
           await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
         )
       ) {
-        return { error: 'cant' };
+        errors.push('cant');
+        return { errors };
       }
-      const { id, address, type } = args.input;
-      const errors = [];
-      if (type === 'gist') {
-        
-      } else if (type === 'npm') {
+      const { id, address } = args.input;
+      const uri = new url.URL(address);
+
+      // gist.github.com/ivansglazunov/4cf14e3e58f4e96f7e7914b963ecdd29
+      const isGist = uri.hostname === 'gist.github.com';
+      const isNpm = uri.hostname === 'npmjs.com' || uri.hostname === 'www.npmjs.com';
+
+      if (isGist) {
+        const username = uri.username;
+        const password = uri.password;
+        const gistId = uri.pathname.split('/')[2];
+        if (!username || !password) {
+          errors.push('gist requires user and pass');
+        }
+        if (!username || !password) {
+          errors.push('gist valid address like http://gist.github.com/account/gist');
+        }
+        if (errors.length) return { errors };
+      } else if (isNpm) {
         const dirid = uuid();
         const dir = [tmpdir,dirid].join('/');
         const pckgDir = [tmpdir,dirid,'node_modules',address].join('/');
