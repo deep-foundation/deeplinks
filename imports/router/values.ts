@@ -92,7 +92,6 @@ export default async (req, res) => {
         // }
         return res.status(200).json({});
       } catch(error) {
-        debug('error', error);
         throw error;
         // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
         //   debug('reject', current.id);

@@ -104,16 +104,6 @@ export const down = async () => {
   })());
   await (generateDown({
     schemaName: 'public',
-    tableName: 'bool_exp',
-    valueType: 'jsonb',
-    customColumnsSql: 'value jsonb',
-    linkRelation: 'object',
-    linksTableName: 'links',
-    api,
-    deep,
-  })());
-  await (generateDown({
-    schemaName: 'public',
     tableName: BOOL_EXP_TABLE_NAME,
     valueType: 'TEXT',
     customColumnsSql: 'value text',

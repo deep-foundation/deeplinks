@@ -228,10 +228,13 @@ export const down = async () => {
     args: {
       table: TABLE_NAME,
       source: 'default',
-      name: BOOL_EXP_COMPUTED_FIELD,
+      name: 'exec_bool_exp',
       cascade: false,
     },
   });
+  await api.sql(sql`
+    DROP FUNCTION IF EXISTS ${BOOL_EXP_COMPUTED_FIELD} CASCADE;
+  `);
   await api.sql(sql`
     DROP FUNCTION IF EXISTS bool_exp_execute CASCADE;
   `);

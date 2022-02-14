@@ -227,7 +227,6 @@ export const down = async () => {
     const deletedHandlers = await root.delete({ 
       type_id: handleScheduleId,
     }, { name: 'DELETE_SCHEDULE_HANDLERS' });
-    console.log(JSON.stringify(deletedHandlers, null, 2));
     await delay(10000);
   } catch(e) {
     console.error(e);

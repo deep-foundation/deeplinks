@@ -39,17 +39,28 @@ export const up = async () => {
 
   await deep.insert({ 
     type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
-    string: { data: { value: `
-    async ({ deep, gql, data: { promiseId } }) => {
+    string: { data: { value: `async ({ deep, gql, data: { newLink, promiseId } }) => {
+      const query = await deep.select({
+        id: newLink.to_id,
+        type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
+      });
+      const address = query?.data?.[0]?.value?.value;
+      if (!address) {
+        return { error: 'No address' };
+      }
       const result = await deep.apolloClient.query({
-        query: gql\`query PACKAGE_INSTALL {
-          packager_install(input: {address: "4cf14e3e58f4e96f7e7914b963ecdd29", type: "gist", version: "0.0.1"}) {
+        query: gql\`query PACKAGE_INSTALL($address: String!) {
+          packager_install(input: { address: $address }) {
             ids
             packageId
             errors
           }
         }\`,
+        variables: {
+          address,
+        },
       });
+      if (result?.data?.packager_install?.errors?.length) return result?.data?.packager_install;
       await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'PromiseOut'),
         from_id: promiseId,
@@ -57,8 +68,7 @@ export const up = async () => {
         string: { data: { value: 'package' } },
       });
       return result?.data?.packager_install;
-    }
-  ` } },
+    }` } },
     in: { data: {
       type_id: await deep.id('@deep-foundation/core', 'Handler'),
       from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),

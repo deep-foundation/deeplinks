@@ -36,10 +36,10 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
   let gql, explained, sql;
   try {
     gql = JSON.stringify(boolExpValue).replace(/"([^"]+)":/g, '$1:');
-    gql = gql.replace(`'${userPublicSymbol}'`, userReplaceSymbol);
-    gql = gql.replace(`"${userPublicSymbol}"`, userReplaceSymbol);
-    gql = gql.replace(`'${itemPublicSymbol}'`, itemReplaceSymbol);
-    gql = gql.replace(`"${itemPublicSymbol}"`, itemReplaceSymbol);
+    gql = gql.replace(new RegExp(`'${userPublicSymbol}'`, 'g'), userReplaceSymbol);
+    gql = gql.replace(new RegExp(`"${userPublicSymbol}"`, 'g'), userReplaceSymbol);
+    gql = gql.replace(new RegExp(`'${itemPublicSymbol}'`, 'g'), itemReplaceSymbol);
+    gql = gql.replace(new RegExp(`"${itemPublicSymbol}"`, 'g'), itemReplaceSymbol);
     explained = await api.explain(`{ links(where: { _and: [{ id: { _eq: ${itemReplaceSymbol} } }, ${gql}] }, limit: 1) { id } }`);
     sql = explained?.data?.[0]?.sql;
     if (sql) {
@@ -60,6 +60,6 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
     }
   } catch (error) {
     console.log(error);
-    console.log(gql, explained, sql);
+    debug('error', gql, explained, sql);
   }
 };
