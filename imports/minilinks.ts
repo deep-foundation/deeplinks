@@ -241,10 +241,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       const id = idsArray[l];
       const link = byId[id];
       debug('remove old l:', l, 'id:', id, 'link:', link);
-      oldLinksArray.push(link);
-      oldLinksObject[id] = link;
+      if (link) {
+        oldLinksArray.push(link);
+        oldLinksObject[id] = link;
+      }
     }
-    debug('emit removed before', idsArray, JSON.stringify(oldLinksArray.map(l => l.id), null, 2), JSON.stringify(Object.values(oldLinksObject).map(l => l.id), null, 2));
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
       const link = oldLinksArray[l];
@@ -291,7 +292,6 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       delete byId?.[id];
     }
     _remove(links, l => idsArray.includes(l[options.id]));
-    debug('emit removed after', idsArray, JSON.stringify(oldLinksArray.map(l => l.id), null, 2), JSON.stringify(Object.values(oldLinksObject).map(l => l.id), null, 2));
     for (let l = 0; l < oldLinksArray.length; l++) {
       const link = oldLinksArray[l];
       debug('emit removed link', link, '_updating', this._updating);
