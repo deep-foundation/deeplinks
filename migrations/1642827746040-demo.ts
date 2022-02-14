@@ -80,7 +80,24 @@ export const up = async () => {
   };
   await insertRule(admin, {
     subject: adminWhere,
-    object: adminWhere,
+    object: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+    ],
     action: [
       {
         type_id: await deep.id('@deep-foundation/core', 'Include'),
@@ -110,7 +127,15 @@ export const up = async () => {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
         } },
-      }
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+        to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
     ],
     action: [
       {
@@ -145,9 +170,6 @@ export const up = async () => {
         } },
       },
     ],
-  });
-  console.log(admin.token, admin.linkId, {
-    type_id: await admin.id('@deep-foundation/core', 'Rule'),
   });
   await insertRule(admin, {
     subject: usersWhere,

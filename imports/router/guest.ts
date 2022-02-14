@@ -24,7 +24,7 @@ const client = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
   secret: process.env.DEEPLINKS_HASURA_SECRET,
-});
+}, { ApolloClient: { defaultOptions: { query: { fetchPolicy: 'no-cache' }, watchQuery: { fetchPolicy: 'no-cache' } } } });
 
 const deep = new DeepClient({
   apolloClient: client,

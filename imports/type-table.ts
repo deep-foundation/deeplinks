@@ -105,14 +105,14 @@ export const generateUp = (options: ITypeTableStringOptions) => async () => {
 export const generateDown = (options: ITypeTableStringOptions) => async () => {
   const { schemaName, tableName, linkRelation, linksTableName, api, deep } = options;
 
-  await api.query({
+  if (linkRelation && linksTableName) await api.query({
     type: 'drop_relationship',
     args: {
       table: linksTableName,
       relationship: linkRelation,
     },
   });
-  await api.query({
+  if (linkRelation && linksTableName) await api.query({
     type: 'drop_relationship',
     args: {
       table: tableName,

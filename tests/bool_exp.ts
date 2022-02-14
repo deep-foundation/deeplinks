@@ -140,12 +140,12 @@ describe('bool_exp', () => {
       const d1s = await deep.select({
         id: { _eq: boolExpId },
       }, { returning: `exec_bool_exp(args: { link_id: ${g1.linkId} }) { id }` });
-      expect(d1s?.data?.[0]?.exec_bool_exp).to.be.undefined;
+      expect(d1s?.data?.[0]?.exec_bool_exp || []).to.be.empty;
       const deep1 = new DeepClient({ deep, ...g1 });
       const g1s = await deep1.select({
         id: { _eq: boolExpId },
       }, { returning: `exec_bool_exp(args: { link_id: ${g1.linkId} }) { id }` });
-      expect(g1s?.data?.[0]?.exec_bool_exp).to.not.be.empty;
+      expect(g1s?.data?.[0]?.exec_bool_exp || []).to.not.be.empty;
       expect(g1s?.data?.[0]?.exec_bool_exp?.[0]?.id).to.be.equal(g1.linkId);
     });
     it(`X-Deep-Item-Id`, async () => {

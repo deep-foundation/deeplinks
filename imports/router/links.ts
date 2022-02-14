@@ -19,7 +19,7 @@ const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
-const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
+const  HASURA_DEEPLINKS_URL = process.env.HASURA_DEEPLINKS_URL || 'http://docker.host.internal:3006';
 const DOCKER = process.env.DOCKER || 0;
 
 export const api = new HasuraApi({
@@ -58,7 +58,7 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 };
 
 const runnerController = new RunnerController({
-  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep-graphql-engine-1:8080/v1/graphql',
+  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
   network: 'deep_network',
   portsHash: {},
   handlersHash: {},
@@ -307,7 +307,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
       type: 'create_cron_trigger',
       args: {
         name: `handle_schedule_${handleScheduleLink?.id}`,
-        webhook: `${DEEPLINKS_PUBLIC_URL}/api/scheduler`,
+        webhook: `${HASURA_DEEPLINKS_URL}/api/scheduler`,
         schedule: scheduleValue,
         include_in_metadata: true,
         payload: {

@@ -169,16 +169,16 @@ const corePckg: PackagerPackage = {
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
 
     { id: 'PackagerInstall', type: 'Type', from: 'Any', to: 'PackagerQuery' }, // 86
-    { id: 'PackagerPublish', type: 'Type', from: 'Any', to: 'Package' }, // 87
+    { id: 'PackagerPublish', type: 'Type', from: 'Package', to: 'Query' }, // 87
 
     { id: 'Active', type: 'Type', from: 'Any', to: 'Any' }, // 88
 
     { id: 'AllowPackagerInstall', type: 'Operation' }, // 89
     { id: 'AllowPackagerPublish', type: 'Operation' }, // 90
 
-    { id: 'PromiseOut', type: 'Type', from: 'PromiseResult', to: 'Any' }, // 91
+    { id: 'PromiseOut', type: 'Type', from: 'Promise', to: 'Any' }, // 91
     { id: 'promiseOutValue', type: 'Value', from: 'PromiseOut', to: 'String' }, // 92
-    
+
     { id: 'PackagerQuery', type: 'Type' }, // 93
     { id: 'packagerQueryValue', type: 'Value', from: 'PackagerQuery', to: 'String' }, // 94
 
@@ -232,7 +232,6 @@ export const down = async () => {
     const deletedHandlers = await root.delete({ 
       type_id: handleScheduleId,
     }, { name: 'DELETE_SCHEDULE_HANDLERS' });
-    console.log(JSON.stringify(deletedHandlers, null, 2));
     await delay(10000);
   } catch(e) {
     console.error(e);
