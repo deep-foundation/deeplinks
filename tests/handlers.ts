@@ -438,36 +438,40 @@ describe('async function handle by type with resolve using deep client', () => {
   });
 });
 
-// describe('handle port', () => {
-//   it(`handle port`, async () => {
-//     const port = 80;
-//     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
-//     const portId = (await deep.insert({
-//       type_id: portTypeId,
-//       number: { data: { value: port } }
-//     }))?.data?.[0]?.id;
+describe('handle port', () => {
+  it(`handle port`, async () => {
+    const port = 80;
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    const portId = (await deep.insert({
+      type_id: portTypeId,
+      number: { data: { value: port } }
+    }))?.data?.[0]?.id;
 
-//     const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
+    const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
 
-//     const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
-//     const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
+    const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
+    const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
 
-//     await deep.await(hanlePortLinkId);
+    await deep.await(hanlePortLinkId);
 
-//     console.log("waiting for container to be created");
-//     execSync(`npx wait-on http://localhost:${port}/healthz`);
-//     console.log("container is up");
+    // console.log("waiting for container to be created");
+    // execSync(`npx wait-on http://localhost:${port}/healthz`);
+    // console.log("container is up");
 
-//     // Check if port handler docker container responds to health check
+    // Check if port handler docker container responds to health check
 
-//     // await delay(5000);
+    await delay(5000);
 
-//     await deleteId(hanlePortLinkId);
+    await deleteId(hanlePortLinkId);
 
-//     // Check if port handler docker container does not respond to health check
+    // Check if port handler docker container does not respond to health check
 
-//   });
-// });
+    // console.log("waiting for container to be created");
+    // execSync(`npx wait-off http://localhost:${port}/healthz`);
+    // console.log("container is up");
+
+  });
+});
 
 // describe('handle by selector', () => {
 //   it(`handle insert`, async () => {
