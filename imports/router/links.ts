@@ -342,10 +342,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 
   // get port
   const port = await deep.select({
-    type_id: await deep.id('@deep-foundation/core', 'Port'),
-    out: {
-      id: { _eq: handlePortLink.id },
-    },
+    id: { _eq: handlePortLink.from_id },
   }, {
     table: 'links',
     returning: 'id value',

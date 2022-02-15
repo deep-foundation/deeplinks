@@ -454,7 +454,9 @@ describe('handle port', () => {
 
     // Check if port handler docker container responds to health check
 
-    // await deleteId(hanlePortLinkId);
+    await delay(5000);
+
+    await deleteId(hanlePortLinkId);
 
     // Check if port handler docker container does not respond to health check
 
