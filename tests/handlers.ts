@@ -466,7 +466,7 @@ describe('async function handle by type with resolve using deep client', () => {
 //     console.log(link);
 
 //     await deep.await(link.id);
-//
+
 
 //     const client = deep.apolloClient;
 //     const result = await client.query({
@@ -505,34 +505,3 @@ describe('async function handle by type with resolve using deep client', () => {
 //     // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
 //   });
 // });
-
-const itDelay = () => {
-  if (DELAY) {
-    (it)('delay', async () => {
-      await delay(DELAY);
-    });
-  }
-};
-
-// export const prepare = () => { };
-// export const testMinus15 = (x: boolean) => async () => { };
-// export const testPlus15 = (x: boolean) => async () => { }
-// export const testRecursive = (x: boolean) => async () => { };
-// export const testRecursiveSameRoot = (x: boolean) => async () => { }
-// export const testSeparation1 = (x: boolean) => async () => { }
-// export const testSeparation2 = (x: boolean) => async () => { }
-
-
-// (it)('prepare', prepare);
-// it('+15', testPlus15(true));
-// itDelay();
-// it('-15', testMinus15(true));
-// itDelay();
-
-// it('recursive', testRecursive(true));
-// itDelay();
-// it('recursiveSameRoot', testRecursiveSameRoot(true));
-// itDelay();
-// it('testSeparation1', testSeparation1(true));
-// itDelay();
-// it('testSeparation2', testSeparation2(true));
