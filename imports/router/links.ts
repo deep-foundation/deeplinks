@@ -74,7 +74,7 @@ export const useRunner = async ({
   debug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   debug('jwt', jwt);
-  const portResult = await runnerController.findPort({ handler, code, jwt, data: { oldLink, newLink, moment }});
+  const portResult = await runnerController.newContainer({ handler, code, jwt, data: { oldLink, newLink, moment }});
   debug('portResult', portResult);
   const initResult = await runnerController.initHandler({ port: portResult?.port });
   debug('initResult', initResult);
@@ -371,22 +371,28 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // start container
     const containerName = `handle_port_${portValue}`;
     console.log('containerName', containerName);
-    const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
-    console.log('dockerCommand', dockerCommand);
-    const dockerOutput = await execSync(dockerCommand).toString();
-    console.log('dockerOutput', dockerOutput);
-    
+    // const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
+    // console.log('dockerCommand', dockerCommand);
+    // const dockerOutput = await execSync(dockerCommand).toString();
+    // console.log('dockerOutput', dockerOutput);
+
+    const portResult = await runnerController.newContainer({ handler: dockerImage, code: null, jwt: null, data: { }});
+
+    if (portResult.error) return console.log('portResult.error', portResult.error);
     console.log('port handler container created');
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
     const containerName = `handle_port_${portValue}`;
     console.log('containerName', containerName);
-    const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
-    console.log('dockerCommand', dockerCommand);
-    const dockerOutput = await execSync(dockerCommand).toString();
-    console.log('dockerOutput', dockerOutput);
+    // const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
+    // console.log('dockerCommand', dockerCommand);
+    // const dockerOutput = await execSync(dockerCommand).toString();
+    // console.log('dockerOutput', dockerOutput);
+
+    const dropResult = await runnerController.dropContainer(containerName);
     
+    // if (dropResult?.error) return console.log('portResult.error', dropResult?.error);
     console.log('port handler container deleted');
   }
 }

@@ -14,13 +14,14 @@ export interface runnerControllerOptions {
   docker: number;
 }
 
-export interface findPortOptions {
+export interface newContainerOptions {
   handler: string,
   code: string,
   jwt: string,
   data: any
   forceName?: string;
   forcePort?: number;
+  forceRestart?: boolean;
 }
 export interface initOptions {
   port: number;
@@ -53,13 +54,22 @@ export class RunnerController {
     this.portsHash = options?.portsHash || runnerControllerOptionsDefault.portsHash;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
-  async findPort( options: findPortOptions ): Promise<{port?: number; error?: string}> {
-    const { handler, forcePort, forceName } = options;
+  async _findPort(): Promise<number> {
+    const { portsHash } = this;
+    let dockerPort;
+    console.log({ portsHash });
+    do {
+      dockerPort = await getPort();
+    } while (portsHash[dockerPort])
+    return dockerPort;
+  }
+  async newContainer( options: newContainerOptions ): Promise<{port?: number; error?: string}> {
+    const { handler, forcePort, forceName, forceRestart } = options;
     const { network, handlersHash, portsHash, docker, gqlURN } = this;
     console.log({ handlersHash, portsHash });
     const containerName = forceName || crypto.createHash('md5').update(handler).digest("hex");
     if (handlersHash[containerName]) return { port: handlersHash[containerName] };
-    let dockerPort = forcePort || await getPort();
+    let dockerPort = forcePort || await this._findPort();
     let dockerRunResult;
     let done = false;
     let count = 30;
@@ -73,21 +83,24 @@ export class RunnerController {
       } catch (e) {
         dockerRunResult = e.stderr;
       }
-      if (dockerRunResult.indexOf('port is already arllocated') !== -1) {
+      if (dockerRunResult.indexOf('port is already allocated') !== -1) {
+        if (forcePort) return { error: 'port is already allocated' };
         continue;
       } else if (dockerRunResult.indexOf('is already in use by container') !== -1) {
-        let dockerStopResult = await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
-        console.log('dockerStopResult', { dockerStopResult });
+        if (!forceRestart) return { error: 'is already in use by container' };
+        await this.dropContainer(containerName);
       } else {
         done = true;
         handlersHash[containerName] = dockerPort;
         portsHash[dockerPort] = containerName;
       }
-      if (!done) while (portsHash[dockerPort]) {
-        dockerPort = await getPort();
-      }
+      if (!done && !forcePort) dockerPort = await this._findPort();
     }
     return { port: dockerPort };
+  }
+  async dropContainer( containerName: string ) {
+    let dockerStopResult = await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
+    console.log('dockerStopResult', { dockerStopResult });
   }
   async initHandler( options: initOptions ): Promise<{ error?: string; }> {
     const { portsHash, docker } = this;
