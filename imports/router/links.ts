@@ -390,7 +390,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     const dockerOutput = await execSync(dockerCommand).toString();
     console.log('dockerOutput', dockerOutput);
     
-    console.log('tcp listener created');
+    console.log('port handler container created');
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
@@ -401,7 +401,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     const dockerOutput = await execSync(dockerCommand).toString();
     console.log('dockerOutput', dockerOutput);
     
-    console.log('tcp listener deleted');
+    console.log('port handler container deleted');
   }
 }
 

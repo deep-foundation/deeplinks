@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
@@ -439,10 +440,11 @@ function randomInteger(min, max) {
 
 describe('handle port', () => {
   it(`handle port`, async () => {
+    const port = 80;
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     const portId = (await deep.insert({
       type_id: portTypeId,
-      number: { data: { value: randomInteger(50000, 65536) } }
+      number: { data: { value: port } }
     }))?.data?.[0]?.id;
 
     const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
@@ -452,9 +454,13 @@ describe('handle port', () => {
 
     await deep.await(hanlePortLinkId);
 
+    console.log("waiting for container to be created");
+    execSync(`npx wait-on http://localhost:${port}/healthz`);
+    console.log("container is up");
+
     // Check if port handler docker container responds to health check
 
-    await delay(5000);
+    // await delay(5000);
 
     await deleteId(hanlePortLinkId);
 
