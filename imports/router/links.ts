@@ -354,20 +354,6 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
   console.log('portValue', portValue);
 
   if (operation == 'INSERT') {
-    // an example to run a docker:
-    // docker run -p ${dockerPort}:${dockerPort} --name ${containerName} -d ${handler}
-
-    // isolation provider structure:
-    // { id: 'dockerIsolationProviderValue', type: 'Value', from: 'DockerIsolationProvider', to: 'String' }, // 82
-    // { id: 'JSDockerIsolationProvider', type: 'DockerIsolationProvider', value: { value: 'deepf/js-docker-isolation-provider:main' } }, // 83
-    // { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' }, // 84
-    // { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
-
-    // handle port structure:
-    // { id: 'Port', type: 'Type', value: { value: 'Port' } }, // 89
-    // { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 90
-    // { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 91
-
     // get dockerImage from isolation provider
     const isolationProvider = await deep.select({
       type_id: await deep.id('@deep-foundation/core', 'DockerIsolationProvider'),
