@@ -341,9 +341,10 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // const dockerOutput = await execSync(dockerCommand).toString();
     // console.log('dockerOutput', dockerOutput);
 
-    const dropResult = await containerController.dropContainer({ name: containerName });
+    const container = await containerController.findContainer(containerName);
+
+    await containerController.dropContainer(container);
     
-    // if (dropResult?.error) return console.log('portResult.error', dropResult?.error);
     console.log('port handler container deleted');
   }
 }

@@ -98,7 +98,7 @@ export class ContainerController {
         continue;
       } else if (dockerRunResult.indexOf('is already in use by container') !== -1) {
         if (!forceRestart) return { error: 'is already in use by container' };
-        await this.dropContainer({ name: containerName });
+        await this._dropContainer(containerName);
       } else {
         done = true;
 
@@ -123,10 +123,13 @@ export class ContainerController {
     const { handlersHash } = this;
     return handlersHash[containerName];
   }
+  async _dropContainer( containerName: string ) {
+    return await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
+  }
   async dropContainer( container: container ) {
     const { handlersHash } = this;
     if (!handlersHash[container.name]) return;
-    let dockerStopResult = await execSync(`docker stop ${container.name} && docker rm ${container.name}`).toString();
+    let dockerStopResult = await this._dropContainer(container.name);
     handlersHash[container.name] = undefined;
     console.log('dockerStopResult', { dockerStopResult });
   }
