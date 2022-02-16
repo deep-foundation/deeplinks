@@ -74,7 +74,7 @@ export const useRunner = async ({
   debug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   debug('jwt', jwt);
-  const portResult = await runnerController.newContainer({ handler, code, jwt, data: { oldLink, newLink, moment }});
+  const portResult = await runnerController.newContainer({ forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   debug('portResult', portResult);
   const initResult = await runnerController.initHandler({ port: portResult?.port });
   debug('initResult', initResult);
