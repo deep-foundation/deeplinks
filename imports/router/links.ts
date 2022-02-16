@@ -11,7 +11,7 @@ import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { execSync } from 'child_process';
-import { RunnerController as ContainerController } from '../runner-controller';
+import { ContainerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
@@ -327,10 +327,10 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // const dockerOutput = await execSync(dockerCommand).toString();
     // console.log('dockerOutput', dockerOutput);
 
-    const portResult = await containerController.newContainer({ handler: dockerImage, code: null, jwt: null, data: { }});
+    const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
 
-    if (portResult.error) return console.log('portResult.error', portResult.error);
-    console.log('port handler container created');
+    if (container.error) return console.log('portResult.error', container.error);
+    console.log(`port handler container ${JSON.stringify(container)} created`);
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}

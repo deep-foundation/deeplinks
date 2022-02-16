@@ -46,7 +46,7 @@ export const runnerControllerOptionsDefault: runnerControllerOptions = {
   handlersHash: {},
 };
 
-export class RunnerController {
+export class ContainerController {
   gqlURN: string;
   network: string;
   docker: number;
@@ -72,12 +72,13 @@ export class RunnerController {
     const { network, handlersHash, portsHash, gqlURN } = this;
     console.log({ handlersHash, portsHash });
     const containerName = forceName || crypto.createHash('md5').update(handler).digest("hex");
-    if (handlersHash[containerName]) return handlersHash[containerName];
+    console.log({ containerName, forceName });
+    let container = await this.findContainer(containerName);
+    if (container) return container;
     let dockerPort = forcePort || await this._findPort();
     let dockerRunResult;
     let done = false;
     let count = 30;
-    let container = {};
     while (!done) {
       console.log({ count });
       if (count < 0) return { error: 'timeout findPort' };
@@ -89,6 +90,7 @@ export class RunnerController {
         dockerRunResult = execSync(command).toString();
         console.log('dockerRunResult', { dockerRunResult });
       } catch (e) {
+        console.log('error', e);
         dockerRunResult = e.stderr;
       }
       if (dockerRunResult.indexOf('port is already allocated') !== -1) {
@@ -117,8 +119,15 @@ export class RunnerController {
     }
     return container;
   }
+  async findContainer( containerName: string ) {
+    const { handlersHash } = this;
+    return handlersHash[containerName];
+  }
   async dropContainer( container: container ) {
+    const { handlersHash } = this;
+    if (!handlersHash[container.name]) return;
     let dockerStopResult = await execSync(`docker stop ${container.name} && docker rm ${container.name}`).toString();
+    handlersHash[container.name] = undefined;
     console.log('dockerStopResult', { dockerStopResult });
   }
   async initHandler( container: container ): Promise<{ error?: string; }> {

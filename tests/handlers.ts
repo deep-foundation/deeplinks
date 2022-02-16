@@ -4,6 +4,9 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
 
+import waitOn from 'wait-on';
+import getPort from 'get-port';
+
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
@@ -438,107 +441,108 @@ describe('async function handle by type with resolve using deep client', () => {
   });
 });
 
-// describe('handle port', () => {
-//   it(`handle port`, async () => {
-//     const port = 80;
-//     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
-//     const portId = (await deep.insert({
-//       type_id: portTypeId,
-//       number: { data: { value: port } }
-//     }))?.data?.[0]?.id;
+describe.only('handle port', () => {
+  it(`handle port`, async () => {
+    const port = await getPort();
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    const portId = (await deep.insert({
+      type_id: portTypeId,
+      number: { data: { value: port } }
+    }))?.data?.[0]?.id;
 
-//     const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
+    const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
 
-//     const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
-//     const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
+    const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
+    const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
 
-//     await deep.await(hanlePortLinkId);
+    await deep.await(hanlePortLinkId);
 
-//     // console.log("waiting for container to be created");
-//     // execSync(`npx wait-on http://localhost:${port}/healthz`);
-//     // console.log("container is up");
+    // Check if port handler docker container responds to health check
+    console.log("waiting for container to be created");
+    execSync(`npx wait-on http://localhost:${port}/healthz`);
+    console.log("container is up");
 
-//     // Check if port handler docker container responds to health check
+    // await delay(20000);
 
-//     await delay(5000);
+    await deleteId(hanlePortLinkId);
 
-//     await deleteId(hanlePortLinkId);
+    // await delay(20000);
 
-//     // Check if port handler docker container does not respond to health check
+    // Check if port handler docker container does not respond to health check
+    await waitOn({
+      resources: [
+        `http://localhost:${port}/healthz`
+      ],
+      reverse: true,
+    });
+  });
+});
 
-//     // console.log("waiting for container to be created");
-//     // execSync(`npx wait-off http://localhost:${port}/healthz`);
-//     // console.log("container is up");
+describe.skip('handle by selector', () => {
+  it(`handle insert`, async () => {
+    const typeId = await deep.id('@deep-foundation/core', 'Type');
+    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
 
-//   });
-// });
+    // selector -- selection -> link (concrete)
+    const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
+    const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
 
-// describe('handle by selector', () => {
-//   it(`handle insert`, async () => {
-//     const typeId = await deep.id('@deep-foundation/core', 'Type');
-//     const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-//     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-//     const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
-
-//     // selector -- selection -> link (concrete)
-//     const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-//     const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
-
-//     const userTypeId = await deep.id('@deep-foundation/core', 'User');
+    const userTypeId = await deep.id('@deep-foundation/core', 'User');
     
-//     const selector = (await deep.insert({ 
-//       type_id: selectorTypeId
-//     }, { name: 'IMPORT_SELECTOR' })).data[0];
+    const selector = (await deep.insert({ 
+      type_id: selectorTypeId
+    }, { name: 'IMPORT_SELECTOR' })).data[0];
 
-//     const link = (await deep.insert({ 
-//       type_id: userTypeId,
-//     }, { name: 'IMPORT_LINK' })).data[0];
+    const link = (await deep.insert({ 
+      type_id: userTypeId,
+    }, { name: 'IMPORT_LINK' })).data[0];
 
-//     const selection = (await deep.insert({ 
-//       from_id: selector.id,
-//       type_id: selectionTypeId,
-//       to_id: link.id,
-//     }, { name: 'IMPORT_SELECTION' })).data[0];
+    const selection = (await deep.insert({ 
+      from_id: selector.id,
+      type_id: selectionTypeId,
+      to_id: link.id,
+    }, { name: 'IMPORT_SELECTION' })).data[0];
 
-//     console.log(link);
+    console.log(link);
 
-//     await deep.await(link.id);
+    await deep.await(link.id);
 
-
-//     const client = deep.apolloClient;
-//     const result = await client.query({
-//       query: gql`{
-//         links(where: { 
-//           in: { 
-//             type_id: { _eq: ${resolvedTypeId} }, # Resolved
-//             from: { 
-//               type_id: { _eq: ${promiseTypeId} }, # Promise
-//               in: { 
-//                 type_id: { _eq: ${thenTypeId} } # Then
-//                 from_id: { _eq: ${link.id} } # link.id
-//               }
-//             }
-//           },
-//         }) {
-//       object { value }
-//         }
-//       }`,
-//     });
+    const client = deep.apolloClient;
+    const result = await client.query({
+      query: gql`{
+        links(where: { 
+          in: { 
+            type_id: { _eq: ${resolvedTypeId} }, # Resolved
+            from: { 
+              type_id: { _eq: ${promiseTypeId} }, # Promise
+              in: { 
+                type_id: { _eq: ${thenTypeId} } # Then
+                from_id: { _eq: ${link.id} } # link.id
+              }
+            }
+          },
+        }) {
+      object { value }
+        }
+      }`,
+    });
     
-//     // console.log(JSON.stringify(result, null, 2));
-//     // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+    // console.log(JSON.stringify(result, null, 2));
+    // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
 
-//     console.log(result?.data?.links.length);
-//     console.log(result?.data?.links[0]?.object?.value);
+    console.log(result?.data?.links.length);
+    console.log(result?.data?.links[0]?.object?.value);
 
-//     console.log(JSON.stringify(result?.data?.links, null, 2));
+    console.log(JSON.stringify(result?.data?.links, null, 2));
 
-//     assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
+    assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
     
 
-//     // TODO: check result link is created
-//     // TODO: check resolve link is created
+    // TODO: check result link is created
+    // TODO: check resolve link is created
 
-//     // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
-//   });
-// });
+    // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
+  });
+});
