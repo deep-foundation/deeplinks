@@ -11,7 +11,7 @@ import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { execSync } from 'child_process';
-import { ContainerController } from '../runner-controller';
+import { ContainerController } from '../container-controller';
 
 const SCHEMA = 'public';
 

@@ -3,6 +3,7 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
+import Debug from 'debug';
 
 import waitOn from 'wait-on';
 import getPort from 'get-port';
@@ -17,6 +18,7 @@ const deep = new DeepClient({ apolloClient });
 
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
+const debug = Debug('deep-foundation:deeplinks:tests:handlers');
 
 const insertOperationHandlerForType = async (handleOperationTypeId: number, typeId: number, code: string) => {
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
@@ -457,24 +459,26 @@ describe('handle port', () => {
 
     await deep.await(hanlePortLinkId);
 
-    // Check if port handler docker container responds to health check
-    console.log("waiting for container to be created");
-    execSync(`npx wait-on http://localhost:${port}/healthz`);
-    console.log("container is up");
+    // await delay(10000);
 
-    // await delay(20000);
+    // Check if port handler docker container responds to health check
+    debug("waiting for container to be created");
+    await waitOn({ resources: [`http://localhost:${port}/healthz`] });
+    debug("container is up");
 
     await deleteId(hanlePortLinkId);
 
     // await delay(20000);
 
     // Check if port handler docker container does not respond to health check
+    debug("waiting for container to be removed");
     await waitOn({
       resources: [
         `http://localhost:${port}/healthz`
       ],
       reverse: true,
     });
+    debug("container is down");
   });
 });
 
