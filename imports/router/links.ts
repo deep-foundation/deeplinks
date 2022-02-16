@@ -11,7 +11,7 @@ import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { execSync } from 'child_process';
-import { RunnerController } from '../runner-controller';
+import { RunnerController as ContainerController } from '../runner-controller';
 
 const SCHEMA = 'public';
 
@@ -57,12 +57,11 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
   };
 };
 
-const runnerController = new RunnerController({
+const containerController = new ContainerController({
   gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
   network: 'deep_network',
   portsHash: {},
-  handlersHash: {},
-  docker: +DOCKER
+  handlersHash: {}
 })
 
 export const useRunner = async ({
@@ -74,11 +73,11 @@ export const useRunner = async ({
   debug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   debug('jwt', jwt);
-  const portResult = await runnerController.newContainer({ forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
-  debug('portResult', portResult);
-  const initResult = await runnerController.initHandler({ port: portResult?.port });
+  const container = await containerController.newContainer({ publish: false, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
+  debug('portResult', container);
+  const initResult = await containerController.initHandler(container);
   debug('initResult', initResult);
-  const callResult = await runnerController.callHandler({ code, port: portResult?.port, jwt, data: { oldLink, newLink, moment, promiseId } });
+  const callResult = await containerController.callHandler({ code, container, jwt, data: { oldLink, newLink, moment, promiseId } });
   debug('callResult', callResult);
   return callResult;
 }
@@ -328,7 +327,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // const dockerOutput = await execSync(dockerCommand).toString();
     // console.log('dockerOutput', dockerOutput);
 
-    const portResult = await runnerController.newContainer({ handler: dockerImage, code: null, jwt: null, data: { }});
+    const portResult = await containerController.newContainer({ handler: dockerImage, code: null, jwt: null, data: { }});
 
     if (portResult.error) return console.log('portResult.error', portResult.error);
     console.log('port handler container created');
@@ -342,7 +341,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // const dockerOutput = await execSync(dockerCommand).toString();
     // console.log('dockerOutput', dockerOutput);
 
-    const dropResult = await runnerController.dropContainer(containerName);
+    const dropResult = await containerController.dropContainer({ name: containerName });
     
     // if (dropResult?.error) return console.log('portResult.error', dropResult?.error);
     console.log('port handler container deleted');
