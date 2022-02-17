@@ -9,7 +9,6 @@ const debug = Debug('deeplinks:container-controller');
 export interface ContainerControllerOptions {
   gqlURN: string;
   network: string;
-  portsHash?: any;
   handlersHash?: any;
 }
 
@@ -42,7 +41,6 @@ export interface CallOptions {
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
   gqlURN: 'deep_deeplinks_1:3006',
   network: 'deep_network',
-  portsHash: {},
   handlersHash: {},
 };
 
@@ -50,22 +48,12 @@ export class ContainerController {
   gqlURN: string;
   network: string;
   docker: number;
-  portsHash: { [id: number]: string } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
     this.gqlURN = options?.gqlURN || runnerControllerOptionsDefault.gqlURN;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
-  async _findPort(): Promise<number> {
-    const { portsHash } = this;
-    let dockerPort;
-    debug('portsHash', { portsHash });
-    do {
-      dockerPort = await getPort();
-    } while (portsHash[dockerPort])
-    return dockerPort;
-  }
   async newContainer( options: NewContainerOptions ): Promise<Container> {
     const { handler, forcePort, forceName, forceRestart, publish } = options;
     const { network, handlersHash, gqlURN } = this;
@@ -74,7 +62,7 @@ export class ContainerController {
     debug('containerName, forceName', { containerName, forceName });
     let container = await this.findContainer(containerName);
     if (container) return container;
-    let dockerPort = forcePort || await this._findPort();
+    let dockerPort = forcePort || await getPort();
     let dockerRunResult;
     let done = false;
     let count = 30;
@@ -110,10 +98,8 @@ export class ContainerController {
         execSync(`npx wait-on http://${ip}:${dockerPort}/healthz`);
 
         handlersHash[containerName] = container;
-        // handlersHash[containerName] = dockerPort;
-        // portsHash[dockerPort] = publish ? 'localhost' : containerName;
       }
-      if (!done && !forcePort) dockerPort = await this._findPort();
+      if (!done && !forcePort) dockerPort = await getPort();
     }
     return container;
   }
