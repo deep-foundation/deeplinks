@@ -28,7 +28,7 @@ const corePckg: PackagerPackage = {
   },
   data: [
     { id: 'Type', type: 'Type', from: 'Any', to: 'Any' }, // 1
-    { id: 'Package', type: 'Type' }, // 2
+    { id: 'PackagerPackage', type: 'Type' }, // 2
     { id: 'Contain', type: 'Type', from: 'Any', to: 'Any' }, // 3
 
     // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
@@ -46,13 +46,13 @@ const corePckg: PackagerPackage = {
     // ===
 
     { id: 'typeValue', type: 'Value', from: 'Type', to: 'String' }, // 13
-    { id: 'packageValue', type: 'Value', from: 'Package', to: 'String' }, // 14
+    { id: 'packageValue', type: 'Value', from: 'PackagerPackage', to: 'String' }, // 14
 
     // ===
 
     // ign
     { id: 'Type' },
-    { id: 'Package' },
+    { id: 'PackagerPackage' },
     { id: 'Contain' },
     { id: 'Value' },
     { id: 'Any' },
@@ -108,9 +108,9 @@ const corePckg: PackagerPackage = {
 
     { id: 'packageNamespaceValue', type: 'Value', from: 'PackageNamespace', to: 'String' }, // 44
 
-    { id: 'PackageActive', type: 'Type', from: 'PackageNamespace', to: 'Package' }, // 45
+    { id: 'PackageActive', type: 'Type', from: 'PackageNamespace', to: 'PackagerPackage' }, // 45
 
-    { id: 'PackageVersion', type: 'Type', from: 'PackageNamespace', to: 'Package' }, // 46
+    { id: 'PackageVersion', type: 'Type', from: 'PackageNamespace', to: 'PackagerPackage' }, // 46
     { id: 'packageVersionValue', type: 'Value', from: 'PackageVersion', to: 'String' }, // 47
 
     { id: 'HandleOperation', type: 'Type', from: 'Type', to: 'Type' }, // 48
@@ -126,7 +126,7 @@ const corePckg: PackagerPackage = {
     { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 56
     { id: 'Unfocus', type: 'Type', from: 'Focus', to: 'Focus' }, // 57
     { id: 'Query', type: 'Type' }, // 58
-    { id: 'queryValue', type: 'Value', from: 'Contain', to: 'Object' }, // 59
+    { id: 'queryValue', type: 'Value', from: 'Query', to: 'Object' }, // 59
     { id: 'Fixed', type: 'Type' }, // 60
     { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 61
     { id: 'Space', type: 'Type' }, // 62
@@ -169,7 +169,7 @@ const corePckg: PackagerPackage = {
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' }, // 85
 
     { id: 'PackagerInstall', type: 'Type', from: 'Any', to: 'PackagerQuery' }, // 86
-    { id: 'PackagerPublish', type: 'Type', from: 'Package', to: 'Query' }, // 87
+    { id: 'PackagerPublish', type: 'Type', from: 'PackagerPackage', to: 'PackagerQuery' }, // 87
 
     { id: 'Active', type: 'Type', from: 'Any', to: 'Any' }, // 88
 
@@ -186,6 +186,8 @@ const corePckg: PackagerPackage = {
     { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 96
     { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 97
 
+    { id: 'PackagerInstalled', type: 'Type', from: 'PackagerPackage', to: 'PackagerQuery' }, // 98
+    { id: 'PackagerPublished', type: 'Type', from: 'PackagerPackage', to: 'PackagerQuery' }, // 99
   ],
   errors: [],
   strict: true,
@@ -196,9 +198,10 @@ export const up = async () => {
   const packager = new Packager(root);
   const { errors, packageId, namespaceId } = await packager.import(corePckg);
   if (errors.length) {
-    console.log(errors[0]?.graphQLErrors[0]?.message);
-    console.log(errors[0]?.graphQLErrors[0]?.extensions?.internal);
-    console.log(errors[0]?.graphQLErrors[0]?.extensions?.internal?.request);
+    console.log(errors);
+    console.log(errors[0]?.graphQLErrors?.[0]?.message);
+    console.log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
+    console.log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
     throw new Error('Import error');
   } else {
     await root.insert({

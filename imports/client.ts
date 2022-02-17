@@ -35,7 +35,7 @@ const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
     'containTree': GLOBAL_ID_CONTAIN_TREE,
-    'Package': GLOBAL_ID_PACKAGE,
+    'PackagerPackage': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
     'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
     'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
@@ -463,7 +463,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!error && !!token && relogin) {
       if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
     }
-    return { linkId, token, error };
+    return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
   };
 
   async jwt(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
@@ -476,7 +476,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         if (!!token && relogin) {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
-        return { linkId, token, error: undefined };
+        return { linkId, token, error: (!linkId || !token) ? 'unexepted' : undefined };
       } catch(error) {
         return { error };
       }
@@ -486,7 +486,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!error && !!token && relogin) {
         if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
       }
-      return { linkId, token, error };
+      return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
     } else return { error: `linkId or token must be provided` };
   };
 

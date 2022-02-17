@@ -12,6 +12,8 @@ import child_process from 'child_process';
 import * as semver from 'semver';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import url from 'url';
+import path from 'path';
+import { isEmpty } from 'lodash';
 
 const tmpdir = os.tmpdir();
 
@@ -43,8 +45,8 @@ export const typeDefsString = `
     address: String
   }
   type PackagerPublishOutput {
-    ids: [Int]
     errors: [String]
+    address: String
   }
 `;
 export const typeDefs = gql`${typeDefsString}`;
@@ -73,17 +75,16 @@ const resolvers = {
 
       if (isGist) {
         const username = uri.username;
-        const password = uri.password;
         const gistId = uri.pathname.split('/')[2];
-        if (!username || !password) {
-          errors.push('gist requires user and pass');
+        if (!username) {
+          errors.push('gist requires token');
         }
-        if (!username || !password) {
+        if (!gistId) {
           errors.push('gist valid address like http://gist.github.com/account/gist');
         }
         if (errors.length) return { errors };
         // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
-        const gists = new Gists({ username, password });
+        const gists = new Gists({ token: username });
         const result = await gists.get(gistId);
         const files = result?.body?.files;
         const deepPckgContent = files?.['deep.json']?.content;
@@ -98,7 +99,7 @@ const resolvers = {
         } else {
           errors.push(`deep.json not founded in gist`);
         }
-      } else if (isNpm) {
+      // } else if (isNpm) {
         // const dirid = uuid();
         // const dir = [tmpdir,dirid].join('/');
         // fs.mkdirSync(dir);
@@ -146,6 +147,11 @@ const resolvers = {
         return { errors };
       }
       const { id, address } = args.input;
+
+      if (!id) return { errors: ['!id'] };
+      const packageResults = await deep.select(id);
+      if (!packageResults.data?.length) return { errors: ['!package'] }
+
       const uri = new url.URL(address);
 
       // gist.github.com/ivansglazunov/4cf14e3e58f4e96f7e7914b963ecdd29
@@ -154,49 +160,73 @@ const resolvers = {
 
       if (isGist) {
         const username = uri.username;
-        const password = uri.password;
         const gistId = uri.pathname.split('/')[2];
-        if (!username || !password) {
-          errors.push('gist requires user and pass');
-        }
-        if (!username || !password) {
-          errors.push('gist valid address like http://gist.github.com/account/gist');
+        if (!username) {
+          errors.push('gist requires token');
         }
         if (errors.length) return { errors };
-      } else if (isNpm) {
-        const dirid = uuid();
-        const dir = [tmpdir,dirid].join('/');
-        const pckgDir = [tmpdir,dirid,'node_modules',address].join('/');
-        fs.mkdirSync(dir);
-        try {
-          child_process.execSync(`cd ${dir}; npm install --no-cache ${address};`,{stdio:[0,1,2]});
-        } catch(error) {
-          errors.push(error);
-          errors.push('installation failed');
-          return { errors };
-        }
-        const npmPckgPath = [pckgDir,'package.json'].join('/');
-        const npmPckgJSON = fs.readFileSync(npmPckgPath, { encoding: 'utf-8' });
-        let npmPckg;
-        let nextVersion;
-        if (!npmPckgJSON) {
-          errors.push('package.json not founded in installed package');
-          return { errors };
+        if (gistId) {
+          // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
+          const deepPckgContent = await packager.export({ packageLinkId: id });
+          if (deepPckgContent?.errors?.length) {
+            errors.push(deepPckgContent.errors);
+          }
+          if (isEmpty(deepPckgContent?.package)) {
+            errors.push('!package');
+          }
+          if (isEmpty(deepPckgContent?.data)) {
+            errors.push('!data');
+          }
+          if (errors.length) return { errors };
+          const gists = new Gists({ token: username });
+          const result = await gists.edit(gistId, { files: { 'deep.json': { content: JSON.stringify(deepPckgContent) } } });
+          if (result?.body?.id) return { errors, address: `https://${username}@gist.github.com${uri.pathname}` };
         } else {
-          npmPckg = JSON.parse(npmPckgJSON);
-          npmPckg.version = nextVersion = semver.inc(npmPckg?.version || '0.0.0', 'patch');
+          // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
+          const deepPckgContent = await packager.export({ packageLinkId: id });
+          if (deepPckgContent?.errors?.length) {
+            errors.push(deepPckgContent.errors);
+            return { errors };
+          }
+          const gists = new Gists({ token: username });
+          const result = await gists.create(gistId, { files: { 'deep.json': { content: JSON.stringify(deepPckgContent) } } });
+          if (result?.body?.id) return { errors, address: `https://${username}@gist.github.com${path.normalize(`${uri.pathname}/${result?.body?.id}`)}` };
         }
-        await deep.update({
-          link: {
-            type_id: { _eq: GLOBAL_ID_PACKAGE_VERSION },
-            to_id: { _eq: id },
-          },
-        }, { value: nextVersion }, { table: 'strings' });
-        fs.writeFileSync(npmPckgPath, JSON.stringify(npmPckg), { encoding: 'utf-8' });
-        const deepPckgContent = await packager.export({ packageLinkId: id });
-        fs.writeFileSync([pckgDir,'deep.json'].join('/'), JSON.stringify(deepPckgContent), { encoding: 'utf-8' });
-        child_process.execSync(`cd ${pckgDir}; npm publish;`,{stdio:[0,1,2]});
-        fs.rmSync(dir, { recursive: true, force: true });
+        if (errors.length) return { errors };
+      // } else if (isNpm) {
+        // const dirid = uuid();
+        // const dir = [tmpdir,dirid].join('/');
+        // const pckgDir = [tmpdir,dirid,'node_modules',address].join('/');
+        // fs.mkdirSync(dir);
+        // try {
+        //   child_process.execSync(`cd ${dir}; npm install --no-cache ${address};`,{stdio:[0,1,2]});
+        // } catch(error) {
+        //   errors.push(error);
+        //   errors.push('installation failed');
+        //   return { errors };
+        // }
+        // const npmPckgPath = [pckgDir,'package.json'].join('/');
+        // const npmPckgJSON = fs.readFileSync(npmPckgPath, { encoding: 'utf-8' });
+        // let npmPckg;
+        // let nextVersion;
+        // if (!npmPckgJSON) {
+        //   errors.push('package.json not founded in installed package');
+        //   return { errors };
+        // } else {
+        //   npmPckg = JSON.parse(npmPckgJSON);
+        //   npmPckg.version = nextVersion = semver.inc(npmPckg?.version || '0.0.0', 'patch');
+        // }
+        // await deep.update({
+        //   link: {
+        //     type_id: { _eq: GLOBAL_ID_PACKAGE_VERSION },
+        //     to_id: { _eq: id },
+        //   },
+        // }, { value: nextVersion }, { table: 'strings' });
+        // fs.writeFileSync(npmPckgPath, JSON.stringify(npmPckg), { encoding: 'utf-8' });
+        // const deepPckgContent = await packager.export({ packageLinkId: id });
+        // fs.writeFileSync([pckgDir,'deep.json'].join('/'), JSON.stringify(deepPckgContent), { encoding: 'utf-8' });
+        // child_process.execSync(`cd ${pckgDir}; npm publish;`,{stdio:[0,1,2]});
+        // fs.rmSync(dir, { recursive: true, force: true });
       }
       return { errors };
     },
