@@ -303,7 +303,7 @@ export class Packager<L extends Link<any>> {
 
   async selectLinks(options: PackagerExportOptions): Promise<MinilinksResult<PackagerLink>> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
-    const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const Package = await this.client.id('@deep-foundation/core', 'PackagerPackage');
     const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
     const result = await this.client.select({
       _or: [
@@ -361,7 +361,7 @@ export class Packager<L extends Link<any>> {
     namespaceId: number;
   }> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
-    const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const Package = await this.client.id('@deep-foundation/core', 'PackagerPackage');
     const PackageNamespace = await this.client.id('@deep-foundation/core', 'PackageNamespace');
     const Active = await this.client.id('@deep-foundation/core', 'PackageActive');
     const Version = await this.client.id('@deep-foundation/core', 'PackageVersion');
@@ -395,6 +395,7 @@ export class Packager<L extends Link<any>> {
     }
     // console.log(data);
     // type, from, to fields to numeric ids
+    console.log(data, containsHash);
     for (let l = 0; l < data.length; l++) {
       const item = data[l];
       if (item.type && !item._) {
@@ -647,17 +648,20 @@ export class Packager<L extends Link<any>> {
    */
   async export(options: PackagerExportOptions): Promise<PackagerPackage> {
     const globalLinks = await this.selectLinks(options);
-    // console.log('globalLinks', globalLinks.links);
-    const Package = await this.client.id('@deep-foundation/core', 'Package');
+    const Package = await this.client.id('@deep-foundation/core', 'PackagerPackage');
     const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
-    const version: any = globalLinks.types[PackageVersion]?.[0];
+    const version: any = globalLinks.types[PackageVersion]?.[0] || '0.0.0';
     const pack: any = globalLinks.types[Package]?.[0];
     const pckg = {
       package: { name: pack?.value?.value, version: version?.value?.value },
       data: [],
-      strict: false,
       errors: [],
     };
+
+    if (!pack) pckg.errors.push('!package');
+    if (!version) pckg.errors.push('!version');
+    if (pckg?.errors?.length) return pckg;
+
     const ml = minilinks(globalLinks.links.filter(l => l.id !== version?.id));
     const { sorted } = sort(pckg, ml.links, pckg.errors, {
       id: 'id',

@@ -103,7 +103,9 @@ export interface MinilinksInstance<L extends Link<number>>{
 export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<number>>(options: MGO): MinilinksInstance<L> {
   return function minilinks<L>(linksArray = [], memory: any = {}): MinilinksResult<L> {
     // @ts-ignore
-    return new MinilinkCollection<MGO, L>(options, memory);
+    const mc = new MinilinkCollection<MGO, L>(options, memory);
+    mc.add(linksArray);
+    return mc;
   }
 }
 
