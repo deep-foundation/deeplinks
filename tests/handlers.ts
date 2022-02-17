@@ -404,7 +404,7 @@ describe('sync function handle by schedule with resolve', () => {
   });
 });
 
-describe('async function handle by type with resolve using deep client', () => {
+describe.only('async function handle by type with resolve using deep client', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
@@ -542,7 +542,6 @@ describe.skip('handle by selector', () => {
     console.log(JSON.stringify(result?.data?.links, null, 2));
 
     assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
-    
 
     // TODO: check result link is created
     // TODO: check resolve link is created

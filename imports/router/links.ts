@@ -60,7 +60,6 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 const containerController = new ContainerController({
   gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
   network: 'deep_network',
-  portsHash: {},
   handlersHash: {}
 })
 
