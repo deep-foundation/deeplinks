@@ -73,11 +73,21 @@ export const up = async () => {
         AND s.selector_id = h.from_id
         AND h.type_id = ${handleSelectorTypeId}
     ) AS distict_selectors;
+
+    IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_tables 
+      WHERE 
+        schemaname = 'public' AND 
+        tablename  = 'debug_output'
+      ) THEN
+      CREATE TABLE public.debug_output (promises bigint, new_id bigint);
+    END IF;
+    INSERT INTO debug_output ("promises", "new_id") VALUES (PROMISES, NEW."id");
     IF (PROMISES > 0) THEN
-      FOR i IN 1..PROMISES LOOP
+      -- FOR i IN 1..PROMISES LOOP
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."id",PROMISE);
-      END LOOP;
+      -- END LOOP;
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
