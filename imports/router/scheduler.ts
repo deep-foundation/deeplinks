@@ -94,16 +94,6 @@ export async function handleScheduleMomemt(moment: any) {
             }
           }
         } }`;
-
-        // #{
-        //   #  from: {
-        //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-        //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Include')} },
-        //   #      to_id: { _eq: $linkId },
-        //   #    }
-        //   #  }
-        //   #}
   // console.log('queryString', queryString);
 
   const query = gql`${queryString}`;

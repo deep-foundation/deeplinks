@@ -482,66 +482,139 @@ describe('handle port', () => {
   });
 });
 
-describe.skip('handle by selector', () => {
+export async function insertSelector() {
+  const { data: [{ id: ty0 }] } = await deep.insert({
+    type_id: await deep.id('@deep-foundation/core', 'Type'),
+  });
+  const { data: [{ id: ty1 }] } = await deep.insert({
+    type_id: await deep.id('@deep-foundation/core', 'Type'),
+    from_id: ty0,
+    to_id: ty0,
+  });
+  const { data: [{ id: tr1 }] } = await deep.insert({
+    type_id: await deep.id('@deep-foundation/core', 'Tree'),
+    out: { data: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'TreeIncludeDown'),
+        to_id: ty1,
+      },
+      {
+        type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+        to_id: ty0,
+      },
+    ] }
+  });
+  const { data: [{ id: id0 }] } = await deep.insert({
+    type_id: ty0,
+  });
+  const { data: [{ id: s1 }] } = await deep.insert({
+    type_id: await deep.id('@deep-foundation/core', 'Selector'),
+    out: { data: [
+      {
+        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        to_id: id0,
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: tr1
+        } },
+      },
+    ] }
+  });
+
+  return {
+    nodeTypeId: ty0,
+    linkTypeId: ty1,
+    treeId: tr1,
+    selectorId: s1,
+    rootId: id0,
+  };
+};
+
+export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
+  const { data: [{ id: id1 }] } = await deep.insert({
+    type_id: nodeTypeId,
+    in: { data: {
+      type_id: linkTypeId,
+      from_id: rootId,
+    } }
+  });
+  const { data: [{ id: id2 }] } = await deep.insert({
+    type_id: nodeTypeId,
+    in: { data: {
+      type_id: linkTypeId,
+      from_id: id1,
+    } }
+  });
+  
+  const n1 = await deep.select({
+    item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
+  }, { table: 'selectors', returning: 'item_id selector_id' });
+  assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
+};
+
+describe.only('handle by selector', () => {
   it(`handle insert`, async () => {
-    const typeId = await deep.id('@deep-foundation/core', 'Type');
-    const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
-
-    // selector -- selection -> link (concrete)
-    const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-    const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
-
-    const userTypeId = await deep.id('@deep-foundation/core', 'User');
+    const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = await insertSelector();
+    await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
     
-    const selector = (await deep.insert({ 
-      type_id: selectorTypeId
-    }, { name: 'IMPORT_SELECTOR' })).data[0];
+    // const typeId = await deep.id('@deep-foundation/core', 'Type');
+    // const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
+    // const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    // const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
 
-    const link = (await deep.insert({ 
-      type_id: userTypeId,
-    }, { name: 'IMPORT_LINK' })).data[0];
+    // // selector -- selection -> link (concrete)
+    // const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
+    // const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
 
-    const selection = (await deep.insert({ 
-      from_id: selector.id,
-      type_id: selectionTypeId,
-      to_id: link.id,
-    }, { name: 'IMPORT_SELECTION' })).data[0];
-
-    console.log(link);
-
-    await deep.await(link.id);
-
-    const client = deep.apolloClient;
-    const result = await client.query({
-      query: gql`{
-        links(where: { 
-          in: { 
-            type_id: { _eq: ${resolvedTypeId} }, # Resolved
-            from: { 
-              type_id: { _eq: ${promiseTypeId} }, # Promise
-              in: { 
-                type_id: { _eq: ${thenTypeId} } # Then
-                from_id: { _eq: ${link.id} } # link.id
-              }
-            }
-          },
-        }) {
-      object { value }
-        }
-      }`,
-    });
+    // const userTypeId = await deep.id('@deep-foundation/core', 'User');
     
-    // console.log(JSON.stringify(result, null, 2));
-    // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+    // const selector = (await deep.insert({ 
+    //   type_id: selectorTypeId
+    // }, { name: 'IMPORT_SELECTOR' })).data[0];
 
-    console.log(result?.data?.links.length);
-    console.log(result?.data?.links[0]?.object?.value);
+    // const link = (await deep.insert({ 
+    //   type_id: userTypeId,
+    // }, { name: 'IMPORT_LINK' })).data[0];
 
-    console.log(JSON.stringify(result?.data?.links, null, 2));
+    // const selection = (await deep.insert({ 
+    //   from_id: selector.id,
+    //   type_id: selectionTypeId,
+    //   to_id: link.id,
+    // }, { name: 'IMPORT_SELECTION' })).data[0];
 
-    assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
+    // console.log(link);
+
+    // await deep.await(link.id);
+
+    // const client = deep.apolloClient;
+    // const result = await client.query({
+    //   query: gql`{
+    //     links(where: { 
+    //       in: { 
+    //         type_id: { _eq: ${resolvedTypeId} }, # Resolved
+    //         from: { 
+    //           type_id: { _eq: ${promiseTypeId} }, # Promise
+    //           in: { 
+    //             type_id: { _eq: ${thenTypeId} } # Then
+    //             from_id: { _eq: ${link.id} } # link.id
+    //           }
+    //         }
+    //       },
+    //     }) {
+    //   object { value }
+    //     }
+    //   }`,
+    // });
+    
+    // // console.log(JSON.stringify(result, null, 2));
+    // // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+
+    // console.log(result?.data?.links.length);
+    // console.log(result?.data?.links[0]?.object?.value);
+
+    // console.log(JSON.stringify(result?.data?.links, null, 2));
+
+    // assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
 
     // TODO: check result link is created
     // TODO: check resolve link is created
