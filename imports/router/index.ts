@@ -6,7 +6,7 @@ import reserved from './reserved';
 import healthz from './healthz';
 import scheduler from './scheduler';
 
-const router = express.Router();
+const router:express.IRouter = express.Router();
 
 router.use('/api/links', links);
 router.use('/api/values', values);
