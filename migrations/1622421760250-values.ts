@@ -4,7 +4,7 @@ import { generateMutation, generateSerial, insertMutation } from '../imports/gql
 import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import times from 'lodash/times';
 import { time } from 'console';
-import { Packager, PackagerPackage } from '../imports/packager';
+import { Packager, Package } from '../imports/packager';
 import { DeepClient } from '../imports/client';
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';

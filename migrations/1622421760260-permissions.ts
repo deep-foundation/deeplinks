@@ -54,7 +54,7 @@ export const up = async () => {
       ],
     },
     insert: {
-      type: { id: { _neq: 0 } },
+      type: {},
       _or: [
         {
           type: {
