@@ -22,7 +22,7 @@ beforeAll(async () => {
 describe('typing', () => {
   it(`type required`, async () => {
     let throwed = false;
-    try { await deep.insert({ type_id: 999 }); }
+    try { await deep.insert({ type_id: 999999 }); }
     catch (error) { throwed = true; }
     assert(throwed, true);
   });

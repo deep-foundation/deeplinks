@@ -54,12 +54,18 @@ const start = async () => {
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   console.log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
-    await axios({
-      method: 'post',
-      url: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}/v1/metadata`,
-      headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
-      data: { type: 'reload_metadata', args: {}}
-    });
+    setTimeout(() => {
+      axios({
+        method: 'post',
+        url: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}/v1/metadata`,
+        headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
+        data: { type: 'reload_metadata', args: {}}
+      }).then(() => {
+        console.log('hasura metadata reloaded');
+      }, () => {
+        console.error('hasura metadata broken');
+      });
+    }, 5000);
   } catch(e){
     console.error(e);
   }

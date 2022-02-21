@@ -48,7 +48,7 @@ describe('serialize', () => {
           type_id: await deepClient.id('@deep-foundation/core', 'Contain'),
           value: 'b',
           from: {
-            type_id: await deepClient.id('@deep-foundation/core', 'PackagerPackage'),
+            type_id: await deepClient.id('@deep-foundation/core', 'Package'),
             value: 'a',
           },
         },
@@ -58,7 +58,7 @@ describe('serialize', () => {
         type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Contain') },
         string: { value: { _eq: 'b' } },
         from: {
-          type_id: { _eq: await deepClient.id('@deep-foundation/core', 'PackagerPackage') },
+          type_id: { _eq: await deepClient.id('@deep-foundation/core', 'Package') },
           string: { value: { _eq: 'a' } },
         },
       }
