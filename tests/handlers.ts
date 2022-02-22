@@ -188,8 +188,8 @@ function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-describe('sync function handle by type with resolve', () => {
-  it(`handle insert`, async () => {
+describe.only('sync function handle by type with resolve', () => {
+  it.only(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
@@ -552,7 +552,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
 };
 
-describe.only('handle by selector', () => {
+describe.skip('handle by selector', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
