@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.49",
+  "version": "0.0.52",
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 PORT=3006 npm run launch",
     "launch": "ts-node ./index.ts;",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.5.8",
-    "@deep-foundation/hasura": "0.0.10",
+    "@deep-foundation/hasura": "0.0.11",
     "@deep-foundation/materialized-path": "0.0.8",
     "@deep-foundation/react-hasura": "0.0.4",
     "@deep-foundation/store": "0.0.6",
@@ -43,6 +43,7 @@
     "http-proxy-middleware": "^2.0.1",
     "internal-ip": "^6.2.0",
     "jsonwebtoken": "^8.5.1",
+    "microtime": "^3.0.0",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
