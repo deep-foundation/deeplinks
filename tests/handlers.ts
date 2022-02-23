@@ -188,8 +188,8 @@ function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-describe.only('sync function handle by type with resolve', () => {
-  it.only(`handle insert`, async () => {
+describe('sync function handle by type with resolve', () => {
+  it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
