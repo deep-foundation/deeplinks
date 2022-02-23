@@ -85,43 +85,47 @@ export const up = async () => {
     type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
     string: { data: { value:
 `async ({ deep, gql, data: { newLink, promiseId } }) => {
-  const query = await deep.select({
-    id: newLink.to_id,
-    type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
-  });
-  const address = query?.data?.[0]?.value?.value;
-  if (!address) {
-    return { error: 'No address' };
+  try {
+    const query = await deep.select({
+      id: newLink.to_id,
+      type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
+    });
+    const address = query?.data?.[0]?.value?.value;
+    if (!address) {
+      return { error: 'No address' };
+    }
+    const id = newLink.from_id;
+    const result = await deep.apolloClient.query({
+      query: gql\`query PACKAGE_PUBLISH($address: String!, $id: Int) {
+        packager_publish(input: { address: $address, id: $id }) {
+          address
+          errors
+        }
+      }\`,
+      variables: {
+        address,
+        id,
+      },
+    });
+    if (!result?.data?.packager_publish || result?.data?.packager_publish?.errors?.length) return result;
+    const newAddress = result?.data?.packager_publish?.address;
+    const out = await deep.insert({
+      type_id: await deep.id('@deep-foundation/core', 'PromiseOut'),
+      from_id: promiseId,
+      ...(
+          newAddress != address
+          ? { to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
+              string: { data: { value: newAddress } },
+          } } }
+          : { to_id: query?.data?.[0]?.id }
+      ),
+      string: { data: { value: 'package' } },
+    });
+    return result?.data?.packager_publish;
+  } catch(error) {
+    return error;
   }
-  const id = newLink.to_id;
-  const result = await deep.apolloClient.query({
-    query: gql\`query PACKAGE_PUBLISH($address: String!, $id: String) {
-      packager_install(input: { address: $address, id: $id }) {
-        address
-        errors
-      }
-    }\`,
-    variables: {
-      address,
-      id,
-    },
-  });
-  if (!result?.data?.packager_publish || result?.data?.packager_publish?.errors?.length) return result?.data?.packager_publish;
-  const newAddress = result?.data?.packager_publish?.address;
-  await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'PromiseOut'),
-    from_id: promiseId,
-    ...(
-        newAddress != address
-        ? { to: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
-            string: { data: { value: newAddress } },
-        } } }
-        : { to_id: query?.data?.[0]?.id }
-    ),
-    string: { data: { value: 'package' } },
-  });
-  return result?.data?.packager_publish;
 }`
     } },
     in: { data: {

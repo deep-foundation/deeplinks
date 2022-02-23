@@ -35,7 +35,7 @@ const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
     'containTree': GLOBAL_ID_CONTAIN_TREE,
-    'PackagerPackage': GLOBAL_ID_PACKAGE,
+    'Package': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
     'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
     'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
@@ -83,7 +83,7 @@ export interface DeepClientOptions<L = Link<number>> {
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
-  error?: ApolloError;
+  error?: any;
 }
 
 export type DeepClientPackageSelector = string;
@@ -91,7 +91,7 @@ export type DeepClientPackageContain = string;
 export type DeepClientLinkId = number;
 // export type DeepClientBoolExp = number;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
-export type DeepClientPathItem = DeepClientPackageContain;
+export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
 export interface DeepClientInstance<L = Link<number>> {
   linkId?: number;
@@ -258,6 +258,9 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>> {
+    if (!exp) {
+      return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
+    }
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
@@ -439,18 +442,27 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
       const item = path[p];
-      const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
-      where = nextWhere;
+      if (typeof(item) !== 'boolean') {
+        const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
+        where = nextWhere;
+      }
     }
     return where;
   }
 
+  /**
+   * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
+   * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
+   * @returns number
+   */
   async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
     const q = await this.select(this.pathToWhere(start, ...path));
-    if (q.error) throw q.error;
+    if (q.error) {
+      throw q.error;
+    }
     // @ts-ignore
     const result = (q?.data?.[0]?.id | _ids?.[start]?.[path?.[0]] | 0);
-    if (!result) {
+    if (!result && path[path.length - 1] !== true) {
       throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
     }
     return result;

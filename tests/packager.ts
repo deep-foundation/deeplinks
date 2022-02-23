@@ -3,6 +3,8 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import { gql } from "@apollo/client";
 import { Packager } from "../imports/packager";
+import { minilinks } from "../imports/minilinks";
+import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager";
 
 const GIST_URL = process.env.GIST_URL;
 
@@ -12,150 +14,140 @@ const apolloClient = generateApolloClient({
   secret: process.env.DEEPLINKS_HASURA_SECRET,
 });
 
-const root = new DeepClient({ apolloClient });
-
-let adminToken: string;
-let deep: any;
-
-beforeAll(async () => {
-  const { linkId, token } = await root.jwt({ linkId: await root.id('@deep-foundation/core', 'system', 'admin') });
-  adminToken = token;
-  deep = new DeepClient({ deep: root, token: adminToken, linkId });
-});
-
-const demoPackage = {
-  "package": {
-    "name": "gist-package-test",
-    "version": "0.0.1"
-  },
-  "data": [
-    {
-      "id": 1,
-      "package": {
-        "dependencyId": 1,
-        "containValue": "Any"
-      }
-    },
-    {
-      "id": "1",
-      "type": "1",
-      "from": 8,
-      "to": 8
-    },
-    {
-      "id": "2",
-      "type": "1",
-      "value": { "value": "File" }
-    }
-  ],
-  "errors": [],
-  "dependencies": { "1": { "name": "@deep-foundation/core" } }
-};
+const deep = new DeepClient({ apolloClient });
 
 describe('packager', () => {
   describe('class', () => {
-    it('export', async () => {
+    it('export import', async () => {
       const packager = new Packager(deep);
-      const { ids, errors, packageId } = await packager.import(demoPackage);
+      const namespace = await deep.select({
+        type_id: await deep.id('@deep-foundation/core','PackageNamespace'),
+        string: { value: { _eq: '@deep-foundation/test' } },
+      });
+      const { data: [{ id: packageId }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Package'),
+        string: { data: { value: '@deep-foundation/test' } },
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'PackageVersion'),
+          string: { data: { value: '0.0.0' } },
+          ...(
+            namespace?.data?.[0]
+            ? {
+              from_id: namespace?.data?.[0]?.id,
+            }
+            : {
+              from: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'PackageNamespace'),
+                string: { data: { value: '@deep-foundation/test' } },
+              } },
+            }
+          ),
+        } },
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            string: { data: { value: 'item' } },
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Type'),
+              from_id: await deep.id('@deep-foundation/core', 'Any'),
+              to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+            } },
+          },
+        ] },
+      });
+      assert(!!packageId, '!packageId');
       const exported = await packager.export({ packageLinkId: packageId });
-      console.log(exported);
+      assert(!exported.errors?.length, '!!exported.errors.length');
+      const imported = await packager.import(exported);
+      assert(!imported.errors?.length, '!!imported.errors.length');
+      const results = await deep.select({ id: { _in: imported?.ids } });
+      const ml = minilinks(results.data);
+      assert(+ml.links.length === +imported.ids.length, 'ml.links.length !== imported.ids.length');
+      // TODO best valid checker
     });
   });
   if (GIST_URL) {
-    describe.skip('links', () => {
-      // it(`install`, async () => {
-      //   // insert query
-      //   const { data: [{ id: packageQueryId }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
-      //     string: { data: { value: GIST_URL } },
-      //   });
-      //   // initiate installation
-      //   const { data: [{ id: packageInstallId }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerInstall'),
-      //     from_id: deep.linkId, // actual user only can be here
-      //     to_id: packageQueryId,
-      //   });
-      //   // you can await promise of all operations about this link
-      //   await deep.await(packageInstallId);
-      // });
-      // it(`publish`, async () => {
-      //   // insert query
-      //   const { data: [{ id: packageQueryId1 }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
-      //     string: { data: { value: GIST_URL } },
-      //   });
-      //   // initiate installation
-      //   const { data: [{ id: packageInstallId1 }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerInstall'),
-      //     from_id: deep.linkId, // actual user only can be here
-      //     to_id: packageQueryId1,
-      //   });
-      //   // you can await promise of all operations about this link
-      //   await deep.await(packageInstallId1);
+    describe('links', () => {
+      it(`install and publish`, async () => {
+        const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+        const admin = new DeepClient({ deep, token, linkId });
 
-      //   console.log({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerPackage'),
-      //     in: {
-      //       type_id: await deep.id('@deep-foundation/core', 'PromiseOut'),
-      //       from: {
-      //         in: {
-      //           type_id: await deep.id('@deep-foundation/core', 'Then'),
-      //           from_id: packageInstallId1,
-      //         }
-      //       },
-      //     },
-      //   });
-      //   const { data: [{ id: packageId }] } = await deep.select({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerPackage'),
-      //     in: {
-      //       type_id: await deep.id('@deep-foundation/core', 'PromiseOut'),
-      //       from: {
-      //         in: {
-      //           type_id: await deep.id('@deep-foundation/core', 'Then'),
-      //           from_id: packageInstallId1,
-      //         }
-      //       },
-      //     },
-      //   });
-
-      //   // insert query
-      //   const { data: [{ id: packageQueryId2 }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerQuery'),
-      //     string: { data: { value: GIST_URL } },
-      //   });
-      //   // initiate installation
-      //   const { data: [{ id: packagePublishId }] } = await deep.insert({
-      //     type_id: await deep.id('@deep-foundation/core', 'PackagerPublish'),
-      //     from_id: packageId,
-      //     to_id: packageQueryId2,
-      //   });
-      //   // you can await promise of all operations about this link
-      //   await deep.await(packagePublishId);
-      // });
-    });
-    describe('gql', () => {
-      it.skip(`install`, async () => {
         // insert query
-        const imported = await deep.apolloClient.query({
-          query: gql`query PACKAGE_INSTALL($address: String!) {
-            packager_install(input: { address: $address }) {
-              ids
-              packageId
-              errors
-            }
-          }`,
-          variables: {
-            address: GIST_URL
+        const { data: [{ id: packageQueryId1 }] } = await admin.insert({
+          type_id: await admin.id('@deep-foundation/core', 'PackagerQuery'),
+          string: { data: { value: GIST_URL } },
+        });
+        // initiate installation
+        const { data: [{ id: packageInstallId1 }] } = await admin.insert({
+          type_id: await admin.id('@deep-foundation/core', 'PackagerInstall'),
+          from_id: admin.linkId, // actual user only can be here
+          to_id: packageQueryId1,
+        });
+        // you can await promise of all operations about this link
+        await admin.await(packageInstallId1);
+
+        const { data: [{ id: packageId }] } = await admin.select({
+          type_id: await admin.id('@deep-foundation/core', 'Package'),
+          in: {
+            type_id: await admin.id('@deep-foundation/core', 'PromiseOut'),
+            from: {
+              in: {
+                type_id: await admin.id('@deep-foundation/core', 'Then'),
+                from_id: packageInstallId1,
+              }
+            },
           },
         });
-        if (imported.data?.packager_install?.errors.length) {
+
+        // insert query
+        const { data: [{ id: packageQueryId2 }] } = await admin.insert({
+          type_id: await admin.id('@deep-foundation/core', 'PackagerQuery'),
+          string: { data: { value: GIST_URL } },
+        });
+        // initiate installation
+        const { data: [{ id: packagePublishId }] } = await admin.insert({
+          type_id: await admin.id('@deep-foundation/core', 'PackagerPublish'),
+          from_id: packageId,
+          to_id: packageQueryId2,
+        });
+        // you can await promise of all operations about this link
+        await admin.await(packagePublishId);
+      });
+    });
+    describe('core', () => {
+      it(`install then publish old`, async () => {
+        // insert query
+        const imported = await packagerInstallCore([], GIST_URL);
+        if (imported.errors?.length) {
           console.log(JSON.stringify(imported, null, 2));
-          throw new Error('!!imported.data.errors');
+          throw new Error('!!errors?.length');
+        }
+        // insert query
+        const exported = await packagerPublishCore([], GIST_URL, imported.packageId);
+        if (exported?.errors?.length) {
+          console.log(JSON.stringify(exported, null, 2));
+          throw new Error('!!exported.data.errors');
         }
       });
-      it(`publish old`, async () => {
+      it(`install then publish new`, async () => {
         // insert query
-        const imported = await deep.apolloClient.query({
+        const address = GIST_URL.split('/').slice(0, -1).join('/');
+        const imported = await packagerInstallCore([], GIST_URL);
+        if (imported?.errors?.length) {
+          console.log(JSON.stringify(imported, null, 2));
+          throw new Error('!!imported.data.errors');
+        }
+        const exported = await packagerPublishCore([], address, imported.packageId);
+        if (exported?.errors?.length) {
+          console.log(JSON.stringify(exported, null, 2));
+          throw new Error('!!exported.data.errors');
+        }
+      });
+    });
+    describe('gql', () => {
+      it(`install then publish old`, async () => {
+        // insert query
+        const { data: { packager_install: imported } } = await deep.apolloClient.query({
           query: gql`query PACKAGE_INSTALL($address: String!) {
             packager_install(input: { address: $address }) {
               ids
@@ -167,13 +159,13 @@ describe('packager', () => {
             address: GIST_URL
           },
         });
-        if (imported.data?.errors?.length) {
+        if (imported.errors?.length) {
           console.log(JSON.stringify(imported, null, 2));
-          throw new Error('!!imported.data.errors');
+          throw new Error('!!errors?.length');
         }
-        console.log(JSON.stringify(imported, null, 2));
         // insert query
-        const exported = await deep.apolloClient.query({
+        // const exported = await packagerPublishCore([], GIST_URL, imported.packageId);
+        const { data: { packager_publish: exported } } = await deep.apolloClient.query({
           query: gql`query PACKAGE_PUBLISH($address: String!, $id: Int) {
             packager_publish(input: { address: $address, id: $id }) {
               address
@@ -182,18 +174,20 @@ describe('packager', () => {
           }`,
           variables: {
             address: GIST_URL,
-            id: imported.data?.packager_install?.packageId,
+            id: imported?.packageId,
           },
         });
-        if (exported.data?.packager_install?.errors?.length) {
+        if (exported?.errors?.length) {
           console.log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
       });
-      it.skip(`publish new`, async () => {
-        const address = GIST_URL.split('/').slice(0, -1).join('/');
+      it(`install then publish new`, async () => {
         // insert query
-        const imported = await deep.apolloClient.query({
+        const address = GIST_URL.split('/').slice(0, -1).join('/');
+        // const imported = await packagerInstallCore([], GIST_URL);
+        // insert query
+        const { data: { packager_install: imported } } = await deep.apolloClient.query({
           query: gql`query PACKAGE_INSTALL($address: String!) {
             packager_install(input: { address: $address }) {
               ids
@@ -205,13 +199,13 @@ describe('packager', () => {
             address: GIST_URL
           },
         });
-        if (imported.data?.errors?.length) {
+        if (imported?.errors?.length) {
           console.log(JSON.stringify(imported, null, 2));
           throw new Error('!!imported.data.errors');
         }
-        console.log(JSON.stringify(imported, null, 2));
+        // const exported = await packagerPublishCore([], address, imported.packageId);
         // insert query
-        const exported = await deep.apolloClient.query({
+        const { data: { packager_publish: exported } } = await deep.apolloClient.query({
           query: gql`query PACKAGE_PUBLISH($address: String!, $id: Int) {
             packager_publish(input: { address: $address, id: $id }) {
               address
@@ -220,10 +214,10 @@ describe('packager', () => {
           }`,
           variables: {
             address: address,
-            id: imported.data?.packager_install?.packageId,
+            id: imported?.packageId,
           },
         });
-        if (exported.data?.packager_publish?.errors?.length) {
+        if (exported?.errors?.length) {
           console.log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
