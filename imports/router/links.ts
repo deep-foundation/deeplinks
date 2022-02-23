@@ -19,7 +19,7 @@ const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
-const  HASURA_DEEPLINKS_URL = process.env.HASURA_DEEPLINKS_URL || 'http://docker.host.internal:3006';
+const  DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://docker.host.internal:3006';
 const DOCKER = process.env.DOCKER || 0;
 
 export const api = new HasuraApi({
@@ -257,7 +257,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
       type: 'create_cron_trigger',
       args: {
         name: `handle_schedule_${handleScheduleLink?.id}`,
-        webhook: `${HASURA_DEEPLINKS_URL}/api/scheduler`,
+        webhook: `${DOCKER_DEEPLINKS_URL}/api/scheduler`,
         schedule: scheduleValue,
         include_in_metadata: true,
         payload: {
