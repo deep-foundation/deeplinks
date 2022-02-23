@@ -35,20 +35,20 @@ services:
       HASURA_GRAPHQL_LOG_LEVEL: "debug"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
-      HASURA_GRAPHQL_JWT_SECRET: '${JWT_SECRET}'
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
       HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: "true"
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "link"
   case:
-    image: deepf/deepcase
-    network_mode: host
+    image: deepf/deepcase:deepcase-19-menzorg
+    networks:
+      - network
     ports:
     - "3007:3007"
     depends_on:
     - "graphql-engine"
     restart: always
-    environment:
   links:
-    image: deepf/deepcase:main
+    image: deepf/deeplinks:main
     networks:
       - network
     ports:
@@ -56,7 +56,14 @@ services:
     depends_on:
     - "graphql-engine"
     restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts: ['host.docker.internal:host-gateway']
     environment:
+      DEEPLINKS_HASURA_PATH: 'deep_graphql-engine_1:8080'
+      DEEPLINKS_HASURA_SSL: '0'
+      DEEPLINKS_HASURA_SECRET: 'myadminsecretkey'
+      JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 volumes:
   db_data:
 networks:
