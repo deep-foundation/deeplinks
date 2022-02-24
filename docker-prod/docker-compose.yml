@@ -47,6 +47,9 @@ services:
     depends_on:
     - "graphql-engine"
     restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts: ['host.docker.internal:host-gateway']
   links:
     image: deepf/deeplinks:main
     networks:
