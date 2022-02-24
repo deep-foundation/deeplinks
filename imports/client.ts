@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
 import { useMemo } from "react";
 import { deprecate, inherits } from "util";
@@ -64,7 +64,7 @@ export interface DeepClientOptions<L = Link<number>> {
 
   deep?: DeepClientInstance<L>;
 
-  apolloClient?: ApolloClient<any>;
+  apolloClient?: IApolloClient<any>;
   minilinks?: MinilinksResult<L>;
   table?: string;
   returning?: string;
@@ -100,7 +100,7 @@ export interface DeepClientInstance<L = Link<number>> {
 
   deep: DeepClientInstance<L>;
 
-  apolloClient?: ApolloClient<any>;
+  apolloClient?: IApolloClient<any>;
   minilinks?: MinilinksResult<L>;
   table?: string;
   returning?: string;
@@ -188,7 +188,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   deep: DeepClientInstance<L>;
 
-  apolloClient?: ApolloClient<any>;
+  apolloClient?: IApolloClient<any>;
   minilinks?: MinilinksResult<L>;
   table?: string;
   returning?: string;
@@ -210,18 +210,24 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   constructor(options: DeepClientOptions<L>) {
     this.deep = options.deep;
+    if (!this.apolloClient) this.apolloClient = options.apolloClient;
 
-    if (!this.apolloClient && !options.apolloClient && options.token) {
+    if (!this.deep && !options.apolloClient) throw new Error('options.apolloClient or options.deep is required');
+
+    if (this.deep && !this.apolloClient && !options.apolloClient && options.token) {
       this.apolloClient = generateApolloClient({
-        path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
-        ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+        // @ts-ignore
+        path: this.deep.apolloClient?.path,
+        // @ts-ignore
+        ssl: this.deep.apolloClient?.ssl,
         token: options.token,
       });
     }
 
+    if (!this.apolloClient) throw new Error('apolloClient is invalid');
+
     // @ts-ignore
     this.minilinks = options.minilinks || minilinks([]);
-    if (!this.apolloClient) this.apolloClient = options.apolloClient;
     this.table = options.table || 'links';
 
     this.linkId = options.linkId;
@@ -539,7 +545,7 @@ export function useAuthNode() {
   return useLocalStore('use_auth_link_id', 0);
 }
 
-export function useDeep(apolloClientProps?: ApolloClient<any>) {
+export function useDeep(apolloClientProps?: IApolloClient<any>) {
   const apolloClientHook = useApolloClient();
   const apolloClient = apolloClientProps || apolloClientHook;
 
