@@ -15,7 +15,7 @@ export interface IOptions {
 const _hasura = path.normalize(`${__dirname}/../../hasura`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
 
-const handleEnvWindows = (k, envs) => ` set ${k} ${envs[k]} &&`;
+const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]} &&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
 

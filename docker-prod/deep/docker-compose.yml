@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.8'
 services:
   postgres:
     image: postgres:12
@@ -50,6 +50,7 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
+    pull_policy: always
   links:
     image: deepf/deeplinks:main
     networks:
@@ -62,6 +63,7 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
+    pull_policy: always
     environment:
       DEEPLINKS_HASURA_PATH: 'deep_graphql-engine_1:8080'
       DEEPLINKS_HASURA_SSL: '0'
