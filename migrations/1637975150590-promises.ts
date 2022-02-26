@@ -30,8 +30,8 @@ export const up = async () => {
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
-  
-  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
+
+  await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$ 
   DECLARE 
     PROMISE bigint;
     PROMISES bigint;
@@ -40,7 +40,7 @@ export const up = async () => {
         EXISTS(
           SELECT 1
           FROM links
-          WHERE from_id = NEW."type_id"
+          WHERE from_id = link."type_id"
           AND type_id = ${handleInsertTypeId}
         )
       --OR
@@ -50,26 +50,26 @@ export const up = async () => {
       --      links as selection,
       --      links as handleInsert
       --    WHERE 
-      --          selection.to_id = NEW."id"
+      --          selection.to_id = link."id"
       --      AND type_id = ${selectionTypeId}
       --      AND selection.from_id = handleInsert.from_id
       --      AND handleInsert.type_id = ${handleInsertTypeId}
       --  )
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."id",PROMISE);
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
     END IF;
     IF (
-      NEW."type_id" = ${handleScheduleTypeId}
+      link."type_id" = ${handleScheduleTypeId}
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW.from_id,PROMISE);
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link.from_id,PROMISE);
     END IF;
     SELECT COUNT(*) INTO PROMISES FROM (
         SELECT DISTINCT s.selector_id, h.id
         FROM selectors s, links h
         WHERE
-            s.item_id = NEW."id"
+            s.item_id = link."id"
         AND s.selector_id = h.from_id
         AND h.type_id = ${handleSelectorTypeId}
     ) AS distict_selectors;
@@ -82,13 +82,20 @@ export const up = async () => {
       ) THEN
       CREATE TABLE public.debug_output (promises bigint, new_id bigint);
     END IF;
-    INSERT INTO debug_output ("promises", "new_id") VALUES (PROMISES, NEW."id");
+    INSERT INTO debug_output ("promises", "new_id") VALUES (PROMISES, link."id");
     IF (PROMISES > 0) THEN
       -- FOR i IN 1..PROMISES LOOP
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."id",PROMISE);
+        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
       -- END LOOP;
     END IF;
+    RETURN TRUE;
+  END; $function$ LANGUAGE plpgsql;`);
+  
+  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
+  DECLARE 
+  BEGIN
+    PERFORM create_promises_for_inserted_link(NEW);
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER links__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
@@ -194,5 +201,6 @@ export const down = async () => {
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__function CASCADE;`);
 
+  await api.sql(sql`DROP FUNCTION IF EXISTS create_promises_for_inserted_link CASCADE;`);
   await api.sql(sql`DROP TABLE IF EXISTS debug_output CASCADE;`);
 };
