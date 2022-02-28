@@ -58,7 +58,7 @@ export class ContainerController {
     const { handler, forcePort, forceName, forceRestart, publish } = options;
     const { network, handlersHash, gqlURN } = this;
     debug('options, network, handlersHash', { options, network, handlersHash });
-    const containerName = forceName || crypto.createHash('md5').update(handler).digest("hex");
+    const containerName = 'deep_' + (forceName || crypto.createHash('md5').update(handler).digest("hex"));
     debug('containerName, forceName', { containerName, forceName });
     let container = await this.findContainer(containerName);
     if (container) return container;

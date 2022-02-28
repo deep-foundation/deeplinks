@@ -86,12 +86,12 @@ export async function call (options: IOptions) {
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'sleep') {
-      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose -p deep down --remove-orphans`;
+      str = `${envsString} docker stop $(docker ps --filter name=deep -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}')`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
     if (options.operation === 'reset') {
-      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && docker-compose -p deep down --remove-orphans && (docker rm $(docker ps -qa --filter name=deep) || true) && (docker volume rm $(docker volume ls -q --filter name=deep) || true) && cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} ${DOCKER ? `&& cd ${_deepcase}/local && docker-compose -p deep up` : ``}`;
+      str = `${envsString} (docker rm -f $(docker ps --filter name=deep -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep) || true) && npx rimraf ${envs['MIGRATIONS_DIR']}`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
