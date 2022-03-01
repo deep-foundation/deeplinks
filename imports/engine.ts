@@ -81,7 +81,7 @@ export async function call (options: IOptions) {
   let str;
   try {
     if (options.operation === 'run') {
-      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f $MIGRATIONS_DIR`;
+      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http://host.docker.internal' : 'tcp'}:8080/console && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f $MIGRATIONS_DIR`;
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
