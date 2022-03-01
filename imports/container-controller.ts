@@ -99,7 +99,7 @@ export class ContainerController {
         debug('container', container);
         
         // wait on
-        execSync(`npx wait-on --timeout 5000 http://${host}:${dockerPort}/healthz`);
+        execSync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
 
         handlersHash[containerName] = container;
       }
