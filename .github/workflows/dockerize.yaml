@@ -1,9 +1,9 @@
 name: Deploy deeplinks app
 on:
   push:
-    branches: [ main ]
+    branches: [ deepcase-19-menzorg ]
   pull_request:
-    branches: [ main ]
+    branches: [ deepcase-19-menzorg ]
   workflow_dispatch:
 defaults:
   run:
