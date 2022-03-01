@@ -491,7 +491,7 @@ describe.skip('handle by selector', () => {
 
     // selector -- selection -> link (concrete)
     const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-    const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
+    const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
     const userTypeId = await deep.id('@deep-foundation/core', 'User');
     

@@ -64,7 +64,7 @@ const corePckg: Package = {
     // /ign
 
     { id: 'Selector', type: 'Type' }, // 15
-    { id: 'Include', type: 'Type', from: 'Selector', to: 'Any' }, // 16
+    { id: 'SelectorInclude', type: 'Type', from: 'Selector', to: 'Any' }, // 16
 
     { id: 'Rule', type: 'Type' }, // 17
     { id: 'RuleSubject', type: 'Type', from: 'Rule', to: 'Selector' }, // 18
@@ -145,10 +145,10 @@ const corePckg: Package = {
 
     { id: 'system', type: 'Type' }, // 71
 
-    { id: 'Exclude', type: 'Type', from: 'Selector', to: 'Any' }, // 72
+    { id: 'SelectorExclude', type: 'Type', from: 'Selector', to: 'Any' }, // 72
 
     { id: 'BoolExp', type: 'Type' }, // 73
-    { id: 'boolExpValue', type: 'Value', from: 'Operation', to: 'Object' }, // 74
+    { id: 'boolExpValue', type: 'Value', from: 'BoolExp', to: 'Object' }, // 74
 
     { id: 'SelectorFilter', type: 'Type', from: 'Selector', to: 'BoolExp' }, // 75
 

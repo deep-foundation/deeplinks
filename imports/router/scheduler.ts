@@ -99,7 +99,7 @@ export async function handleScheduleMomemt(moment: any) {
         //   #  from: {
         //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
         //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Include')} },
+        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
         //   #      to_id: { _eq: $linkId },
         //   #    }
         //   #  }
