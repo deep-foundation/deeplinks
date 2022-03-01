@@ -29,9 +29,9 @@ export const up = async () => {
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
-  const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
+  const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
-  await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$ 
+  await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
   DECLARE 
     PROMISE bigint;
     PROMISES bigint;

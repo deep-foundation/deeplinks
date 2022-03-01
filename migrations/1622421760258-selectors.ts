@@ -40,7 +40,7 @@ export const up = async () => {
       ${TABLE_NAME} as include_link,
       ${TABLE_NAME} as include_tree_link
     WHERE
-      (include_link."type_id" = ${await deep.id('@deep-foundation/core', 'Include')}) AND
+      (include_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorInclude')}) AND
       (mp_include."path_item_id" = include_link."to_id") AND
       (mp_include."group_id" = include_tree_link."to_id" AND include_tree_link."from_id" = include_link."id" AND include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
       NOT EXISTS (
@@ -50,7 +50,7 @@ export const up = async () => {
         ${TABLE_NAME} as exclude_tree_link,
         ${MP_TABLE_NAME} as mp_exclude
         WHERE
-          (exclude_link."type_id" = ${await deep.id('@deep-foundation/core', 'Exclude')}) AND
+          (exclude_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorExclude')}) AND
           (exclude_link."from_id" = include_link."from_id") AND
           (mp_exclude."item_id" = mp_include."item_id") AND 
           (mp_exclude."path_item_id" = exclude_link."to_id") AND 

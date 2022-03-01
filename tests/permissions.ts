@@ -70,7 +70,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: a2.linkId,
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -85,7 +85,7 @@ describe('permissions', () => {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: [
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: id1,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -93,7 +93,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
                   to_id: id2,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -108,7 +108,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -170,7 +170,7 @@ describe('permissions', () => {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: [
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a1.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -178,7 +178,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a2.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -186,7 +186,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
                   to_id: a3.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -201,7 +201,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -215,7 +215,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -291,7 +291,7 @@ describe('permissions', () => {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: [
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a1.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -299,7 +299,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a2.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -307,7 +307,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
                   to_id: a3.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -322,7 +322,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -336,7 +336,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core', 'AllowUpdate'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -407,7 +407,7 @@ describe('permissions', () => {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: [
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a1.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -415,7 +415,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a2.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -423,7 +423,7 @@ describe('permissions', () => {
                   } },
                 },
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
                   to_id: a3.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -438,7 +438,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -452,7 +452,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -502,7 +502,7 @@ describe('permissions', () => {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: [
                 {
-                  type_id: await deep.id('@deep-foundation/core', 'Include'),
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                   to_id: a2.linkId,
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -517,7 +517,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: a1.linkId,
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -531,7 +531,7 @@ describe('permissions', () => {
             to: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Selector'),
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Include'),
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
                 to_id: await deep.id('@deep-foundation/core', 'AllowLogin'),
                 out: { data: {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
