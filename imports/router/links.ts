@@ -19,7 +19,7 @@ const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
-const  DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://docker.host.internal:3006';
+const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
 const DOCKER = process.env.DOCKER || '0';
 
 export const api = new HasuraApi({
