@@ -58,7 +58,7 @@ export class ContainerController {
     const { handler, forcePort, forceName, forceRestart, publish } = options;
     const { network, handlersHash, gqlURN } = this;
     debug('options, network, handlersHash', { options, network, handlersHash });
-    const containerName = 'deep_' + (forceName || crypto.createHash('md5').update(handler).digest("hex"));
+    const containerName = forceName || 'deep_' + crypto.createHash('md5').update(handler).digest("hex");
     debug('containerName, forceName', { containerName, forceName });
     let container = await this.findContainer(containerName);
     if (container) return container;
@@ -89,13 +89,17 @@ export class ContainerController {
         done = true;
 
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
-        const inspectResult = execSync(`docker inspect ${containerName}`).toString();
-        const inspectJSON = JSON.parse(inspectResult)
-        const ip = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
-        container = { name: containerName, host: ip, port: dockerPort };
-
+        let host = 'localhost';
+        if (!publish) {
+          const inspectResult = execSync(`docker inspect ${containerName}`).toString();
+          const inspectJSON = JSON.parse(inspectResult)
+          host = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
+        }
+        container = { name: containerName, host, port: dockerPort };
+        debug('container', container);
+        
         // wait on
-        execSync(`npx wait-on http://${ip}:${dockerPort}/healthz`);
+        execSync(`npx wait-on --timeout 5000 http://${host}:${dockerPort}/healthz`);
 
         handlersHash[containerName] = container;
       }
@@ -108,6 +112,7 @@ export class ContainerController {
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
+    debug('_dropContainer', containerName);
     return await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
   }
   async dropContainer( container: Container ) {

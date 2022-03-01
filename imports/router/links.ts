@@ -73,7 +73,7 @@ export const useRunner = async ({
   useRunnerDebug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   useRunnerDebug('jwt', jwt);
-  const container = await containerController.newContainer({ publish: false, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
+  const container = await containerController.newContainer({ publish: DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   useRunnerDebug('portResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
@@ -323,7 +323,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     handlePortDebug('dockerImage', dockerImage);
 
     // start container
-    const containerName = `handle_port_${portValue}`;
+    const containerName = `deep_handle_port_${portValue}`;
     handlePortDebug('containerName', containerName);
     // const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
     // handlePortDebug('dockerCommand', dockerCommand);
@@ -337,7 +337,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
-    const containerName = `handle_port_${portValue}`;
+    const containerName = `deep_handle_port_${portValue}`;
     handlePortDebug('containerName', containerName);
     // const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
     // handlePortDebug('dockerCommand', dockerCommand);
@@ -345,6 +345,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // handlePortDebug('dockerOutput', dockerOutput);
 
     const container = await containerController.findContainer(containerName);
+    handlePortDebug('container', container);
 
     await containerController.dropContainer(container);
     
