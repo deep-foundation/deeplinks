@@ -215,13 +215,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!this.deep && !options.apolloClient) throw new Error('options.apolloClient or options.deep is required');
 
     if (this.deep && !this.apolloClient && !options.apolloClient && options.token) {
-      console.log({
-        // @ts-ignore
-        path: this.deep.apolloClient?.path,
-        // @ts-ignore
-        ssl: this.deep.apolloClient?.ssl,
-        token: options.token,
-      });
       this.apolloClient = generateApolloClient({
         // @ts-ignore
         path: this.deep.apolloClient?.path,
