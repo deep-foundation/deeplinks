@@ -5,6 +5,7 @@ import getPort from 'get-port';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:container-controller');
+const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
   gqlURN: string;
@@ -47,7 +48,6 @@ export const runnerControllerOptionsDefault: ContainerControllerOptions = {
 export class ContainerController {
   gqlURN: string;
   network: string;
-  docker: number;
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
@@ -89,7 +89,7 @@ export class ContainerController {
         done = true;
 
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
-        let host = 'localhost';
+        let host = +DOCKER ? 'docker.host.internal' : 'localhost';
         if (!publish) {
           const inspectResult = execSync(`docker inspect ${containerName}`).toString();
           const inspectJSON = JSON.parse(inspectResult)

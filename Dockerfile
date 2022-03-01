@@ -16,6 +16,8 @@ COPY imports ./imports
 
 ENV PORT 3006
 ENV DOCKER 1
+ENV DEBUG_COLORS true
+ENV DEBUG deeplinks:*
 
 EXPOSE 3006
 ENTRYPOINT ["node", "index.js"]

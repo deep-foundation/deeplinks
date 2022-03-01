@@ -20,7 +20,7 @@ const debug = Debug('deeplinks:eh:links');
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
 const  DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://docker.host.internal:3006';
-const DOCKER = process.env.DOCKER || 0;
+const DOCKER = process.env.DOCKER || '0';
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -73,7 +73,7 @@ export const useRunner = async ({
   useRunnerDebug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   useRunnerDebug('jwt', jwt);
-  const container = await containerController.newContainer({ publish: DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
+  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   useRunnerDebug('portResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
