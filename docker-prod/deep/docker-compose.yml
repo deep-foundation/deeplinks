@@ -52,7 +52,7 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
   links:
-    image: deepf/deeplinks:main
+    image: deepf/deeplinks:deepcase-19-menzorg
     networks:
       - network
     ports:
