@@ -92,17 +92,17 @@ export const up = async () => {
     RETURN TRUE;
   END; $function$ LANGUAGE plpgsql;`);
   
-  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
   DECLARE 
   BEGIN
     PERFORM create_promises_for_inserted_link(NEW);
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER links__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__insert__function();`);
+  await api.sql(sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__insert__function();`);
 
   const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
 
-  await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint; 
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint; 
   BEGIN
     IF (
         EXISTS(
@@ -129,7 +129,7 @@ export const up = async () => {
     END IF;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER links__promise__delete__trigger BEFORE DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE links__promise__delete__function();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__promise__delete__trigger BEFORE DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__delete__function();`);
 
   await (promiseTriggersUp({
     schemaName: 'public',
@@ -196,7 +196,7 @@ export const down = async () => {
     deep,
   })());
 
-  await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__trigger ON "${LINKS_TABLE_NAME}";`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS z_${LINKS_TABLE_NAME}__promise__insert__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__function CASCADE;`);
