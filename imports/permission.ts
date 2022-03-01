@@ -1,6 +1,8 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
 
 export const permissions = async (api: HasuraApi, table: string, actions: {
+  role: string;
+
   select: any;
   insert: any;
   update: any;
@@ -9,6 +11,8 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
   columns?: string | string[];
   computed_fields?: string[];
 } = {
+  role: 'link',
+
   select: {},
   insert: {},
   update: {},
@@ -23,7 +27,7 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
     type: 'pg_create_select_permission',
     args: {
       table: table,
-      role: 'link',
+      role: actions.role,
       permission: {
         columns: columns,
         computed_fields,
@@ -37,7 +41,7 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
     type: 'create_insert_permission',
     args: {
       table: table,
-      role: 'link',
+      role: actions.role,
       permission: {
         check: actions.insert,
         columns: '*',
@@ -48,7 +52,7 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
     type: 'create_update_permission',
     args: {
       table: table,
-      role: 'link',
+      role: actions.role,
       permission: {
         columns: '*',
         filter: actions.update,
@@ -60,7 +64,7 @@ export const permissions = async (api: HasuraApi, table: string, actions: {
     type: 'create_delete_permission',
     args: {
       table: table,
-      role: 'link',
+      role: actions.role,
       permission: {
         filter: actions.delete,
       }

@@ -50,8 +50,28 @@ export const up = async () => {
   await api.metadata({
     type: "add_remote_schema_permissions",
     args: {
+      remote_schema: 'guest',
+      role: 'undefined',
+      definition: {
+        schema: gs,
+      },
+    },
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
       remote_schema: 'jwt',
       role: 'link',
+      definition: {
+        schema: js,
+      },
+    },
+  });
+  await api.metadata({
+    type: "add_remote_schema_permissions",
+    args: {
+      remote_schema: 'jwt',
+      role: 'undefined',
       definition: {
         schema: js,
       },
