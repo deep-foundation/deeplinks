@@ -39,7 +39,7 @@ export interface CallOptions {
 }
 
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
-  gqlURN: 'deep_deeplinks_1:3006',
+  gqlURN: 'deep_links_1:3006',
   network: 'deep_network',
   handlersHash: {},
 };
