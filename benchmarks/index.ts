@@ -30,7 +30,7 @@ const deep = new DeepClient({ apolloClient });
           type_id: await deep.id('@deep-foundation/core', 'Selector'),
           out: { data: [
             {
-              type_id: await deep.id('@deep-foundation/core', 'Include'),
+              type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
               to_id: guest.linkId,
               out: { data: {
                 type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -45,7 +45,7 @@ const deep = new DeepClient({ apolloClient });
         to: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Selector'),
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Include'),
+            type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
             to_id: await deep.id('@deep-foundation/core'),
             out: { data: {
               type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -59,7 +59,7 @@ const deep = new DeepClient({ apolloClient });
         to: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Selector'),
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Include'),
+            type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
             to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
             out: { data: {
               type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),

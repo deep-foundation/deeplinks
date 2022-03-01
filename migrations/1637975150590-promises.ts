@@ -29,7 +29,7 @@ export const up = async () => {
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
-  const selectionTypeId = await deep.id('@deep-foundation/core', 'Include');
+  const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
   
   await api.sql(sql`CREATE OR REPLACE FUNCTION links__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
   DECLARE 

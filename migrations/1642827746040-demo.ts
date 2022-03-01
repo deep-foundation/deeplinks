@@ -63,7 +63,7 @@ export const up = async () => {
   const admin = new DeepClient({ deep, token, linkId });
 
   const usersWhere = {
-    type_id: await deep.id('@deep-foundation/core', 'Include'),
+    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
     to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
     out: { data: {
       type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -71,7 +71,7 @@ export const up = async () => {
     } },
   };
   const adminWhere = {
-    type_id: await deep.id('@deep-foundation/core', 'Include'),
+    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
     to_id: await deep.id('@deep-foundation/core', 'system', 'admin'),
     out: { data: {
       type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -82,7 +82,7 @@ export const up = async () => {
     subject: adminWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -90,7 +90,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -100,7 +100,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -108,7 +108,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -121,7 +121,7 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -129,7 +129,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Exclude'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
         to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -139,7 +139,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -152,7 +152,7 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'system', 'admin'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -162,7 +162,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowLogin'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -175,7 +175,7 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Active'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -183,7 +183,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Focus'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -191,7 +191,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Unfocus'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -199,7 +199,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Contain'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -207,7 +207,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Space'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -215,7 +215,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Query'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -248,7 +248,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -261,7 +261,7 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Contain'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -269,7 +269,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Focus'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -277,7 +277,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Query'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -301,7 +301,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowUpdate'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -314,7 +314,7 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Focus'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -322,7 +322,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Active'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -330,7 +330,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Query'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -338,7 +338,7 @@ export const up = async () => {
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'Space'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
@@ -362,7 +362,7 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'Include'),
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
