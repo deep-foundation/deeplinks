@@ -89,7 +89,7 @@ export class ContainerController {
         done = true;
 
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
-        let host = +DOCKER ? 'docker.host.internal' : 'localhost';
+        let host = +DOCKER ? 'host.docker.internal' : 'localhost';
         if (!publish) {
           const inspectResult = execSync(`docker inspect ${containerName}`).toString();
           const inspectJSON = JSON.parse(inspectResult)
