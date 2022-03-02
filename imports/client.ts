@@ -547,12 +547,15 @@ export function useAuthNode() {
 
 export function useDeep(apolloClientProps?: IApolloClient<any>) {
   const apolloClientHook = useApolloClient();
-  const apolloClient = apolloClientProps || apolloClientHook;
+  const apolloClient: IApolloClient<any> = apolloClientProps || apolloClientHook;
 
   const [linkId, setLinkId] = useAuthNode();
   const [token, setToken] = useTokenController();
 
   const deep = useMemo(() => {
+    if (!apolloClient?.jwt_token) {
+      console.log({ token, apolloClient });
+    }
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {

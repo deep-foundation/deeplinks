@@ -28,16 +28,14 @@ const deep = new DeepClient({
 export const up = async () => {
   debug('up');
   debug('hasura permissions');
-  await permissions(api, MP_TABLE_NAME);
-  await permissions(api, SELECTORS_TABLE_NAME);
-  await permissions(api, CAN_TABLE_NAME);
-  const linksPermissions = async (self) => ({
+  const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
+    role,
     select: {
       _or: [
         {
           can_object: {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
-            subject_id: { _eq: 'X-Hasura-User-Id' },
+            subject_id: { _eq: subjectId },
           },
         },
         {
@@ -47,7 +45,7 @@ export const up = async () => {
               type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
               from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
               string: { value: { _eq: 'admin' } },
-              to_id: { _eq: 'X-Hasura-User-Id' },
+              to_id: { _eq: subjectId },
             },
           },
         },
@@ -60,7 +58,7 @@ export const up = async () => {
           type: {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
+              subject_id: { _eq: subjectId },
             },
           },
         },
@@ -71,7 +69,7 @@ export const up = async () => {
               type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
               from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
               string: { value: { _eq: 'admin' } },
-              to_id: { _eq: 'X-Hasura-User-Id' },
+              to_id: { _eq: subjectId },
             },
           },
         },
@@ -83,7 +81,7 @@ export const up = async () => {
           type: {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
+              subject_id: { _eq: subjectId },
             },
           },
         },
@@ -94,7 +92,7 @@ export const up = async () => {
               type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
               from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
               string: { value: { _eq: 'admin' } },
-              to_id: { _eq: 'X-Hasura-User-Id' },
+              to_id: { _eq: subjectId },
             },
           },
         },
@@ -106,9 +104,9 @@ export const up = async () => {
           type: {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
-              subject_id: { _eq: 'X-Hasura-User-Id' },
+              subject_id: { _eq: subjectId },
               _or: [
-                { subject_id: { _eq: 'X-Hasura-User-Id' } },
+                { subject_id: { _eq: subjectId } },
               ],
             },
           },
@@ -120,7 +118,7 @@ export const up = async () => {
               type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
               from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
               string: { value: { _eq: 'admin' } },
-              to_id: { _eq: 'X-Hasura-User-Id' },
+              to_id: { _eq: subjectId },
             },
           },
         },
@@ -130,28 +128,120 @@ export const up = async () => {
     columns: ['id','from_id','to_id','type_id'],
     computed_fields: ['value'],
   });
-  await permissions(api, LINKS_TABLE_NAME, (await linksPermissions(['$','id'])));
-  const valuesPermissions = {
-    ...(await linksPermissions(['$','link_id'])),
-    select: {
-      link: (await linksPermissions(['$','link_id'])).select,
-    },
-    insert: {
-      link: (await linksPermissions(['$','link_id'])).insert,
-    },
-    update: {
-      link: (await linksPermissions(['$','link_id'])).update,
-    },
-    delete: {
-      link: (await linksPermissions(['$','link_id'])).delete,
-    },
-
-    columns: ['id','link_id','value'],
+  await permissions(api, MP_TABLE_NAME, {
+    role: 'link',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
     computed_fields: [],
-  };
-  await permissions(api, 'strings', valuesPermissions);
-  await permissions(api, 'numbers', valuesPermissions);
-  await permissions(api, 'objects', valuesPermissions);
+  });
+  await permissions(api, MP_TABLE_NAME, {
+    role: 'undefined',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
+    computed_fields: [],
+  });
+  await permissions(api, CAN_TABLE_NAME, {
+    role: 'link',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
+    computed_fields: [],
+  });
+  await permissions(api, CAN_TABLE_NAME, {
+    role: 'undefined',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
+    computed_fields: [],
+  });
+  await permissions(api, SELECTORS_TABLE_NAME, {
+    role: 'link',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
+    computed_fields: [],
+  });
+  await permissions(api, SELECTORS_TABLE_NAME, {
+    role: 'undefined',
+  
+    select: {},
+    insert: {},
+    update: {},
+    delete: {},
+    
+    columns: '*',
+    computed_fields: [],
+  });
+  await (async () => {
+    await permissions(api, LINKS_TABLE_NAME, (await linksPermissions(['$','id'], 'X-Hasura-User-Id', 'link')));
+    const valuesPermissions = {
+      ...(await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')),
+      select: {
+        link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+      },
+      insert: {
+        link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).insert,
+      },
+      update: {
+        link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).update,
+      },
+      delete: {
+        link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).delete,
+      },
+      
+      columns: ['id','link_id','value'],
+      computed_fields: [],
+    };
+    await permissions(api, 'strings', valuesPermissions);
+    await permissions(api, 'numbers', valuesPermissions);
+    await permissions(api, 'objects', valuesPermissions);
+  })();
+  await (async () => {
+    await permissions(api, LINKS_TABLE_NAME, (await linksPermissions(['$','id'], GLOBAL_ID_ANY, 'undefined')));
+    const valuesPermissions = {
+      ...(await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')),
+      select: {
+        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).select,
+      },
+      insert: {
+        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).insert,
+      },
+      update: {
+        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).update,
+      },
+      delete: {
+        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).delete,
+      },
+
+      columns: ['id','link_id','value'],
+      computed_fields: [],
+    };
+    await permissions(api, 'strings', valuesPermissions);
+    await permissions(api, 'numbers', valuesPermissions);
+    await permissions(api, 'objects', valuesPermissions);
+  })();
   debug('postgresql triggers');
   debug('insert');
   await api.sql(sql`
