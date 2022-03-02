@@ -1,0 +1,76 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:12
+    networks:
+      - network
+    ports:
+    - "5432:5432"
+    restart: always
+    command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
+    volumes:
+    - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      PGGSSENCMODE: disable
+      PGSSLMODE: disable
+      PGREQUIRESSL: 0
+  graphql-engine:
+    image: hasura/graphql-engine:v2.0.10
+    networks:
+      - network
+    ports:
+    - "8080:8080"
+    extra_hosts: ['host.docker.internal:host-gateway']
+    links:
+    - "postgres:postgres"
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_LOG_LEVEL: "debug"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
+      HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: "true"
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "link"
+  case:
+    image: deepf/deepcase:main
+    networks:
+      - network
+    ports:
+    - "3007:3007"
+    depends_on:
+    - "graphql-engine"
+    restart: always
+    pull_policy: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts: ['host.docker.internal:host-gateway']
+  links:
+    image: deepf/deeplinks:main
+    networks:
+      - network
+    ports:
+    - "3006:3006"
+    depends_on:
+    - "graphql-engine"
+    restart: always
+    pull_policy: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts: ['host.docker.internal:host-gateway']
+    environment:
+      DEEPLINKS_HASURA_PATH: 'deep_graphql-engine_1:8080'
+      DEEPLINKS_HASURA_SSL: '0'
+      DEEPLINKS_HASURA_SECRET: 'myadminsecretkey'
+      JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
+volumes:
+  db_data:
+networks:
+  network:
+    driver: bridge

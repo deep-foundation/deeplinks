@@ -19,8 +19,8 @@ const debug = Debug('deeplinks:eh:links');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
-const  DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://docker.host.internal:3006';
-const DOCKER = process.env.DOCKER || 0;
+const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
+const DOCKER = process.env.DOCKER || '0';
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -58,7 +58,7 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 };
 
 const containerController = new ContainerController({
-  gqlURN: DOCKER ? 'deep_deeplinks_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
+  gqlURN: DOCKER ? 'deep_links_1:3006/gql' : 'deep_graphql-engine_1:8080/v1/graphql',
   network: 'deep_network',
   handlersHash: {}
 })
@@ -68,16 +68,17 @@ export const useRunner = async ({
 } : {
   code: string, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
 }) => {
+  const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
-  debug("handler4: ");
+  useRunnerDebug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
-  debug('jwt', jwt);
-  const container = await containerController.newContainer({ publish: false, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
-  debug('portResult', container);
+  useRunnerDebug('jwt', jwt);
+  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
+  useRunnerDebug('portResult', container);
   const initResult = await containerController.initHandler(container);
-  debug('initResult', initResult);
+  useRunnerDebug('initResult', initResult);
   const callResult = await containerController.callHandler({ code, container, jwt, data: { oldLink, newLink, moment, promiseId } });
-  debug('callResult', callResult);
+  useRunnerDebug('callResult', callResult);
   return callResult;
 }
 
@@ -88,6 +89,7 @@ export const handlerOperations = {
 };
 
 export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
+  const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
@@ -174,8 +176,8 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     // console.log(queryString);
     // console.log(query);
     // console.log(JSON.stringify(query, null, 2));
-    debug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    debug("handlersWithCode?.length: ", handlersWithCode?.length);
+    handleOperationDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+    handleOperationDebug("handlersWithCode?.length: ", handlersWithCode?.length);
 
     // console.log(handleStringResult);
     // console.log(JSON.stringify(handleStringResult, null, 2));
@@ -189,33 +191,33 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
           promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
-          debug('error', error);
+          handleOperationDebug('error', error);
         }
       }
     }
 
-    debug('promise: ', promise);
+    handleOperationDebug('promise: ', promise);
     if (promise) {
-      debug("promises.length: ", promises.length);
+      handleOperationDebug("promises.length: ", promises.length);
 
       // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
       // Promise.allSettled(promises)
       await Promise.allSettled(promises.map((p) => p() as Promise<any>))
         .then(async (values) => {
-          debug("values: ", values);
+          handleOperationDebug("values: ", values);
           const promiseResults = [];
           for (let i = 0; i < values.length; i++) {
             const value = values[i];
             const handleInsertId = handleInsertsIds[i];
             if (value.status == 'fulfilled') {
               const result = value.value;
-              debug("result: ", result);
+              handleOperationDebug("result: ", result);
               const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
-              debug("error: ", error);
+              handleOperationDebug("error: ", error);
               const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
@@ -223,11 +225,11 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
           try
           {
             await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            debug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+            handleOperationDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
           }
           catch(e)
           {
-            debug('promiseResults insert error: ', e?.message ?? e);
+            handleOperationDebug('promiseResults insert error: ', e?.message ?? e);
           }
         });
     }
@@ -235,8 +237,9 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 }
 
 export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT' | 'DELETE') {
-  debug('handleScheduleLink', handleScheduleLink);
-  debug('operation', operation);
+  const handleScheduleDebug = Debug('deeplinks:eh:links:handleSchedule');
+  handleScheduleDebug('handleScheduleLink', handleScheduleLink);
+  handleScheduleDebug('operation', operation);
   if (operation == 'INSERT') {
     // get schedule
     const schedule = await deep.select({
@@ -248,11 +251,11 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
       table: 'links',
       returning: 'id value',
     });
-    debug(schedule);
+    handleScheduleDebug(schedule);
     const scheduleId = schedule?.data?.[0]?.id;
     const scheduleValue = schedule?.data?.[0]?.value.value;
-    debug('scheduleId', scheduleId);
-    debug('scheduleValue', scheduleValue);
+    handleScheduleDebug('scheduleId', scheduleId);
+    handleScheduleDebug('scheduleValue', scheduleValue);
     await api.query({
       type: 'create_cron_trigger',
       args: {
@@ -274,7 +277,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
         comment: `Event trigger for handle schedule link ${handleScheduleLink?.id} with cron schedule definition ${scheduleValue} of ${scheduleId} schedule.`,
       }
     });
-    debug('cron trigger created');
+    handleScheduleDebug('cron trigger created');
   } else if (operation == 'DELETE') {
     await api.query({
       type: 'delete_cron_trigger',
@@ -282,13 +285,14 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
         name: `handle_schedule_${handleScheduleLink?.id}`,
       }
     });
-    debug('cron trigger deleted');
+    handleScheduleDebug('cron trigger deleted');
   }
 }
 
 export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DELETE') {
-  console.log('handlePortLink', handlePortLink);
-  console.log('operation', operation);
+  const handlePortDebug = Debug('deeplinks:eh:links:handlePort');
+  handlePortDebug('handlePortLink', handlePortLink);
+  handlePortDebug('operation', operation);
 
   // get port
   const port = await deep.select({
@@ -297,11 +301,11 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     table: 'links',
     returning: 'id value',
   });
-  console.log(port);
+  handlePortDebug(port);
   const portId = port?.data?.[0]?.id;
   const portValue = port?.data?.[0]?.value.value;
-  console.log('portId', portId);
-  console.log('portValue', portValue);
+  handlePortDebug('portId', portId);
+  handlePortDebug('portValue', portValue);
 
   if (operation == 'INSERT') {
     // get dockerImage from isolation provider
@@ -314,37 +318,38 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
       table: 'links',
       returning: 'id value',
     });
-    console.log(isolationProvider);
+    handlePortDebug(isolationProvider);
     const dockerImage = isolationProvider?.data?.[0]?.value.value;
-    console.log('dockerImage', dockerImage);
+    handlePortDebug('dockerImage', dockerImage);
 
     // start container
-    const containerName = `handle_port_${portValue}`;
-    console.log('containerName', containerName);
+    const containerName = `deep_handle_port_${portValue}`;
+    handlePortDebug('containerName', containerName);
     // const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
-    // console.log('dockerCommand', dockerCommand);
+    // handlePortDebug('dockerCommand', dockerCommand);
     // const dockerOutput = await execSync(dockerCommand).toString();
-    // console.log('dockerOutput', dockerOutput);
+    // handlePortDebug('dockerOutput', dockerOutput);
 
     const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
 
-    if (container.error) return console.log('portResult.error', container.error);
-    console.log(`port handler container ${JSON.stringify(container)} created`);
+    if (container.error) return handlePortDebug('portResult.error', container.error);
+    handlePortDebug(`port handler container ${JSON.stringify(container)} created`);
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
-    const containerName = `handle_port_${portValue}`;
-    console.log('containerName', containerName);
+    const containerName = `deep_handle_port_${portValue}`;
+    handlePortDebug('containerName', containerName);
     // const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
-    // console.log('dockerCommand', dockerCommand);
+    // handlePortDebug('dockerCommand', dockerCommand);
     // const dockerOutput = await execSync(dockerCommand).toString();
-    // console.log('dockerOutput', dockerOutput);
+    // handlePortDebug('dockerOutput', dockerOutput);
 
     const container = await containerController.findContainer(containerName);
+    handlePortDebug('container', container);
 
     await containerController.dropContainer(container);
     
-    console.log('port handler container deleted');
+    handlePortDebug('port handler container deleted');
   }
 }
 
@@ -380,6 +385,7 @@ export default async (req, res) => {
       debug('event', JSON.stringify(event, null, 2));
       debug('oldRow', oldRow);
       debug('newRow', newRow);
+      debug('operation', operation);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
