@@ -1,10 +1,13 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import crypto from 'crypto';
 import axios from 'axios';
 import getPort from 'get-port';
 import Debug from 'debug';
+import util from 'util';
+const execAsync = util.promisify(exec);
 
 const debug = Debug('deeplinks:container-controller');
+const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
   gqlURN: string;
@@ -39,41 +42,37 @@ export interface CallOptions {
 }
 
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
-  gqlURN: 'deep_deeplinks_1:3006',
+  gqlURN: 'deep_links_1:3006',
   network: 'deep_network',
   handlersHash: {},
 };
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 export class ContainerController {
   gqlURN: string;
   network: string;
-  docker: number;
+  runContainerHash: { [id: string]: Boolean } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
     this.gqlURN = options?.gqlURN || runnerControllerOptionsDefault.gqlURN;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
-  async newContainer( options: NewContainerOptions ): Promise<Container> {
-    const { handler, forcePort, forceName, forceRestart, publish } = options;
-    const { network, handlersHash, gqlURN } = this;
-    debug('options, network, handlersHash', { options, network, handlersHash });
-    const containerName = forceName || crypto.createHash('md5').update(handler).digest("hex");
-    debug('containerName, forceName', { containerName, forceName });
-    let container = await this.findContainer(containerName);
-    if (container) return container;
-    let dockerPort = forcePort || await getPort();
-    let dockerRunResult;
+  async _runContainer( containerName: string, dockerPort: number, options: NewContainerOptions ) {
+    const { handler, forcePort, forceRestart, publish } = options;
+    const { network, gqlURN } = this;
     let done = false;
     let count = 30;
+    let dockerRunResult;
     while (!done) {
-      debug('count', { count });
-      if (count < 0) return { error: 'timeout findPort' };
+      debug('count _runContainer', { count });
+      if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
         const command = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
         debug('command', { command });
-        dockerRunResult = execSync(command).toString();
+        dockerRunResult = (await execAsync(command)).toString();
         debug('dockerRunResult', { dockerRunResult });
       } catch (e) {
         debug('error', e);
@@ -89,15 +88,71 @@ export class ContainerController {
         done = true;
 
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
-        const inspectResult = execSync(`docker inspect ${containerName}`).toString();
-        const inspectJSON = JSON.parse(inspectResult)
-        const ip = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
-        container = { name: containerName, host: ip, port: dockerPort };
-
+        let host = +DOCKER ? 'host.docker.internal' : 'localhost';
+        if (!publish) {
+          const inspectResult = (await execAsync(`docker inspect ${containerName}`)).toString();
+          const inspectJSON = JSON.parse(inspectResult)
+          host = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
+        }
+        const container = { name: containerName, host, port: dockerPort };
+        debug('container', container);
+        
         // wait on
-        execSync(`npx wait-on http://${ip}:${dockerPort}/healthz`);
+        await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
 
+        return container;
+      }
+    }
+  }
+  async _waitContainer( containerName: string ) {
+    const { runContainerHash } = this;
+    let done = false;
+    let count = 100;
+    while (!done) {
+      debug('count _waitContainer', { count });
+      if (count < 0) return { error: 'timeout _waitContainer' };
+      count--;
+
+      if (runContainerHash[containerName]) {
+        await delay(1000);
+      } else {
+        done = true;
+      }
+    }
+  }
+
+  async newContainer( options: NewContainerOptions ): Promise<Container> {
+    const { handler, forcePort, forceName } = options;
+    const { network, handlersHash, runContainerHash } = this;
+    debug('options, network, handlersHash', { options, network, handlersHash });
+    const containerName = forceName || 'deep_' + crypto.createHash('md5').update(handler).digest("hex");
+    debug('containerName, forceName', { containerName, forceName });
+    let container = await this.findContainer(containerName);
+    if (container) return container;
+    let dockerPort = forcePort || await getPort();
+    
+    let done = false;
+    let count = 30;
+    while (!done) {
+      debug('count findPort', { count });
+      if (count < 0) return { error: 'timeout findPort' };
+      count--;
+      if (runContainerHash[containerName]) 
+      {
+        await this._waitContainer(containerName);
+        if (!!handlersHash[containerName]) {
+          container = handlersHash[containerName];
+        }
+      }
+      else
+      {
+        runContainerHash[containerName] = true;
+        container = await this._runContainer(containerName, dockerPort, options);
+      }
+      if (!!container && !container?.error) {
+        done = true;
         handlersHash[containerName] = container;
+        runContainerHash[containerName] = undefined;
       }
       if (!done && !forcePort) dockerPort = await getPort();
     }
@@ -108,7 +163,8 @@ export class ContainerController {
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
-    return await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
+    debug('_dropContainer', containerName);
+    return (await execAsync(`docker stop ${containerName} && docker rm ${containerName}`)).toString();
   }
   async dropContainer( container: Container ) {
     const { handlersHash } = this;

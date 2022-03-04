@@ -1,4 +1,11 @@
-FROM node:12.16-stretch
+FROM node:14.15-alpine3.13 AS node
+FROM docker:20.10.8-dind-alpine3.13 
+
+COPY --from=node /usr/lib /usr/lib
+COPY --from=node /usr/local/share /usr/local/share
+COPY --from=node /usr/local/lib /usr/local/lib
+COPY --from=node /usr/local/include /usr/local/include
+COPY --from=node /usr/local/bin /usr/local/bin
 
 COPY package.json .
 COPY index.js .
@@ -9,6 +16,8 @@ COPY imports ./imports
 
 ENV PORT 3006
 ENV DOCKER 1
+ENV DEBUG_COLORS true
+ENV DEBUG deeplinks:*
 
 EXPOSE 3006
 ENTRYPOINT ["node", "index.js"]

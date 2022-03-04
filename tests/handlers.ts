@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';

@@ -9,5 +9,6 @@ export function useTokenController() {
 
 export function TokenProvider({ children }: { children?: any }) {
   const [token, setToken] = useTokenController();
+  console.log('TokenProvider', { token });
   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>;
 }
