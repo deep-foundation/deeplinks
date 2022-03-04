@@ -10,7 +10,6 @@ import { permissions } from '../permission';
 import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
-import { execSync } from 'child_process';
 import { ContainerController } from '../container-controller';
 
 const SCHEMA = 'public';
@@ -325,10 +324,6 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // start container
     const containerName = `deep_handle_port_${portValue}`;
     handlePortDebug('containerName', containerName);
-    // const dockerCommand = `docker run -p ${portValue}:${portValue} --name ${containerName} -d ${dockerImage}`;
-    // handlePortDebug('dockerCommand', dockerCommand);
-    // const dockerOutput = await execSync(dockerCommand).toString();
-    // handlePortDebug('dockerOutput', dockerOutput);
 
     const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
 
@@ -339,10 +334,6 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     // docker stop ${containerName} && docker rm ${containerName}
     const containerName = `deep_handle_port_${portValue}`;
     handlePortDebug('containerName', containerName);
-    // const dockerCommand = `docker stop ${containerName} && docker rm ${containerName}`;
-    // handlePortDebug('dockerCommand', dockerCommand);
-    // const dockerOutput = await execSync(dockerCommand).toString();
-    // handlePortDebug('dockerOutput', dockerOutput);
 
     const container = await containerController.findContainer(containerName);
     handlePortDebug('container', container);
