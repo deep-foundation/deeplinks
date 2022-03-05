@@ -4,6 +4,11 @@ import { generateQuery, generateQueryData, generateSerial, insertMutation } from
 
 
 const debug = Debug('deeplinks:promise');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
 
@@ -23,9 +28,9 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
   const timeout = options.timeout || 1000; // @TODO todo dynamic timeout based on handlers avg runtime
   const client: ApolloClient<any> = options.client;
   return new Promise(async (res, rej) => {
-    debug('promise', { id });
+    log('promise', { id });
     if (!id) {
-      debug('!id', { id: options.id });
+      log('!id', { id: options.id });
       return rej('options.id must be defined!');
     }
     let promises = null;
@@ -65,15 +70,15 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
           } })],
           name: 'PROMISE',
         }));
-        debug('result', result);
+        log('result', result);
         try {
           if (result?.errors) {
-            debug('error', result?.errors);
+            log('error', result?.errors);
             return rej(result?.errors);
           }
           else if (result?.data) {
             const links = result.data?.q0;
-            debug('data', JSON.stringify(links, null, 2));
+            log('data', JSON.stringify(links, null, 2));
             if (promises === null) {
               promises = {};
               for (let l = 0; l < links.length; l++) {
@@ -91,7 +96,7 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
             
             let promisesCount = Object.keys(promises).length;
             let thenExists = promisesCount > 0;
-            debug('analized', { thenExists });
+            log('analized', { thenExists });
 
             if (thenExists) {
               let thenResolvedByPromise: boolean[] = [];
@@ -103,7 +108,7 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
               }
               const thenResolved = thenResolvedByPromise.some(r => r);
               const thenRejected = thenRejectedByPromise.some(r => r);
-              debug('analized', { thenResolved, thenRejected });
+              log('analized', { thenResolved, thenRejected });
 
               const filteredLinks = links.filter(l => 
                 l?.id === id ||
@@ -112,32 +117,32 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
                 (l?.type?.id === options.Resolved && promises[l?.from_id]) ||
                 (l?.type?.id === options.Rejected && promises[l?.from_id])
               );
-              debug('filteredLinks', JSON.stringify(filteredLinks, null, 2));
+              log('filteredLinks', JSON.stringify(filteredLinks, null, 2));
 
               if (thenResolved && !thenRejected) {
-                debug('resolved');
+                log('resolved');
                 return res(options.Results ? filteredLinks : true);
               }
               else if (thenRejected) {
-                debug('rejected');
+                log('rejected');
                 return res(options.Results ? filteredLinks : false);
               } else {
-                debug('waiting');
+                log('waiting');
               }
             } else {
-              debug('!then');
+              log('!then');
               return res(options.Results ? [] : true);
             }
           }
-        } catch(error) {
-          debug('error', error);
-          return rej(options.Results ? error : false);
+        } catch(e) {
+          error('error', e);
+          return rej(options.Results ? e : false);
         }
         await delay(timeout);
       }
-    } catch(error) {
-      debug('error', error);
-      return rej(options.Results ? error : false);
+    } catch(e) {
+      error('error', e);
+      return rej(options.Results ? e : false);
     }
   });
 };
@@ -166,10 +171,10 @@ export async function findPromiseLink(options: PromiseOptions) {
 }
 
 export async function reject(options: PromiseOptions): Promise<boolean> {
-  debug('reject', options.id);
+  log('reject', options.id);
   const promise = await findPromiseLink(options);
   if (promise) {
-    debug('rejected', await options.client.mutate(generateSerial({
+    log('rejected', await options.client.mutate(generateSerial({
       actions: [insertMutation('links', { objects: { type_id: options.Rejected, from_id: promise.id, to_id: promise.id } })],
       name: 'REJECT',
     })));
@@ -179,10 +184,10 @@ export async function reject(options: PromiseOptions): Promise<boolean> {
 }
 
 export async function resolve(options: PromiseOptions): Promise<boolean> {
-  debug('resolve', options.id);
+  log('resolve', options.id);
   const promise = await findPromiseLink(options);
   if (promise) {
-    debug('resolved', await options.client.mutate(generateSerial({
+    log('resolved', await options.client.mutate(generateSerial({
       actions: [insertMutation('links', { objects: { type_id: options.Resolved, from_id: promise.id, to_id: promise.id } })],
       name: 'RESOLVE',
     })));

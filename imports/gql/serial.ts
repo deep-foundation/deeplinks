@@ -2,6 +2,11 @@ import Debug from 'debug';
 import gql from 'graphql-tag';
 
 const debug = Debug('deeplinks:gql:serial');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export interface ISerialOptions {
   actions: any[];
@@ -22,7 +27,7 @@ export const generateSerial = ({
   alias = 'm',
   ...options
 }: ISerialOptions): ISerialResult => {
-  debug('generateSerial', { name, alias, actions });
+  log('generateSerial', { name, alias, actions });
   const calledActions = actions.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
   const defs = calledActions.map(m => m.defs.join(',')).join(',');
   const mutationString = `mutation ${name} (${defs}) { ${calledActions.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
@@ -43,6 +48,6 @@ export const generateSerial = ({
     mutationString,
     ...options
   };
-  debug('generateSerialResult', JSON.stringify({ mutation: mutationString, variables }, null, 2));
+  log('generateSerialResult', JSON.stringify({ mutation: mutationString, variables }, null, 2));
   return result;
 };

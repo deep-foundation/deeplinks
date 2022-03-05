@@ -10,6 +10,8 @@ import { DeepClient } from '../imports/client';
 import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table';
 
 const debug = Debug('deeplinks:migrations:promises');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -22,7 +24,7 @@ const deep = new DeepClient({
 })
 
 export const up = async () => {
-  debug('up');
+  log('up');
 
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
@@ -164,7 +166,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await (promiseTriggersDown({
     schemaName: 'public',
     tableName: 'strings',

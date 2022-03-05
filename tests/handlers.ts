@@ -71,7 +71,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
   const scheduleNode = (await deep.insert({
     type_id: scheduleTypeId,
   }, { name: 'IMPORT_SCHEDULE' })).data[0];
-  // console.log(typeof schedule)
+  // log(typeof schedule)
   const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
   const handleOperation = (await deep.insert({
     from_id: scheduleNode?.id,
@@ -106,7 +106,7 @@ export async function deleteIds(ids: number[], options: {
 } = { table: 'links' }) {
   const idsFiltered = ids?.filter(linkId => typeof linkId === 'number');
   if (idsFiltered?.length > 0) {
-    // console.log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
+    // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
     return await deep.delete({
       id: { _in: idsFiltered },
     }, options);
@@ -139,14 +139,14 @@ export const deleteScheduleHandler = async (handler) => {
 
 export async function ensureLinkIsCreated(typeId: number) {
   const freeId = randomInteger(5000000, 9999999999);
-  // console.log(freeId);
+  // log(freeId);
   const insertedLink = (await deep.insert({
     id: freeId,
     from_id: freeId,
     type_id: typeId,
     to_id: freeId
   }, { name: 'IMPORT_LINK' })).data[0];
-  // console.log(insertedLink);
+  // log(insertedLink);
   assert.equal(freeId, insertedLink.id);
   return freeId;
 }
@@ -433,7 +433,7 @@ describe('async function handle by type with resolve using deep client', () => {
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
-    // console.log(JSON.stringify(promiseResults, null, 2));
+    // log(JSON.stringify(promiseResults, null, 2));
     const queryId = promiseResult?.object?.value?.queryId;
     const query = (await deep.select({ id: { _eq: queryId }})).data[0];
 
@@ -592,7 +592,7 @@ describe.skip('handle by selector', () => {
     //   to_id: link.id,
     // }, { name: 'IMPORT_SELECTION' })).data[0];
 
-    // console.log(link);
+    // log(link);
 
     // await deep.await(link.id);
 
@@ -616,13 +616,13 @@ describe.skip('handle by selector', () => {
     //   }`,
     // });
     
-    // // console.log(JSON.stringify(result, null, 2));
-    // // console.log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
+    // // log(JSON.stringify(result, null, 2));
+    // // log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
 
-    // console.log(result?.data?.links.length);
-    // console.log(result?.data?.links[0]?.object?.value);
+    // log(result?.data?.links.length);
+    // log(result?.data?.links[0]?.object?.value);
 
-    // console.log(JSON.stringify(result?.data?.links, null, 2));
+    // log(JSON.stringify(result?.data?.links, null, 2));
 
     // assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
 

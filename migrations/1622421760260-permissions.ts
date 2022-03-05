@@ -11,6 +11,8 @@ import { CAN_TABLE_NAME } from './1622421760259-can';
 import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
 
 const debug = Debug('deeplinks:migrations:permissions');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 export const TABLE_NAME = 'links';
 export const REPLACE_PATTERN_ID = '777777777777';
@@ -26,8 +28,8 @@ const deep = new DeepClient({
 })
 
 export const up = async () => {
-  debug('up');
-  debug('hasura permissions');
+  log('up');
+  log('hasura permissions');
   const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
     role,
     select: {
@@ -242,8 +244,8 @@ export const up = async () => {
     await permissions(api, 'numbers', valuesPermissions);
     await permissions(api, 'objects', valuesPermissions);
   })();
-  debug('postgresql triggers');
-  debug('insert');
+  log('postgresql triggers');
+  log('insert');
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__insert_links__function()
     RETURNS trigger
@@ -303,7 +305,7 @@ export const up = async () => {
     $function$;
     CREATE TRIGGER ${TABLE_NAME}__permissions__insert_links__trigger AFTER INSERT ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__insert_links__function();
   `);
-  debug('delete');
+  log('delete');
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__delete_links__function()
     RETURNS trigger
@@ -330,13 +332,13 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
-  debug('insert');
+  log('down');
+  log('insert');
   await api.sql(sql`
     DROP TRIGGER IF EXISTS ${TABLE_NAME}__permissions__insert_links__trigger ON ${TABLE_NAME} CASCADE;
     DROP FUNCTION IF EXISTS ${TABLE_NAME}__permissions__insert_links__function() CASCADE;
   `);
-  debug('delete');
+  log('delete');
   await api.sql(sql`
     DROP TRIGGER IF EXISTS ${TABLE_NAME}__permissions__delete_links__trigger ON ${TABLE_NAME} CASCADE;
     DROP FUNCTION IF EXISTS ${TABLE_NAME}__permissions__delete_links__function() CASCADE;

@@ -3,6 +3,11 @@ import { DeepClient } from './client';
 import { Link, minilinks, MinilinksResult } from './minilinks';
 
 const debug = Debug('deeplinks:packager');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export interface PackageIdentifier {
   name: string; // name in deep instance packages namespace
@@ -129,9 +134,9 @@ export class Packager<L extends Link<any>> {
         returning: 'id: link_id'
       });
       return { error: false, namespaceId: q?.data?.[0]?.id };
-    } catch(error) {
-      debug('fetchPackageNamespaceId error');
-      return { error, namespaceId: 0 };
+    } catch(e) {
+      log('fetchPackageNamespaceId error');
+      return { error: e, namespaceId: 0 };
     }
     return { error: true, namespaceId: 0 };
   }
@@ -154,9 +159,9 @@ export class Packager<L extends Link<any>> {
         returning: 'id link { id: to_id }'
       });
       return q?.data?.[0]?.link?.id || 0;
-    } catch(error) {
-      debug('fetchDependenciedLinkId error');
-      console.log(error);
+    } catch(e) {
+      log('fetchDependenciedLinkId error');
+      error(e);
     }
     return 0;
   }
@@ -167,7 +172,7 @@ export class Packager<L extends Link<any>> {
     errors: PackagerError[],
     mutated: PackagerMutated,
   ) {
-    debug('insertItem', item);
+    log('insertItem', item);
     try {
       // insert link section
       if (item.type) {
@@ -177,15 +182,15 @@ export class Packager<L extends Link<any>> {
           errors.push(linkInsert?.errors);
         }
       }
-      debug('insertItem promise', item.id);
+      log('insertItem promise', item.id);
       await this.client.await(+item.id);
-      debug('insertItem promise awaited', item.id);
+      log('insertItem promise awaited', item.id);
       if (item.value && !item.package) {
-        debug('insertItem value', item);
+        log('insertItem value', item);
         let valueLink
         if (!item.type) {
           valueLink = items.find(i => i.id === item.id && !!i.type);
-          debug('insertItem .value', item, valueLink);  
+          log('insertItem .value', item, valueLink);  
         } else {
           valueLink = item;
         }
@@ -193,17 +198,17 @@ export class Packager<L extends Link<any>> {
           errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
         }
         else {
-          debug('insertItem tables');
+          log('insertItem tables');
           const type = typeof(item?.value?.value);
           const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s`, name: 'IMPORT_PACKAGE_VALUE' });
-          debug('insertItem valueInsert', valueInsert);
+          log('insertItem valueInsert', valueInsert);
           if (valueInsert?.errors) errors.push(valueInsert?.errors);
         }
       }
-    } catch(error) {
-      debug('insertItem error');
-      console.log(error);
-      errors.push(error);
+    } catch(e) {
+      log('insertItem error');
+      error(e);
+      errors.push(e);
     }
     return;
   }
@@ -230,10 +235,10 @@ export class Packager<L extends Link<any>> {
         }
       }
       return;
-    } catch(error) {
-      debug('insertItems error');
-      console.log(error);
-      errors.push(error);
+    } catch(e) {
+      log('insertItems error');
+      error(e);
+      errors.push(e);
     }
     return;
   }
@@ -271,7 +276,7 @@ export class Packager<L extends Link<any>> {
           }
         }
       }
-      // console.log(item, global[l]);
+      // log(item, global[l]);
     }
     const resultGlobal = global.filter(l => !l.package);
     return { global: resultGlobal, difference };
@@ -303,9 +308,9 @@ export class Packager<L extends Link<any>> {
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId] };
-    } catch(error) {
-      debug('import error');
-      errors.push(error);
+    } catch(e) {
+      log('import error');
+      errors.push(e);
     }
     return { ids: [], errors };
   }
@@ -399,7 +404,7 @@ export class Packager<L extends Link<any>> {
       });
     }
     data.push(...pckg.data.map(l => ({ ...l, value: l.value ? { ...l.value } : undefined })));
-    // console.log(data);
+    // log(data);
     // string id field to numeric ids
     for (let l = 0; l < data.length; l++) {
       const item = data[l];
@@ -408,7 +413,7 @@ export class Packager<L extends Link<any>> {
       else containsHash[local] = (item.id = ++counter);
       if (item.package) dependedLinks.push(item);
     }
-    // console.log(data);
+    // log(data);
     // type, from, to fields to numeric ids
     for (let l = 0; l < data.length; l++) {
       const item = data[l];
@@ -425,7 +430,7 @@ export class Packager<L extends Link<any>> {
         item.to = containsHash[item.to];
       }
     }
-    // console.log(data);
+    // log(data);
     if (pckg.package.name === corePackage) {
       packageId = 'package';
       containsHash[packageId] = ++counter;
@@ -664,9 +669,9 @@ export class Packager<L extends Link<any>> {
       type: 'type_id',
     });
     ml.links = sorted;
-    // console.log('pckg1', JSON.stringify(pckg));
+    // log('pckg1', JSON.stringify(pckg));
     await this.serialize(ml, options, pckg);
-    // console.log('pckg2', JSON.stringify(pckg));
+    // log('pckg2', JSON.stringify(pckg));
     return pckg;
   }
 }

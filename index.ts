@@ -7,10 +7,18 @@ import axios from 'axios';
 import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import expressPlayground from 'graphql-playground-middleware-express';
+import Debug from 'debug';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
+
+const debug = Debug('deeplinks');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -52,7 +60,7 @@ const start = async () => {
   guestServer.applyMiddleware({ path: '/api/guest', app });
   packagerServer.applyMiddleware({ path: '/api/packager', app });
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
-  console.log(`Hello bugfixers! Listening ${process.env.PORT} port`);
+  log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
     setTimeout(() => {
       axios({
@@ -61,13 +69,13 @@ const start = async () => {
         headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
         data: { type: 'reload_metadata', args: {}}
       }).then(() => {
-        console.log('hasura metadata reloaded');
+        log('hasura metadata reloaded');
       }, () => {
-        console.error('hasura metadata broken');
+        error('hasura metadata broken');
       });
     }, 5000);
   } catch(e){
-    console.error(e);
+    error(e);
   }
 }
 

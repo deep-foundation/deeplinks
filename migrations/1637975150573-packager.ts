@@ -5,6 +5,8 @@ import { DeepClient } from '../imports/client';
 import { typeDefsString } from '../imports/router/packager';
 
 const debug = Debug('deeplinks:migrations:packager');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -23,7 +25,7 @@ const deep = new DeepClient({
 })
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await api.query({
     type: 'add_remote_schema',
     args: {
@@ -123,8 +125,8 @@ export const up = async () => {
       string: { data: { value: 'package' } },
     });
     return result?.data?.packager_publish;
-  } catch(error) {
-    return error;
+  } catch(e) {
+    return e;
   }
 }`
     } },
@@ -150,7 +152,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await api.query({
     type: 'remove_remote_schema',
     args: {

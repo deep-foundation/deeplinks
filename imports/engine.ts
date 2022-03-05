@@ -3,6 +3,14 @@ import { exec } from 'child_process';
 import path from 'path';
 import internalIp from 'internal-ip';
 import axios from 'axios';
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:engine');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const execP = promisify(exec);
 const DOCKER = process.env.DOCKER || '0';
@@ -66,8 +74,8 @@ const checkStatus = async () => {
   let result;
   try {
     result = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
-  } catch (error){
-    console.log(error);
+  } catch (e){
+    error(e)
   }
   return result?.data?.docker;
 };
@@ -93,8 +101,8 @@ export async function call (options: IOptions) {
       const { stdout, stderr } = await execP(str);
       return { ...options, envs, str, stdout, stderr };
     }
-  } catch(error) {
-    return { ...options, str, envs, error };
+  } catch(e) {
+    return { ...options, str, envs, error: e };
   }
   return options;
 }

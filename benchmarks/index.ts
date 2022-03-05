@@ -2,6 +2,14 @@ import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { Suite } from 'benchmark';
 import { DeepClient } from '../imports/client';
 import _ from 'lodash';
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:benchmarks');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const delay = time => new Promise(res => setTimeout(res, time));
 
@@ -110,10 +118,10 @@ const deep = new DeepClient({ apolloClient });
     // } });
   
     suite.on('cycle', function(event) {
-      console.log(String(event.target));
+      log(String(event.target));
     });
     suite.on('complete', function() {
-      console.log('Fastest is ' + this.filter('fastest').map('name'));
+      log('Fastest is ' + this.filter('fastest').map('name'));
       res(undefined);
     });
     // run async

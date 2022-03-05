@@ -4,6 +4,8 @@ import { typeDefsString as gs } from '../imports/router/guest';
 import { typeDefsString as js } from '../imports/router/jwt';
 
 const debug = Debug('deeplinks:migrations:jwt');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -12,7 +14,7 @@ const api = new HasuraApi({
 });
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await api.query({
     type: 'add_remote_schema',
     args: {
@@ -80,7 +82,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await api.query({
     type: 'remove_remote_schema',
     args: {

@@ -15,6 +15,11 @@ import { ContainerController } from '../container-controller';
 const SCHEMA = 'public';
 
 const debug = Debug('deeplinks:eh:links');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
@@ -68,7 +73,6 @@ export const useRunner = async ({
   code: string, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
 }) => {
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
-  // code example '() => { return (arg)=>{console.log(arg); return {result: 123}}}'
   useRunnerDebug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
   useRunnerDebug('jwt', jwt);
@@ -93,15 +97,15 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  // console.log('currentLinkId', currentLinkId);
-  // console.log('currentTypeId', currentTypeId);
+  // log('currentLinkId', currentLinkId);
+  // log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
   const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
-  // console.log('handlerTypeId', handlerTypeId);
-  // console.log('handleOperationTypeId', handleOperationTypeId);
+  // log('handlerTypeId', handlerTypeId);
+  // log('handleOperationTypeId', handleOperationTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -140,14 +144,14 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
         //   #    }
         //   #  }
         //   #}
-  // console.log('queryString', queryString);
+  // log('queryString', queryString);
 
   const query = gql`${queryString}`;
 
   const variables = {
     typeId: currentTypeId
   };
-  // console.log('variables', JSON.stringify(variables));
+  // log('variables', JSON.stringify(variables));
 
   const handlersResult = await client.query({ query, variables });
 
@@ -155,7 +159,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const handleInsertsIds: any[] = [];
 
   const handlersWithCode = handlersResult?.data?.links as any[];
-  // console.log('handlersWithCode.length', handlersWithCode?.length);
+  // log('handlersWithCode.length', handlersWithCode?.length);
 
   const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
   const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
@@ -172,15 +176,15 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   });
 
   if (handlersWithCode?.length > 0) {
-    // console.log(queryString);
-    // console.log(query);
-    // console.log(JSON.stringify(query, null, 2));
+    // log(queryString);
+    // log(query);
+    // log(JSON.stringify(query, null, 2));
     handleOperationDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
     handleOperationDebug("handlersWithCode?.length: ", handlersWithCode?.length);
 
-    // console.log(handleStringResult);
-    // console.log(JSON.stringify(handleStringResult, null, 2));
-    // console.log(handleStringResult?.data?.links?.[0]?.value);
+    // log(handleStringResult);
+    // log(JSON.stringify(handleStringResult, null, 2));
+    // log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
       const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
@@ -359,7 +363,7 @@ export default async (req, res) => {
         }, {
           returning: `value`,
         });
-        // console.log("old queryResult: ", queryResult);
+        // log("old queryResult: ", queryResult);
         oldRow.value = queryResult.data?.[0]?.value;
       }
       // select value into newRow
@@ -369,18 +373,18 @@ export default async (req, res) => {
         }, {
           returning: `value`,
         });
-        // console.log("new queryResult: ", queryResult);
+        // log("new queryResult: ", queryResult);
         newRow.value = queryResult.data?.[0]?.value;
       }
 
-      debug('event', JSON.stringify(event, null, 2));
-      debug('oldRow', oldRow);
-      debug('newRow', newRow);
-      debug('operation', operation);
+      log('event', JSON.stringify(event, null, 2));
+      log('oldRow', oldRow);
+      log('newRow', newRow);
+      log('operation', operation);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
       const typeId = current.type_id;
-      // console.log('current', current, typeId);
+      // log('current', current, typeId);
 
       try {
         if(operation === 'INSERT') {
@@ -401,10 +405,10 @@ export default async (req, res) => {
           await handlePort(current, operation);
         }
 
-        // console.log("done");
+        // log("done");
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-          debug('resolve', current.id);
+          log('resolve', current.id);
           await resolve({
             id: current.id, client,
             Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -415,10 +419,10 @@ export default async (req, res) => {
           });
         }
         return res.status(200).json({});
-      } catch(error) {
-        debug('error', error);
+      } catch(e) {
+        error('error', e);
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-          debug('reject', current.id);
+          log('reject', current.id);
           await reject({
             id: current.id, client,
             Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -433,7 +437,7 @@ export default async (req, res) => {
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
-  } catch(error) {
-    return res.status(500).json({ error: error.toString() });
+  } catch(e) {
+    return res.status(500).json({ error: e.toString() });
   }
 };

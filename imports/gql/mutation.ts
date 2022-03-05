@@ -1,6 +1,11 @@
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:gql:mutation');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const fieldsInputs = (tableName): IGenerateMutationFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,
@@ -50,7 +55,7 @@ export const generateMutation = ({
   returning = `id`,
   variables,
 }: IGenerateMutationOptions): IGenerateMutationBuilder => {
-  debug('generateMutationOptions', { tableName, operation, queryName, returning, variables });
+  log('generateMutationOptions', { tableName, operation, queryName, returning, variables });
   const fields =
     operation === 'insert' ? ['objects','on_conflict']
   : operation === 'update' ? ['_inc','_set','where']
@@ -59,7 +64,7 @@ export const generateMutation = ({
   const fieldTypes = fieldsInputs(tableName);
 
   return (alias: string, index: number): IGenerateMutationResult => {
-    debug('generateMutationBuilder', { tableName, operation, queryName, returning, variables, alias, index });
+    log('generateMutationBuilder', { tableName, operation, queryName, returning, variables, alias, index });
     const defs = [];
     const args = [];
     for (let f = 0; f < fields.length; f++) {
@@ -94,7 +99,7 @@ export const generateMutation = ({
       resultAlias,
       resultVariables,
     };
-    debug('generateMutationResult', result);
+    log('generateMutationResult', result);
     return result;
   };
 };

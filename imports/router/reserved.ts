@@ -1,6 +1,14 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { generateMutation, generateSerial, insertMutation } from '../gql';
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:eh:reserved');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const SCHEMA = 'public';
 
@@ -38,10 +46,10 @@ export default async (req, res) => {
       ],
       name: 'INSERT_RESERVED',
     }));
-    if (!mutateLinksResult.data['m0']?.returning?.[0]?.id) res.status(500).json({ error: 'insert resrved error' });
+    if (!mutateLinksResult.data['m0']?.returning?.[0]?.id) res.status(500).json({ error: 'insert reserved error' });
     return res.json({ ids });
-  } catch(error) {
-    console.trace('ERROR', JSON.stringify(error, null, 2));
-    return res.status(500).json({ error: error.toString() });
+  } catch(e) {
+    error(JSON.stringify(e, null, 2));
+    return res.status(500).json({ error: e.toString() });
   }
 };

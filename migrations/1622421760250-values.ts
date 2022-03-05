@@ -13,6 +13,8 @@ import { generateUp, generateDown } from '../imports/type-table';
 export const BOOL_EXP_TABLE_NAME = 'bool_exp';
 
 const debug = Debug('deeplinks:migrations:values');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const apolloClient = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -29,7 +31,7 @@ export const api = new HasuraApi({
 const deep = new DeepClient({ apolloClient });
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await (generateUp({
     schemaName: 'public',
     tableName: 'strings',
@@ -71,7 +73,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await (generateDown({
     schemaName: 'public',
     tableName: 'strings',

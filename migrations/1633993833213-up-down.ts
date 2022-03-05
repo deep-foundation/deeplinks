@@ -4,9 +4,11 @@ import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 
 const debug = Debug('deeplinks:migrations:up-down');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__down_links__function(link ${LINKS_TABLE_NAME}, tree bigint)
     RETURNS SETOF ${LINKS_TABLE_NAME}
     LANGUAGE sql
@@ -72,7 +74,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await api.query({
     type: 'drop_computed_field',
     args: {

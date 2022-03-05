@@ -5,6 +5,14 @@ import { gql } from "@apollo/client";
 import { Packager } from "../imports/packager";
 import { minilinks } from "../imports/minilinks";
 import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager";
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:tests:packager');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const GIST_URL = process.env.GIST_URL;
 
@@ -119,13 +127,13 @@ describe('packager', () => {
         // insert query
         const imported = await packagerInstallCore([], GIST_URL);
         if (imported.errors?.length) {
-          console.log(JSON.stringify(imported, null, 2));
+          log(JSON.stringify(imported, null, 2));
           throw new Error('!!errors?.length');
         }
         // insert query
         const exported = await packagerPublishCore([], GIST_URL, imported.packageId);
         if (exported?.errors?.length) {
-          console.log(JSON.stringify(exported, null, 2));
+          log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
       });
@@ -134,12 +142,12 @@ describe('packager', () => {
         const address = GIST_URL.split('/').slice(0, -1).join('/');
         const imported = await packagerInstallCore([], GIST_URL);
         if (imported?.errors?.length) {
-          console.log(JSON.stringify(imported, null, 2));
+          log(JSON.stringify(imported, null, 2));
           throw new Error('!!imported.data.errors');
         }
         const exported = await packagerPublishCore([], address, imported.packageId);
         if (exported?.errors?.length) {
-          console.log(JSON.stringify(exported, null, 2));
+          log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
       });
@@ -160,7 +168,7 @@ describe('packager', () => {
           },
         });
         if (imported.errors?.length) {
-          console.log(JSON.stringify(imported, null, 2));
+          log(JSON.stringify(imported, null, 2));
           throw new Error('!!errors?.length');
         }
         // insert query
@@ -178,7 +186,7 @@ describe('packager', () => {
           },
         });
         if (exported?.errors?.length) {
-          console.log(JSON.stringify(exported, null, 2));
+          log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
       });
@@ -200,7 +208,7 @@ describe('packager', () => {
           },
         });
         if (imported?.errors?.length) {
-          console.log(JSON.stringify(imported, null, 2));
+          log(JSON.stringify(imported, null, 2));
           throw new Error('!!imported.data.errors');
         }
         // const exported = await packagerPublishCore([], address, imported.packageId);
@@ -218,7 +226,7 @@ describe('packager', () => {
           },
         });
         if (exported?.errors?.length) {
-          console.log(JSON.stringify(exported, null, 2));
+          log(JSON.stringify(exported, null, 2));
           throw new Error('!!exported.data.errors');
         }
       });

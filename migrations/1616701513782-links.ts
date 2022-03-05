@@ -3,6 +3,8 @@ import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:migrations:links');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 export const api = new HasuraApi({
   path: process.env.MIGRATIONS_HASURA_PATH,
@@ -14,7 +16,7 @@ export const SCHEMA = 'public';
 export const TABLE_NAME = 'links';
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await api.sql(sql`
     CREATE TABLE ${SCHEMA}."${TABLE_NAME}" (id bigint PRIMARY KEY, from_id bigint DEFAULT 0, to_id bigint DEFAULT 0, type_id bigint NOT NULL);
     CREATE SEQUENCE ${TABLE_NAME}_id_seq
@@ -216,7 +218,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await api.query({
     type: 'drop_computed_field',
     args: {
