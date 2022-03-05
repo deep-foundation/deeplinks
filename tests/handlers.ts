@@ -4,6 +4,15 @@ import { assert } from 'chai';
 import gql from "graphql-tag";
 import Debug from 'debug';
 
+const debug = Debug('deeplinks:tests:handlers');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
+
+// Debug.enable(`${namespaces ? `${namespaces},` : ``}*:error`); // Force enable all errors output
+
 import waitOn from 'wait-on';
 import getPort from 'get-port';
 
@@ -17,7 +26,6 @@ const deep = new DeepClient({ apolloClient });
 
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
-const debug = Debug('deep-foundation:deeplinks:tests:handlers');
 
 const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string) => {
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
@@ -461,23 +469,23 @@ describe('handle port', () => {
     // await delay(10000);
 
     // Check if port handler docker container responds to health check
-    debug("waiting for container to be created");
+    log("waiting for container to be created");
     await waitOn({ resources: [`http://localhost:${port}/healthz`] });
-    debug("container is up");
+    log("container is up");
 
     await deleteId(hanlePortLinkId);
 
     // await delay(20000);
 
     // Check if port handler docker container does not respond to health check
-    debug("waiting for container to be removed");
+    log("waiting for container to be removed");
     await waitOn({
       resources: [
         `http://localhost:${port}/healthz`
       ],
       reverse: true,
     });
-    debug("container is down");
+    log("container is down");
   });
 });
 
@@ -551,7 +559,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
 };
 
-describe.only('handle by selector', () => {
+describe.skip('handle by selector', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
@@ -622,5 +630,14 @@ describe.only('handle by selector', () => {
     // TODO: check resolve link is created
 
     // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
+  });
+});
+
+describe.skip('debug', () => {
+  it(`log`, async () => {
+    log('this message should be log');
+  });
+  it(`error`, async () => {
+    error('this message should be error');
   });
 });
