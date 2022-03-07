@@ -5,6 +5,11 @@ import { generateMutation, generateSerial } from './gql';
 import { DeepClient } from './client';
 
 const debug = Debug('deeplinks:bool_exp');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -32,7 +37,7 @@ export const applyBoolExpToLink = (sql: string, linkId: number) => {
 };
 
 export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
-  debug('boolExpToSQL', boolExpId, boolExpValue);
+  log('boolExpToSQL', boolExpId, boolExpValue);
   let gql, explained, sql;
   try {
     gql = JSON.stringify(boolExpValue).replace(/"([^"]+)":/g, '$1:');
@@ -46,7 +51,7 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
       const convertedSql = `SELECT json_array_length("root") as "root" FROM (${sql}) as "root"`
       const boolExp = await deep.select({ link_id: { _eq: boolExpId } }, { table: 'bool_exp', returning: 'id link_id' });
       const boolExpLink = boolExp?.data?.[0];
-      debug('boolExpLink', boolExpLink);
+      log('boolExpLink', boolExpLink);
       if (boolExpLink) {
         const mutateResult = await deep.update(boolExpLink.id, {
           value: convertedSql,
@@ -58,8 +63,8 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
         }, { table: 'bool_exp' });
       }
     }
-  } catch (error) {
-    console.log(error);
-    debug('error', gql, explained, sql);
+  } catch (e) {
+    error(e);
+    error('error', gql, explained, sql);
   }
 };

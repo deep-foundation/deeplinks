@@ -2,7 +2,9 @@ import Debug from 'debug';
 import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { sql } from '@deep-foundation/hasura/sql';
 
-const debug = Debug('deep-foundation:deeplinks:migrations:reserved-links');
+const debug = Debug('deeplinks:migrations:reserved-links');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_RL_TABLE = process.env.MIGRATIONS_RL_TABLE || 'rl_example__links__reserved';
@@ -49,13 +51,13 @@ export const downTable = async ({
 };
 
 export const up = async () => {
-  debug('up');
-  debug('table');
+  log('up');
+  log('table');
   await upTable({
     RL_TABLE: RL_TABLE_NAME,
   });
 
-  debug('trigger');
+  log('trigger');
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() RETURNS TRIGGER AS $trigger$
     BEGIN
       IF NEW.id IS NOT NULL THEN
@@ -70,7 +72,7 @@ export const up = async () => {
     END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger BEFORE INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW WHEN (pg_trigger_depth() < 1 AND NEW.type_id != 0) EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function();`);
 
-  debug('cron_trigger');
+  log('cron_trigger');
   await api.query({
     type: 'create_cron_trigger',
     args: {
@@ -89,7 +91,7 @@ export const up = async () => {
     }
   });
 
-  debug('action_types');
+  log('action_types');
   await api.query({
     type: 'set_custom_types',
     args: {
@@ -109,7 +111,7 @@ export const up = async () => {
       ]
     }
   });
-  debug('action');
+  log('action');
   await api.query({
     type: 'create_action',
     args: {
@@ -139,8 +141,8 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
-  debug('action');
+  log('down');
+  log('action');
   await api.query({
     type:'drop_action',
     args:{
@@ -148,19 +150,19 @@ export const down = async () => {
        clear_data: true
     }
   });
-  debug('cron_trigger');
+  log('cron_trigger');
   await api.query({
     type: 'delete_cron_trigger',
     args: {
        name: 'reserved_links_cleaner',
     }
   });
- debug('trigger');
+  log('trigger');
   await api.sql(sql`
     DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__reserved__instead_of_insert__trigger ON ${LINKS_TABLE_NAME} CASCADE;
     DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() CASCADE;
   `);
-  debug('table');
+  log('table');
   await downTable({
     RL_TABLE: RL_TABLE_NAME,
   });

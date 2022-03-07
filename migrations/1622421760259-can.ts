@@ -7,6 +7,8 @@ import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { SELECTORS_TABLE_NAME } from './1622421760258-selectors';
 
 const debug = Debug('deeplinks:migrations:can');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 export const CAN_TABLE_NAME = 'can';
 export const TABLE_NAME = 'links';
@@ -22,8 +24,8 @@ const deep = new DeepClient({
 })
 
 export const up = async () => {
-  debug('up');
-  debug('view');
+  log('up');
+  log('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
     SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
@@ -211,8 +213,8 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
-  debug('view');
+  log('down');
+  log('view');
   await api.query({
     type: 'untrack_table',
     args: {

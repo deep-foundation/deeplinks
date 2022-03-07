@@ -9,6 +9,8 @@ import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_I
 import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -110,7 +112,7 @@ const trigger = Trigger({
 });
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await upTable({
     MP_TABLE: MP_TABLE_NAME, customColumns: '',
     api,
@@ -149,24 +151,24 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
-  debug('dropInclude');
+  log('down');
+  log('dropInclude');
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__function CASCADE;`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__trigger ON "${LINKS_TABLE_NAME}";`);
-  debug('dropRels');
+  log('dropRels');
   await downRels({
     MP_TABLE: MP_TABLE_NAME,
     GRAPH_TABLE: LINKS_TABLE_NAME,
     api,
   });
-  debug('dropTrigger');
+  log('dropTrigger');
   await api.sql(trigger.downFunctionInsertNode());
   await api.sql(trigger.downFunctionDeleteNode());
   await api.sql(trigger.downTriggerDelete());
   await api.sql(trigger.downTriggerInsert());
-  debug('dropTable');
+  log('dropTable');
   await downTable({
     MP_TABLE: MP_TABLE_NAME,
     api,

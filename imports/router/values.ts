@@ -10,7 +10,6 @@ import { permissions } from '../permission';
 import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
-import { execSync } from 'child_process';
 import axios from 'axios';
 import crypto from 'crypto';
 import { 
@@ -21,6 +20,11 @@ import { boolExpToSQL } from '../bool_exp_to_sql';
 const SCHEMA = 'public';
 
 const debug = Debug('deeplinks:eh:values');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -59,10 +63,10 @@ export default async (req, res) => {
       const oldRow = { ...linkRow, value: oldValueRow };
       const newRow = { ...linkRow, value: newValueRow };
 
-      debug('operation', operation);
-      debug('oldValueRow', oldValueRow);
-      debug('newValueRow', newValueRow);
-      debug('oldRow', oldRow);
+      log('operation', operation);
+      log('oldValueRow', oldValueRow);
+      log('newValueRow', newValueRow);
+      log('oldRow', oldRow);
 
       if(oldValueRow && !newValueRow) {
           // delete bool_exp trash
@@ -78,10 +82,10 @@ export default async (req, res) => {
       try {
         await handleOperation('Update', oldRow, newRow);
         
-        // console.log("done");
+        // log("done");
 
         // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-        //   debug('resolve', current.id);
+        //   log('resolve', current.id);
         //   await resolve({
         //     id: current.id, client,
         //     Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -91,10 +95,10 @@ export default async (req, res) => {
         //   });
         // }
         return res.status(200).json({});
-      } catch(error) {
-        throw error;
+      } catch(e) {
+        throw e;
         // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-        //   debug('reject', current.id);
+        //   log('reject', current.id);
         //   await reject({
         //     id: current.id, client,
         //     Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -108,7 +112,7 @@ export default async (req, res) => {
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
-  } catch(error) {
-    return res.status(500).json({ error: error.toString() });
+  } catch(e) {
+    return res.status(500).json({ error: e.toString() });
   }
 };

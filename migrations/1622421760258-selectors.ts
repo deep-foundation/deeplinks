@@ -8,6 +8,8 @@ import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
 import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql';
 
 const debug = Debug('deeplinks:migrations:selectors');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 export const SELECTORS_TABLE_NAME = 'selectors';
 export const TABLE_NAME = 'links';
@@ -24,8 +26,8 @@ const deep = new DeepClient({
 })
 
 export const up = async () => {
-  debug('up');
-  debug('view');
+  log('up');
+  log('view');
   await api.sql(sql`
     CREATE VIEW ${SELECTORS_TABLE_NAME} AS
     SELECT 
@@ -208,8 +210,8 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
-  debug('view');
+  log('down');
+  log('view');
   await api.query({
     type: 'untrack_table',
     args: {

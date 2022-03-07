@@ -1,10 +1,18 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import crypto from 'crypto';
 import axios from 'axios';
 import getPort from 'get-port';
 import Debug from 'debug';
+import util from 'util';
+const execAsync = util.promisify(exec);
 
 const debug = Debug('deeplinks:container-controller');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
+
 const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
@@ -45,38 +53,35 @@ export const runnerControllerOptionsDefault: ContainerControllerOptions = {
   handlersHash: {},
 };
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 export class ContainerController {
   gqlURN: string;
   network: string;
+  runContainerHash: { [id: string]: Boolean } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
     this.gqlURN = options?.gqlURN || runnerControllerOptionsDefault.gqlURN;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
-  async newContainer( options: NewContainerOptions ): Promise<Container> {
-    const { handler, forcePort, forceName, forceRestart, publish } = options;
-    const { network, handlersHash, gqlURN } = this;
-    debug('options, network, handlersHash', { options, network, handlersHash });
-    const containerName = forceName || 'deep_' + crypto.createHash('md5').update(handler).digest("hex");
-    debug('containerName, forceName', { containerName, forceName });
-    let container = await this.findContainer(containerName);
-    if (container) return container;
-    let dockerPort = forcePort || await getPort();
-    let dockerRunResult;
+  async _runContainer( containerName: string, dockerPort: number, options: NewContainerOptions ) {
+    const { handler, forcePort, forceRestart, publish } = options;
+    const { network, gqlURN } = this;
     let done = false;
     let count = 30;
+    let dockerRunResult;
     while (!done) {
-      debug('count', { count });
-      if (count < 0) return { error: 'timeout findPort' };
+      log('count _runContainer', { count });
+      if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
         const command = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
-        debug('command', { command });
-        dockerRunResult = execSync(command).toString();
-        debug('dockerRunResult', { dockerRunResult });
+        log('command', { command });
+        dockerRunResult = (await execAsync(command)).toString();
+        log('dockerRunResult', { dockerRunResult });
       } catch (e) {
-        debug('error', e);
+        error('error', e);
         dockerRunResult = e.stderr;
       }
       if (dockerRunResult.indexOf('port is already allocated') !== -1) {
@@ -91,17 +96,69 @@ export class ContainerController {
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
         let host = +DOCKER ? 'host.docker.internal' : 'localhost';
         if (!publish) {
-          const inspectResult = execSync(`docker inspect ${containerName}`).toString();
+          const inspectResult = (await execAsync(`docker inspect ${containerName}`)).toString();
           const inspectJSON = JSON.parse(inspectResult)
           host = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
         }
-        container = { name: containerName, host, port: dockerPort };
-        debug('container', container);
+        const container = { name: containerName, host, port: dockerPort };
+        log('container', container);
         
         // wait on
-        execSync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
+        await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
 
+        return container;
+      }
+    }
+  }
+  async _waitContainer( containerName: string ) {
+    const { runContainerHash } = this;
+    let done = false;
+    let count = 100;
+    while (!done) {
+      log('count _waitContainer', { count });
+      if (count < 0) return { error: 'timeout _waitContainer' };
+      count--;
+
+      if (runContainerHash[containerName]) {
+        await delay(1000);
+      } else {
+        done = true;
+      }
+    }
+  }
+
+  async newContainer( options: NewContainerOptions ): Promise<Container> {
+    const { handler, forcePort, forceName } = options;
+    const { network, handlersHash, runContainerHash } = this;
+    log('options, network, handlersHash', { options, network, handlersHash });
+    const containerName = forceName || 'deep_' + crypto.createHash('md5').update(handler).digest("hex");
+    log('containerName, forceName', { containerName, forceName });
+    let container = await this.findContainer(containerName);
+    if (container) return container;
+    let dockerPort = forcePort || await getPort();
+    
+    let done = false;
+    let count = 30;
+    while (!done) {
+      log('count findPort', { count });
+      if (count < 0) return { error: 'timeout findPort' };
+      count--;
+      if (runContainerHash[containerName]) 
+      {
+        await this._waitContainer(containerName);
+        if (!!handlersHash[containerName]) {
+          container = handlersHash[containerName];
+        }
+      }
+      else
+      {
+        runContainerHash[containerName] = true;
+        container = await this._runContainer(containerName, dockerPort, options);
+      }
+      if (!!container && !container?.error) {
+        done = true;
         handlersHash[containerName] = container;
+        runContainerHash[containerName] = undefined;
       }
       if (!done && !forcePort) dockerPort = await getPort();
     }
@@ -112,26 +169,26 @@ export class ContainerController {
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
-    debug('_dropContainer', containerName);
-    return await execSync(`docker stop ${containerName} && docker rm ${containerName}`).toString();
+    log('_dropContainer', containerName);
+    return (await execAsync(`docker stop ${containerName} && docker rm ${containerName}`)).toString();
   }
   async dropContainer( container: Container ) {
     const { handlersHash } = this;
     if (!handlersHash[container.name]) return;
     let dockerStopResult = await this._dropContainer(container.name);
     handlersHash[container.name] = undefined;
-    debug('dockerStopResult', { dockerStopResult });
+    log('dockerStopResult', { dockerStopResult });
   }
   async initHandler( container: Container ): Promise<{ error?: string; }> {
     const { host, port } = container;
     let initResult;
     try {
       const initRunner = `http://${host}:${port}/init`
-      debug('initRunner', { initRunner })
+      log('initRunner', { initRunner })
       initResult = await axios.post(initRunner);
-      debug('initResult', { initResult: initResult.toString() });
+      log('initResult', { initResult: initResult.toString() });
     } catch (e) {
-      debug('error', e);
+      error('error', e);
       return ({ error: e });
     }
     if (initResult?.data?.error) return { error: initResult?.data?.error};
@@ -141,7 +198,7 @@ export class ContainerController {
     const { container } = options;
     try {
       const callRunner = `http://${container.host}:${container.port}/call`
-      debug('callRunner', { callRunner, params: options })
+      log('callRunner', { callRunner, params: options })
       const result = await axios.post(callRunner, { params: options });
       if (result?.data?.error) return { error: result?.data?.error };
       if (result?.data?.resolved) {
@@ -149,7 +206,7 @@ export class ContainerController {
       }
       return Promise.reject(result?.data?.rejected);
     } catch (e) {
-      debug('error', e);
+      error('error', e);
       return ({ error: e });
     }
   }

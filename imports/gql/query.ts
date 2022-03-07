@@ -2,6 +2,11 @@ import Debug from 'debug';
 import gql from 'graphql-tag';
 
 const debug = Debug('deeplinks:gql:query');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,
@@ -46,12 +51,12 @@ export const generateQueryData = ({
   returning = `id`,
   variables,
 }: IGenerateQueryDataOptions): IGenerateQueryDataBuilder => {
-  debug('generateQuery', { tableName, operation, queryName, returning, variables });
+  log('generateQuery', { tableName, operation, queryName, returning, variables });
   const fields = ['distinct_on', 'limit', 'offset', 'order_by', 'where'];
   const fieldTypes = fieldsInputs(tableName);
 
   return (alias: string, index: number): IGenerateQueryDataResult => {
-    debug('generateQueryBuilder', { tableName, operation, queryName, returning, variables, alias, index });
+    log('generateQueryBuilder', { tableName, operation, queryName, returning, variables, alias, index });
     const defs = [];
     const args = [];
     for (let f = 0; f < fields.length; f++) {
@@ -83,7 +88,7 @@ export const generateQueryData = ({
       resultAlias,
       resultVariables,
     };
-    debug('generateQueryResult', result);
+    log('generateQueryResult', result);
     return result
   };
 };
@@ -106,7 +111,7 @@ export const generateQuery = ({
   name = 'QUERY',
   alias = 'q',
 }: IGenerateQueryOptions): IGenerateQueryResult => {
-  debug('generateQuery', { name, alias, queries });
+  log('generateQuery', { name, alias, queries });
   const calledQueries = queries.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
   const defs = calledQueries.map(m => m.defs.join(',')).join(',');
   const queryString = `${operation} ${name} (${defs}) { ${calledQueries.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
@@ -126,7 +131,7 @@ export const generateQuery = ({
     variables,
     queryString,
   };
-  debug('generateQueryResult', JSON.stringify({ query: queryString, variables }, null, 2));
+  log('generateQueryResult', JSON.stringify({ query: queryString, variables }, null, 2));
   return result;
 };
 

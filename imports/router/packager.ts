@@ -78,8 +78,8 @@ export const packagerInstallCore = async (errors = [], address: string) => {
         const deepPckg = JSON.parse(deepPckgContent);
         const { ids, errors, packageId } = await packager.import(deepPckg);
         return { ids, errors, packageId };
-      } catch(error) {
-        errors.push(String(error));
+      } catch(e) {
+        errors.push(String(e));
       }
     } else {
       errors.push(`deep.json not founded in gist`);
@@ -92,8 +92,8 @@ export const packagerInstallCore = async (errors = [], address: string) => {
     // if (version) selector += '@' + version;
     // try {
     //   child_process.execSync(`cd ${dir}; npm install --no-cache ${selector};`,{stdio:[0,1,2]});
-    // } catch(error) {
-    //   errors.push(error);
+    // } catch(e) {
+    //   errors.push(e);
     //   errors.push('installation failed');
     //   return { errors };
     // }
@@ -106,8 +106,8 @@ export const packagerInstallCore = async (errors = [], address: string) => {
     //     const { ids, errors, packageId } = await packager.import(deepPckg);
     //     fs.rmSync(dir, { recursive: true, force: true });
     //     return { ids, errors, packageId };
-    //   } catch(error) {
-    //     errors.push(error);
+    //   } catch(e) {
+    //     errors.push(e);
     //   }
     // } else {
     //   errors.push(`deep.json not founded in gist`);
@@ -171,8 +171,8 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
     // fs.mkdirSync(dir);
     // try {
     //   child_process.execSync(`cd ${dir}; npm install --no-cache ${address};`,{stdio:[0,1,2]});
-    // } catch(error) {
-    //   errors.push(error);
+    // } catch(e) {
+    //   errors.push(e);
     //   errors.push('installation failed');
     //   return { errors };
     // }

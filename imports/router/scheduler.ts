@@ -10,7 +10,6 @@ import { permissions } from '../permission';
 import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
-import { execSync } from 'child_process';
 import axios from 'axios';
 import crypto from 'crypto';
 import { 
@@ -22,6 +21,11 @@ import { makePromiseResult, useRunner } from './links';
 const SCHEMA = 'public';
 
 const debug = Debug('deeplinks:eh:scheduler');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -58,14 +62,14 @@ export const insertPromise = async (scheduleId: number) => {
 
 export async function handleScheduleMomemt(moment: any) {
   const scheduleId: number = moment.payload.scheduleId;
-  // console.log('currentLinkId', currentLinkId);
-  // console.log('currentTypeId', currentTypeId);
+  // log('currentLinkId', currentLinkId);
+  // log('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
 
-  // console.log('handlerTypeId', handlerTypeId);
-  // console.log('handleInsertTypeId', handleInsertTypeId);
+  // log('handlerTypeId', handlerTypeId);
+  // log('handleInsertTypeId', handleInsertTypeId);
 
   const queryString = `query SELECT_CODE($scheduleId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -94,25 +98,15 @@ export async function handleScheduleMomemt(moment: any) {
             }
           }
         } }`;
-
-        // #{
-        //   #  from: {
-        //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-        //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
-        //   #      to_id: { _eq: $linkId },
-        //   #    }
-        //   #  }
-        //   #}
-  // console.log('queryString', queryString);
+  // log('queryString', queryString);
 
   const query = gql`${queryString}`;
-  // console.log('query', query);
+  // log('query', query);
 
   const variables = {
     scheduleId
   };
-  // console.log('variables', JSON.stringify(variables));
+  // log('variables', JSON.stringify(variables));
 
   const handlersResult = await client.query({ query, variables });
 
@@ -120,17 +114,17 @@ export async function handleScheduleMomemt(moment: any) {
   const handleInsertsIds: any[] = [];
 
   const handlersWithCode = handlersResult?.data?.links as any[];
-  console.log('handlersWithCode.length', handlersWithCode?.length);
+  log('handlersWithCode.length', handlersWithCode?.length);
   if (handlersWithCode?.length > 0) {
-    // console.log(queryString);
-    // console.log(query);
-    // console.log(JSON.stringify(query, null, 2));
-    console.log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    console.log(handlersWithCode?.length);
+    // log(queryString);
+    // log(query);
+    // log(JSON.stringify(query, null, 2));
+    log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+    log(handlersWithCode?.length);
 
-    // console.log(handleStringResult);
-    // console.log(JSON.stringify(handleStringResult, null, 2));
-    // console.log(handleStringResult?.data?.links?.[0]?.value);
+    // log(handleStringResult);
+    // log(JSON.stringify(handleStringResult, null, 2));
+    // log(handleStringResult?.data?.links?.[0]?.value);
     for (const handlerWithCode of handlersWithCode) {
       const code = handlerWithCode?.value?.value;
       const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
@@ -139,8 +133,8 @@ export async function handleScheduleMomemt(moment: any) {
         try {
           promises.push(() => useRunner({ code, handler: isolationValue, moment }));
           handleInsertsIds.push(handleInsertId);
-        } catch (error) {
-          debug('error', error);
+        } catch (e) {
+          error('error', e);
         }
       }
     }
@@ -160,41 +154,41 @@ export async function handleScheduleMomemt(moment: any) {
     });
     // const promise = 
     await insertPromise(scheduleId);
-    console.log('promise: ', promise);
+    log('promise: ', promise);
     if (promise) {
-      console.log("promises.length: ", promises.length);
+      log("promises.length: ", promises.length);
 
       // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
       // Promise.allSettled(promises)
       await Promise.allSettled(promises.map((p) => p() as Promise<any>))
         .then(async (values) => {
-          console.log("values: ", values);
+          log("values: ", values);
           const promiseResults = [];
           for (let i = 0; i < values.length; i++) {
             const value = values[i];
             const handleInsertId = handleInsertsIds[i];
             if (value.status == 'fulfilled') {
               const result = value.value;
-              console.log("result: ", result);
+              log("result: ", result);
               const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
-              console.log("error: ", error);
+              log("error: ", error);
               const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
           }
-          console.log("promiseResults: ", JSON.stringify(promiseResults, null, 2));
+          log("promiseResults: ", JSON.stringify(promiseResults, null, 2));
           try
           {
             await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            console.log("promiseResults are inserted");
+            log("promiseResults are inserted");
           }
           catch(e)
           {
-            console.log('promiseResults insert error: ', e?.message ?? e);
+            log('promiseResults insert error: ', e?.message ?? e);
           }
         });
     }
@@ -213,16 +207,16 @@ export default async (req, res) => {
     const event = req?.body;
     const operation = event?.op;
 
-    console.log(`event`, event);
+    log(`event`, event);
 
     try {
       // await handleOperation('Update', oldRow, newRow);
       await handleScheduleMomemt(event);
       
-      // console.log("done");
+      // log("done");
 
       // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-      //   debug('resolve', current.id);
+      //   log('resolve', current.id);
       //   await resolve({
       //     id: current.id, client,
       //     Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -232,11 +226,11 @@ export default async (req, res) => {
       //   });
       // }
       return res.status(200).json({});
-    } catch(error) {
-      debug('error', error);
-      throw error;
+    } catch(e) {
+      error('error', e);
+      throw e;
       // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-      //   debug('reject', current.id);
+      //   log('reject', current.id);
       //   await reject({
       //     id: current.id, client,
       //     Then: await deep.id('@deep-foundation/core', 'Then'),
@@ -248,7 +242,7 @@ export default async (req, res) => {
     }
 
     return res.status(500).json({ error: 'notexplained' });
-  } catch(error) {
-    return res.status(500).json({ error: error.toString() });
+  } catch(e) {
+    return res.status(500).json({ error: e.toString() });
   }
 };

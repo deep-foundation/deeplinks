@@ -8,6 +8,14 @@ import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks
 import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:client');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const ALLOWED_IDS = [5];
 export const DENIED_IDS = [0, 10, 11, 12, 13];
@@ -250,7 +258,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   stringify(any?: any): string {
     if (typeof(any) === 'string') {
       let json;
-      try { json = JSON.parse(any); } catch(error) {}
+      try { json = JSON.parse(any); } catch(e) {}
       return json ? JSON.stringify(json, null, 2) : any.toString();
     } else if (typeof(any) === 'object') {
       return JSON.stringify(any, null, 2);
@@ -307,11 +315,11 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         actions: [insertMutation(table, { ...variables, objects: objects }, { tableName: table, operation: 'insert', returning })],
         name: name,
       }));
-    } catch(error) {
-      const sqlError = error?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) error.message = sqlError.message;
-      if (!this._silent(options)) throw error;
-      return { ...q, data: (q)?.data?.m0?.returning, error };
+    } catch(e) {
+      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+      if (sqlError?.message) e.message = sqlError.message;
+      if (!this._silent(options)) throw e;
+      return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -495,8 +503,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
         return { linkId, token, error: (!linkId || !token) ? 'unexepted' : undefined };
-      } catch(error) {
-        return { error };
+      } catch(e) {
+        return { error: e };
       }
     } else if (options?.linkId) {
       const result = await this.apolloClient.query({ query: JWT, variables: { linkId: +options.linkId } });
@@ -554,7 +562,7 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
 
   const deep = useMemo(() => {
     if (!apolloClient?.jwt_token) {
-      console.log({ token, apolloClient });
+      log({ token, apolloClient });
     }
     return new DeepClient({
       apolloClient, linkId, token,

@@ -31,7 +31,7 @@ export default async (req, res) => {
     }));
 
     return res.json({ cleaned: [] });
-  } catch(error) {
-    return res.status(500).json({ error: error.toString() });
+  } catch(e) {
+    return res.status(500).json({ error: e.toString() });
   }
 };

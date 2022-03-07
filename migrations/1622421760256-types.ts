@@ -8,6 +8,8 @@ import { Packager, Package } from '../imports/packager';
 import { DeepClient } from '../imports/client';
 
 const debug = Debug('deeplinks:migrations:types');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const rootClient = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -194,14 +196,14 @@ const corePckg: Package = {
 };
 
 export const up = async () => {
-  debug('up');
+  log('up');
   const packager = new Packager(root);
   const { errors, packageId, namespaceId } = await packager.import(corePckg);
   if (errors.length) {
-    console.log(errors);
-    console.log(errors[0]?.graphQLErrors?.[0]?.message);
-    console.log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
-    console.log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
+    log(errors);
+    log(errors[0]?.graphQLErrors?.[0]?.message);
+    log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
+    log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
     throw new Error('Import error');
   } else {
     await root.insert({
@@ -229,7 +231,7 @@ export const up = async () => {
 const delay = time => new Promise(res => setTimeout(res, time));
 
 export const down = async () => {
-  debug('down');
+  log('down');
   try {
     const handleScheduleId = await root.id('@deep-foundation/core', 'HandleSchedule');
     const deletedHandlers = await root.delete({ 
@@ -237,7 +239,7 @@ export const down = async () => {
     }, { name: 'DELETE_SCHEDULE_HANDLERS' });
     await delay(10000);
   } catch(e) {
-    console.error(e);
+    error(e);
   }
   await root.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };

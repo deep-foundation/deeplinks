@@ -9,6 +9,8 @@ import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_I
 import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
 const debug = Debug('deeplinks:migrations:auto-indexes');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -23,7 +25,7 @@ const api = new HasuraApi({
 });
 
 export const up = async () => {
-  debug('up');
+  log('up');
   await api.sql(sql`CREATE OR REPLACE FUNCTION create_btree_index(schema_name text, table_name text, column_name text) RETURNS void
   AS $$
   BEGIN
@@ -40,7 +42,7 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
   await api.sql(sql`DROP FUNCTION create_btree_index;`);
   await api.sql(sql`DROP FUNCTION create_btree_indexes_for_all_columns;`);
 };

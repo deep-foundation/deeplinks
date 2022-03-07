@@ -6,6 +6,11 @@ import Debug from 'debug';
 import { inherits } from 'util';
 
 const debug = Debug('deeplinks:minilinks');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export interface LinkPlain<Ref extends number> {
   id: Ref;
@@ -124,7 +129,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
-    debug('add', linksArray, this);
+    log('add', linksArray, this);
     const { byId, byFrom, byTo, byType, links, options } = this;
     const anomalies = [];
     const errors = [];
@@ -233,7 +238,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
-    debug('remove', idsArray, this);
+    log('remove', idsArray, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const anomalies = [];
     const errors = [];
@@ -242,7 +247,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
       const link = byId[id];
-      debug('remove old l:', l, 'id:', id, 'link:', link);
+      log('remove old l:', l, 'id:', id, 'link:', link);
       if (link) {
         oldLinksArray.push(link);
         oldLinksObject[id] = link;
@@ -296,7 +301,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     _remove(links, l => idsArray.includes(l[options.id]));
     for (let l = 0; l < oldLinksArray.length; l++) {
       const link = oldLinksArray[l];
-      debug('emit removed link', link, '_updating', this._updating);
+      log('emit removed link', link, '_updating', this._updating);
       if (!this._updating) this.emitter.emit('removed', link);
     }
     return {
@@ -309,7 +314,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
-    debug('apply', linksArray, this);
+    log('apply', linksArray, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const toAdd = [];
     const toUpdate = [];

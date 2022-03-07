@@ -10,6 +10,8 @@ import { DeepClient } from '../imports/client';
 import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table';
 
 const debug = Debug('deeplinks:migrations:demo');
+const log = debug.extend('log');
+const error = debug.extend('error');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
@@ -57,7 +59,7 @@ const insertRule = async (admin, options: {
 };
 
 export const up = async () => {
-  debug('up');
+  log('up');
 
   const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
   const admin = new DeepClient({ deep, token, linkId });
@@ -374,5 +376,5 @@ export const up = async () => {
 };
 
 export const down = async () => {
-  debug('down');
+  log('down');
 };
