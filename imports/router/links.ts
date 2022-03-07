@@ -75,6 +75,17 @@ export const useRunner = async ({
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
   const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
+
+  // TODO:
+  // const currentLink = newLink || oldLink;
+  // if (currentLink has package up in contain tree) {
+  //   generate jwt by package id
+  // } else if (there is not package up in contain tree but there is user up in contain tree) {
+  //   generate jwt by user id
+  // } else {
+  //   no jwt
+  // }
+
   useRunnerDebug('jwt', jwt);
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   useRunnerDebug('portResult', container);
