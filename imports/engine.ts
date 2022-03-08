@@ -95,7 +95,7 @@ export async function call (options: IOptions) {
 
   const execEngine = async (operation, composeVersion, idDeeplinksDocker, envsStr) => {
     if (operation === 'run') {
-      str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f ${ process.platform === "win32" ? '%MIGRATIONS_DIR%' : '$MIGRATIONS_DIR'}`;
+      str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
     }
     if (operation === 'sleep') {
       if (process.platform === "win32") {
