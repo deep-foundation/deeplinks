@@ -30,7 +30,7 @@ const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUni
 
 const generateEnvs = (options) => {
   const { envs, idDeeplinksDocker } = options;
-  let envsString = '';
+  let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
   const hasuraPort = 8080;
   const deeplinksPort = 3006;
@@ -66,8 +66,8 @@ const generateEnvs = (options) => {
     envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
     envs['NEXT_PUBLIC_DEEPLINKS_URL'] = envs['NEXT_PUBLIC_DEEPLINKS_URL'] ? envs['NEXT_PUBLIC_DEEPLINKS_URL'] : `http://localhost:${deeplinksPort}`;
   }
-  Object.keys(envs).forEach(k => envsString += handleEnv(k, envs));
-  return envsString;
+  Object.keys(envs).forEach(k => envsStr += handleEnv(k, envs));
+  return envsStr;
 };
 
 const checkStatus = async () => {
@@ -83,26 +83,43 @@ const checkStatus = async () => {
 export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   const idDeeplinksDocker = await checkStatus();
-  let envsString = generateEnvs({ envs, idDeeplinksDocker});
+  let envsStr = generateEnvs({ envs, idDeeplinksDocker});
   let str;
+  let composeVersion;
+
+  const getCompose = async (operation) => {
+    if (operation == 'run') return;
+    const { stdout } = await execP('docker-compose version --short');
+    return stdout.match(/\d+/)[0];
+  };
+
+  const execEngine = async (operation, composeVersion, idDeeplinksDocker, envsStr) => {
+    if (operation === 'run') {
+      str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f $MIGRATIONS_DIR`;
+    }
+    if (operation === 'sleep') {
+      if (process.platform === "win32") {
+        str = `powershell -command docker stop $(docker ps -a --filter name=deep_ -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}')`;
+      } else {
+        str = `docker stop $(docker ps --filter name=deep_ -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}')`;
+      }
+    }
+    if (operation === 'reset') {
+      if (process.platform === "win32") {
+        str = `powershell -command (docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}') || true); docker volume rm $(docker volume ls -q --filter name=deep_)${ !+DOCKER ? '; docker network rm $(docker network ls -q -f name=deep_) ' : ''}; npx rimraf ${envs['MIGRATIONS_DIR']}`;
+      } else {
+        str = `(docker rm -fv $(docker ps -a --filter name=deep_ -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ' && (docker network rm $(docker network ls -q -f name=deep_) || true)' : ''} && npx rimraf ${envs['MIGRATIONS_DIR']}`;
+      }
+    }
+    const { stdout, stderr } = await execP(`${envsStr} ${str}`);
+    return { stdout, stderr }
+  }
   try {
-    if (options.operation === 'run') {
-      str = `${envsString} cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080/console && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f $MIGRATIONS_DIR`;
-      const { stdout, stderr } = await execP(str);
-      return { ...options, envs, str, stdout, stderr };
-    }
-    if (options.operation === 'sleep') {
-      str = `${envsString} docker stop $(docker ps --filter name=deep_ -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}')`;
-      const { stdout, stderr } = await execP(str);
-      return { ...options, envs, str, stdout, stderr };
-    }
-    if (options.operation === 'reset') {
-      str = `${envsString} (docker rm -fv $(docker ps -a --filter name=deep_ -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ' && (docker network rm $(docker network ls -q -f name=deep_) || true)' : ''} && npx rimraf ${envs['MIGRATIONS_DIR']}`;
-      const { stdout, stderr } = await execP(str);
-      return { ...options, envs, str, stdout, stderr };
-    }
+    const composeVersion = await getCompose(options.operation);
+    const engine = await execEngine(options.operation, composeVersion, idDeeplinksDocker, envsStr) ;
+    return { ...options, composeVersion, envs, str, fullStr: `${envsStr} ${str}`, stdout: engine.stdout, stderr: engine.stderr };
   } catch(e) {
-    return { ...options, str, envs, error: e };
+    return { ...options, composeVersion, envs, str, fullStr: `${envsStr} ${str}`, error: e };
   }
   return options;
 }

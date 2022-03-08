@@ -19,5 +19,7 @@ ENV DOCKER 1
 ENV DEBUG_COLORS true
 ENV DEBUG deeplinks:*
 
+RUN apk add docker-compose==1.29.2
+
 EXPOSE 3006
 ENTRYPOINT ["node", "index.js"]
