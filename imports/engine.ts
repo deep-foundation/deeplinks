@@ -24,7 +24,7 @@ const _hasura = path.normalize(`${__dirname}/../../hasura`);
 const _deepcase = path.normalize(`${__dirname}/../../deepcase`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
 
-const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]} &&`;
+const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
@@ -38,7 +38,7 @@ const generateEnvs = (options) => {
 
   envs['npm_config_yes'] = envs['npm_config_yes'] ? envs['npm_config_yes'] : 'true';
   envs['NEXT_PUBLIC_HIDEPATH'] = envs['NEXT_PUBLIC_HIDEPATH'] ? envs['NEXT_PUBLIC_HIDEPATH'] : '1';
-  envs['JWT_SECRET'] = envs['JWT_SECRET'] ? envs['JWT_SECRET'] : `'{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'`;
+  envs['JWT_SECRET'] = envs['JWT_SECRET'] ? envs['JWT_SECRET'] : `{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}`;
   envs['MIGRATIONS_ID_TYPE_SQL'] = envs['MIGRATIONS_ID_TYPE_SQL'] ? envs['MIGRATIONS_ID_TYPE_SQL'] : 'bigint';
   envs['MIGRATIONS_ID_TYPE_GQL'] = envs['MIGRATIONS_ID_TYPE_GQL'] ? envs['MIGRATIONS_ID_TYPE_GQL'] : 'bigint';
   envs['MIGRATIONS_HASURA_SECRET'] = envs['MIGRATIONS_HASURA_SECRET'] ? envs['MIGRATIONS_HASURA_SECRET'] : 'myadminsecretkey';
@@ -95,7 +95,7 @@ export async function call (options: IOptions) {
 
   const execEngine = async (operation, composeVersion, idDeeplinksDocker, envsStr) => {
     if (operation === 'run') {
-      str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f $MIGRATIONS_DIR`;
+      str = `cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS 1 &&' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz --timeout 10000` : ''} && npm run migrate -- -f ${ process.platform === "win32" ? '%MIGRATIONS_DIR%' : '$MIGRATIONS_DIR'}`;
     }
     if (operation === 'sleep') {
       if (process.platform === "win32") {
