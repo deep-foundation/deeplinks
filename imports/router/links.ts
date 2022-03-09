@@ -541,15 +541,14 @@ export default async (req, res) => {
         newRow.value = queryResult.data?.[0]?.value;
       }
       
+      const current = operation === 'DELETE' ? oldRow : newRow;
+      log(`Processing ${current.id} link.`)
+      // log('event', JSON.stringify(event, null, 2));
+      log('operation', operation);
+      log('current', current);
+      log('oldRow', oldRow);
+      log('newRow', newRow);
       try {
-        const current = operation === 'DELETE' ? oldRow : newRow;
-        log(`Processing ${current.id} link.`)
-        // log('event', JSON.stringify(event, null, 2));
-        log('operation', operation);
-        log('current', current);
-        log('oldRow', oldRow);
-        log('newRow', newRow);
-
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
           // await handleSelector(oldRow, newRow);
