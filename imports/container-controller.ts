@@ -16,7 +16,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
-  gqlURN: string;
+  gqlUrnWithoutProject: string;
   network: string;
   handlersHash?: any;
 }
@@ -48,26 +48,27 @@ export interface CallOptions {
 }
 
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
-  gqlURN: 'deep_links_1:3006',
-  network: 'deep_network',
+  gqlUrnWithoutProject: 'links_1:3006',
+  network: 'network',
   handlersHash: {},
 };
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 export class ContainerController {
-  gqlURN: string;
+  gqlUrnWithoutProject: string;
   network: string;
+  delimiter: string;
   runContainerHash: { [id: string]: Boolean } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
-    this.gqlURN = options?.gqlURN || runnerControllerOptionsDefault.gqlURN;
+    this.gqlUrnWithoutProject = options?.gqlUrnWithoutProject || runnerControllerOptionsDefault.gqlUrnWithoutProject;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
   async _runContainer( containerName: string, dockerPort: number, options: NewContainerOptions ) {
     const { handler, forcePort, forceRestart, publish } = options;
-    const { network, gqlURN } = this;
+    const { network, gqlUrnWithoutProject } = this;
     let done = false;
     let count = 30;
     let dockerRunResult;
@@ -76,7 +77,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker run -e PORT=${dockerPort} -e GQL_URN=${gqlURN} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
+        const command = `docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gqlUrnWithoutProject} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
         log('command', { command });
         dockerRunResult = (await execAsync(command)).toString();
         log('dockerRunResult', { dockerRunResult });
@@ -98,7 +99,7 @@ export class ContainerController {
         if (!publish) {
           const inspectResult = (await execAsync(`docker inspect ${containerName}`)).toString();
           const inspectJSON = JSON.parse(inspectResult)
-          host = inspectJSON?.[0]?.NetworkSettings?.Networks?.deep_network?.IPAddress;
+          host = inspectJSON?.[0]?.NetworkSettings?.Networks?.[network]?.IPAddress;
         }
         const container = { name: containerName, host, port: dockerPort };
         log('container', container);
@@ -126,12 +127,21 @@ export class ContainerController {
       }
     }
   }
+  async getDelimiter() {
+    if (this.delimiter) return this.delimiter;
+    const versionResult = await execAsync(`docker-compose version --short`);
+    log('versionResult', { versionResult });
+    const majorVersion = versionResult?.stdout?.match(/\d+/)[0];
+    log('majorVersion', { majorVersion });
+    this.delimiter = majorVersion === '1' ? '_' : '-';
+    return this.delimiter;
+  }
 
   async newContainer( options: NewContainerOptions ): Promise<Container> {
     const { handler, forcePort, forceName } = options;
     const { network, handlersHash, runContainerHash } = this;
     log('options, network, handlersHash', { options, network, handlersHash });
-    const containerName = forceName || 'deep_' + crypto.createHash('md5').update(handler).digest("hex");
+    const containerName = forceName || `deep${await this.getDelimiter()}${crypto.createHash('md5').update(handler).digest("hex")}`;
     log('containerName, forceName', { containerName, forceName });
     let container = await this.findContainer(containerName);
     if (container) return container;
@@ -143,15 +153,13 @@ export class ContainerController {
       log('count findPort', { count });
       if (count < 0) return { error: 'timeout findPort' };
       count--;
-      if (runContainerHash[containerName]) 
-      {
+      if (runContainerHash[containerName]) {
         await this._waitContainer(containerName);
         if (!!handlersHash[containerName]) {
           container = handlersHash[containerName];
         }
       }
-      else
-      {
+      else {
         runContainerHash[containerName] = true;
         container = await this._runContainer(containerName, dockerPort, options);
       }
@@ -165,7 +173,8 @@ export class ContainerController {
     return container;
   }
   async findContainer( containerName: string ) {
-    const { handlersHash } = this;
+    const { handlersHash, runContainerHash } = this;
+    log('findContainer hashes', { handlersHash, runContainerHash });
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
