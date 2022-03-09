@@ -557,7 +557,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   return id2;
 };
 
-describe.skip('handle by selector', () => {
+describe.only('handle by selector', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
@@ -565,7 +565,9 @@ describe.skip('handle by selector', () => {
     const handler = await insertHandler(handleSelectorTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
     const idToWait = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
+    log('awaiting starts...');
     await deep.await(idToWait);
+    log('awaiting finished.');
 
     // await deleteHandler(handler);
 

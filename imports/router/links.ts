@@ -516,9 +516,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
-    // log('event', JSON.stringify(event, null, 2));
     const operation = event?.op;
-    log('operation', operation);
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       const oldRow = event?.data?.old;
       // select value into oldRow
@@ -531,8 +529,6 @@ export default async (req, res) => {
         // log("old queryResult: ", queryResult);
         oldRow.value = queryResult.data?.[0]?.value;
       }
-      log('oldRow', oldRow);
-
       const newRow = event?.data?.new;
       // select value into newRow
       if(newRow) {
@@ -544,12 +540,16 @@ export default async (req, res) => {
         // log("new queryResult: ", queryResult);
         newRow.value = queryResult.data?.[0]?.value;
       }
-      log('newRow', newRow);
-
-      const current = operation === 'DELETE' ? oldRow : newRow;
-      log('current', current);
       
       try {
+        const current = operation === 'DELETE' ? oldRow : newRow;
+        log(`Processing ${current.id} link.`)
+        // log('event', JSON.stringify(event, null, 2));
+        log('operation', operation);
+        log('current', current);
+        log('oldRow', oldRow);
+        log('newRow', newRow);
+
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
           // await handleSelector(oldRow, newRow);
@@ -572,7 +572,7 @@ export default async (req, res) => {
           await handlePort(current, operation);
         }
 
-        // log("done");
+        log(`Link ${current.id} is proccessed.`);
 
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           log('resolve', current.id);
