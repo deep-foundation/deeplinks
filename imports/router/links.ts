@@ -554,7 +554,7 @@ export default async (req, res) => {
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
-          await handleSelector(oldRow, newRow);
+          // await handleSelector(oldRow, newRow);
         } else if(operation === 'UPDATE') {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
