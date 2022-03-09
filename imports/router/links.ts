@@ -516,11 +516,11 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
+    // log('event', JSON.stringify(event, null, 2));
     const operation = event?.op;
+    log('operation', operation);
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       const oldRow = event?.data?.old;
-      const newRow = event?.data?.new;
-
       // select value into oldRow
       if(oldRow) {
         const queryResult = await deep.select({
@@ -531,6 +531,9 @@ export default async (req, res) => {
         // log("old queryResult: ", queryResult);
         oldRow.value = queryResult.data?.[0]?.value;
       }
+      log('oldRow', oldRow);
+
+      const newRow = event?.data?.new;
       // select value into newRow
       if(newRow) {
         const queryResult = await deep.select({
@@ -541,16 +544,11 @@ export default async (req, res) => {
         // log("new queryResult: ", queryResult);
         newRow.value = queryResult.data?.[0]?.value;
       }
-
-      log('event', JSON.stringify(event, null, 2));
-      log('oldRow', oldRow);
       log('newRow', newRow);
-      log('operation', operation);
 
       const current = operation === 'DELETE' ? oldRow : newRow;
-      const typeId = current.type_id;
-      // log('current', current, typeId);
-
+      log('current', current);
+      
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
@@ -561,6 +559,8 @@ export default async (req, res) => {
           await handleOperation('Delete', oldRow, newRow);
           // await handleSelector(oldRow, newRow); ??
         }
+
+        const typeId = current.type_id;
 
         const handleScheduleId = await deep.id('@deep-foundation/core', 'HandleSchedule');
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
