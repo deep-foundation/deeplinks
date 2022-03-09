@@ -46,11 +46,21 @@ app.use('/gql', createProxyMiddleware({
   },
 }));
 
+//   hasura-admin
+
+app.use('/v1', createProxyMiddleware({
+  target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
+  changeOrigin: true,
+  ws: true,
+}));
+
 app.use('/console', createProxyMiddleware({
   target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
 }));
+
+//   hasura-admin
 
 app.use(express.json());
 app.use('/', router);
