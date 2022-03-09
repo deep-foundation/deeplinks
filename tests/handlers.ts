@@ -557,7 +557,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   return id2;
 };
 
-describe.only('handle by selector', () => {
+describe.skip('handle by selector', () => {
   it(`handle insert`, async () => {
     const numberToReturn = randomInteger(5000000, 9999999999);
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
