@@ -48,13 +48,7 @@ app.use('/gql', createProxyMiddleware({
 
 //   hasura-admin
 
-app.use('/v1', createProxyMiddleware({
-  target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
-  changeOrigin: true,
-  ws: true,
-}));
-
-app.use('/console', createProxyMiddleware({
+app.use(['/v1','/v1alpha1','/v2','console'], createProxyMiddleware({
   target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
