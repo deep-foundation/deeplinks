@@ -46,6 +46,15 @@ app.use('/gql', createProxyMiddleware({
   },
 }));
 
+app.use('/hasura', createProxyMiddleware({
+  target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
+  changeOrigin: true,
+  ws: true,
+  pathRewrite: {
+    "/hasura": "/console",
+  },
+}));
+
 app.use(express.json());
 app.use('/', router);
 
