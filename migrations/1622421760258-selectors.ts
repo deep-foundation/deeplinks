@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
+import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
 import { api, SCHEMA } from './1616701513782-links';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
@@ -63,12 +63,17 @@ export const up = async () => {
     CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint, user_id bigint) RETURNS BOOL AS $trigger$ DECLARE
       boolExp RECORD;
       sqlResult INT;
+      query TEXT;
     BEGIN
       SELECT be.* into boolExp
       FROM "${BOOL_EXP_TABLE_NAME}" as be
       WHERE be.link_id=bool_exp_link_id;
       IF boolExp IS NOT NULL THEN
-        EXECUTE (SELECT REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text)) INTO sqlResult;
+        IF (user_id IS NULL) THEN
+          user_id := ${GLOBAL_ID_ANY};
+        END IF;
+        SELECT REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text) INTO query;
+        EXECUTE query INTO sqlResult;
         IF sqlResult = 0 THEN
           RETURN FALSE;
         END IF;

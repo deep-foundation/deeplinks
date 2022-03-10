@@ -407,7 +407,6 @@ describe('sync function handle by schedule with resolve', () => {
     await deleteScheduleHandler(handler);
 
     assert.isTrue(!!promiseResult);
-
   });
 });
 
@@ -437,16 +436,13 @@ describe('async function handle by type with resolve using deep client', () => {
     const queryId = promiseResult?.object?.value?.queryId;
     const query = (await deep.select({ id: { _eq: queryId }})).data[0];
 
+    await deleteId(queryId);
+    await deletePromiseResult(promiseResult, linkId);
+    await deleteHandler(handler);
+
     // assert.equal(query.type_id, queryTypeId);
     assert.equal(query.id, queryId);
-
     assert.isTrue(!!promiseResult);
-
-    await deleteId(queryId);
-
-    await deletePromiseResult(promiseResult, linkId);
-
-    await deleteHandler(handler);
   });
 });
 
@@ -553,10 +549,12 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
     } }
   });
   
-  const n1 = await deep.select({
-    item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
-  }, { table: 'selectors', returning: 'item_id selector_id' });
-  assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
+  // const n1 = await deep.select({
+  //   item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
+  // }, { table: 'selectors', returning: 'item_id selector_id' });
+  // assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
+
+  return id2;
 };
 
 describe.skip('handle by selector', () => {
@@ -565,7 +563,11 @@ describe.skip('handle by selector', () => {
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
     const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = await insertSelector();
     const handler = await insertHandler(handleSelectorTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-    await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+    const idToWait = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+
+    await deep.await(idToWait);
+
+    // await deleteHandler(handler);
 
     // const typeId = await deep.id('@deep-foundation/core', 'Type');
     // const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
