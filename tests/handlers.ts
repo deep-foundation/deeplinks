@@ -541,11 +541,18 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
       from_id: rootId,
     } }
   });
+  // const { data: [{ id: id2 }] } = await deep.insert({
+  //   type_id: nodeTypeId,
+  //   in: { data: {
+  //     type_id: linkTypeId,
+  //     from_id: id1,
+  //   } }
+  // });
   const { data: [{ id: id2 }] } = await deep.insert({
-    type_id: nodeTypeId,
-    in: { data: {
-      type_id: linkTypeId,
-      from_id: id1,
+    from_id: id1,
+    type_id: linkTypeId,
+    to: { data: {
+      type_id: nodeTypeId,
     } }
   });
   
@@ -565,9 +572,20 @@ describe.only('handle by selector', () => {
     const handler = await insertHandler(handleSelectorTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
     const idToWait = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
-    log('awaiting starts...');
+    error('idToWait', idToWait);
+
+    // log('awaiting starts...');
     await deep.await(idToWait);
-    log('awaiting finished.');
+    // log('awaiting finished.');
+
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, idToWait);
+    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+    await deleteId(idToWait); // TODO make complete cleanup
+    await deletePromiseResult(promiseResult);
+    await deleteHandler(handler);
+
+    assert.isTrue(!!promiseResult);
 
     // await deleteHandler(handler);
 

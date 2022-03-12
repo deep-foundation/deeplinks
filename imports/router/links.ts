@@ -545,13 +545,13 @@ export default async (req, res) => {
       log(`Processing ${current.id} link.`)
       // log('event', JSON.stringify(event, null, 2));
       log('operation', operation);
+      // log('oldRow', oldRow);
+      // log('newRow', newRow);
       log('current', current);
-      log('oldRow', oldRow);
-      log('newRow', newRow);
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
-          // await handleSelector(oldRow, newRow);
+          await handleSelector(oldRow, newRow);
         } else if(operation === 'UPDATE') {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
