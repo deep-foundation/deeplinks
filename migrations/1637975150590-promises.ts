@@ -86,10 +86,10 @@ export const up = async () => {
     END IF;
     INSERT INTO debug_output ("promises", "new_id") VALUES (PROMISES, link."id");
     IF (PROMISES > 0) THEN
-      -- FOR i IN 1..PROMISES LOOP
+      FOR i IN 1..PROMISES LOOP
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
-      -- END LOOP;
+      END LOOP;
     END IF;
     RETURN TRUE;
   END; $function$ LANGUAGE plpgsql;`);
