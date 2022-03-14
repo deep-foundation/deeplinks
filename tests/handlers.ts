@@ -104,25 +104,25 @@ export async function deleteIds(ids: number[], options: {
   variables?: any;
   name?: string;
 } = { table: 'links' }) {
+  // return await deep.delete(ids, options); // should work, but doesn't
+
   const idsFiltered = ids?.filter(linkId => typeof linkId === 'number');
   if (idsFiltered?.length > 0) {
     // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
     try
     {
-      return await deep.delete({
-        id: { _in: idsFiltered },
-      }, options);
+      return await deep.delete(idsFiltered, options);
     }
     catch (e)
     {
-      error(`Error deleting ids: ${idsFiltered.join(', ')}`, e);
+      error(`Error deleting ids: ${idsFiltered.join(', ')}`, JSON.stringify(e, null, 2));
     }
   } else {
     return { data: [] };
   }
 }
 
-export async function deletePromiseResult(promiseResult: any, linkId: any = null) {
+export async function deletePromiseResult(promiseResult: any, linkId?: any) {
   const resultLinkId = promiseResult?.in?.[0]?.id;
   const thenLinkId = promiseResult?.in?.[0]?.from?.in?.[0]?.id;
   const valueId = promiseResult?.object?.id;
