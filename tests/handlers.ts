@@ -644,12 +644,17 @@ describe.only('handle by selector', () => {
     // await deep.await(idToWait);
     // log('awaiting finished.');
 
-    // await deep.await(selectorItems[1].linkId); // doesn't work
+    // await deep.await(selectorItems[0].linkId); // doesn't work. why?
     await deep.await(selectorItems[1].linkId);
+    await deep.await(selectorItems[0].linkId);
 
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, selectorItems[1].linkId);
-    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
+    const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
+    const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
+
+    const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
+    const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
 
     for (const selectorItem of selectorItems) {
       deleteId(selectorItem.linkId);
@@ -657,10 +662,12 @@ describe.only('handle by selector', () => {
     }
     
     await deleteSelector(selector);
-    await deletePromiseResult(promiseResult);
+    await deletePromiseResult(promiseResult1);
+    await deletePromiseResult(promiseResult2);
     await deleteHandler(handler);
 
-    assert.isTrue(!!promiseResult);
+    assert.isTrue(!!promiseResult1);
+    assert.isTrue(!!promiseResult2);
 
     // }
     // catch (err) {
