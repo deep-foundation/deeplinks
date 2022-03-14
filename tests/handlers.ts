@@ -95,7 +95,7 @@ export async function deleteId(id: number, options: {
   name?: string;
 } = { table: 'links' })
 {
-  deleteIds([id], options);
+  await deleteIds([id], options);
 }
 
 export async function deleteIds(ids: number[], options: {
@@ -107,9 +107,16 @@ export async function deleteIds(ids: number[], options: {
   const idsFiltered = ids?.filter(linkId => typeof linkId === 'number');
   if (idsFiltered?.length > 0) {
     // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
-    return await deep.delete({
-      id: { _in: idsFiltered },
-    }, options);
+    try
+    {
+      return await deep.delete({
+        id: { _in: idsFiltered },
+      }, options);
+    }
+    catch (e)
+    {
+      error(`Error deleting ids: ${idsFiltered.join(', ')}`, e);
+    }
   } else {
     return { data: [] };
   }
@@ -486,61 +493,95 @@ describe('handle port', () => {
 });
 
 export async function insertSelector() {
+  const typeTypeId = await deep.id('@deep-foundation/core', 'Type');
   const { data: [{ id: ty0 }] } = await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Type'),
+    type_id: typeTypeId,
   });
   const { data: [{ id: ty1 }] } = await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Type'),
+    type_id: typeTypeId,
     from_id: ty0,
     to_id: ty0,
   });
-  const { data: [{ id: tr1 }] } = await deep.insert({
+  const treeIncludeDownTypeId = await deep.id('@deep-foundation/core', 'TreeIncludeDown');
+  const { data: [{ id: tr1, out: treeIncludes }] } = await deep.insert({
     type_id: await deep.id('@deep-foundation/core', 'Tree'),
     out: { data: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'TreeIncludeDown'),
+        type_id: treeIncludeDownTypeId,
         to_id: ty1,
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+        type_id: treeIncludeDownTypeId,
         to_id: ty0,
       },
     ] }
-  });
+  }, {
+    returning: `
+      id
+      out(where: { to_id: { _in: [${ty0}, ${ty1}] }, type_id: { _eq: ${treeIncludeDownTypeId} } }) {
+        id
+      }
+    `,
+  }) as any;
   const { data: [{ id: id0 }] } = await deep.insert({
     type_id: ty0,
   });
-  const { data: [{ id: s1 }] } = await deep.insert({
+  const selectorIncludeTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
+  const selectorTreeTypeId = await deep.id('@deep-foundation/core', 'SelectorTree');
+  const { data: [{ id: s1, out: selectorData }] } = await deep.insert({
     type_id: await deep.id('@deep-foundation/core', 'Selector'),
     out: { data: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: selectorIncludeTypeId,
         to_id: id0,
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          type_id: selectorTreeTypeId,
           to_id: tr1
         } },
       },
     ] }
-  });
+  }, {
+    returning: `
+      id
+      out(where: { to_id: { _eq: ${id0} }, type_id: { _eq: ${selectorIncludeTypeId} } }) {
+        id
+        out(where: { to_id: { _eq: ${tr1} }, type_id: { _eq: ${selectorTreeTypeId} } }) {
+          id
+        }
+      }
+    `,
+  }) as any;
 
   return {
     nodeTypeId: ty0,
     linkTypeId: ty1,
     treeId: tr1,
+    treeIncludesIds: treeIncludes.map(({ id }) => id),
     selectorId: s1,
+    selectorIncludeId: selectorData[0].id,
+    selectorTreeId: selectorData[0].out[0].id,
     rootId: id0,
   };
 };
 
 export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
-  const { data: [{ id: id1 }] } = await deep.insert({
-    type_id: nodeTypeId,
-    in: { data: {
-      type_id: linkTypeId,
-      from_id: rootId,
+  // const { data: [{ id: id1 }] } = await deep.insert({
+  //   type_id: nodeTypeId,
+  //   in: { data: {
+  //     type_id: linkTypeId,
+  //     from_id: rootId,
+  //   } }
+  // });
+  const { data: [{ id: linkId1, to: { id: nodeId1 } }] } = await deep.insert({
+    type_id: linkTypeId,
+    from_id: rootId,
+    to: { data: {
+      type_id: nodeTypeId,
     } }
-  });
+  }, { returning: 'id to { id }' }) as any;
+
+  // return linkId1; // doesn't work
+
   // const { data: [{ id: id2 }] } = await deep.insert({
   //   type_id: nodeTypeId,
   //   in: { data: {
@@ -548,45 +589,83 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   //     from_id: id1,
   //   } }
   // });
-  const { data: [{ id: id2 }] } = await deep.insert({
-    from_id: id1,
+  const { data: [{ id: linkId2, to: { id: nodeId2 } }] } = await deep.insert({
+    from_id: nodeId1,
     type_id: linkTypeId,
     to: { data: {
       type_id: nodeTypeId,
     } }
-  });
+  }, { returning: 'id to { id }' }) as any;
   
   // const n1 = await deep.select({
   //   item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
   // }, { table: 'selectors', returning: 'item_id selector_id' });
   // assert.lengthOf(n1?.data, 1, `item_id ${id2} must be in selector_id ${selectorId}`);
 
-  return id2;
+  // return linkId2;
+  return [
+    { linkId: linkId1, nodeId: nodeId1 },
+    { linkId: linkId2, nodeId: nodeId2 },
+  ]
+};
+
+export const deleteSelector = async (selector: any) => {
+  await deleteId(selector.linkTypeId);
+  await deleteId(selector.nodeTypeId);
+  await deleteId(selector.treeId);
+  await deleteIds(selector.treeIncludesIds);
+  await deleteId(selector.selectorId);
+  await deleteId(selector.selectorIncludeId);
+  await deleteId(selector.selectorTreeId);
+  await deleteId(selector.rootId);
 };
 
 describe.only('handle by selector', () => {
   it(`handle insert`, async () => {
+    // try 
+    // {
+    
     const numberToReturn = randomInteger(5000000, 9999999999);
     const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
-    const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = await insertSelector();
+    const selector = await insertSelector();
+    const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
+    // console.log(`nodeTypeId: ${nodeTypeId}`);
+    // console.log(`linkTypeId: ${linkTypeId}`);
+    // console.log(`treeId: ${treeId}`);
+    // console.log(`treeIncludesIds: ${treeIncludesIds}`);
+    // console.log(`selectorId: ${selectorId}`);
+    // console.log(`selectorIncludeId: ${selectorIncludeId}`);
+    // console.log(`selectorTreeId: ${selectorTreeId}`);
+    // console.log(`rootId: ${rootId}`);
     const handler = await insertHandler(handleSelectorTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-    const idToWait = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
-
-    error('idToWait', idToWait);
+    const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
     // log('awaiting starts...');
-    await deep.await(idToWait);
+    // await deep.await(idToWait);
     // log('awaiting finished.');
 
+    // await deep.await(selectorItems[1].linkId); // doesn't work
+    await deep.await(selectorItems[1].linkId);
+
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, idToWait);
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, selectorItems[1].linkId);
     const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
-    await deleteId(idToWait); // TODO make complete cleanup
+
+    for (const selectorItem of selectorItems) {
+      deleteId(selectorItem.linkId);
+      deleteId(selectorItem.nodeId);
+    }
+    
+    await deleteSelector(selector);
     await deletePromiseResult(promiseResult);
     await deleteHandler(handler);
 
     assert.isTrue(!!promiseResult);
 
+    // }
+    // catch (err) {
+    //   console.error(err);
+    // }
     // await deleteHandler(handler);
 
     // const typeId = await deep.id('@deep-foundation/core', 'Type');
