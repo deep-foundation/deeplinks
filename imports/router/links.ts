@@ -261,7 +261,7 @@ export async function handleSelector(oldLink: any, newLink: any) {
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
   // log('handlerTypeId', handlerTypeId);

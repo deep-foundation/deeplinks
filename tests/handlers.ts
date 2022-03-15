@@ -626,7 +626,7 @@ describe.only('handle by selector', () => {
     // {
     
     const numberToReturn = randomInteger(5000000, 9999999999);
-    const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
+    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const selector = await insertSelector();
     const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
     // console.log(`nodeTypeId: ${nodeTypeId}`);
@@ -637,7 +637,7 @@ describe.only('handle by selector', () => {
     // console.log(`selectorIncludeId: ${selectorIncludeId}`);
     // console.log(`selectorTreeId: ${selectorTreeId}`);
     // console.log(`rootId: ${rootId}`);
-    const handler = await insertHandler(handleSelectorTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+    const handler = await insertHandler(handleInsertTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
     const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
     // log('awaiting starts...');

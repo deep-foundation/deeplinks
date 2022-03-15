@@ -30,7 +30,6 @@ export const up = async () => {
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
-  const handleSelectorTypeId = await deep.id('@deep-foundation/core', 'HandleSelector');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
@@ -73,7 +72,7 @@ export const up = async () => {
         WHERE
             s.item_id = link."id"
         AND s.selector_id = h.from_id
-        AND h.type_id = ${handleSelectorTypeId}
+        AND h.type_id = ${handleInsertTypeId}
     ) AS distict_selectors;
 
     IF NOT EXISTS (
