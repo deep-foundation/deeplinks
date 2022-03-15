@@ -657,8 +657,8 @@ describe.only('handle by selector', () => {
     const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
 
     for (const selectorItem of selectorItems) {
-      deleteId(selectorItem.linkId);
-      deleteId(selectorItem.nodeId);
+      await deleteId(selectorItem.linkId);
+      await deleteId(selectorItem.nodeId);
     }
     
     await deleteSelector(selector);
