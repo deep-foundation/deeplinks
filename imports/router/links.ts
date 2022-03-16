@@ -496,6 +496,8 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 
     const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
 
+    handlePortDebug('newContainer result', container);
+
     if (container.error) return handlePortDebug('portResult.error', container.error);
     handlePortDebug(`port handler container ${JSON.stringify(container)} created`);
   } else if (operation == 'DELETE') {
