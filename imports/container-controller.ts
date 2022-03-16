@@ -171,6 +171,7 @@ export class ContainerController {
       }
       if (!done && !forcePort) dockerPort = await getPort();
     }
+    log('newContainer hashes', { handlersHash, runContainerHash });
     return container;
   }
   async findContainer( containerName: string ) {
