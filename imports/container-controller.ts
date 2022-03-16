@@ -177,6 +177,8 @@ export class ContainerController {
   async findContainer( containerName: string ) {
     const { handlersHash, runContainerHash } = this;
     log('findContainer hashes', { handlersHash, runContainerHash });
+    if (runContainerHash[containerName]) await this._waitContainer(containerName);
+    log('findContainer result', handlersHash[containerName]);
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
@@ -184,7 +186,8 @@ export class ContainerController {
     return (await execAsync(`docker stop ${containerName} && docker rm ${containerName}`))?.stdout;
   }
   async dropContainer( container: Container ) {
-    const { handlersHash } = this;
+    const { handlersHash, runContainerHash } = this;
+    if (runContainerHash[container.name]) await this._waitContainer(container.name);
     if (!handlersHash[container.name]) return;
     let dockerStopResult = await this._dropContainer(container.name);
     handlersHash[container.name] = undefined;
