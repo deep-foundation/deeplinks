@@ -81,7 +81,7 @@ export class ContainerController {
         log('command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
-        dockerRunResult = dockerRunResultObject.toString();
+        dockerRunResult = dockerRunResultObject?.stdout;
         log('dockerRunResultString', { dockerRunResult });
       } catch (e) {
         error('error', e);
@@ -101,7 +101,7 @@ export class ContainerController {
         if (!publish) {
           const inspectResultObject = await execAsync(`docker inspect ${containerName}`);
           log('inspectResultObject', JSON.stringify(inspectResultObject, null, 2));
-          const inspectResult = inspectResultObject.toString();
+          const inspectResult = inspectResultObject?.stdout;
           log('inspectResultString', { inspectResult });
           const inspectJSON = JSON.parse(inspectResult)
           host = inspectJSON?.[0]?.NetworkSettings?.Networks?.[network]?.IPAddress;
@@ -184,7 +184,7 @@ export class ContainerController {
   }
   async _dropContainer( containerName: string ) {
     log('_dropContainer', containerName);
-    return (await execAsync(`docker stop ${containerName} && docker rm ${containerName}`)).toString();
+    return (await execAsync(`docker stop ${containerName} && docker rm ${containerName}`))?.stdout;
   }
   async dropContainer( container: Container ) {
     const { handlersHash } = this;
