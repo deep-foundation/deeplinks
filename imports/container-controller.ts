@@ -103,7 +103,8 @@ export class ContainerController {
         log('_runContainer container', container);
         
         // wait on
-        await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
+        const waitResult = await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
+        log('_runContainer npx done', { waitResult });
 
         return container;
       }
@@ -164,6 +165,7 @@ export class ContainerController {
       }
       if (!!container && !container?.error) {
         done = true;
+        log('newContainer done true');
         handlersHash[containerName] = container;
         runContainerHash[containerName] = undefined;
       }
