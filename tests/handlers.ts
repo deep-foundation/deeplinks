@@ -446,8 +446,8 @@ describe('async function handle by type with resolve using deep client', () => {
   });
 });
 
-describe.only('handle port', () => {
-  it.only(`handle port`, async () => {
+describe('handle port', () => {
+  it(`handle port`, async () => {
     const port = await getPort();
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     const portId = (await deep.insert({
