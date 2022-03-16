@@ -79,8 +79,10 @@ export class ContainerController {
       try {
         const command = `docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gqlUrnWithoutProject} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
         log('command', { command });
-        dockerRunResult = (await execAsync(command)).toString();
-        log('dockerRunResult', { dockerRunResult });
+        const dockerRunResultObject = await execAsync(command);
+        log('dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
+        dockerRunResult = dockerRunResultObject.toString();
+        log('dockerRunResultString', { dockerRunResult });
       } catch (e) {
         error('error', e);
         dockerRunResult = e.stderr;
