@@ -97,15 +97,8 @@ export class ContainerController {
         done = true;
 
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
-        let host = +DOCKER ? 'host.docker.internal' : 'localhost';
-        if (!publish) {
-          const inspectResultObject = await execAsync(`docker inspect ${containerName}`);
-          log('inspectResultObject', JSON.stringify(inspectResultObject, null, 2));
-          const inspectResult = inspectResultObject?.stdout;
-          log('inspectResultString', { inspectResult });
-          const inspectJSON = JSON.parse(inspectResult)
-          host = inspectJSON?.[0]?.NetworkSettings?.Networks?.[network]?.IPAddress;
-        }
+        if (!publish && !+DOCKER) throw new Error('Need proxy, dl issue https://github.com/deep-foundation/deeplinks/issues/45')
+        let host = publish ? +DOCKER ? 'host.docker.internal' : 'localhost' : +DOCKER ? containerName : '';
         const container = { name: containerName, host, port: dockerPort };
         log('container', container);
         
@@ -200,7 +193,7 @@ export class ContainerController {
       const initRunner = `http://${host}:${port}/init`
       log('initRunner', { initRunner })
       initResult = await axios.post(initRunner);
-      log('initResult', { initResult: initResult.toString() });
+      log('initResult', { initResult });
     } catch (e) {
       error('error', e);
       return ({ error: e });
@@ -213,12 +206,13 @@ export class ContainerController {
     try {
       const callRunner = `http://${container.host}:${container.port}/call`
       log('callRunner', { callRunner, params: options })
-      const result = await axios.post(callRunner, { params: options });
-      if (result?.data?.error) return { error: result?.data?.error };
-      if (result?.data?.resolved) {
-        return result.data.resolved;
+      const callResult = await axios.post(callRunner, { params: options });
+      log('callResult', { callResult });
+      if (callResult?.data?.error) return { error: callResult?.data?.error };
+      if (callResult?.data?.resolved) {
+        return callResult.data.resolved;
       }
-      return Promise.reject(result?.data?.rejected);
+      return Promise.reject(callResult?.data?.rejected);
     } catch (e) {
       error('error', e);
       return ({ error: e });
