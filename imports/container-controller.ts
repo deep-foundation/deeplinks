@@ -99,7 +99,10 @@ export class ContainerController {
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
         let host = +DOCKER ? 'host.docker.internal' : 'localhost';
         if (!publish) {
-          const inspectResult = (await execAsync(`docker inspect ${containerName}`)).toString();
+          const inspectResultObject = await execAsync(`docker inspect ${containerName}`);
+          log('inspectResultObject', JSON.stringify(inspectResultObject, null, 2));
+          const inspectResult = inspectResultObject.toString();
+          log('inspectResultString', { inspectResult });
           const inspectJSON = JSON.parse(inspectResult)
           host = inspectJSON?.[0]?.NetworkSettings?.Networks?.[network]?.IPAddress;
         }
