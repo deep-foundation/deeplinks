@@ -165,9 +165,9 @@ export class ContainerController {
       }
       if (!!container && !container?.error) {
         done = true;
-        log('newContainer done true');
         handlersHash[containerName] = container;
         runContainerHash[containerName] = undefined;
+        log('newContainer done true', { containerName, handlersHash, runContainerHash});
       }
       if (!done && !forcePort) dockerPort = await getPort();
     }
