@@ -148,7 +148,7 @@ export class ContainerController {
     let done = false;
     let count = 30;
     while (!done) {
-      log('count findPort', { count });
+      log('count newContainer', { count });
       if (count < 0) return { error: 'timeout findPort' };
       count--;
       if (runContainerHash[containerName]) {
@@ -160,6 +160,7 @@ export class ContainerController {
       else {
         runContainerHash[containerName] = true;
         container = await this._runContainer(containerName, dockerPort, options);
+        log('newContainer _runContainer result', { container });
       }
       if (!!container && !container?.error) {
         done = true;

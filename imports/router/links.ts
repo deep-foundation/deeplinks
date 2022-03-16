@@ -88,7 +88,7 @@ export const useRunner = async ({
 
   useRunnerDebug('jwt', jwt);
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
-  useRunnerDebug('portResult', container);
+  useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
   const callResult = await containerController.callHandler({ code, container, jwt, data: { oldLink, newLink, moment, promiseId } });
