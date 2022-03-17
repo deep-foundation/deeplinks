@@ -95,7 +95,7 @@ export async function deleteId(id: number, options: {
   name?: string;
 } = { table: 'links' })
 {
-  deleteIds([id], options);
+  await deleteIds([id], options);
 }
 
 export async function deleteIds(ids: number[], options: {
