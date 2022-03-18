@@ -620,7 +620,7 @@ export const deleteSelector = async (selector: any) => {
   await deleteId(selector.rootId);
 };
 
-describe.only('handle by selector', () => {
+describe.skip('handle by selector', () => {
   it(`handle insert`, async () => {
     // try 
     // {
