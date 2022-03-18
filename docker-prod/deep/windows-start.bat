@@ -1,1 +1,1 @@
-docker-compose up -d
+docker-compose -p deep up -d
