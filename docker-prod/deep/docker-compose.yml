@@ -44,8 +44,6 @@ services:
       - network
     ports:
     - "3007:3007"
-    depends_on:
-    - "graphql-engine"
     restart: always
     pull_policy: always
     volumes:
@@ -57,8 +55,6 @@ services:
       - network
     ports:
     - "3006:3006"
-    depends_on:
-    - "graphql-engine"
     restart: always
     pull_policy: always
     volumes:

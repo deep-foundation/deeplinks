@@ -88,7 +88,7 @@ export const useRunner = async ({
 
   useRunnerDebug('jwt', jwt);
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
-  useRunnerDebug('portResult', container);
+  useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
   const callResult = await containerController.callHandler({ code, container, jwt, data: { oldLink, newLink, moment, promiseId } });
@@ -486,30 +486,32 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
       table: 'links',
       returning: 'id value',
     });
-    handlePortDebug(isolationProvider);
+    handlePortDebug('INSERT', isolationProvider);
     const dockerImage = isolationProvider?.data?.[0]?.value.value;
-    handlePortDebug('dockerImage', dockerImage);
+    handlePortDebug('INSERT dockerImage', dockerImage);
 
     // start container
     const containerName = `deep${await containerController.getDelimiter()}handle_port_${portValue}`;
-    handlePortDebug('containerName', containerName);
+    handlePortDebug('INSERT containerName', containerName);
 
     const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
 
+    handlePortDebug('INSERT newContainer result', container);
+
     if (container.error) return handlePortDebug('portResult.error', container.error);
-    handlePortDebug(`port handler container ${JSON.stringify(container)} created`);
+    handlePortDebug(`INSERT port handler container ${JSON.stringify(container)} created`);
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
     const containerName = `deep${await containerController.getDelimiter()}handle_port_${portValue}`;
-    handlePortDebug('containerName', containerName);
+    handlePortDebug('DELETE containerName', containerName);
 
     const container = await containerController.findContainer(containerName);
-    handlePortDebug('container', container);
+    handlePortDebug('DELETE container', container);
 
     await containerController.dropContainer(container);
     
-    handlePortDebug('port handler container deleted');
+    handlePortDebug('DELETE port handler container deleted');
   }
 }
 
