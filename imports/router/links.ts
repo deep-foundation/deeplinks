@@ -517,6 +517,12 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
 
 export default async (req, res) => {
   try {
+    let handlePortId;
+    try {
+      handlePortId = await deep.id('@deep-foundation/core', 'HandlePort');
+    } catch {
+      return res.status(500).json({ error: '@deep-foundation/core package is not ready to support links handlers.' });
+    }
     const event = req?.body?.event;
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
@@ -533,7 +539,7 @@ export default async (req, res) => {
       }
       const newRow = event?.data?.new;
       // select value into newRow
-      if(newRow) {
+      if (newRow) {
         const queryResult = await deep.select({
           id: { _eq: newRow.id },
         }, {
@@ -553,7 +559,7 @@ export default async (req, res) => {
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
-          await handleSelector(oldRow, newRow);
+          // await handleSelector(oldRow, newRow);
         } else if(operation === 'UPDATE') {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
@@ -567,8 +573,7 @@ export default async (req, res) => {
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleSchedule(current, operation);
         }
-
-        const handlePortId = await deep.id('@deep-foundation/core', 'HandlePort');
+        
         if (typeId === handlePortId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handlePort(current, operation);
         }
@@ -601,7 +606,6 @@ export default async (req, res) => {
           });
         }
       }
-
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
