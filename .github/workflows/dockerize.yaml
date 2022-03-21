@@ -9,6 +9,12 @@ defaults:
   run:
     working-directory: ./
 jobs:
+  create-snapshot:
+    name: create-snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - name: docker test
+        run: docker ps
   dockerize:
     name: dockerize
     runs-on: ubuntu-latest
