@@ -14,6 +14,8 @@ COPY index.ts .
 COPY node_modules ./node_modules
 COPY imports ./imports
 
+COPY migrated_pg.dump .
+
 ENV PORT 3006
 ENV DOCKER 1
 ENV DEBUG_COLORS true
