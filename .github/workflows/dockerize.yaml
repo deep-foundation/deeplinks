@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: docker test
-        run: docker ps
+        run: cd docker-prod/deep && docker-compose up -d
   dockerize:
     name: dockerize
     runs-on: ubuntu-latest
