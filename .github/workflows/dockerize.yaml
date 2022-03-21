@@ -13,6 +13,7 @@ jobs:
     name: create-snapshot
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: docker test
         run: cd docker-prod/deep && docker-compose up -d
   dockerize:
