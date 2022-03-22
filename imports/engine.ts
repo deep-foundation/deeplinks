@@ -15,9 +15,31 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const execP = promisify(exec);
 const DOCKER = process.env.DOCKER || '0';
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
-export interface IOptions {
+export interface ICallOptions {
   operation: 'run' | 'sleep' | 'reset';
   envs: { [key: string]: string; };
+}
+
+export interface ICheckDeeplinksStatusReturn {
+  result: '1' | '0' | undefined;
+}
+export interface IGetComposeReturn {
+  result?: String;
+  error?: any;
+}
+export interface IExecEngineReturn {
+  result?: {
+    stdout: String;
+    stderr: String;
+  };
+  error?: any;
+}
+
+export interface IGenerateEngineStrOptions {
+  operation: String;
+  composeVersion: String;
+  idDeeplinksDocker: '0' | '1' | undefined;
+  envs: any;
 }
 
 const _hasura = path.normalize(`${__dirname}/../../hasura`);
@@ -28,7 +50,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const _generateEnvs = (options) => {
+const _generateEnvs = (options): String => {
   const { envs, idDeeplinksDocker, composeVersion } = options;
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
@@ -69,29 +91,30 @@ const _generateEnvs = (options) => {
   return envsStr;
 };
 
-const _checkDeeplinksStatus = async () => {
-  let result;
+const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
+  let status;
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
-    result = await axios.get(`${+DOCKER ? 'htp://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
+    status = await axios.get(`${+DOCKER ? 'htp://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
   } catch (e){
     error(e)
   }
-  return result?.data?.docker;
+  return { result: status?.data?.docker };
 };
 
 
-const _getCompose = async (operation) => {
+const _getCompose = async (operation: String): Promise<IGetComposeReturn> => {
   if (operation == 'run') return;
   try {
     const { stdout } = await execP('docker-compose version --short');
-    return stdout.match(/\d+/)[0];
-  } catch(e){
-    return { error: e };
+    return { result: stdout.match(/\d+/)[0] };
+  } catch( error ){
+    error(error);
+    return { error };
   }
 };
 
-const _generateEngineStr = async (operation, composeVersion, idDeeplinksDocker, envs) => {
+const _generateEngineStr = ({ operation, composeVersion, idDeeplinksDocker, envs }: IGenerateEngineStrOptions): String => {
   let str;
   if (operation === 'run') {
     str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1` : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
@@ -113,23 +136,25 @@ const _generateEngineStr = async (operation, composeVersion, idDeeplinksDocker, 
   return str;
 }
 
-const execEngine = async (envsStr, engineStr) => {
+const execEngine = async ({ envsStr, engineStr }: { envsStr: String; engineStr: String; } ): Promise<IExecEngineReturn> => {
   try {
     const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
-    return { stdout, stderr }
-  } catch(e) {
-    return { error: e };
+    return { result: { stdout, stderr } }
+  } catch(error) {
+    error(error);
+    return { error };
   }
 }
 
-export async function call (options: IOptions) {
+export async function call (options: ICallOptions) {
 
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   const idDeeplinksDocker = await _checkDeeplinksStatus();
   const composeVersion = await _getCompose(options.operation);
-  const envsStr = _generateEnvs({ envs, idDeeplinksDocker, composeVersion});
-  const engineStr = await _generateEngineStr(options.operation, composeVersion, idDeeplinksDocker, envs)
-  const engine = await execEngine(envsStr, engineStr) ;
+  if (composeVersion?.error) return { ...options, envs, error: composeVersion.error };
+  const envsStr = _generateEnvs({ envs, idDeeplinksDocker, composeVersion: composeVersion?.result});
+  const engineStr = _generateEngineStr({ operation: options.operation, composeVersion: composeVersion.result, idDeeplinksDocker: idDeeplinksDocker.result, envs} )
+  const engine = await execEngine({ envsStr, engineStr }) ;
 
   return { ...options, composeVersion, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
