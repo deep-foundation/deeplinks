@@ -96,7 +96,7 @@ const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => 
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
     status = await axios.get(`${+DOCKER ? 'htp://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
-  } catch (e){
+  } catch(e){
     error(e)
   }
   return { result: status?.data?.docker };
