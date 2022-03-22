@@ -1,0 +1,56 @@
+name: Deploy deeplinks dev-app
+on:
+  push:
+    branches: [ deepcase-23-menzorg ]
+  pull_request:
+    branches: [ deepcase-23-menzorg ]
+  workflow_dispatch:
+defaults:
+  run:
+    working-directory: ./
+env:
+  MIGRATIONS_ID_TYPE_SQL: bigint
+  MIGRATIONS_HASURA_PATH: localhost:8080
+  MIGRATIONS_HASURA_SSL: 0
+  MIGRATIONS_HASURA_SECRET: myadminsecretkey
+  MIGRATIONS_DEEPLINKS_URL: http://host.docker.internal:3006
+  JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
+jobs:
+  dockerize:
+    name: dockerize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.15'
+      - name: ci
+        run: npm ci
+      - name: docker init
+        run: cd docker-prod/deep && docker-compose up -d
+      - name: migrate
+        run: npm run migrate
+      - name: backup migrated
+        run: pg_dump --clean --if-exists -d postgres://postgres:postgrespassword@127.0.0.1:5432/postgres > migrated_pg.dump
+      - name: build
+        run: npm run package:build
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: deepf/deeplinks
+      - name: build docker image and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: deepf/deeplinks:dev
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
