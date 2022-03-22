@@ -107,9 +107,9 @@ const _getCompose = async (operation: String): Promise<IGetComposeReturn> => {
   try {
     const { stdout } = await execP('docker-compose version --short');
     return { result: stdout.match(/\d+/)[0] };
-  } catch( error ){
-    error(error);
-    return { error };
+  } catch(e){
+    error(e);
+    return { error: e };
   }
 };
 
@@ -139,9 +139,9 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: String; engineStr:
   try {
     const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
     return { result: { stdout, stderr } }
-  } catch(error) {
-    error(error);
-    return { error };
+  } catch(e) {
+    error(e);
+    return { error: e };
   }
 }
 
@@ -149,11 +149,16 @@ export async function call (options: ICallOptions) {
 
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   const isDeeplinksDocker = await _checkDeeplinksStatus();
+  log({isDeeplinksDocker});
   const composeVersion = await _getCompose(options.operation);
+  log({composeVersion});
   if (composeVersion?.error) return { ...options, envs, error: composeVersion.error };
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker, composeVersion: composeVersion.result});
+  log({envsStr});
   const engineStr = _generateEngineStr({ operation: options.operation, composeVersion: composeVersion.result, isDeeplinksDocker: isDeeplinksDocker.result, envs} )
+  log({engineStr});
   const engine = await _execEngine({ envsStr, engineStr }) ;
+  log({engine});
 
   return { ...options, composeVersion, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
