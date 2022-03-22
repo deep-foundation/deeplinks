@@ -21,7 +21,7 @@ export interface ICallOptions {
 }
 
 interface ICheckDeeplinksStatusReturn {
-  result: '1' | '0' | undefined;
+  result: 1 | 0 | undefined;
 }
 interface IGetComposeReturn {
   result?: String;
@@ -38,9 +38,15 @@ interface IExecEngineReturn {
 interface IGenerateEngineStrOptions {
   operation: String;
   composeVersion: String;
-  isDeeplinksDocker: '0' | '1' | undefined;
+  isDeeplinksDocker: 0 | 1 | undefined;
   envs: any;
 }
+interface IGenerateEnvsOptions {
+  isDeeplinksDocker: 0 | 1 | undefined;
+  composeVersion: String;
+  envs: any;
+}
+
 
 const _hasura = path.normalize(`${__dirname}/../../hasura`);
 const _deepcase = path.normalize(`${__dirname}/../../deepcase`);
@@ -50,8 +56,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const _generateEnvs = (options): String => {
-  const { envs, isDeeplinksDocker, composeVersion } = options;
+const _generateEnvs = ({ envs, isDeeplinksDocker, composeVersion }: IGenerateEnvsOptions): String => {
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
   const hasuraPort = 8080;
@@ -153,7 +158,7 @@ export async function call (options: ICallOptions) {
   const composeVersion = await _getCompose(options.operation);
   log({composeVersion});
   if (composeVersion?.error) return { ...options, envs, error: composeVersion.error };
-  const envsStr = _generateEnvs({ envs, isDeeplinksDocker, composeVersion: composeVersion.result});
+  const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result, composeVersion: composeVersion.result});
   log({envsStr});
   const engineStr = _generateEngineStr({ operation: options.operation, composeVersion: composeVersion.result, isDeeplinksDocker: isDeeplinksDocker.result, envs} )
   log({engineStr});
