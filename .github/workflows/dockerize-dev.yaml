@@ -1,4 +1,4 @@
-name: Deploy deeplinks dev-app
+name: Deploy deeplinks dev-app 
 on:
   push:
     branches: [ deepcase-23-menzorg ]
