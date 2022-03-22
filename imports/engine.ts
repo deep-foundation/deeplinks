@@ -28,7 +28,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = process.platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const generateEnvs = (options) => {
+const _generateEnvs = (options) => {
   const { envs, idDeeplinksDocker, composeVersion } = options;
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
@@ -63,63 +63,73 @@ const generateEnvs = (options) => {
     envs['NEXT_PUBLIC_GQL_SSL'] = envs['NEXT_PUBLIC_GQL_SSL'] ? envs['NEXT_PUBLIC_GQL_SSL'] : '0';
     envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] = envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] ? envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] : `http://localhost:${deepcasePort}`;
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `localhost:${deeplinksPort}/gql`;
-    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : `http://deep${composeVersion == '1' ? '_' : '-'}links${composeVersion == '1' ? '_' : '-'}1:${deeplinksPort}`;
+    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : idDeeplinksDocker === 0 ? `http://host.docker.internal:${deeplinksPort}` : `http://deep${composeVersion == '1' ? '_' : '-'}links${composeVersion == '1' ? '_' : '-'}1:${deeplinksPort}`;
   }
   Object.keys(envs).forEach(k => envsStr += handleEnv(k, envs));
   return envsStr;
 };
 
-const checkStatus = async () => {
+const _checkDeeplinksStatus = async () => {
   let result;
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
-    result = await axios.get(`${+DOCKER ? 'htp://host.docker.internatl:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
+    result = await axios.get(`${+DOCKER ? 'htp://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true });
   } catch (e){
     error(e)
   }
   return result?.data?.docker;
 };
 
-export async function call (options: IOptions) {
-  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
-  const idDeeplinksDocker = await checkStatus();
-  let str;
-  let envsStr;
-  let composeVersion;
 
-  const getCompose = async (operation) => {
-    if (operation == 'run') return;
+const _getCompose = async (operation) => {
+  if (operation == 'run') return;
+  try {
     const { stdout } = await execP('docker-compose version --short');
     return stdout.match(/\d+/)[0];
-  };
-  
-  const execEngine = async (operation, composeVersion, idDeeplinksDocker, envsStr) => {
-    if (operation === 'run') {
-      str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
-    }
-    if (operation === 'sleep') {
-      if (process.platform === "win32") {
-        str = ` powershell -command docker stop $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}')`;
-      } else {
-        str = ` docker stop $(docker ps --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}')`;
-      }
-    }
-    if (operation === 'reset') {
-      if (process.platform === "win32") {
-        str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && powershell -command docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep_)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep_) ` : ''};`;
-      } else {
-        str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && (docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep_) || true)` : ''}`;
-      }
-    }
-    const { stdout, stderr } = await execP(`${envsStr} ${str}`);
-    return { stdout, stderr }
+  } catch(e){
+    return { error: e };
   }
+};
+
+const _generateEngineStr = async (operation, composeVersion, idDeeplinksDocker, envs) => {
+  let str;
+  if (operation === 'run') {
+    str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1` : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+  }
+  if (operation === 'sleep') {
+    if (process.platform === "win32") {
+      str = ` powershell -command docker stop $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}')`;
+    } else {
+      str = ` docker stop $(docker ps --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}')`;
+    }
+  }
+  if (operation === 'reset') {
+    if (process.platform === "win32") {
+      str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && powershell -command docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep_)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep_) ` : ''};`;
+    } else {
+      str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && (docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep_) || true)` : ''}`;
+    }
+  }
+  return str;
+}
+
+const execEngine = async (envsStr, engineStr) => {
   try {
-    composeVersion = await getCompose(options.operation);
-    envsStr = generateEnvs({ envs, idDeeplinksDocker, composeVersion});
-    const engine = await execEngine(options.operation, composeVersion, idDeeplinksDocker, envsStr) ;
-    return { ...options, composeVersion, envs, str, fullStr: `${envsStr} ${str}`, stdout: engine.stdout, stderr: engine.stderr };
+    const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
+    return { stdout, stderr }
   } catch(e) {
-    return { ...options, composeVersion, envs, str, fullStr: `${envsStr ? envsStr : ''} ${str}`, error: e };
+    return { error: e };
   }
+}
+
+export async function call (options: IOptions) {
+
+  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
+  const idDeeplinksDocker = await _checkDeeplinksStatus();
+  const composeVersion = await _getCompose(options.operation);
+  const envsStr = _generateEnvs({ envs, idDeeplinksDocker, composeVersion});
+  const engineStr = await _generateEngineStr(options.operation, composeVersion, idDeeplinksDocker, envs)
+  const engine = await execEngine(envsStr, engineStr) ;
+
+  return { ...options, composeVersion, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
