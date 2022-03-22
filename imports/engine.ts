@@ -47,8 +47,8 @@ const generateEnvs = (options) => {
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
   envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : process.platform === "win32" ? '.migrate' : '/tmp/.deep-migrate';
   if (isGitpod) {
-    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep${composeVersion == '1' ? '_' : '-'}graphql-engine_1:${hasuraPort}` : `$(gp url ${hasuraPort})`;
-    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : idDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep${composeVersion == '1' ? '_' : '-'}graphql-engine_1:${hasuraPort}`;
+    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1:${hasuraPort}` : `$(gp url ${hasuraPort})`;
+    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : idDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1:${hasuraPort}`;
     envs['MIGRATIONS_HASURA_SSL'] = envs['MIGRATIONS_HASURA_SSL'] ? envs['MIGRATIONS_HASURA_SSL'] : +DOCKER ? '0' : '1';
     envs['DEEPLINKS_HASURA_SSL'] = envs['DEEPLINKS_HASURA_SSL'] ? envs['DEEPLINKS_HASURA_SSL'] : idDeeplinksDocker === 0 ? '1' : '0';
     envs['NEXT_PUBLIC_GQL_SSL'] = envs['NEXT_PUBLIC_GQL_SSL'] ? envs['NEXT_PUBLIC_GQL_SSL'] : '1';
@@ -56,14 +56,14 @@ const generateEnvs = (options) => {
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `$(echo $(gp url ${deeplinksPort}) | awk -F[/:] '{print $4}')/gql`;
     envs['NEXT_PUBLIC_ENGINES'] = envs['NEXT_PUBLIC_ENGINES'] ? envs['NEXT_PUBLIC_ENGINES'] : '1';
   } else {
-    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep${composeVersion == '1' ? '_' : '-'}graphql-engine_1:${hasuraPort}` : `localhost:${hasuraPort}`;
-    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : idDeeplinksDocker === 0 ? `localhost:${hasuraPort}` : `deep${composeVersion == '1' ? '_' : '-'}graphql-engine_1:${hasuraPort}`;
+    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1:${hasuraPort}` : `localhost:${hasuraPort}`;
+    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : idDeeplinksDocker === 0 ? `localhost:${hasuraPort}` : `deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1:${hasuraPort}`;
     envs['MIGRATIONS_HASURA_SSL'] = envs['MIGRATIONS_HASURA_SSL'] ? envs['MIGRATIONS_HASURA_SSL'] : '0';
     envs['DEEPLINKS_HASURA_SSL'] = envs['DEEPLINKS_HASURA_SSL'] ? envs['DEEPLINKS_HASURA_SSL'] : '0';
     envs['NEXT_PUBLIC_GQL_SSL'] = envs['NEXT_PUBLIC_GQL_SSL'] ? envs['NEXT_PUBLIC_GQL_SSL'] : '0';
     envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] = envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] ? envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] : `http://localhost:${deepcasePort}`;
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `localhost:${deeplinksPort}/gql`;
-    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : `http://deep${composeVersion == '1' ? '_' : '-'}links_1:${deeplinksPort}`;
+    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : `http://deep${composeVersion == '1' ? '_' : '-'}links${composeVersion == '1' ? '_' : '-'}1:${deeplinksPort}`;
   }
   Object.keys(envs).forEach(k => envsStr += handleEnv(k, envs));
   return envsStr;
@@ -84,16 +84,15 @@ export async function call (options: IOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   const idDeeplinksDocker = await checkStatus();
   let str;
+  let envsStr;
+  let composeVersion;
 
   const getCompose = async (operation) => {
     if (operation == 'run') return;
     const { stdout } = await execP('docker-compose version --short');
     return stdout.match(/\d+/)[0];
   };
-
-  let composeVersion = await getCompose(options.operation);
-  let envsStr = generateEnvs({ envs, idDeeplinksDocker, composeVersion});
-
+  
   const execEngine = async (operation, composeVersion, idDeeplinksDocker, envsStr) => {
     if (operation === 'run') {
       str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal' : 'tcp'}:8080 && cd ${_deeplinks} ${idDeeplinksDocker===undefined ? `&& ${ process.platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
@@ -116,10 +115,11 @@ export async function call (options: IOptions) {
     return { stdout, stderr }
   }
   try {
+    composeVersion = await getCompose(options.operation);
+    envsStr = generateEnvs({ envs, idDeeplinksDocker, composeVersion});
     const engine = await execEngine(options.operation, composeVersion, idDeeplinksDocker, envsStr) ;
     return { ...options, composeVersion, envs, str, fullStr: `${envsStr} ${str}`, stdout: engine.stdout, stderr: engine.stderr };
   } catch(e) {
-    return { ...options, composeVersion, envs, str, fullStr: `${envsStr} ${str}`, error: e };
+    return { ...options, composeVersion, envs, str, fullStr: `${envsStr ? envsStr : ''} ${str}`, error: e };
   }
-  return options;
 }
