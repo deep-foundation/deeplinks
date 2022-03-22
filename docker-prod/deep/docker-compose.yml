@@ -39,7 +39,7 @@ services:
       HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: "true"
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "link"
   case:
-    image: deepf/deepcase:main
+    image: deepf/deepcase:dev
     networks:
       - network
     ports:
@@ -50,7 +50,7 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
   links:
-    image: deepf/deeplinks:main
+    image: deepf/deeplinks:dev
     networks:
       - network
     ports:
