@@ -7,11 +7,13 @@ import axios from 'axios';
 import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import expressPlayground from 'graphql-playground-middleware-express';
+import moesif from 'moesif-nodejs';
 import Debug from 'debug';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
+const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
 
 const debug = Debug('deeplinks');
 const log = debug.extend('log');
@@ -55,6 +57,13 @@ app.use(['/v1','/v1alpha1','/v2','/console'], createProxyMiddleware({
 }));
 
 //   hasura-admin
+
+if (MOESIF_TOKEN) {
+  const moesifMiddleware = moesif({applicationId: MOESIF_TOKEN});
+  app.use(moesifMiddleware);
+  moesifMiddleware.startCaptureOutgoing();
+}
+
 
 app.use(express.json());
 app.use('/', router);

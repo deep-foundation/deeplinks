@@ -44,6 +44,7 @@
     "internal-ip": "^6.2.0",
     "jsonwebtoken": "^8.5.1",
     "microtime": "^3.0.0",
+    "moesif-nodejs": "^3.1.19",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2",
     "supports-color": "^9.2.1",
