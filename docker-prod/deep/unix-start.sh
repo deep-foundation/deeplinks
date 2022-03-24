@@ -7,6 +7,6 @@ echo 'Migrating data'
 sleep 5
 echo 'It will be faster soon, but now please wait...'
 curl -s -X POST http://localhost:3007/api/deeplinks --data '{"operation":"run"}' --header "Content-Type: application/json" > /dev/null
-echo ''
-echo 'Migrations done! Please, open file "open-deep.html"'
-sleep 1
+echo 'Migrations done!'
+# (macos) || (linux) open default browser
+(open ./open-deep.html) || (xdg-open ./open-deep.html 1>/dev/null 2>&1)
