@@ -153,6 +153,7 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: String; engineStr:
 export async function call (options: ICallOptions) {
 
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
+  log({options});
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   log({isDeeplinksDocker});
   const composeVersion = await _getCompose(options.operation);
