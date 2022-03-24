@@ -5,5 +5,6 @@ sleep 5
 echo 'Migrating data'
 echo 'It will be faster soon, but now please wait...'
 $postParams = @{operation='run'}; wget -Method POST -Uri "http://localhost:3007/api/deeplinks" -Body $postParams | Out-Null
-echo 'Migrations done! Please, open file "open-deep.html"'
+echo 'Migrations done!"'
 sleep 1
+Invoke-Expression open-deep.html
