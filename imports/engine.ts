@@ -4,6 +4,7 @@ import path from 'path';
 import internalIp from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
+import fixPath from 'fix-path';
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -108,9 +109,9 @@ const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => 
 };
 
 
-const _getCompose = async (): Promise<IGetComposeReturn> => {
+const _getCompose = async (PATH: string): Promise<IGetComposeReturn> => {
   try {
-    const { stdout } = await execP('docker-compose version --short');
+    const { stdout } = await execP(`PATH=${PATH} docker-compose version --short`);
     return { result: stdout.match(/\d+/)[0] };
   } catch(e){
     error(e);
@@ -154,10 +155,15 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
 export async function call (options: ICallOptions) {
 
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
+  fixPath();
+  const PATH = [];
+  if (process?.env?.PATH) PATH.push(process?.env?.PATH);
+  if (envs['PATH']) PATH.push(process?.env?.PATH);
+  envs['PATH'] = PATH.join(':');
   log({options});
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   log({isDeeplinksDocker});
-  const composeVersion = await _getCompose();
+  const composeVersion = await _getCompose(envs['PATH']);
   log({composeVersion});
   if (composeVersion?.error) return { ...options, envs, error: composeVersion.error };
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result, composeVersion: composeVersion.result});
