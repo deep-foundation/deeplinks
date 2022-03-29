@@ -62,7 +62,8 @@ export function makePromiseResult(promise: any, resolvedTypeId: number, promiseR
 };
 
 const containerController = new ContainerController({
-  gqlUrnWithoutProject: +DOCKER ? 'links_1:3006/gql' : 'graphql-engine_1:8080/v1/graphql',
+  gql_docker_domain: +DOCKER ? 'links' : 'graphql-engine',
+  gql_port_path: +DOCKER ? '3006/gql' : '8080/v1/graphql',
   network: 'deep_network',
   handlersHash: {}
 })

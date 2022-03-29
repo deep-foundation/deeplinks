@@ -16,7 +16,8 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
-  gqlUrnWithoutProject: string;
+  gql_docker_domain: string;
+  gql_port_path: string;
   network: string;
   handlersHash?: any;
 }
@@ -48,7 +49,8 @@ export interface CallOptions {
 }
 
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
-  gqlUrnWithoutProject: 'links_1:3006',
+  gql_docker_domain: 'links',
+  gql_port_path: '3006/gql',
   network: 'network',
   handlersHash: {},
 };
@@ -56,19 +58,21 @@ export const runnerControllerOptionsDefault: ContainerControllerOptions = {
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 export class ContainerController {
-  gqlUrnWithoutProject: string;
+  gql_docker_domain: string;
+  gql_port_path: string;
   network: string;
   delimiter: string;
   runContainerHash: { [id: string]: Boolean } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
-    this.gqlUrnWithoutProject = options?.gqlUrnWithoutProject || runnerControllerOptionsDefault.gqlUrnWithoutProject;
+    this.gql_docker_domain = options?.gql_docker_domain || runnerControllerOptionsDefault.gql_docker_domain;
+    this.gql_port_path = options?.gql_port_path || runnerControllerOptionsDefault.gql_port_path;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
   async _runContainer( containerName: string, dockerPort: number, options: NewContainerOptions ) {
     const { handler, forcePort, forceRestart, publish } = options;
-    const { network, gqlUrnWithoutProject } = this;
+    const { network, gql_docker_domain, gql_port_path } = this;
     let done = false;
     let count = 30;
     let dockerRunResult;
@@ -77,7 +81,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gqlUrnWithoutProject} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
+        const command = `docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gql_docker_domain}${await this.getDelimiter()}1:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
         log('_runContainer command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('_runContainer dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
