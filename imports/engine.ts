@@ -4,6 +4,7 @@ import path from 'path';
 import internalIp from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
+// @ts-ignore
 import fixPath from 'fix-path';
 
 const debug = Debug('deeplinks:engine');
