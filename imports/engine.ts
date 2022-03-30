@@ -148,9 +148,9 @@ const _generateEngineStr = ({ operation, composeVersion, isDeeplinksDocker, envs
   return str;
 }
 
-const _execEngine = async ({ envs, engineStr }: { envs: any; engineStr: string; } ): Promise<IExecEngineReturn> => {
+const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr: string; } ): Promise<IExecEngineReturn> => {
   try {
-    const { stdout, stderr } = await execP(engineStr, { env: { ...envs }});
+    const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
     return { result: { stdout, stderr } }
   } catch(e) {
     error(e);
@@ -163,10 +163,7 @@ export async function call (options: ICallOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   if (platform !== "win32"){
     fixPath();
-    const PATH = [];
-    if (process?.env?.PATH) PATH.push(process?.env?.PATH);
-    if (envs['PATH']) PATH.push(process?.env?.PATH);
-    envs['PATH'] = PATH.join(':');
+    envs['PATH'] = process?.env?.['PATH'];
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
@@ -180,7 +177,7 @@ export async function call (options: ICallOptions) {
   log({envs});
   const engineStr = _generateEngineStr({ operation: options.operation, composeVersion: composeVersion.result, isDeeplinksDocker: isDeeplinksDocker.result, envs} )
   log({engineStr});
-  const engine = await _execEngine({ envs, engineStr }) ;
+  const engine = await _execEngine({ envsStr, engineStr }) ;
   log({engine});
 
   return { ...options, platform, isDeeplinksDocker, composeVersion, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
