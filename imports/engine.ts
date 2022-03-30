@@ -116,7 +116,7 @@ const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => 
 
 const _getCompose = async (PATH: string): Promise<IGetComposeReturn> => {
   try {
-    const { stdout } = await execP(`PATH=${PATH} docker-compose version --short`);
+    const { stdout } = await execP(`PATH="${PATH}" docker-compose version --short`);
     log('_getCompose stdout', stdout)
     return { result: stdout.match(/\d+/)[0] };
   } catch(e){
@@ -129,7 +129,7 @@ const _generateEngineStr = ({ operation, composeVersion, isDeeplinksDocker, envs
   let str;
   if (![ 'run', 'sleep', 'reset' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'run') {
-    str = ` cd ${path.normalize(`${_hasura}/local/`)} && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1` : 'tcp'}:8080 && cd ${_deeplinks} ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
@@ -140,9 +140,9 @@ const _generateEngineStr = ({ operation, composeVersion, isDeeplinksDocker, envs
   }
   if (operation === 'reset') {
     if (platform === "win32") {
-      str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && powershell -command docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep_)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep_) ` : ''};`;
+      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']} && powershell -command docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"_\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep_)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep_) ` : ''};`;
     } else {
-      str = ` cd ${_deeplinks} && npx rimraf ${envs['MIGRATIONS_DIR']} && (docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep_) || true)` : ''}`;
+      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']} && (docker rm -fv $(docker ps -a --filter name=deep${composeVersion == '1' ? '_' : '-'} -q --format '{{ $a:= false }}{{ range $splited := (split .Names "_") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep_) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep_) || true)` : ''}`;
     }
   }
   return str;
@@ -163,7 +163,7 @@ export async function call (options: ICallOptions) {
   const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
   if (platform !== "win32"){
     fixPath();
-    envs['PATH'] = process?.env?.['PATH'];
+    envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
