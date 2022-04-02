@@ -257,16 +257,16 @@ export async function handleSelector(oldLink: any, newLink: any) {
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  // log('currentLinkId', currentLinkId);
-  // log('currentTypeId', currentTypeId);
+  handleSelectorDebug('currentLinkId', currentLinkId);
+  handleSelectorDebug('currentTypeId', currentTypeId);
 
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
   const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
-  // log('handlerTypeId', handlerTypeId);
-  // log('handleOperationTypeId', handleOperationTypeId);
+  handleSelectorDebug('handlerTypeId', handlerTypeId);
+  handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -325,7 +325,7 @@ export async function handleSelector(oldLink: any, newLink: any) {
   const handleInsertsIds: any[] = [];
 
   const handlersWithCode = handlersResult?.data?.links as any[];
-  // log('handlersWithCode.length', handlersWithCode?.length);
+  handleSelectorDebug('handlersWithCode.length', handlersWithCode?.length);
 
   const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
   const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
