@@ -642,10 +642,13 @@ describe.only('handle by selector', () => {
 
     // log('awaiting starts...');
     // await deep.await(idToWait);
+
     // log('awaiting finished.');
 
     // await deep.await(selectorItems[0].linkId); // doesn't work. why?
+    log(`awaiting ${selectorItems[1].linkId} link.`)
     await deep.await(selectorItems[1].linkId);
+    log(`awaiting ${selectorItems[0].linkId} link.`)
     await deep.await(selectorItems[0].linkId);
 
     const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
