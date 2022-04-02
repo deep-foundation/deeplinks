@@ -452,7 +452,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   pathToWhere(start: DeepClientStartItem, ...path: DeepClientPathItem[]): any {
-    const pckg = { type_id: GLOBAL_ID_PACKAGE, value: start };
+    const pckg = typeof(start) === 'string' ? { type_id: GLOBAL_ID_PACKAGE, value: start } : { id: start };
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
       const item = path[p];

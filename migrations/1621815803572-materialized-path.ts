@@ -67,14 +67,21 @@ const trigger = Trigger({
   // TODO optimize duplicating equal selects
 
   isAllowSpreadFromCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
   )`,
   isAllowSpreadCurrentTo: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
+    AND
+    EXISTS (SELECT * FROM ${LINKS_TABLE_NAME} as child, ${LINKS_TABLE_NAME} as include WHERE
+      child."id" = CURRENT."to_id" AND
+      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+      include."from_id" = groupRow.id AND
+      include."to_id" IN (child.type_id, ${GLOBAL_ID_ANY})
+    )
   )`,
 
   isAllowSpreadToCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
@@ -86,6 +93,13 @@ const trigger = Trigger({
     l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
+    AND
+    EXISTS (SELECT * FROM ${LINKS_TABLE_NAME} as child, ${LINKS_TABLE_NAME} as include WHERE
+      child."id" = CURRENT."from_id" AND
+      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+      include."from_id" = groupRow.id AND
+      include."to_id" IN (child.type_id, ${GLOBAL_ID_ANY})
+    )
   )`,
 
   isAllowSpreadToInCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE

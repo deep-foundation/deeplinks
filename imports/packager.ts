@@ -179,6 +179,7 @@ export class Packager<L extends Link<any>> {
         const insert = { id: +item.id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 };
         const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
         if (linkInsert?.errors) {
+          log('insertItem linkInsert error', insert);
           errors.push(linkInsert?.errors);
         }
       }
@@ -195,6 +196,7 @@ export class Packager<L extends Link<any>> {
           valueLink = item;
         }
         if (!valueLink) {
+          log('insertItem insertValue error');
           errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
         }
         else {
@@ -202,7 +204,10 @@ export class Packager<L extends Link<any>> {
           const type = typeof(item?.value?.value);
           const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s`, name: 'IMPORT_PACKAGE_VALUE' });
           log('insertItem valueInsert', valueInsert);
-          if (valueInsert?.errors) errors.push(valueInsert?.errors);
+          if (valueInsert?.errors) {
+            log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });
+            errors.push(valueInsert?.errors);
+          }
         }
       }
     } catch(e) {

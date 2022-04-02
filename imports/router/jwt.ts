@@ -37,6 +37,11 @@ const resolvers = {
   Query: {
     jwt: async (source, args, context, info) => {
       const { linkId } = args.input;
+      if (!linkId) {
+        return {
+          linkId: +context?.headers?.['x-hasura-user-id']
+        };
+      }
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !(await deep.select({
