@@ -36,7 +36,7 @@ export const up = async () => {
   DECLARE 
     PROMISE bigint;
     PROMISES bigint;
-    SELECTOR selectors;
+    SELECTOR record;
     user_id bigint;
     hasura_session json;
   BEGIN
@@ -90,20 +90,16 @@ export const up = async () => {
       ) THEN
       CREATE TABLE public.debug_output (promises bigint, new_id bigint);
     END IF;
-    INSERT INTO debug_output ("promises", "new_id") VALUES (user_id, link."id");
-
+    
     FOR SELECTOR IN
-      SELECT selectors.* FROM (
-        SELECT DISTINCT s.selector_id, h.id
-        FROM selectors s, links h
-        WHERE
-            s.item_id = link."id"
-        AND s.selector_id = h.from_id
-        AND h.type_id = ${handleInsertTypeId}
-      ) AS distict_selectors, selectors
+      SELECT s.selector_id, s.bool_exp_id, h.id
+      FROM selectors s, links h
       WHERE
-          distict_selectors.selector_id = selectors.selector_id
+          s.item_id = link."id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${handleInsertTypeId}
     LOOP
+      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, link."id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
