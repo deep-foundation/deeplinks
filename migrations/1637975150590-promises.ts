@@ -36,6 +36,9 @@ export const up = async () => {
   DECLARE 
     PROMISE bigint;
     PROMISES bigint;
+    SELECTOR selectors;
+    user_id bigint;
+    hasura_session json;
   BEGIN
     IF (
         EXISTS(
@@ -66,14 +69,18 @@ export const up = async () => {
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link.from_id,PROMISE);
     END IF;
-    SELECT COUNT(*) INTO PROMISES FROM (
-        SELECT DISTINCT s.selector_id, h.id
-        FROM selectors s, links h
-        WHERE
-            s.item_id = link."id"
-        AND s.selector_id = h.from_id
-        AND h.type_id = ${handleInsertTypeId}
-    ) AS distict_selectors;
+    -- SELECT COUNT(*) INTO "PROMISES" FROM (
+    --     SELECT DISTINCT s.selector_id, h.id
+    --     FROM selectors s, links h
+    --     WHERE
+    --         s.item_id = link."id"
+    --     AND s.selector_id = h.from_id
+    --     AND h.type_id = ${handleInsertTypeId}
+    -- ) AS distict_selectors;
+
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
 
     IF NOT EXISTS (
       SELECT FROM pg_catalog.pg_tables 
@@ -83,13 +90,32 @@ export const up = async () => {
       ) THEN
       CREATE TABLE public.debug_output (promises bigint, new_id bigint);
     END IF;
-    INSERT INTO debug_output ("promises", "new_id") VALUES (PROMISES, link."id");
-    IF (PROMISES > 0) THEN
-      FOR i IN 1..PROMISES LOOP
+    INSERT INTO debug_output ("promises", "new_id") VALUES (user_id, link."id");
+
+    FOR SELECTOR IN
+      SELECT selectors.* FROM (
+        SELECT DISTINCT s.selector_id, h.id
+        FROM selectors s, links h
+        WHERE
+            s.item_id = link."id"
+        AND s.selector_id = h.from_id
+        AND h.type_id = ${handleInsertTypeId}
+      ) AS distict_selectors, selectors
+      WHERE
+          distict_selectors.selector_id = selectors.selector_id
+    LOOP
+      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
-      END LOOP;
-    END IF;
+      END IF;
+    END LOOP;
+
+    -- IF (PROMISES > 0) THEN
+    --   FOR i IN 1..PROMISES LOOP
+    --     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+    --     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
+    --   END LOOP;
+    -- END IF;
     RETURN TRUE;
   END; $function$ LANGUAGE plpgsql;`);
   
