@@ -115,7 +115,7 @@ const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => 
 
 const _getCompose = async (PATH: string): Promise<IGetComposeReturn> => {
   try {
-    const { stdout } = await execP(`${handleEnv('PATH', PATH)} docker-compose version --short`);
+    const { stdout } = await execP(`${handleEnv('PATH', {PATH})} docker-compose version --short`);
     log('_getCompose stdout', stdout)
     return { result: stdout.match(/\d+/)[0] };
   } catch(e){
