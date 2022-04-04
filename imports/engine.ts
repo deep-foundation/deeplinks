@@ -96,8 +96,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker, composeVersion }: IGenerateEnv
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `localhost:${deeplinksPort}/gql`;
     envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : isDeeplinksDocker === 0 ? `http://host.docker.internal:${deeplinksPort}` : `http://deep${composeVersion == '1' ? '_' : '-'}links${composeVersion == '1' ? '_' : '-'}1:${deeplinksPort}`;
   }
-  //return string for debug without path. Path dont need to be set for debug
-  Object.keys(envs).forEach(k => k ==='PATH' && platform === "win32" ? null : envsStr += handleEnv(k, envs));
+  Object.keys(envs).forEach(k => envsStr += handleEnv(k, envs));
   return envsStr;
 };
 
@@ -116,7 +115,7 @@ const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => 
 
 const _getCompose = async (PATH: string): Promise<IGetComposeReturn> => {
   try {
-    const { stdout } = await execP(`PATH="${PATH}" docker-compose version --short`);
+    const { stdout } = await execP(`${handleEnv('PATH', PATH)} docker-compose version --short`);
     log('_getCompose stdout', stdout)
     return { result: stdout.match(/\d+/)[0] };
   } catch(e){
@@ -173,6 +172,7 @@ export async function call (options: ICallOptions) {
   const composeVersion = await _getCompose(envs['PATH']);
   log({composeVersion});
   if (composeVersion?.error) return { ...options, envs, error: composeVersion.error };
+
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result, composeVersion: composeVersion.result});
   log({envs});
   const engineStr = _generateEngineStr({ operation: options.operation, composeVersion: composeVersion.result, isDeeplinksDocker: isDeeplinksDocker.result, envs} )
