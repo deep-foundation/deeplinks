@@ -61,13 +61,13 @@ export const up = async () => {
       --  )
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
     END IF;
     IF (
       link."type_id" = ${handleScheduleTypeId}
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link.from_id,PROMISE);
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
     END IF;
     -- SELECT COUNT(*) INTO "PROMISES" FROM (
     --     SELECT DISTINCT s.selector_id, h.id
@@ -90,9 +90,18 @@ export const up = async () => {
       ) THEN
       CREATE TABLE public.debug_output (promises bigint, new_id bigint);
     END IF;
+
+    IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_tables 
+      WHERE 
+        schemaname = 'public' AND 
+        tablename  = 'promise_selectors'
+      ) THEN
+      CREATE TABLE public.promise_selectors (promise_id bigint, item_id bigint, selector_id bigint);
+    END IF;
     
     FOR SELECTOR IN
-      SELECT s.selector_id, s.bool_exp_id, h.id
+      SELECT s.selector_id, h.id, s.bool_exp_id
       FROM selectors s, links h
       WHERE
           s.item_id = link."id"
@@ -102,14 +111,15 @@ export const up = async () => {
       INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, link."id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
+        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+        INSERT INTO promise_selectors ("promise_id","item_id","selector_id") VALUES (PROMISE, link."id", SELECTOR.selector_id);
       END IF;
     END LOOP;
 
     -- IF (PROMISES > 0) THEN
     --   FOR i IN 1..PROMISES LOOP
     --     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    --     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},link."id",PROMISE);
+    --     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
     --   END LOOP;
     -- END IF;
     RETURN TRUE;
@@ -148,7 +158,7 @@ export const up = async () => {
       --  )
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."id",PROMISE);
+    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."id", PROMISE);
     END IF;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
