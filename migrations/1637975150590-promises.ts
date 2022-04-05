@@ -32,6 +32,25 @@ export const up = async () => {
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
+  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (promise_id bigint, item_id bigint, selector_id bigint, handler_id bigint);`);
+  await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
+  await api.query({
+    type: 'track_table',
+    args: {
+      schema: 'public',
+      name: 'promise_selectors',
+    },
+  });
+
+  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.debug_output (promises bigint, new_id bigint);`);
+  await api.query({
+    type: 'track_table',
+    args: {
+      schema: 'public',
+      name: 'debug_output',
+    },
+  });
+
   await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
   DECLARE 
     PROMISE bigint;
@@ -47,27 +66,15 @@ export const up = async () => {
           WHERE from_id = link."type_id"
           AND type_id = ${handleInsertTypeId}
         )
-      --OR
-      --  EXISTS(
-      --    SELECT 1
-      --    FROM
-      --      links as selection,
-      --      links as handleInsert
-      --    WHERE 
-      --          selection.to_id = link."id"
-      --      AND type_id = ${selectionTypeId}
-      --      AND selection.from_id = handleInsert.from_id
-      --      AND handleInsert.type_id = ${handleInsertTypeId}
-      --  )
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+    INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
     END IF;
     IF (
       link."type_id" = ${handleScheduleTypeId}
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
+    INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
     END IF;
     -- SELECT COUNT(*) INTO "PROMISES" FROM (
     --     SELECT DISTINCT s.selector_id, h.id
@@ -81,27 +88,9 @@ export const up = async () => {
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';
-
-    IF NOT EXISTS (
-      SELECT FROM pg_catalog.pg_tables 
-      WHERE 
-        schemaname = 'public' AND 
-        tablename  = 'debug_output'
-      ) THEN
-      CREATE TABLE public.debug_output (promises bigint, new_id bigint);
-    END IF;
-
-    IF NOT EXISTS (
-      SELECT FROM pg_catalog.pg_tables 
-      WHERE 
-        schemaname = 'public' AND 
-        tablename  = 'promise_selectors'
-      ) THEN
-      CREATE TABLE public.promise_selectors (promise_id bigint, item_id bigint, selector_id bigint);
-    END IF;
     
     FOR SELECTOR IN
-      SELECT s.selector_id, h.id, s.bool_exp_id
+      SELECT s.selector_id, h.id as handler_id, s.bool_exp_id
       FROM selectors s, links h
       WHERE
           s.item_id = link."id"
@@ -111,17 +100,10 @@ export const up = async () => {
       INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, link."id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-        INSERT INTO promise_selectors ("promise_id","item_id","selector_id") VALUES (PROMISE, link."id", SELECTOR.selector_id);
+        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handler_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handler_id);
       END IF;
     END LOOP;
-
-    -- IF (PROMISES > 0) THEN
-    --   FOR i IN 1..PROMISES LOOP
-    --     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    --     INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-    --   END LOOP;
-    -- END IF;
     RETURN TRUE;
   END; $function$ LANGUAGE plpgsql;`);
   
@@ -158,7 +140,7 @@ export const up = async () => {
       --  )
     ) THEN
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-    INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."id", PROMISE);
+    INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId},OLD."id", PROMISE);
     END IF;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
@@ -235,5 +217,26 @@ export const down = async () => {
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__function CASCADE;`);
 
   await api.sql(sql`DROP FUNCTION IF EXISTS create_promises_for_inserted_link CASCADE;`);
-  await api.sql(sql`DROP TABLE IF EXISTS debug_output CASCADE;`);
+  await api.query({
+    type: 'untrack_table',
+    args: {
+      table: {
+        schema: 'public',
+        name: 'debug_output',
+      },
+      cascade: true,
+    },
+  });
+  await api.sql(sql`DROP TABLE IF EXISTS "public"."debug_output" CASCADE;`);
+  await api.query({
+    type: 'untrack_table',
+    args: {
+      table: {
+        schema: 'public',
+        name: 'promise_selectors',
+      },
+      cascade: true,
+    },
+  });
+  await api.sql(sql`DROP TABLE IF EXISTS "public"."promise_selectors" CASCADE;`);
 };
