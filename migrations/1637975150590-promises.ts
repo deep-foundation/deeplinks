@@ -76,15 +76,6 @@ export const up = async () => {
     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
     INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
     END IF;
-    -- SELECT COUNT(*) INTO "PROMISES" FROM (
-    --     SELECT DISTINCT s.selector_id, h.id
-    --     FROM selectors s, links h
-    --     WHERE
-    --         s.item_id = link."id"
-    --     AND s.selector_id = h.from_id
-    --     AND h.type_id = ${handleInsertTypeId}
-    -- ) AS distict_selectors;
-
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';

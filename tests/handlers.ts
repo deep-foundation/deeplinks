@@ -128,6 +128,8 @@ export async function deletePromiseResult(promiseResult: any, linkId?: any) {
   const valueId = promiseResult?.object?.id;
   const promiseResultId = promiseResult?.id;
   const promiseId = promiseResult?.in?.[0]?.from?.id;
+  const promiseReasonId = promiseResult?.in?.[0]?.out?.[0]?.id;
+  await deleteId(promiseReasonId);
   await deleteIds([resultLinkId, thenLinkId]);
   await deleteIds([promiseResultId, promiseId, linkId]);
   await deleteId(valueId, { table: 'objects' });
@@ -158,14 +160,15 @@ export async function ensureLinkIsCreated(typeId: number) {
   return freeId;
 }
 
-export async function getPromiseResults(deep, rejectedTypeId: number, linkId: any) {
+export async function getPromiseResults(deep, resultTypeId: number, linkId: any) {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
   const client = deep.apolloClient;
   const queryString = `{
     links(where: { 
       in: {
-        type_id: { _eq: ${rejectedTypeId} }, # Resolved
+        type_id: { _eq: ${resultTypeId} }, # Resolved/Rejected
         from: { 
           type_id: { _eq: ${promiseTypeId} }, # Promise
           in: { 
@@ -180,13 +183,16 @@ export async function getPromiseResults(deep, rejectedTypeId: number, linkId: an
         id
         value
       }
-      in(where: { type_id: { _eq: ${rejectedTypeId} } }) {
+      in(where: { type_id: { _eq: ${resultTypeId} } }) {
         id
         from {
           id
           in(where: { type_id: { _eq: ${thenTypeId} } }) {
             id
           }
+        }
+        out(where: { type_id: { _eq: ${promiseReasonTypeId} } }) {
+          id
         }
       }
     }
@@ -654,10 +660,12 @@ describe.only('handle by selector', () => {
     const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
     const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
+    console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
 
     const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
     const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
+    console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
 
     for (const selectorItem of selectorItems) {
       await deleteId(selectorItem.linkId);
