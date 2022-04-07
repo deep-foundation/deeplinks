@@ -268,38 +268,20 @@ export async function handleSelector(oldLink: any, newLink: any) {
   handleSelectorDebug('handlerTypeId', handlerTypeId);
   handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
-  // const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
-  //   type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-  //   in: {
-  //     from_id: { _eq: ${dockerSupportsJsType} },
-  //     type_id: { _eq: ${handlerTypeId} },
-  //     in: {
-  //       from: {
-  //         type_id: { _eq: ${selectorTypeId} },
-  //         selected: {
-  //           item_id: { _eq: ${currentLinkId} },
-  //         },
-  //       },
-  //       type_id: { _eq: ${handleOperationTypeId} },
-  //     }
-  //   }
-  // }) {
-  //   id
-  //   value
-  //   in(where: { type_id: { _eq: ${handlerTypeId} } }) {
-  //     id
-  //     in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-  //       id
-  //     }
-  //     support: from {
-  //       id
-  //       isolation: from {
-  //         id
-  //         value
-  //       }
-  //     }
-  //   }
-  // } }`;
+  const promiseSelectorsQueryString = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { promise_selectors(where: {
+    item_id: { _eq: $itemId },
+  }) {
+    id
+  } }`;
+
+  const promiseSelectorsQuery = gql`${promiseSelectorsQueryString}`;
+
+  const promiseSelectorsQueryVariables = {
+    itemId: currentLinkId
+  };
+
+  const promiseSelectors = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
+  handleSelectorDebug('promiseSelectors', JSON.stringify(promiseSelectors, null, 2));
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
