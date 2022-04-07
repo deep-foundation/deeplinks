@@ -32,13 +32,33 @@ export const up = async () => {
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
-  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (id bigserial PRIMARY KEY, promise_id bigint, item_id bigint, selector_id bigint, handler_id bigint);`);
+  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (id bigserial PRIMARY KEY, promise_id bigint, item_id bigint, selector_id bigint, handle_operation_id bigint);`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
   await api.query({
     type: 'track_table',
     args: {
       schema: 'public',
       name: 'promise_selectors',
+    },
+  });
+  await api.query({
+    type: 'create_object_relationship',
+    args: {
+      table: 'promise_selectors',
+      name: 'handle_operation',
+      type: 'one_to_one',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: 'public',
+            name: 'links',
+          },
+          column_mapping: {
+            handle_operation_id: 'id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
     },
   });
 
@@ -81,7 +101,7 @@ export const up = async () => {
     user_id := hasura_session::json->>'x-hasura-user-id';
     
     FOR SELECTOR IN
-      SELECT s.selector_id, h.id as handler_id, s.bool_exp_id
+      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
       FROM selectors s, links h
       WHERE
           s.item_id = link."id"
@@ -92,7 +112,7 @@ export const up = async () => {
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handler_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handler_id);
+        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN TRUE;
@@ -219,6 +239,13 @@ export const down = async () => {
     },
   });
   await api.sql(sql`DROP TABLE IF EXISTS "public"."debug_output" CASCADE;`);
+  await api.query({
+    type: 'drop_relationship',
+    args: {
+      table: 'promise_selectors',
+      relationship: 'handle_operation',
+    },
+  });
   await api.query({
     type: 'untrack_table',
     args: {
