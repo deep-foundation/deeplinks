@@ -268,8 +268,11 @@ export async function handleSelector(oldLink: any, newLink: any) {
   handleSelectorDebug('handlerTypeId', handlerTypeId);
   handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
+  // TODO: Load the code 
+
   const promiseSelectorsQueryString = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { promise_selectors(where: {
     item_id: { _eq: $itemId },
+    handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
   }) {
     id
   } }`;
@@ -280,8 +283,17 @@ export async function handleSelector(oldLink: any, newLink: any) {
     itemId: currentLinkId
   };
 
-  const promiseSelectors = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
-  handleSelectorDebug('promiseSelectors', JSON.stringify(promiseSelectors, null, 2));
+  const promiseSelectorsResult = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
+  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
+
+  const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
+  handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
+
+  if (!promiseSelectors?.length) {
+    return;
+  }
+
+  // TODO: Delete handled promiseSelectors
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
