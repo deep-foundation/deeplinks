@@ -42,11 +42,11 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-export function makePromiseResult(promise: any, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
+export function makePromiseResult(promiseId: number, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
   return {
     from: {
       data: {
-        from_id: promise.id,
+        from_id: promiseId,
         type_id: resolvedTypeId,
         to: {
           data: {
@@ -227,13 +227,13 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             if (value.status == 'fulfilled') {
               const result = value.value;
               handleOperationDebug("result: ", result);
-              const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
               handleOperationDebug("error: ", error);
-              const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
           }
@@ -267,6 +267,39 @@ export async function handleSelector(oldLink: any, newLink: any) {
 
   handleSelectorDebug('handlerTypeId', handlerTypeId);
   handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
+
+  // const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
+  //   type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
+  //   in: {
+  //     from_id: { _eq: ${dockerSupportsJsType} },
+  //     type_id: { _eq: ${handlerTypeId} },
+  //     in: {
+  //       from: {
+  //         type_id: { _eq: ${selectorTypeId} },
+  //         selected: {
+  //           item_id: { _eq: ${currentLinkId} },
+  //         },
+  //       },
+  //       type_id: { _eq: ${handleOperationTypeId} },
+  //     }
+  //   }
+  // }) {
+  //   id
+  //   value
+  //   in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+  //     id
+  //     in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
+  //       id
+  //     }
+  //     support: from {
+  //       id
+  //       isolation: from {
+  //         id
+  //         value
+  //       }
+  //     }
+  //   }
+  // } }`;
 
   const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
@@ -381,13 +414,13 @@ export async function handleSelector(oldLink: any, newLink: any) {
             if (value.status == 'fulfilled') {
               const result = value.value;
               handleSelectorDebug("result: ", result);
-              const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
               handleSelectorDebug("error: ", error);
-              const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
           }
