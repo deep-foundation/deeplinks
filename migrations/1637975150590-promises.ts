@@ -32,7 +32,7 @@ export const up = async () => {
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
-  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (promise_id bigint, item_id bigint, selector_id bigint, handler_id bigint);`);
+  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (id bigserial PRIMARY KEY, promise_id bigint, item_id bigint, selector_id bigint, handler_id bigint);`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
   await api.query({
     type: 'track_table',
