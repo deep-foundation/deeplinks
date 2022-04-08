@@ -2,6 +2,7 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert, expect } from 'chai';
 import { stringify } from "querystring";
+import { delay } from "../imports/promise";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -245,6 +246,201 @@ describe('permissions', () => {
       expect(da3).to.be.undefined;
       expect(e3).to.not.be.undefined;
     });
+    it(`insert permission with SelectorFilter`, async () => {
+      const a1 = await deep.guest({});
+      const a2 = await deep.guest({});
+      const a3 = await deep.guest({});
+      const { data: [{ id: TempType }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Type'),
+        from_id: await deep.id('@deep-foundation/core', 'Any'),
+        to_id: await deep.id('@deep-foundation/core', 'Any'),
+      });
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a1.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a3.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: await deep.id('@deep-foundation/core'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a1.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a3.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: TempType,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                  to: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+                    object: { data: { value: {
+                      to_id: { _eq: 'X-Deep-User-Id' } ,// <== HERE
+                    }, }, },
+                  }, },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+
+      await delay(5000);
+
+      const d1 = new DeepClient({ deep, ...a1, silent: true });
+      const { data: da1, error: e1 } = await d1.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+      });
+      expect(da1).to.not.be.undefined;
+      expect(e1).to.be.undefined;
+      const { data: da1t, error: e1t } = await d1.insert({
+        type_id: TempType,
+        from_id: da1?.[0]?.id,
+        to_id: a1.linkId,
+      });
+      expect(da1t).to.not.be.undefined;
+      expect(e1t).to.be.undefined;
+      const d2 = new DeepClient({ deep, ...a2, silent: true });
+      const { data: da2, error: e2 } = await d2.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+      });
+      expect(da2).to.not.be.undefined;
+      expect(e2).to.be.undefined;
+      const { data: da2t, error: e2t } = await d2.insert({
+        type_id: TempType,
+        from_id: da2?.[0]?.id,
+        to_id: a1.linkId, // <== HERE
+      });
+      expect(da2t).to.be.undefined; // <== HERE
+      expect(e2t).to.not.be.undefined;
+      const d3 = new DeepClient({ deep, ...a3, silent: true });
+      const { data: da3, error: e3 } = await d3.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+      });
+      expect(da3).to.not.be.undefined;
+      expect(e3).to.be.undefined;
+      const { data: da3t, error: e3t } = await d3.insert({
+        type_id: TempType,
+        from_id: da2?.[0]?.id,
+        to_id: a3.linkId,
+      });
+      expect(da3t).to.not.be.undefined;
+      expect(e3t).to.be.undefined;
+    });
   });
   describe('update', () => {
     it(`root can update string value`, async () => {
@@ -486,6 +682,187 @@ describe('permissions', () => {
       await d3.delete(id3);
       const n3 = await deep.select({ id: id3 });
       assert.lengthOf(n3?.data, 1);
+    });
+    it(`delete permission with SelectorFilter`, async () => {
+      const a1 = await deep.guest({});
+      const a2 = await deep.guest({});
+      const a3 = await deep.guest({});
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a1.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a3.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a1.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a3.linkId,
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                  to: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+                    object: { data: { value: {
+                      string: { value: { _eq: 'abc2' } },// <== HERE
+                    }, }, },
+                  }, },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowDelete'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+
+      await delay(5000);
+
+      const d1 = new DeepClient({ deep, ...a1, silent: true });
+      const { data: da1, error: e1 } = await d1.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        string: { data: { value: 'abc1' } },
+      });
+      expect(e1).to.be.undefined;
+      expect(da1).to.not.be.undefined;
+      const { data: da1d, error: e1d } = await d1.delete(da1?.[0]?.id);
+      expect(e1d).to.not.be.undefined;
+      expect(da1d).to.be.undefined;
+      const d2 = new DeepClient({ deep, ...a2, silent: true });
+      const { data: da2, error: e2 } = await d2.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        string: { data: { value: 'abc2' } },
+      });
+      expect(e2).to.be.undefined;
+      expect(da2).to.not.be.undefined;
+      const { data: da2d, error: e2d } = await d2.delete(da2?.[0]?.id);
+      expect(e2d).to.be.undefined;
+      expect(da2d).to.not.be.undefined;
+      const d3 = new DeepClient({ deep, ...a3, silent: true });
+      const { data: da3, error: e3 } = await d3.insert({
+        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        string: { data: { value: 'abc3' } },
+      });
+      expect(e3).to.be.undefined;
+      expect(da3).to.not.be.undefined;
+      const { data: da3d, error: e3d } = await d3.delete(da3?.[0]?.id);
+      expect(e3d).to.not.be.undefined;
+      expect(da3d).to.be.undefined;
     });
   });
   describe('login', () => {

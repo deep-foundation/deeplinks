@@ -38,6 +38,7 @@ export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
 export const GLOBAL_ID_HANDLE_UPDATE=50;
+export const GLOBAL_ID_SELECTOR_FILTER=75;
 
 const _ids = {
   '@deep-foundation/core': {
@@ -330,16 +331,25 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     returning?: string;
     variables?: any;
     name?: string;
+    silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
-    const q = await this.apolloClient.mutate(generateSerial({
-      actions: [updateMutation(table, { ...variables, where, _set: value }, { tableName: table, operation: 'update', returning })],
-      name: name,
-    }));
+    let q;
+    try {
+      q = await this.apolloClient.mutate(generateSerial({
+        actions: [updateMutation(table, { ...variables, where, _set: value }, { tableName: table, operation: 'update', returning })],
+        name: name,
+      }));
+    } catch(e) {
+      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+      if (sqlError?.message) e.message = sqlError.message;
+      if (!this._silent(options)) throw e;
+      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    }
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
   };
@@ -349,6 +359,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     returning?: string;
     variables?: any;
     name?: string;
+    silent?: boolean;
   }):Promise<DeepClientResult<{ returning: { id }[] }>> {
     if (!exp) throw new Error('!exp');
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
@@ -356,11 +367,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultDeleteName;
-    const q = await this.apolloClient.mutate(generateSerial({
-      actions: [deleteMutation(table, { ...variables, where, returning }, { tableName: table, operation: 'delete', returning })],
-      name: name,
-    }));
-    // @ts-ignore
+    let q;
+    try {
+      q = await this.apolloClient.mutate(generateSerial({
+        actions: [deleteMutation(table, { ...variables, where, returning }, { tableName: table, operation: 'delete', returning })],
+        name: name,
+      }));
+      // @ts-ignore
+    } catch(e) {
+      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+      if (sqlError?.message) e.message = sqlError.message;
+      if (!this._silent(options)) throw e;
+      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    }
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 

@@ -256,7 +256,9 @@ export const up = async () => {
         typeLink RECORD;
         fromLink RECORD;
         toLink RECORD;
-        sqlResult INT;
+        sqlResult BOOL;
+        session_variables json;
+        user_id bigint;
       BEGIN
         IF (NEW."from_id" != NEW."to_id" AND (NEW."from_id" = 0 OR NEW."to_id" = 0)) THEN
           RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %, type: %.', NEW."id", NEW."from_id", NEW."to_id", NEW."type_id";
@@ -291,15 +293,41 @@ export const up = async () => {
           END IF;
         END IF;
 
-        SELECT be.* into boolExp
-        FROM "${TABLE_NAME}" as allow, "${BOOL_EXP_TABLE_NAME}" as be
-        WHERE allow.type_id=19 AND allow.from_id=NEW.type_id AND allow.to_id=16 AND be.link_id=allow.id;
-        IF boolExp IS NOT NULL THEN
-          EXECUTE (SELECT REPLACE(boolExp.sql, '${REPLACE_PATTERN_ID}', NEW.id::text)) INTO sqlResult;
-          IF sqlResult = 0 THEN
-            RAISE EXCEPTION 'dc dg mp reject insert because bool_exp: % gql: %', boolExp.id, boolExp.gql;
-          END IF;
+        session_variables := current_setting('hasura.user', 't');
+        IF session_variables IS NULL THEN
+          session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
         END IF;
+        user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
+
+        IF user_id IS NOT NULL THEN
+          FOR boolExp
+          IN (
+            SELECT sr.*
+            FROM
+            "${CAN_TABLE_NAME}" as can,
+            "${TABLE_NAME}" as ro,
+            "${SELECTORS_TABLE_NAME}" as sr
+            WHERE
+            can."object_id" = NEW."type_id" AND
+            can."subject_id" = user_id AND
+            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsert')} AND
+            ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
+            ro."from_id" = can."rule_id" AND
+            sr."selector_id" = ro."to_id" AND
+            sr."item_id" = NEW."type_id" AND
+            sr."bool_exp_id" IS NOT NULL
+          )
+          LOOP
+            SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."bool_exp_id", user_id);
+            IF (sqlResult = FALSE) THEN
+              RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            END IF;
+            IF (sqlResult IS NULL) THEN
+              RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            END IF;
+          END LOOP;
+        END IF;
+
         RETURN NEW;
       END;
     $function$;
@@ -313,17 +341,46 @@ export const up = async () => {
     AS $function$
       DECLARE
         boolExp RECORD;
-        sqlResult INT;
+        sqlResult BOOL;
+        session_variables json;
+        user_id bigint;
       BEGIN
-        SELECT be.* into boolExp
-        FROM "${TABLE_NAME}" as allow, "${BOOL_EXP_TABLE_NAME}" as be
-        WHERE allow.type_id=19 AND allow.from_id=OLD.type_id AND allow.to_id=18 AND be.link_id=allow.id;
-        IF boolExp IS NOT NULL THEN
-          EXECUTE (SELECT REPLACE(boolExp.sql, '${REPLACE_PATTERN_ID}', OLD.id::text)) INTO sqlResult;
-          IF sqlResult = 0 THEN
-            RAISE EXCEPTION 'dc dg mp reject delete because bool_exp: % gql: %', boolExp.id, boolExp.gql;
+
+      session_variables := current_setting('hasura.user', 't');
+      IF session_variables IS NULL THEN
+        session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
+      END IF;
+      user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
+
+      IF user_id IS NOT NULL THEN
+        FOR boolExp
+        IN (
+          SELECT sr.*
+          FROM
+          "${CAN_TABLE_NAME}" as can,
+          "${TABLE_NAME}" as ro,
+          "${SELECTORS_TABLE_NAME}" as sr
+          WHERE
+          can."object_id" = OLD."type_id" AND
+          can."subject_id" = user_id AND
+          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDelete')} AND
+          ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
+          ro."from_id" = can."rule_id" AND
+          sr."selector_id" = ro."to_id" AND
+          sr."item_id" = OLD."type_id" AND
+          sr."bool_exp_id" IS NOT NULL
+        )
+        LOOP
+          SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."bool_exp_id", user_id);
+          IF (sqlResult = FALSE) THEN
+            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
           END IF;
-        END IF;
+          IF (sqlResult IS NULL) THEN
+            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+          END IF;
+        END LOOP;
+      END IF;
+
         RETURN OLD;
       END;
     $function$;
