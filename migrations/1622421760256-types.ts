@@ -160,7 +160,7 @@ const corePckg: Package = {
 
     { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 78
 
-    { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79
+    { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79 // TODO: Remove/Reuse
 
     { id: 'IsolationProvider', type: 'Type' }, // 80
     { id: 'DockerIsolationProvider', type: 'IsolationProvider' }, // 81

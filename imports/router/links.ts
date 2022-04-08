@@ -251,7 +251,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   }
 }
 
-export async function handleSelector(oldLink: any, newLink: any) {
+export async function handleSelectorOperation(oldLink: any, newLink: any) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
@@ -275,6 +275,24 @@ export async function handleSelector(oldLink: any, newLink: any) {
     handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
   }) {
     id
+    promise_id
+    handle_operation {
+      id
+      handler: to {
+        id
+        supports: from {
+          id
+          isolation: from {
+            id
+            image: value
+          }
+        }
+        file: to {
+          id
+          code: value
+        }
+      }
+    }
   } }`;
 
   const promiseSelectorsQuery = gql`${promiseSelectorsQueryString}`;
@@ -350,6 +368,7 @@ export async function handleSelector(oldLink: any, newLink: any) {
 
   const promises: any[] = [];
   const handleInsertsIds: any[] = [];
+  const promisesIds: any[] = [];
 
   const handlersWithCode = handlersResult?.data?.links as any[];
   handleSelectorDebug('handlersWithCode.length', handlersWithCode?.length);
@@ -359,76 +378,86 @@ export async function handleSelector(oldLink: any, newLink: any) {
   const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-  const promise = await findPromiseLink({
-    id: currentLinkId, client: deep.apolloClient,
-    Then: await deep.id('@deep-foundation/core', 'Then'),
-    Promise: await deep.id('@deep-foundation/core', 'Promise'),
-    Resolved: resolvedTypeId,
-    Rejected: rejectedTypeId,
-    Results: false,
-  });
+  // const promise = await findPromiseLink({
+  //   id: currentLinkId, client: deep.apolloClient,
+  //   Then: await deep.id('@deep-foundation/core', 'Then'),
+  //   Promise: await deep.id('@deep-foundation/core', 'Promise'),
+  //   Resolved: resolvedTypeId,
+  //   Rejected: rejectedTypeId,
+  //   Results: false,
+  // });
 
-  if (handlersWithCode?.length > 0) {
+  // if (handlersWithCode?.length > 0) {
+  if (promiseSelectors?.length > 0) {
     // log(queryString);
     // log(query);
     // log(JSON.stringify(query, null, 2));
-    handleSelectorDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    handleSelectorDebug("handlersWithCode?.length: ", handlersWithCode?.length);
+    // handleSelectorDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+    // handleSelectorDebug("handlersWithCode?.length: ", handlersWithCode?.length);
 
     // log(handleStringResult);
     // log(JSON.stringify(handleStringResult, null, 2));
     // log(handleStringResult?.data?.links?.[0]?.value);
-    for (const handlerWithCode of handlersWithCode) {
-      const code = handlerWithCode?.value?.value;
-      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
-      const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
+    for (const promiseSelector of promiseSelectors) {
+      const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
+      const isolationValue = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
+      const handleInsertId = promiseSelector?.handle_operation?.id;
+      handleSelectorDebug('code', code);
+      handleSelectorDebug('isolationValue', isolationValue);
+      handleSelectorDebug('handleInsertId', handleInsertId);
+    // for (const handlerWithCode of handlersWithCode) {
+      // const code = handlerWithCode?.value?.value;
+      // const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+      // const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
       if (code) {
         try {
-          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
+          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promiseSelector.promise_id }));
           handleInsertsIds.push(handleInsertId);
+          promisesIds.push(promiseSelector.promise_id);
         } catch (error) {
           handleSelectorDebug('error', error);
         }
       }
     }
 
-    handleSelectorDebug('promise: ', promise);
-    if (promise) {
-      handleSelectorDebug("promises.length: ", promises.length);
+    // handleSelectorDebug('promise: ', promise);
+    // if (promise) {
+    handleSelectorDebug("promises.length: ", promises.length);
 
-      // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-      // Promise.allSettled(promises)
-      await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-        .then(async (values) => {
-          handleSelectorDebug("values: ", values);
-          const promiseResults = [];
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            const handleInsertId = handleInsertsIds[i];
-            if (value.status == 'fulfilled') {
-              const result = value.value;
-              handleSelectorDebug("result: ", result);
-              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-            if (value.status == 'rejected') {
-              const error = value.reason;
-              handleSelectorDebug("error: ", error);
-              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
+    // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
+    // Promise.allSettled(promises)
+    await Promise.allSettled(promises.map((p) => p() as Promise<any>))
+      .then(async (values) => {
+        handleSelectorDebug("values: ", values);
+        const promiseResults = [];
+        for (let i = 0; i < values.length; i++) {
+          const value = values[i];
+          const handleInsertId = handleInsertsIds[i];
+          const promiseId = promisesIds[i];
+          if (value.status == 'fulfilled') {
+            const result = value.value;
+            handleSelectorDebug("result: ", result);
+            const promiseResult = makePromiseResult(promiseId, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+            promiseResults.push(promiseResult);
           }
-          try
-          {
-            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            handleSelectorDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+          if (value.status == 'rejected') {
+            const error = value.reason;
+            handleSelectorDebug("error: ", error);
+            const promiseResult = makePromiseResult(promiseId, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+            promiseResults.push(promiseResult);
           }
-          catch(e)
-          {
-            handleSelectorDebug('promiseResults insert error: ', e?.message ?? e);
-          }
-        });
-    }
+        }
+        try
+        {
+          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          handleSelectorDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+        }
+        catch(e)
+        {
+          handleSelectorDebug('promiseResults insert error: ', e?.message ?? e);
+        }
+      });
+    // }
   }
 }
 
@@ -587,7 +616,7 @@ export default async (req, res) => {
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
-          await handleSelector(oldRow, newRow);
+          await handleSelectorOperation(oldRow, newRow);
         } else if(operation === 'UPDATE') {
           // await handleInsert(typeId, newRow);
         } else if(operation === 'DELETE') {
