@@ -230,20 +230,14 @@ export const up = async () => {
           type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
           object: { data: { value: {
             _or: [
-              { to_id: { _eq: 0 } },
-              { to: {
+              { from_id: { _eq: 0 } },
+              { from: {
                 _by_item: {
                   group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
                   path_item_id: { _eq: 'X-Deep-User-Id' },
                 },
-               } },
+              } },
             ],
-            from: {
-              _by_item: {
-                group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-                path_item_id: { _eq: 'X-Deep-User-Id' },
-              },
-            },
           } } }
         } },
       },
