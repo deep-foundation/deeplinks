@@ -170,13 +170,13 @@ export async function handleScheduleMomemt(moment: any) {
             if (value.status == 'fulfilled') {
               const result = value.value;
               log("result: ", result);
-              const promiseResult = makePromiseResult(promise, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
             if (value.status == 'rejected') {
               const error = value.reason;
               log("error: ", error);
-              const promiseResult = makePromiseResult(promise, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
               promiseResults.push(promiseResult);
             }
           }
