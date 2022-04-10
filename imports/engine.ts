@@ -7,6 +7,20 @@ import Debug from 'debug';
 // @ts-ignore
 import fixPath from 'fix-path';
 
+function isElectron() {
+  // @ts-ignore
+  if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process?.type === 'renderer') {
+      return true;
+  }
+  if (typeof process !== 'undefined' && typeof process.versions === 'object' && !!process?.versions?.electron) {
+      return true;
+  }
+  if (typeof navigator === 'object' && typeof navigator.userAgent === 'string' && navigator?.userAgent.indexOf('Electron') >= 0) {
+      return true;
+  }
+  return false;
+}
+
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
 const error = debug.extend('error');
@@ -129,6 +143,7 @@ const _generateEngineStr = ({ operation, composeVersion, isDeeplinksDocker, envs
   if (![ 'run', 'sleep', 'reset' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'run') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep${composeVersion == '1' ? '_' : '-'}graphql-engine${composeVersion == '1' ? '_' : '-'}1` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+    if (isElectron()) str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres graphql-engine && docker volume create deep_db_data && docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep_db_data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/${platform === "win32" ? '.migrate' : '.deep-migrate'}" &&${str}`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
