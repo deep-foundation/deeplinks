@@ -654,9 +654,6 @@ export const deleteSelector = async (selector: any) => {
 
 describe.only('handle by selector', () => {
   it(`handle insert`, async () => {
-    // try 
-    // {
-    
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
@@ -707,76 +704,61 @@ describe.only('handle by selector', () => {
 
     assert.isTrue(!!promiseResult1);
     assert.isTrue(!!promiseResult2);
+  });
+  it(`handle delete`, async () => {
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
-    // }
-    // catch (err) {
-    //   console.error(err);
-    // }
-    // await deleteHandler(handler);
+    const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+    const selector = await insertSelector();
+    const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
+    // console.log(`nodeTypeId: ${nodeTypeId}`);
+    // console.log(`linkTypeId: ${linkTypeId}`);
+    // console.log(`treeId: ${treeId}`);
+    // console.log(`treeIncludesIds: ${treeIncludesIds}`);
+    // console.log(`selectorId: ${selectorId}`);
+    // console.log(`selectorIncludeId: ${selectorIncludeId}`);
+    // console.log(`selectorTreeId: ${selectorTreeId}`);
+    // console.log(`rootId: ${rootId}`);
+    const handler = await insertHandler(handleDeleteTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+    const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
-    // const typeId = await deep.id('@deep-foundation/core', 'Type');
-    // const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-    // const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    // const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+    // log('awaiting starts...');
+    // await deep.await(idToWait);
 
-    // // selector -- selection -> link (concrete)
-    // const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-    // const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
+    // log('awaiting finished.');
 
-    // const userTypeId = await deep.id('@deep-foundation/core', 'User');
+    await deleteId(selectorItems[0].linkId);
+    await deleteId(selectorItems[1].linkId);
+
+    // await deep.await(selectorItems[0].linkId); // doesn't work. why?
+    log(`awaiting ${selectorItems[1].linkId} link.`)
+    await deep.await(selectorItems[1].linkId);
+    log(`awaiting ${selectorItems[0].linkId} link.`)
+    await deep.await(selectorItems[0].linkId);
+
+    const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
+    const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
+    console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
+
+    const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
+    const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
+    console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
+
+    for (const selectorItem of selectorItems) {
+      await deleteId(selectorItem.linkId);
+      await deleteId(selectorItem.nodeId);
+    }
     
-    // const selector = (await deep.insert({ 
-    //   type_id: selectorTypeId
-    // }, { name: 'IMPORT_SELECTOR' })).data[0];
+    await deleteSelector(selector);
+    await deletePromiseResult(promiseResult1);
+    await deletePromiseResult(promiseResult2);
+    await deleteHandler(handler);
 
-    // const link = (await deep.insert({ 
-    //   type_id: userTypeId,
-    // }, { name: 'IMPORT_LINK' })).data[0];
-
-    // const selection = (await deep.insert({ 
-    //   from_id: selector.id,
-    //   type_id: selectionTypeId,
-    //   to_id: link.id,
-    // }, { name: 'IMPORT_SELECTION' })).data[0];
-
-    // log(link);
-
-    // await deep.await(link.id);
-
-    // const client = deep.apolloClient;
-    // const result = await client.query({
-    //   query: gql`{
-    //     links(where: { 
-    //       in: { 
-    //         type_id: { _eq: ${resolvedTypeId} }, # Resolved
-    //         from: { 
-    //           type_id: { _eq: ${promiseTypeId} }, # Promise
-    //           in: { 
-    //             type_id: { _eq: ${thenTypeId} } # Then
-    //             from_id: { _eq: ${link.id} } # link.id
-    //           }
-    //         }
-    //       },
-    //     }) {
-    //   object { value }
-    //     }
-    //   }`,
-    // });
-    
-    // // log(JSON.stringify(result, null, 2));
-    // // log(JSON.stringify(result?.data?.links[0]?.object?.value, null, 2))
-
-    // log(result?.data?.links.length);
-    // log(result?.data?.links[0]?.object?.value);
-
-    // log(JSON.stringify(result?.data?.links, null, 2));
-
-    // assert.equal(result?.data?.links[0]?.object?.value?.result, 123);
-
-    // TODO: check result link is created
-    // TODO: check resolve link is created
-
-    // assert.deepEqual(deepClient.boolExpSerialize({ id: 5 }), { id: { _eq: 5 } });
+    assert.isTrue(!!promiseResult1);
+    assert.isTrue(!!promiseResult2);
   });
 });
 
