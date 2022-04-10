@@ -16,6 +16,8 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 import waitOn from 'wait-on';
 import getPort from 'get-port';
 
+jest.setTimeout(120000);
+
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
@@ -26,6 +28,20 @@ const deep = new DeepClient({ apolloClient });
 
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
+
+let lastFreeId = 9999999999;
+
+const nextFreeId = () => {
+  lastFreeId -= 1;
+  return lastFreeId;
+};
+
+let lastHandlerResult = 1;
+
+const nextHandlerResult = () => {
+  lastHandlerResult += 1;
+  return lastHandlerResult;
+};
 
 const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string) => {
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
@@ -147,7 +163,8 @@ export const deleteScheduleHandler = async (handler) => {
 };
 
 export async function ensureLinkIsCreated(typeId: number) {
-  const freeId = randomInteger(5000000, 9999999999);
+  // const freeId = randomInteger(5000000, 9999999999);
+  const freeId = nextFreeId();
   // log(freeId);
   const insertedLink = (await deep.insert({
     id: freeId,
@@ -202,15 +219,14 @@ export async function getPromiseResults(deep, resultTypeId: number, linkId: any)
   }))?.data?.links;
 }
 
-jest.setTimeout(120000);
-
-function randomInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+// function randomInteger(min, max) {
+//   return Math.floor(Math.random() * (max - min + 1)) + min;
+// }
 
 describe('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -227,7 +243,8 @@ describe('sync function handle by type with resolve', () => {
     assert.isTrue(!!promiseResult);
   });
   it(`handle update when value is inserted`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
@@ -247,7 +264,8 @@ describe('sync function handle by type with resolve', () => {
     assert.isTrue(!!promiseResult);
   });
   it(`handle update when value is updated`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
@@ -276,7 +294,8 @@ describe('sync function handle by type with resolve', () => {
     assert.equal(matchedPromiseResults.length, 2);
   });
   it(`handle update when value is deleted`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
@@ -306,7 +325,8 @@ describe('sync function handle by type with resolve', () => {
     assert.equal(matchedPromiseResults.length, 2);
   });
   it(`handle delete`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
@@ -329,7 +349,8 @@ describe('sync function handle by type with resolve', () => {
 
 describe('sync function handle by type with reject', () => {
   it(`handle insert`, async () => {
-    const numberToThrow = randomInteger(5000000, 9999999999);
+    // const numberToThrow = randomInteger(5000000, 9999999999);
+    const numberToThrow = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -347,7 +368,8 @@ describe('sync function handle by type with reject', () => {
     assert.isTrue(!!promiseResult);
   });
   it(`handle delete`, async () => {
-    const numberToThrow = randomInteger(5000000, 9999999999);
+    // const numberToThrow = randomInteger(5000000, 9999999999);
+    const numberToThrow = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
@@ -368,7 +390,8 @@ describe('sync function handle by type with reject', () => {
 
 describe('async function handle by type with reject', () => {
   it(`handle insert`, async () => {
-    const numberToThrow = randomInteger(5000000, 9999999999);
+    // const numberToThrow = randomInteger(5000000, 9999999999);
+    const numberToThrow = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -386,7 +409,8 @@ describe('async function handle by type with reject', () => {
     assert.isTrue(!!promiseResult);
   });
   it(`handle delete`, async () => {
-    const numberToThrow = randomInteger(5000000, 9999999999);
+    // const numberToThrow = randomInteger(5000000, 9999999999);
+    const numberToThrow = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
@@ -404,9 +428,10 @@ describe('async function handle by type with reject', () => {
   });
 });
 
-describe('sync function handle by schedule with resolve', () => {
+describe.only('sync function handle by schedule with resolve', () => {
   it(`handle schedule`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     // const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
@@ -425,7 +450,8 @@ describe('sync function handle by schedule with resolve', () => {
 
 describe('async function handle by type with resolve using deep client', () => {
   it(`handle insert`, async () => {
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -626,12 +652,14 @@ export const deleteSelector = async (selector: any) => {
   await deleteId(selector.rootId);
 };
 
-describe.only('handle by selector', () => {
+describe.skip('handle by selector', () => {
   it(`handle insert`, async () => {
     // try 
     // {
     
-    const numberToReturn = randomInteger(5000000, 9999999999);
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
+
     const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const selector = await insertSelector();
     const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
