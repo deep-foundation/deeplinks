@@ -251,24 +251,18 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   }
 }
 
-export async function handleSelectorOperation(oldLink: any, newLink: any) {
+export async function handleSelectorOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
-  const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  handleSelectorDebug('currentLinkId', currentLinkId);
-  handleSelectorDebug('currentTypeId', currentTypeId);
+  // handleSelectorDebug('currentLinkId', currentLinkId);
+  // handleSelectorDebug('currentTypeId', currentTypeId);
 
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const selectorTypeId = await deep.id('@deep-foundation/core', 'Selector');
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-  const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
-  handleSelectorDebug('handlerTypeId', handlerTypeId);
-  handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
-
-  // TODO: Load the code 
+  // handleSelectorDebug('handlerTypeId', handlerTypeId);
+  // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseSelectorsQueryString = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { promise_selectors(where: {
     item_id: { _eq: $itemId },
@@ -302,7 +296,7 @@ export async function handleSelectorOperation(oldLink: any, newLink: any) {
   };
 
   const promiseSelectorsResult = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
-  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
+  // handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
 
   const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
   handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
@@ -310,62 +304,6 @@ export async function handleSelectorOperation(oldLink: any, newLink: any) {
   if (!promiseSelectors?.length) {
     return;
   }
-
-  const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
-          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-          in: {
-            from_id: { _eq: ${dockerSupportsJsType} },
-            type_id: { _eq: ${handlerTypeId} },
-            in: {
-              from: {
-                type_id: { _eq: ${selectorTypeId} },
-                selected: {
-                  item_id: { _eq: ${currentLinkId} },
-                },
-              },
-              type_id: { _eq: ${handleOperationTypeId} },
-            }
-          }
-        }) {
-          id
-          value
-          in(where: { type_id: { _eq: ${handlerTypeId} } }) {
-            id
-            in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-              id
-            }
-            support: from {
-              id
-              isolation: from {
-                id
-                value
-              }
-            }
-          }
-        } }`;
-
-        // #{
-        //   #  from: {
-        //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-        //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
-        //   #      to_id: { _eq: $linkId },
-        //   #    }
-        //   #  }
-        //   #}
-  // log('queryString', queryString);
-
-  const query = gql`${queryString}`;
-
-  const variables = {
-    typeId: currentTypeId
-  };
-  // log('variables', JSON.stringify(variables));
-
-  const handlersResult = await client.query({ query, variables });
-
-  const handlersWithCode = handlersResult?.data?.links as any[];
-  handleSelectorDebug('handlersWithCode.length', handlersWithCode?.length);
 
   const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
   const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
@@ -393,77 +331,57 @@ export async function handleSelectorOperation(oldLink: any, newLink: any) {
     const promises: any[] = [];
     const handleInsertsIds: any[] = [];
 
-    // if (handlersWithCode?.length > 0) {
-    if (promiseSelectors?.length > 0) {
-      // log(queryString);
-      // log(query);
-      // log(JSON.stringify(query, null, 2));
-      // handleSelectorDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-      // handleSelectorDebug("handlersWithCode?.length: ", handlersWithCode?.length);
-
-      // log(handleStringResult);
-      // log(JSON.stringify(handleStringResult, null, 2));
-      // log(handleStringResult?.data?.links?.[0]?.value);
-      for (const promiseSelector of promiseSelectors) {
-        const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
-        const isolationValue = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
-        const handleInsertId = promiseSelector?.handle_operation?.id;
-        handleSelectorDebug('code', code);
-        handleSelectorDebug('isolationValue', isolationValue);
-        handleSelectorDebug('handleInsertId', handleInsertId);
-      // for (const handlerWithCode of handlersWithCode) {
-        // const code = handlerWithCode?.value?.value;
-        // const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
-        // const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code) {
-          try {
-            promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId }));
-            handleInsertsIds.push(handleInsertId);
-          } catch (error) {
-            handleSelectorDebug('error', error);
-          }
+    for (const promiseSelector of promiseSelectors) {
+      const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
+      const isolationValue = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
+      const handleInsertId = promiseSelector?.handle_operation?.id;
+      // handleSelectorDebug('code', code);
+      // handleSelectorDebug('isolationValue', isolationValue);
+      // handleSelectorDebug('handleInsertId', handleInsertId);
+      if (code) {
+        try {
+          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId }));
+          handleInsertsIds.push(handleInsertId);
+        } catch (error) {
+          handleSelectorDebug('error', error);
         }
       }
-
-      // handleSelectorDebug('promise: ', promise);
-      // if (promise) {
-      handleSelectorDebug("promises.length: ", promises.length);
-
-      // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-      // Promise.allSettled(promises)
-      await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-        .then(async (values) => {
-          handleSelectorDebug("values: ", values);
-          const promiseResults = [];
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            const handleInsertId = handleInsertsIds[i];
-            if (value.status == 'fulfilled') {
-              const result = value.value;
-              handleSelectorDebug("result: ", result);
-              const promiseResult = makePromiseResult(promiseId, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-            if (value.status == 'rejected') {
-              const error = value.reason;
-              handleSelectorDebug("error: ", error);
-              const promiseResult = makePromiseResult(promiseId, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-          }
-          try
-          {
-            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            handleSelectorDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
-          }
-          catch(e)
-          {
-            handleSelectorDebug('promiseResults insert error: ', e?.message ?? e);
-          }
-        });
-      // }
-      await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' });
     }
+
+    // handleSelectorDebug('promise: ', promise);
+    handleSelectorDebug("promises.length: ", promises.length);
+
+    await Promise.allSettled(promises.map((p) => p() as Promise<any>))
+      .then(async (values) => {
+        handleSelectorDebug("values: ", values);
+        const promiseResults = [];
+        for (let i = 0; i < values.length; i++) {
+          const value = values[i];
+          const handleInsertId = handleInsertsIds[i];
+          if (value.status == 'fulfilled') {
+            const result = value.value;
+            handleSelectorDebug("result: ", result);
+            const promiseResult = makePromiseResult(promiseId, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+            promiseResults.push(promiseResult);
+          }
+          if (value.status == 'rejected') {
+            const error = value.reason;
+            handleSelectorDebug("error: ", error);
+            const promiseResult = makePromiseResult(promiseId, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+            promiseResults.push(promiseResult);
+          }
+        }
+        try
+        {
+          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          handleSelectorDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+        }
+        catch(e)
+        {
+          handleSelectorDebug('promiseResults insert error: ', e?.message ?? e);
+        }
+      });
+    await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' });
   }
 }
 
@@ -622,12 +540,10 @@ export default async (req, res) => {
       try {
         if(operation === 'INSERT') {
           await handleOperation('Insert', oldRow, newRow);
-          await handleSelectorOperation(oldRow, newRow);
-        } else if(operation === 'UPDATE') {
-          // await handleInsert(typeId, newRow);
+          await handleSelectorOperation('Insert', oldRow, newRow);
         } else if(operation === 'DELETE') {
           await handleOperation('Delete', oldRow, newRow);
-          // await handleSelector(oldRow, newRow); ??
+          await handleSelectorOperation('Delete', oldRow, newRow);
         }
 
         const typeId = current.type_id;
