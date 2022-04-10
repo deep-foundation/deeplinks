@@ -705,7 +705,7 @@ describe.only('handle by selector', () => {
     assert.isTrue(!!promiseResult1);
     assert.isTrue(!!promiseResult2);
   });
-  it(`handle delete`, async () => {
+  it.only(`handle delete`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
@@ -728,8 +728,8 @@ describe.only('handle by selector', () => {
 
     // log('awaiting finished.');
 
-    await deleteId(selectorItems[0].linkId);
     await deleteId(selectorItems[1].linkId);
+    await deleteId(selectorItems[0].linkId);
 
     // await deep.await(selectorItems[0].linkId); // doesn't work. why?
     log(`awaiting ${selectorItems[1].linkId} link.`)

@@ -262,6 +262,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
 
   // handleSelectorDebug('handlerTypeId', handlerTypeId);
+  handleSelectorDebug('handleOperation', operation);
   // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseSelectorsQueryString = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { promise_selectors(where: {
