@@ -155,7 +155,7 @@ export const up = async () => {
       WHERE
           s.item_id = OLD."id"
       AND s.selector_id = h.from_id
-      AND h.type_id = ${handleInsertTypeId}
+      AND h.type_id = ${handleDeleteTypeId}
     LOOP
       INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, OLD."id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(OLD."id", SELECTOR.bool_exp_id, user_id) THEN

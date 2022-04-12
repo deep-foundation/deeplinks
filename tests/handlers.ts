@@ -652,7 +652,7 @@ export const deleteSelector = async (selector: any) => {
   await deleteId(selector.rootId);
 };
 
-describe.only('handle by selector', () => {
+describe('handle by selector', () => {
   it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
@@ -705,7 +705,7 @@ describe.only('handle by selector', () => {
     assert.isTrue(!!promiseResult1);
     assert.isTrue(!!promiseResult2);
   });
-  it.only(`handle delete`, async () => {
+  it(`handle delete`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
@@ -732,20 +732,20 @@ describe.only('handle by selector', () => {
     await deleteId(selectorItems[0].linkId);
 
     // await deep.await(selectorItems[0].linkId); // doesn't work. why?
-    log(`awaiting ${selectorItems[1].linkId} link.`)
+    // console.log(`awaiting ${selectorItems[1].linkId} link.`)
     await deep.await(selectorItems[1].linkId);
-    log(`awaiting ${selectorItems[0].linkId} link.`)
+    // console.log(`awaiting ${selectorItems[0].linkId} link.`)
     await deep.await(selectorItems[0].linkId);
 
     const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
     const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
-    console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
+    // console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
 
     const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
     const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
-    console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
+    // console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
 
     for (const selectorItem of selectorItems) {
       await deleteId(selectorItem.linkId);
