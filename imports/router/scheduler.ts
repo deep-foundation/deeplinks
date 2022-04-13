@@ -65,97 +65,99 @@ export async function handleScheduleMomemt(moment: any) {
   // log('currentLinkId', currentLinkId);
   // log('currentTypeId', currentTypeId);
 
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
 
-  // log('handlerTypeId', handlerTypeId);
-  // log('handleInsertTypeId', handleInsertTypeId);
-
-  const queryString = `query SELECT_CODE($scheduleId: bigint) { links(where: {
-          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-          in: {
-            from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
-            type_id: { _eq: ${handlerTypeId} },
+  const promise = await findPromiseLink({
+    id: scheduleId, client: deep.apolloClient,
+    Then: await deep.id('@deep-foundation/core', 'Then'),
+    Promise: await deep.id('@deep-foundation/core', 'Promise'),
+    Resolved: resolvedTypeId,
+    Rejected: rejectedTypeId,
+    Results: false,
+  });
+  log('promise: ', promise);
+  if (promise) 
+  {
+    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+    const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+  
+    // log('handlerTypeId', handlerTypeId);
+    // log('handleInsertTypeId', handleInsertTypeId);
+  
+    const queryString = `query SELECT_CODE($scheduleId: bigint) { links(where: {
+            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
             in: {
-              from_id: { _eq: $scheduleId },
-              type_id: { _eq: ${handleOperationTypeId} },
-            }
-          }
-        }) {
-          id
-          value
-          in(where: { type_id: { _eq: ${handlerTypeId} } }) {
-            id
-            in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-              id
-            }
-            support: from {
-              id
-              isolation: from {
-                id
-                value
+              from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
+              type_id: { _eq: ${handlerTypeId} },
+              in: {
+                from_id: { _eq: $scheduleId },
+                type_id: { _eq: ${handleOperationTypeId} },
               }
             }
+          }) {
+            id
+            value
+            in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+              id
+              in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
+                id
+              }
+              support: from {
+                id
+                isolation: from {
+                  id
+                  value
+                }
+              }
+            }
+          } }`;
+    // log('queryString', queryString);
+  
+    const query = gql`${queryString}`;
+    // log('query', query);
+  
+    const variables = {
+      scheduleId
+    };
+    // log('variables', JSON.stringify(variables));
+  
+    const handlersResult = await client.query({ query, variables });
+  
+    const promises: any[] = [];
+    const handleInsertsIds: any[] = [];
+
+    const handlersWithCode = handlersResult?.data?.links as any[];
+    log('handlersWithCode.length', handlersWithCode?.length);
+    if (handlersWithCode?.length > 0) {
+      // log(queryString);
+      // log(query);
+      // log(JSON.stringify(query, null, 2));
+      log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+      log(handlersWithCode?.length);
+
+      // log(handleStringResult);
+      // log(JSON.stringify(handleStringResult, null, 2));
+      // log(handleStringResult?.data?.links?.[0]?.value);
+      for (const handlerWithCode of handlersWithCode) {
+        const code = handlerWithCode?.value?.value;
+        const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+        const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
+        if (code) {
+          try {
+            promises.push(() => useRunner({ code, handler: isolationValue, moment }));
+            handleInsertsIds.push(handleInsertId);
+          } catch (e) {
+            error('error', e);
           }
-        } }`;
-  // log('queryString', queryString);
-
-  const query = gql`${queryString}`;
-  // log('query', query);
-
-  const variables = {
-    scheduleId
-  };
-  // log('variables', JSON.stringify(variables));
-
-  const handlersResult = await client.query({ query, variables });
-
-  const promises: any[] = [];
-  const handleInsertsIds: any[] = [];
-
-  const handlersWithCode = handlersResult?.data?.links as any[];
-  log('handlersWithCode.length', handlersWithCode?.length);
-  if (handlersWithCode?.length > 0) {
-    // log(queryString);
-    // log(query);
-    // log(JSON.stringify(query, null, 2));
-    log("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    log(handlersWithCode?.length);
-
-    // log(handleStringResult);
-    // log(JSON.stringify(handleStringResult, null, 2));
-    // log(handleStringResult?.data?.links?.[0]?.value);
-    for (const handlerWithCode of handlersWithCode) {
-      const code = handlerWithCode?.value?.value;
-      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
-      const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-      if (code) {
-        try {
-          promises.push(() => useRunner({ code, handler: isolationValue, moment }));
-          handleInsertsIds.push(handleInsertId);
-        } catch (e) {
-          error('error', e);
         }
       }
-    }
 
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-    const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-    const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+      const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+      const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-    const promise = await findPromiseLink({
-      id: scheduleId, client: deep.apolloClient,
-      Then: await deep.id('@deep-foundation/core', 'Then'),
-      Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      Resolved: resolvedTypeId,
-      Rejected: rejectedTypeId,
-      Results: false,
-    });
-    // const promise = 
-    await insertPromise(scheduleId);
-    log('promise: ', promise);
-    if (promise) {
+      // const promise = 
+      await insertPromise(scheduleId);
       log("promises.length: ", promises.length);
 
       // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
@@ -191,6 +193,8 @@ export async function handleScheduleMomemt(moment: any) {
             log('promiseResults insert error: ', e?.message ?? e);
           }
         });
+    } else {
+      // TODO: insert reject for promise
     }
   }
 }
