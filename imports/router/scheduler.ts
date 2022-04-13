@@ -16,7 +16,7 @@ import {
   handleOperation,
 } from './links';
 import { boolExpToSQL } from '../bool_exp_to_sql';
-import { makePromiseResult, useRunner } from './links';
+import { useRunner, processPromises } from './links';
 
 const SCHEMA = 'public';
 
@@ -150,49 +150,17 @@ export async function handleScheduleMomemt(moment: any) {
           } catch (e) {
             error('error', e);
           }
+        } else {
+          // TODO: !!
         }
       }
 
       const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
       const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-      // const promise = 
       await insertPromise(scheduleId);
-      log("promises.length: ", promises.length);
 
-      // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-      // Promise.allSettled(promises)
-      await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-        .then(async (values) => {
-          log("values: ", values);
-          const promiseResults = [];
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            const handleInsertId = handleInsertsIds[i];
-            if (value.status == 'fulfilled') {
-              const result = value.value;
-              log("result: ", result);
-              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-            if (value.status == 'rejected') {
-              const error = value.reason;
-              log("error: ", error);
-              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-          }
-          log("promiseResults: ", JSON.stringify(promiseResults, null, 2));
-          try
-          {
-            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            log("promiseResults are inserted");
-          }
-          catch(e)
-          {
-            log('promiseResults insert error: ', e?.message ?? e);
-          }
-        });
+      await processPromises(promises, handleInsertsIds, promise.id, resolvedTypeId, rejectedTypeId, promiseResultTypeId, promiseReasonTypeId, log);
     } else {
       // TODO: insert reject for promise
     }

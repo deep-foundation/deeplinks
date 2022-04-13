@@ -42,24 +42,72 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-export function makePromiseResult(promiseId: number, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): Partial<{ from: { data: { from_id: any; type_id: number; to: { data: { type_id: number; object: { data: { value: any; }; }; }; }; }; }; type_id: number; to_id: any; }> {
-  return {
-    from: {
-      data: {
-        from_id: promiseId,
-        type_id: resolvedTypeId,
-        to: {
-          data: {
-            type_id: promiseResultTypeId,
-            object: { data: { value: result } },
+export function makePromiseResult(promiseId: number, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): any {
+  if (typeof handleInsertId === 'number') {
+    return {
+      from: {
+        data: {
+          from_id: promiseId,
+          type_id: resolvedTypeId,
+          to: {
+            data: {
+              type_id: promiseResultTypeId,
+              object: { data: { value: result } },
+            }
           }
         }
+      },
+      type_id: promiseReasonTypeId,
+      to_id: handleInsertId
+    };
+  } else {
+    return {
+      from_id: promiseId,
+      type_id: resolvedTypeId,
+      to: {
+        data: {
+          type_id: promiseResultTypeId,
+          object: { data: { value: result } },
+        }
       }
-    },
-    type_id: promiseReasonTypeId,
-    to_id: handleInsertId
-  };
+    };
+  }
 };
+
+export async function processPromises(promises: any[], handleInsertsIds: any[], promiseId: number, promiseResultTypeId: number, promiseReasonTypeId: number, resolvedTypeId: number, rejectedTypeId: number, log: any) {
+  log("promises.length: ", promises.length);
+  await Promise.allSettled(promises.map((p) => p() as Promise<any>))
+      .then(async (values) => {
+        log("values: ", values);
+        const promiseResults = [];
+        for (let i = 0; i < values.length; i++) {
+          const value = values[i];
+          const handleInsertId = handleInsertsIds[i];
+          let resultTypeId = null;
+          let result = null;
+          if (value.status == 'fulfilled') {
+            result = value.value;
+            resultTypeId = resolvedTypeId;
+          }
+          if (value.status == 'rejected') {
+            result = value.reason;
+            resultTypeId = rejectedTypeId;
+          }
+          log("result: ", result);
+          log("resultTypeId: ", resultTypeId);
+          promiseResults.push(makePromiseResult(promiseId, resultTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId));
+        }
+        try
+        {
+          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+        }
+        catch(e)
+        {
+          log('promiseResults insert error: ', e?.message ?? e);
+        }
+      });
+}
 
 const containerController = new ContainerController({
   gql_docker_domain: +DOCKER ? 'links' : 'graphql-engine',
@@ -109,74 +157,8 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const currentLinkId = current.id;
   const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
 
-  // log('currentLinkId', currentLinkId);
-  // log('currentTypeId', currentTypeId);
-
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
-  const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
-
-  // log('handlerTypeId', handlerTypeId);
-  // log('handleOperationTypeId', handleOperationTypeId);
-
-  const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
-          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-          in: {
-            from_id: { _eq: ${dockerSupportsJsType} },
-            type_id: { _eq: ${handlerTypeId} },
-            in: {
-              from_id: { _eq: $typeId },
-              type_id: { _eq: ${handleOperationTypeId} },
-            }
-          }
-        }) {
-          id
-          value
-          in(where: { type_id: { _eq: ${handlerTypeId} } }) {
-            id
-            in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-              id
-            }
-            support: from {
-              id
-              isolation: from {
-                id
-                value
-              }
-            }
-          }
-        } }`;
-
-        // #{
-        //   #  from: {
-        //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-        //   #    out: {
-        //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
-        //   #      to_id: { _eq: $linkId },
-        //   #    }
-        //   #  }
-        //   #}
-  // log('queryString', queryString);
-
-  const query = gql`${queryString}`;
-
-  const variables = {
-    typeId: currentTypeId
-  };
-  // log('variables', JSON.stringify(variables));
-
-  const handlersResult = await client.query({ query, variables });
-
-  const promises: any[] = [];
-  const handleInsertsIds: any[] = [];
-
-  const handlersWithCode = handlersResult?.data?.links as any[];
-  // log('handlersWithCode.length', handlersWithCode?.length);
-
   const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
   const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-  const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
   const promise = await findPromiseLink({
     id: currentLinkId, client: deep.apolloClient,
@@ -187,66 +169,139 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     Results: false,
   });
 
-  if (handlersWithCode?.length > 0) {
-    // log(queryString);
-    // log(query);
-    // log(JSON.stringify(query, null, 2));
-    handleOperationDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-    handleOperationDebug("handlersWithCode?.length: ", handlersWithCode?.length);
+  if (promise) {
+    // log('currentLinkId', currentLinkId);
+    // log('currentTypeId', currentTypeId);
 
-    // log(handleStringResult);
-    // log(JSON.stringify(handleStringResult, null, 2));
-    // log(handleStringResult?.data?.links?.[0]?.value);
-    for (const handlerWithCode of handlersWithCode) {
-      const code = handlerWithCode?.value?.value;
-      const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
-      const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-      if (code) {
-        try {
-          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
-          handleInsertsIds.push(handleInsertId);
-        } catch (error) {
-          handleOperationDebug('error', error);
+    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+    const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
+    const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+
+    // log('handlerTypeId', handlerTypeId);
+    // log('handleOperationTypeId', handleOperationTypeId);
+
+    const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
+            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
+            in: {
+              from_id: { _eq: ${dockerSupportsJsType} },
+              type_id: { _eq: ${handlerTypeId} },
+              in: {
+                from_id: { _eq: $typeId },
+                type_id: { _eq: ${handleOperationTypeId} },
+              }
+            }
+          }) {
+            id
+            value
+            in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+              id
+              in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
+                id
+              }
+              support: from {
+                id
+                isolation: from {
+                  id
+                  value
+                }
+              }
+            }
+          } }`;
+
+          // #{
+          //   #  from: {
+          //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
+          //   #    out: {
+          //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
+          //   #      to_id: { _eq: $linkId },
+          //   #    }
+          //   #  }
+          //   #}
+    // log('queryString', queryString);
+
+    const query = gql`${queryString}`;
+
+    const variables = {
+      typeId: currentTypeId
+    };
+    // log('variables', JSON.stringify(variables));
+
+    const handlersResult = await client.query({ query, variables });
+
+    const promises: any[] = [];
+    const handleInsertsIds: any[] = [];
+
+    const handlersWithCode = handlersResult?.data?.links as any[];
+    // log('handlersWithCode.length', handlersWithCode?.length);
+
+    const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
+    const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+
+    if (handlersWithCode?.length > 0) {
+      // log(queryString);
+      // log(query);
+      // log(JSON.stringify(query, null, 2));
+      handleOperationDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
+      handleOperationDebug("handlersWithCode?.length: ", handlersWithCode?.length);
+
+      // log(handleStringResult);
+      // log(JSON.stringify(handleStringResult, null, 2));
+      // log(handleStringResult?.data?.links?.[0]?.value);
+      for (const handlerWithCode of handlersWithCode) {
+        const code = handlerWithCode?.value?.value;
+        const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+        const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
+        if (code) {
+          try {
+            promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
+            handleInsertsIds.push(handleInsertId);
+          } catch (error) {
+            handleOperationDebug('error', error);
+          }
+        } else {
+          // TODO: !!
         }
       }
-    }
 
-    handleOperationDebug('promise: ', promise);
-    if (promise) {
-      handleOperationDebug("promises.length: ", promises.length);
+      // handleOperationDebug('promise: ', promise);
+      
+      // handleOperationDebug("promises.length: ", promises.length);
 
       // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
       // Promise.allSettled(promises)
-      await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-        .then(async (values) => {
-          handleOperationDebug("values: ", values);
-          const promiseResults = [];
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            const handleInsertId = handleInsertsIds[i];
-            if (value.status == 'fulfilled') {
-              const result = value.value;
-              handleOperationDebug("result: ", result);
-              const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-            if (value.status == 'rejected') {
-              const error = value.reason;
-              handleOperationDebug("error: ", error);
-              const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-              promiseResults.push(promiseResult);
-            }
-          }
-          try
-          {
-            await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-            handleOperationDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
-          }
-          catch(e)
-          {
-            handleOperationDebug('promiseResults insert error: ', e?.message ?? e);
-          }
-        });
+      // await Promise.allSettled(promises.map((p) => p() as Promise<any>))
+      //   .then(async (values) => {
+      //     handleOperationDebug("values: ", values);
+      //     const promiseResults = [];
+      //     for (let i = 0; i < values.length; i++) {
+      //       const value = values[i];
+      //       const handleInsertId = handleInsertsIds[i];
+      //       if (value.status == 'fulfilled') {
+      //         const result = value.value;
+      //         handleOperationDebug("result: ", result);
+      //         const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
+      //         promiseResults.push(promiseResult);
+      //       }
+      //       if (value.status == 'rejected') {
+      //         const error = value.reason;
+      //         handleOperationDebug("error: ", error);
+      //         const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
+      //         promiseResults.push(promiseResult);
+      //       }
+      //     }
+      //     try
+      //     {
+      //       await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+      //       handleOperationDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
+      //     }
+      //     catch(e)
+      //     {
+      //       handleOperationDebug('promiseResults insert error: ', e?.message ?? e);
+      //     }
+      //   });
+      await processPromises(promises, handleInsertsIds, promise.id, resolvedTypeId, rejectedTypeId, promiseResultTypeId, promiseReasonTypeId, handleOperationDebug);
+    } else {
+      // TODO: insert reject for promise
     }
   }
 }
@@ -339,49 +394,20 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       // handleSelectorDebug('code', code);
       // handleSelectorDebug('isolationValue', isolationValue);
       // handleSelectorDebug('handleInsertId', handleInsertId);
-      if (code) {
+      if (code && isolationValue && handleInsertId) {
         try {
           promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           handleSelectorDebug('error', error);
         }
+      } else {
+        promises.push(async () => Promise.reject(new Error('code or isolationValue or handleInsertId is undefined')));
+        handleInsertsIds.push(null);
       }
     }
-
-    // handleSelectorDebug('promise: ', promise);
-    handleSelectorDebug("promises.length: ", promises.length);
-
-    await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-      .then(async (values) => {
-        handleSelectorDebug("values: ", values);
-        const promiseResults = [];
-        for (let i = 0; i < values.length; i++) {
-          const value = values[i];
-          const handleInsertId = handleInsertsIds[i];
-          if (value.status == 'fulfilled') {
-            const result = value.value;
-            handleSelectorDebug("result: ", result);
-            const promiseResult = makePromiseResult(promiseId, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-            promiseResults.push(promiseResult);
-          }
-          if (value.status == 'rejected') {
-            const error = value.reason;
-            handleSelectorDebug("error: ", error);
-            const promiseResult = makePromiseResult(promiseId, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-            promiseResults.push(promiseResult);
-          }
-        }
-        try
-        {
-          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-          handleSelectorDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
-        }
-        catch(e)
-        {
-          handleSelectorDebug('promiseResults insert error: ', e?.message ?? e);
-        }
-      });
+    processPromises(promises, handleInsertsIds, promiseId, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleSelectorDebug);
+    
     await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' });
   }
 }
