@@ -299,7 +299,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       //       handleOperationDebug('promiseResults insert error: ', e?.message ?? e);
       //     }
       //   });
-      await processPromises(promises, handleInsertsIds, promise.id, resolvedTypeId, rejectedTypeId, promiseResultTypeId, promiseReasonTypeId, handleOperationDebug);
+      await processPromises(promises, handleInsertsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleOperationDebug);
     } else {
       // TODO: insert reject for promise
     }

@@ -160,7 +160,7 @@ export async function handleScheduleMomemt(moment: any) {
 
       await insertPromise(scheduleId);
 
-      await processPromises(promises, handleInsertsIds, promise.id, resolvedTypeId, rejectedTypeId, promiseResultTypeId, promiseReasonTypeId, log);
+      await processPromises(promises, handleInsertsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, log);
     } else {
       // TODO: insert reject for promise
     }
