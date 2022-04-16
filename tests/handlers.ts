@@ -428,7 +428,7 @@ describe('async function handle by type with reject', () => {
   });
 });
 
-describe.only('sync function handle by schedule with resolve', () => {
+describe('sync function handle by schedule with resolve', () => {
   it(`handle schedule`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
