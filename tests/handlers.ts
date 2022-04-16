@@ -759,6 +759,44 @@ describe('handle by selector', () => {
     assert.isTrue(!!promiseResult1);
     assert.isTrue(!!promiseResult2);
   });
+  it(`handle update when value is updated`, async () => {
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
+
+    const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+    const selector = await insertSelector();
+    const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
+    const handler = await insertHandler(handleUpdateTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+    const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+
+    const linkId = selectorItems[1].linkId;
+    // const linkId = selectorItems[0].linkId;
+
+    await deep.insert({ link_id: linkId, value: numberToReturn }, { table: 'numbers' });
+    await deep.await(linkId);
+
+    // Trigger link update by updating the value
+    await deep.update({ link_id: linkId }, { value: numberToReturn+1 }, { table: 'numbers' });
+    await deep.await(linkId);
+
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
+    const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
+
+    for (const promiseResult of matchedPromiseResults)
+    {
+      await deletePromiseResult(promiseResult);
+    }
+    for (const selectorItem of selectorItems) {
+      await deleteId(selectorItem.linkId);
+      await deleteId(selectorItem.nodeId);
+    }
+    await deleteId(linkId);
+    await deleteSelector(selector);
+    await deleteHandler(handler);
+    assert.isTrue(!!matchedPromiseResults);
+    assert.equal(matchedPromiseResults.length, 2);
+  });
 });
 
 describe.skip('debug', () => {
