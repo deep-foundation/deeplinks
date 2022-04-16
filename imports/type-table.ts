@@ -174,7 +174,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     END IF;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER UPDATE ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
   BEGIN
     IF (

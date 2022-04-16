@@ -309,7 +309,6 @@ describe('sync function handle by type with resolve', () => {
     // Trigger link update by deleting the value
     await deep.delete({ link_id: { _eq: linkId } }, { table: 'numbers' });
     await deep.await(linkId);
-    // await delay(40000);
 
     const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
     const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
