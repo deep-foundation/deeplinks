@@ -155,7 +155,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
-  const currentTypeId = current.type_id; // TODO: check if it is correct for type for update
+  const currentTypeId = current.type_id;
 
   const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
   const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
@@ -251,7 +251,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
         const code = handlerWithCode?.value?.value;
         const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
         const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code) {
+        if (code && isolationValue && handleInsertId) {
           try {
             promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
             handleInsertsIds.push(handleInsertId);
@@ -259,49 +259,11 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             handleOperationDebug('error', error);
           }
         } else {
-          // TODO: !!
+          promises.push(async () => Promise.reject(new Error('Code of a handler is not loaded.')));
+          handleInsertsIds.push(null);
         }
       }
-
-      // handleOperationDebug('promise: ', promise);
-      
-      // handleOperationDebug("promises.length: ", promises.length);
-
-      // Promise.allSettled([...promises, Promise.reject(new Error('an error'))])
-      // Promise.allSettled(promises)
-      // await Promise.allSettled(promises.map((p) => p() as Promise<any>))
-      //   .then(async (values) => {
-      //     handleOperationDebug("values: ", values);
-      //     const promiseResults = [];
-      //     for (let i = 0; i < values.length; i++) {
-      //       const value = values[i];
-      //       const handleInsertId = handleInsertsIds[i];
-      //       if (value.status == 'fulfilled') {
-      //         const result = value.value;
-      //         handleOperationDebug("result: ", result);
-      //         const promiseResult = makePromiseResult(promise.id, resolvedTypeId, promiseResultTypeId, result, promiseReasonTypeId, handleInsertId);
-      //         promiseResults.push(promiseResult);
-      //       }
-      //       if (value.status == 'rejected') {
-      //         const error = value.reason;
-      //         handleOperationDebug("error: ", error);
-      //         const promiseResult = makePromiseResult(promise.id, rejectedTypeId, promiseResultTypeId, error, promiseReasonTypeId, handleInsertId);
-      //         promiseResults.push(promiseResult);
-      //       }
-      //     }
-      //     try
-      //     {
-      //       await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
-      //       handleOperationDebug("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
-      //     }
-      //     catch(e)
-      //     {
-      //       handleOperationDebug('promiseResults insert error: ', e?.message ?? e);
-      //     }
-      //   });
       await processPromises(promises, handleInsertsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleOperationDebug);
-    } else {
-      // TODO: insert reject for promise
     }
   }
 }
@@ -366,7 +328,6 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-  // TODO: Group promiseSelectors by promise_id
   const promiseSelectorsByPromiseId = promiseSelectors.reduce((accumulator, current) => {
     const promiseId = current.promise_id;
     if (!accumulator[promiseId]) {
@@ -402,7 +363,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
           handleSelectorDebug('error', error);
         }
       } else {
-        promises.push(async () => Promise.reject(new Error('code or isolationValue or handleInsertId is undefined')));
+        promises.push(async () => Promise.reject(new Error('Code of a handler is not loaded.')));
         handleInsertsIds.push(null);
       }
     }

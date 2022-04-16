@@ -143,7 +143,7 @@ export async function handleScheduleMomemt(moment: any) {
         const code = handlerWithCode?.value?.value;
         const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
         const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code) {
+        if (code && isolationValue && handleInsertId) {
           try {
             promises.push(() => useRunner({ code, handler: isolationValue, moment }));
             handleInsertsIds.push(handleInsertId);
@@ -151,7 +151,8 @@ export async function handleScheduleMomemt(moment: any) {
             error('error', e);
           }
         } else {
-          // TODO: !!
+          promises.push(async () => Promise.reject(new Error('Code of a handler is not loaded.')));
+          handleInsertsIds.push(null);
         }
       }
 
@@ -161,8 +162,6 @@ export async function handleScheduleMomemt(moment: any) {
       await insertPromise(scheduleId);
 
       await processPromises(promises, handleInsertsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, log);
-    } else {
-      // TODO: insert reject for promise
     }
   }
 }
