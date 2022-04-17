@@ -142,10 +142,11 @@ export async function handleScheduleMomemt(moment: any) {
       for (const handlerWithCode of handlersWithCode) {
         const code = handlerWithCode?.value?.value;
         const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+        const handlerId = handlerWithCode?.in?.[0]?.id;
         const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code && isolationValue && handleInsertId) {
+        if (code && isolationValue && handlerId && handleInsertId) {
           try {
-            promises.push(() => useRunner({ code, handler: isolationValue, moment }));
+            promises.push(() => useRunner({ code, handlerId, handler: isolationValue, moment }));
             handleInsertsIds.push(handleInsertId);
           } catch (e) {
             error('error', e);

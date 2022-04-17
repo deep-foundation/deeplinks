@@ -117,13 +117,42 @@ const containerController = new ContainerController({
 })
 
 export const useRunner = async ({
-  code, handler, oldLink, newLink, moment, promiseId,
+  code, handler, handlerId, oldLink, newLink, moment, promiseId,
 } : {
-  code: string, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
+  code: string, handlerId: number, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
 }) => {
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
-  const jwt = (await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') })).token;
+
+  const ownerId = await deep.id('@deep-foundation/core', 'system', 'admin');
+ 
+  const userTypeId = await deep.id('@deep-foundation/core', 'User');
+  const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
+  const queryString = `query {
+    mpUp: mp(where: {
+      item_id: {_eq: "${handlerId}"},
+      path_item: {type_id: {_in: ["${userTypeId}", "${packageTypeId}"]}}
+    }) {
+      id
+      type_id
+      path_item {
+        id
+        value
+      }
+      path_item_depth
+      position_id
+    }
+    mpMe: mp(where: {item_id: {_eq: "${handlerId}"}, path_item_id: { _eq: "${handlerId}" }}) {
+      id
+      path_item_depth
+      position_id
+    }
+  }`;
+  const query = gql`${queryString}`;
+  const variables = {
+  };
+  const ownerResults = await client.query({ query, variables });
+  useRunnerDebug("ownerResults: ", JSON.stringify(ownerResults, null, 2));
 
   // TODO:
   // const currentLink = newLink || oldLink;
@@ -135,6 +164,7 @@ export const useRunner = async ({
   //   no jwt
   // }
 
+  const jwt = (await deep.jwt({ linkId: ownerId })).token;
   useRunnerDebug('jwt', jwt);
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   useRunnerDebug('newContainerResult', container);
@@ -250,10 +280,11 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       for (const handlerWithCode of handlersWithCode) {
         const code = handlerWithCode?.value?.value;
         const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+        const handlerId = handlerWithCode?.in?.[0]?.id;
         const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code && isolationValue && handleInsertId) {
+        if (code && isolationValue && handlerId && handleInsertId) {
           try {
-            promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
+            promises.push(async () => useRunner({ code, handlerId, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
             handleInsertsIds.push(handleInsertId);
           } catch (error) {
             handleOperationDebug('error', error);
@@ -351,13 +382,14 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     for (const promiseSelector of promiseSelectors) {
       const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
       const isolationValue = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
+      const handlerId = promiseSelector?.handle_operation?.handler?.id;
       const handleInsertId = promiseSelector?.handle_operation?.id;
       // handleSelectorDebug('code', code);
       // handleSelectorDebug('isolationValue', isolationValue);
       // handleSelectorDebug('handleInsertId', handleInsertId);
-      if (code && isolationValue && handleInsertId) {
+      if (code && isolationValue && handlerId && handleInsertId) {
         try {
-          promises.push(async () => useRunner({ code, handler: isolationValue, oldLink, newLink, promiseId }));
+          promises.push(async () => useRunner({ code, handlerId, handler: isolationValue, oldLink, newLink, promiseId }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           handleSelectorDebug('error', error);

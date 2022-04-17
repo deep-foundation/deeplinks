@@ -47,7 +47,9 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
-  const handlerJSFile = (await deep.insert({ 
+  const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
+  const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+  const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
@@ -56,6 +58,11 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
+  const adminContainHandler = (await deep.insert({
+    from_id: adminUserId,
+    type_id: containTypeId,
+    to_id: handler?.id,
+  }, { name: 'IMPORT_ADMIN_CONTAIN_HANDLER' })).data[0];
   const handleOperation = (await deep.insert({
     from_id: typeId,
     type_id: handleOperationTypeId,
@@ -66,6 +73,7 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     handleOperationId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
+    adminContainHandlerId: adminContainHandler?.id,
   };
 };
 
@@ -152,6 +160,7 @@ export async function deletePromiseResult(promiseResult: any, linkId?: any) {
 }
 
 export const deleteHandler = async (handler) => {
+  await deleteId(handler.adminContainHandlerId);
   await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
   await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
 };
