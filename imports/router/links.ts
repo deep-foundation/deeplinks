@@ -165,11 +165,14 @@ export const useRunner = async ({
   let ownerId;
   if (ownerPackage) {
     ownerId = ownerPackage.id;
+    useRunnerDebug("owner is package");
   } else if (ownerUser) {
     ownerId = ownerUser.id;
+    useRunnerDebug("owner is user");
   } else {
     throw new Error("No handler owner found.");
   }
+  useRunnerDebug("ownerId: ", ownerId);
 
   // TODO:
   // const currentLink = newLink || oldLink;
