@@ -44,20 +44,20 @@ const nextHandlerResult = () => {
 };
 
 const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string) => {
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
-  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
-  const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
-  const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
   const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
+  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const handler = (await deep.insert({
     from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
+  const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+  const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
   const adminContainHandler = (await deep.insert({
     from_id: adminUserId,
     type_id: containTypeId,
@@ -78,25 +78,31 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
 };
 
 const insertOperationHandlerForSchedule = async (schedule: string, code: string) => {
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
-  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
-  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
+  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
   const handler = (await deep.insert({
     from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'IMPORT_HANDLER' })).data[0];
+  const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
+  const adminContainHandler = (await deep.insert({
+    from_id: adminUserId,
+    type_id: await deep.id('@deep-foundation/core', 'Contain'),
+    to_id: handler?.id,
+  }, { name: 'IMPORT_ADMIN_CONTAIN_HANDLER' })).data[0];
+  const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
   const scheduleNode = (await deep.insert({
     type_id: scheduleTypeId,
   }, { name: 'IMPORT_SCHEDULE' })).data[0];
   // log(typeof schedule)
   const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
+  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const handleOperation = (await deep.insert({
     from_id: scheduleNode?.id,
     type_id: handleScheduleTypeId,
@@ -109,6 +115,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     handlerJSFileValueId: handlerJSFileValue?.id,
     scheduleId: scheduleNode?.id,
     scheduleValueId: scheduleValue?.id,
+    adminContainHandlerId: adminContainHandler?.id,
   };
 };
 
@@ -457,7 +464,7 @@ describe('sync function handle by schedule with resolve', () => {
 });
 
 describe('async function handle by type with resolve using deep client', () => {
-  it.only(`handle insert`, async () => {
+  it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
