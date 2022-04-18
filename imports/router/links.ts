@@ -124,8 +124,6 @@ export const useRunner = async ({
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
 
-  const ownerId = await deep.id('@deep-foundation/core', 'system', 'admin');
- 
   const userTypeId = await deep.id('@deep-foundation/core', 'User');
   const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
   const queryString = `query {
@@ -134,9 +132,9 @@ export const useRunner = async ({
       path_item: {type_id: {_in: ["${userTypeId}", "${packageTypeId}"]}}
     }) {
       id
-      type_id
       path_item {
         id
+        type_id
         value
       }
       path_item_depth
@@ -148,11 +146,30 @@ export const useRunner = async ({
       position_id
     }
   }`;
-  const query = gql`${queryString}`;
-  const variables = {
-  };
-  const ownerResults = await client.query({ query, variables });
+  const ownerResults = await client.query({ query: gql`${queryString}` });
   useRunnerDebug("ownerResults: ", JSON.stringify(ownerResults, null, 2));
+
+  const mpUp = ownerResults.data.mpUp;
+  const mpMe = ownerResults.data.mpMe;
+  const possibleOwners = mpMe.map((me) => {
+    const getDepthDifference = (depth: number) => me.path_item_depth - depth;
+    const up = mpUp.filter((up) => up.position_id == me.position_id);
+    const closestUp = up.sort((a, b) => getDepthDifference(a.path_item_depth) - getDepthDifference(b.path_item_depth))[0];
+    return closestUp?.path_item;
+  }).filter(r => !!r);
+  useRunnerDebug("possibleOwners: ", JSON.stringify(possibleOwners, null, 2));
+
+  const ownerPackage = possibleOwners.find(r => r.type_id == packageTypeId);
+  const ownerUser = possibleOwners.find(r => r.type_id == userTypeId);
+
+  let ownerId;
+  if (ownerPackage) {
+    ownerId = ownerPackage.id;
+  } else if (ownerUser) {
+    ownerId = ownerUser.id;
+  } else {
+    throw new Error("No handler owner found.");
+  }
 
   // TODO:
   // const currentLink = newLink || oldLink;

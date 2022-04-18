@@ -457,7 +457,7 @@ describe('sync function handle by schedule with resolve', () => {
 });
 
 describe('async function handle by type with resolve using deep client', () => {
-  it(`handle insert`, async () => {
+  it.only(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
