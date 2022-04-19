@@ -43,6 +43,35 @@ const nextHandlerResult = () => {
   return lastHandlerResult;
 };
 
+const collectIds = (data: any) => {
+  const ids = [];
+  if (Array.isArray(data)) {
+    data.forEach(item => {
+      collectIds(item).forEach(id => ids.push(id));
+    });
+  }
+  if (data.id) {
+    ids.push(data.id);
+  }
+  if (data.to) {
+    collectIds(data.to).forEach(id => ids.push(id));
+  }
+  if (data.from) {
+    collectIds(data.from).forEach(id => ids.push(id));
+  }
+  if (data.in) {
+    data.in.forEach(item => {
+      collectIds(item).forEach(id => ids.push(id));
+    });
+  }
+  if (data.out) {
+    data.out.forEach(item => {
+      collectIds(item).forEach(id => ids.push(id));
+    });
+  }
+  return ids;
+};
+
 const insertPackageWithPermissions = async () => {
   const Rule = await deep.id('@deep-foundation/core', 'Rule');
   const RuleSubject = await deep.id('@deep-foundation/core', 'RuleSubject');
@@ -51,9 +80,17 @@ const insertPackageWithPermissions = async () => {
   const RuleAction = await deep.id('@deep-foundation/core', 'RuleAction');
   const SelectorInclude = await deep.id('@deep-foundation/core', 'SelectorInclude');
   const SelectorTree = await deep.id('@deep-foundation/core', 'SelectorTree');
+  const AllowSelect = await deep.id('@deep-foundation/core', 'AllowSelect');
   const AllowInsert = await deep.id('@deep-foundation/core', 'AllowInsert');
   const containTree = await deep.id('@deep-foundation/core', 'containTree');
-  const insertPermission = await deep.insert({
+  const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
+  const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
+  const $package = (await deep.insert({
+    type_id: packageTypeId,
+  }, { name: 'INSERT_PACKAGE' })).data[0];
+  const packageId = $package.id;
+  // const packageId = await deep.id('@deep-foundation/core');
+  const rule = await deep.insert({
     type_id: Rule,
     out: { data: [
       {
@@ -63,10 +100,10 @@ const insertPackageWithPermissions = async () => {
           out: { data: [
             {
               type_id: SelectorInclude,
-              to_id: await deep.id('@deep-foundation/core'),
+              to_id: packageId,
               out: { data: {
                 type_id: SelectorTree,
-                to_id: await deep.id('@deep-foundation/core', 'joinTree'),
+                to_id: joinTree,
               }, },
             },
           ] },
@@ -79,7 +116,7 @@ const insertPackageWithPermissions = async () => {
           out: { data: [
             {
               type_id: SelectorInclude,
-              to_id: await deep.id('@deep-foundation/core'),
+              to_id: packageId,
               out: { data: {
                 type_id: SelectorTree,
                 to_id: containTree,
@@ -101,19 +138,49 @@ const insertPackageWithPermissions = async () => {
                 to_id: containTree,
               }, },
             },
+            {
+              type_id: SelectorInclude,
+              to_id: AllowSelect,
+              out: { data: {
+                type_id: SelectorTree,
+                to_id: containTree,
+              }, },
+            }
           ], },
         }, },
       },
     ], },
-  });
+  }, { returning: `
+    id
+    out {
+      id
+      to {
+        id
+        out {
+          id
+          out {
+            id
+          }
+        }
+      }
+    }
+  ` });
+  // console.log(JSON.stringify(rule, null, 2));
+  const ids = collectIds(rule.data);
+  // console.log(JSON.stringify(ids, null, 2));
+  return { packageId, ruleIds: ids };
 };
 
+const deletePackageWithPermissions = async ($package: any) => {
+  await deleteId($package.packageId);
+  await deleteIds($package.ruleIds);
+};
 
 const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
-  }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
+  }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
   const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
@@ -121,7 +188,7 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
-  }, { name: 'IMPORT_HANDLER' })).data[0];
+  }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
   // const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
   await insertPackageWithPermissions();
@@ -130,12 +197,12 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     from_id: adminUserId,
     type_id: containTypeId,
     to_id: handler?.id,
-  }, { name: 'IMPORT_ADMIN_CONTAIN_HANDLER' })).data[0];
+  }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
   const handleOperation = (await deep.insert({
     from_id: typeId,
     type_id: handleOperationTypeId,
     to_id: handler?.id,
-  }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
+  }, { name: 'INSERT_INSERT_HANDLER' })).data[0];
   return {
     handlerId: handler?.id,
     handleOperationId: handleOperation?.id,
@@ -149,7 +216,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
-  }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
+  }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
   const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
   const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
@@ -157,17 +224,17 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
-  }, { name: 'IMPORT_HANDLER' })).data[0];
+  }, { name: 'INSERT_HANDLER' })).data[0];
   const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
   const adminContainHandler = (await deep.insert({
     from_id: adminUserId,
     type_id: await deep.id('@deep-foundation/core', 'Contain'),
     to_id: handler?.id,
-  }, { name: 'IMPORT_ADMIN_CONTAIN_HANDLER' })).data[0];
+  }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
   const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
   const scheduleNode = (await deep.insert({
     type_id: scheduleTypeId,
-  }, { name: 'IMPORT_SCHEDULE' })).data[0];
+  }, { name: 'INSERT_SCHEDULE' })).data[0];
   // log(typeof schedule)
   const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
@@ -175,7 +242,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     from_id: scheduleNode?.id,
     type_id: handleScheduleTypeId,
     to_id: handler?.id,
-  }, { name: 'IMPORT_INSERT_HANDLER' })).data[0];
+  }, { name: 'INSERT_INSERT_HANDLER' })).data[0];
   return {
     handlerId: handler?.id,
     handleOperationId: handleOperation?.id,
@@ -255,7 +322,7 @@ export async function ensureLinkIsCreated(typeId: number) {
     from_id: freeId,
     type_id: typeId,
     to_id: freeId
-  }, { name: 'IMPORT_LINK' })).data[0];
+  }, { name: 'INSERT_LINK' })).data[0];
   // log(insertedLink);
   assert.equal(freeId, insertedLink.id);
   return freeId;
@@ -306,6 +373,13 @@ export async function getPromiseResults(deep, resultTypeId: number, linkId: any)
 // function randomInteger(min, max) {
 //   return Math.floor(Math.random() * (max - min + 1)) + min;
 // }
+
+
+// beforeAll(async () => {
+//   const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+//   adminToken = token;
+//   admin = new DeepClient({ deep, token: adminToken, linkId });
+// });
 
 describe('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
