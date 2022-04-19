@@ -29,6 +29,8 @@ const deep = new DeepClient({ apolloClient });
 const DELAY = +process.env.DELAY || 0;
 const delay = time => new Promise(res => setTimeout(res, time));
 
+let packageWithPermissions;
+
 let lastFreeId = 9999999999;
 
 const nextFreeId = () => {
@@ -72,7 +74,7 @@ const collectIds = (data: any) => {
   return ids;
 };
 
-const insertPackageWithPermissions = async () => {
+const insertPackageWithPermissions = async (forcePackageId?) => {
   const Rule = await deep.id('@deep-foundation/core', 'Rule');
   const RuleSubject = await deep.id('@deep-foundation/core', 'RuleSubject');
   const Selector = await deep.id('@deep-foundation/core', 'Selector');
@@ -85,11 +87,15 @@ const insertPackageWithPermissions = async () => {
   const containTree = await deep.id('@deep-foundation/core', 'containTree');
   const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
   const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
-  const $package = (await deep.insert({
-    type_id: packageTypeId,
-  }, { name: 'INSERT_PACKAGE' })).data[0];
-  const packageId = $package.id;
-  // const packageId = await deep.id('@deep-foundation/core');
+  let packageId;
+  if (forcePackageId) {
+    packageId = forcePackageId;
+  } else {
+    const $package = (await deep.insert({
+      type_id: packageTypeId,
+    }, { name: 'INSERT_PACKAGE' })).data[0];
+    packageId = $package.id;
+  }
   const rule = await deep.insert({
     type_id: Rule,
     out: { data: [
@@ -191,7 +197,8 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
   }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
   // const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
-  await insertPackageWithPermissions();
+  // console.log(packageWithPermissions.packageId);
+  // const adminUserId = packageWithPermissions.packageId;
   const adminUserId = await deep.id('@deep-foundation/core');
   const adminContainHandler = (await deep.insert({
     from_id: adminUserId,
@@ -374,12 +381,16 @@ export async function getPromiseResults(deep, resultTypeId: number, linkId: any)
 //   return Math.floor(Math.random() * (max - min + 1)) + min;
 // }
 
+beforeAll(async () => {
+  const packageId = await deep.id('@deep-foundation/core');
+  packageWithPermissions = insertPackageWithPermissions(packageId);
+});
 
-// beforeAll(async () => {
-//   const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
-//   adminToken = token;
-//   admin = new DeepClient({ deep, token: adminToken, linkId });
-// });
+afterAll(async () => {
+  // deletion is not working?
+  // for some reason test continue to pass even after the deletion
+  await deleteIds(packageWithPermissions?.ruleIds);
+});
 
 describe('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
