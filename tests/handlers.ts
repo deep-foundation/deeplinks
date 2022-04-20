@@ -182,7 +182,7 @@ const deletePackageWithPermissions = async ($package: any) => {
   await deleteIds($package.ruleIds);
 };
 
-const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string) => {
+const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string, forceOwnerId?: number) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
@@ -196,12 +196,9 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-  // const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
-  // console.log(packageWithPermissions.packageId);
-  // const adminUserId = packageWithPermissions.packageId;
-  const adminUserId = await deep.id('@deep-foundation/core');
-  const adminContainHandler = (await deep.insert({
-    from_id: adminUserId,
+  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerContainHandler = (await deep.insert({
+    from_id: ownerId,
     type_id: containTypeId,
     to_id: handler?.id,
   }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
@@ -215,11 +212,11 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     handleOperationId: handleOperation?.id,
     handlerJSFileId: handlerJSFile?.id,
     handlerJSFileValueId: handlerJSFileValue?.id,
-    adminContainHandlerId: adminContainHandler?.id,
+    ownerContainHandlerId: ownerContainHandler?.id,
   };
 };
 
-const insertOperationHandlerForSchedule = async (schedule: string, code: string) => {
+const insertOperationHandlerForSchedule = async (schedule: string, code: string, forceOwnerId?: number) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
@@ -232,9 +229,9 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
-  const adminUserId = await deep.id('@deep-foundation/core', 'system', 'admin');
-  const adminContainHandler = (await deep.insert({
-    from_id: adminUserId,
+  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerContainHandler = (await deep.insert({
+    from_id: ownerId,
     type_id: await deep.id('@deep-foundation/core', 'Contain'),
     to_id: handler?.id,
   }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
@@ -257,7 +254,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string)
     handlerJSFileValueId: handlerJSFileValue?.id,
     scheduleId: scheduleNode?.id,
     scheduleValueId: scheduleValue?.id,
-    adminContainHandlerId: adminContainHandler?.id,
+    ownerContainHandlerId: ownerContainHandler?.id,
   };
 };
 
@@ -309,7 +306,7 @@ export async function deletePromiseResult(promiseResult: any, linkId?: any) {
 }
 
 export const deleteHandler = async (handler) => {
-  await deleteId(handler.adminContainHandlerId);
+  await deleteId(handler.ownerContainHandlerId);
   await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
   await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
 };
@@ -383,12 +380,13 @@ export async function getPromiseResults(deep, resultTypeId: number, linkId: any)
 
 beforeAll(async () => {
   const packageId = await deep.id('@deep-foundation/core');
-  packageWithPermissions = insertPackageWithPermissions(packageId);
+  // packageWithPermissions = await insertPackageWithPermissions(packageId);
+  // console.log(JSON.stringify(packageWithPermissions, null, 2));
 });
 
 afterAll(async () => {
-  // deletion is not working?
-  // for some reason test continue to pass even after the deletion
+  // console.log(JSON.stringify(packageWithPermissions, null, 2));
+  // console.log(JSON.stringify(packageWithPermissions?.ruleIds, null, 2));
   await deleteIds(packageWithPermissions?.ruleIds);
 });
 
@@ -617,7 +615,7 @@ describe('sync function handle by schedule with resolve', () => {
 });
 
 describe('async function handle by type with resolve using deep client', () => {
-  it.only(`handle insert`, async () => {
+  it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
