@@ -160,7 +160,7 @@ const corePckg: Package = {
 
     { id: 'scheduleValue', type: 'Value', from: 'Schedule', to: 'String' }, // 78
 
-    { id: 'HandleSelector', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 79 // TODO: Remove/Reuse
+    { id: 'Router', type: 'Type', value: { value: 'Router' } }, // 79
 
     { id: 'IsolationProvider', type: 'Type' }, // 80
     { id: 'DockerIsolationProvider', type: 'IsolationProvider' }, // 81
@@ -190,6 +190,33 @@ const corePckg: Package = {
 
     { id: 'PackagerInstalled', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 98
     { id: 'PackagerPublished', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 99
+
+    // Route
+    { id: 'Route', type: 'Type' }, // 100
+    // RouterProvider from Router to Port
+    { id: 'RouterProvider', type: 'Type', from: 'Router', to: 'Port' }, // 101
+    // RouterUse from Route to Router
+    { id: 'RouterUse', type: 'Type', from: 'Route', to: 'Router' }, // 102
+    // RouterUse value string
+    { id: 'routerUseValue', type: 'Value', from: 'RouterUse', to: 'String' }, // 103
+    // HandleRoute from Route to Handler
+    { id: 'HandleRoute', type: 'HandleOperation', from: 'Route', to: 'Handler' }, // 104
+    // routerTree
+    { id: 'routerTree', type: 'Tree' }, // 105
+    // routerTreeRouter
+    { id: 'routerTreeRouter', type: 'TreeIncludeNode', from: 'routerTree', to: 'Router' }, // 106
+    // routerTreeRoute
+    { id: 'routerTreeRoute', type: 'TreeIncludeNode', from: 'routerTree', to: 'Route' }, // 107
+    // routerTreePort
+    { id: 'routerTreePort', type: 'TreeIncludeNode', from: 'routerTree', to: 'Port' }, // 108
+    // routerTreeRouterProvider
+    { id: 'routerTreeRouterProvider', type: 'TreeIncludeDown', from: 'routerTree', to: 'RouterProvider' }, // 109
+    // routerTreeRouterUse
+    { id: 'routerTreeRouterUse', type: 'TreeIncludeDown', from: 'routerTree', to: 'RouterUse' }, // 110
+    // routerTreeHandleRoute
+    { id: 'routerTreeHandleRoute', type: 'TreeIncludeDown', from: 'routerTree', to: 'HandleRoute' }, // 111
+    // routerTreeHandler
+    { id: 'routerTreeHandler', type: 'TreeIncludeDown', from: 'routerTree', to: 'Handler' }, // 112
   ],
   errors: [],
   strict: true,
