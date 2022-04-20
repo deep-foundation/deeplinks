@@ -692,7 +692,7 @@ describe('async function handle by type with resolve using deep client', () => {
     assert.equal(query.id, queryId);
     assert.isTrue(!!promiseResult);
   });
-  it.only(`handle insert with package jwt`, async () => {
+  it(`handle insert with package jwt`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
 
