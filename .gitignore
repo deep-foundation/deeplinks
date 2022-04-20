@@ -127,3 +127,7 @@ projects/app/electron/app
 /imports/router/*.js
 /imports/router/*.js.map
 /imports/router/*.d.ts
+
+# snapshots
+/snapshots/[0-9]*
+/snapshots/[0-9]*.migrate

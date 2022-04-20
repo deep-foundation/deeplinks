@@ -15,7 +15,9 @@
     "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep up -d ",
     "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep down",
     "start-deeplinks-docker": "cd local && docker-compose -p deep up -d",
-    "stop-deeplinks-docker": "cd local && docker-compose -p deep down"
+    "stop-deeplinks-docker": "cd local && docker-compose -p deep down",
+    "snapshot:create": "node snapshots/create.js",
+    "snapshot:last": "node snapshots/last.js"
   },
   "dependencies": {
     "@apollo/client": "^3.5.8",
