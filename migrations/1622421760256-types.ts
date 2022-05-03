@@ -193,30 +193,30 @@ const corePckg: Package = {
 
     // Route
     { id: 'Route', type: 'Type' }, // 100
-    // RouterProvider from Router to Port
-    { id: 'RouterProvider', type: 'Type', from: 'Router', to: 'Port' }, // 101
-    // RouterUse from Route to Router
-    { id: 'RouterUse', type: 'Type', from: 'Route', to: 'Router' }, // 102
-    // RouterUse value string
-    { id: 'routerUseValue', type: 'Value', from: 'RouterUse', to: 'String' }, // 103
+    // RouterListening from Router to Port
+    { id: 'RouterListening', type: 'Type', from: 'Router', to: 'Port' }, // 101
+    // RouterStringUse from Route to Router
+    { id: 'RouterStringUse', type: 'Type', from: 'Route', to: 'Router' }, // 102
+    // RouterStringUse value string
+    { id: 'routerStringUseValue', type: 'Value', from: 'RouterStringUse', to: 'String' }, // 103
     // HandleRoute from Route to Handler
     { id: 'HandleRoute', type: 'HandleOperation', from: 'Route', to: 'Handler' }, // 104
-    // routerTree
-    { id: 'routerTree', type: 'Tree' }, // 105
-    // routerTreeRouter
-    { id: 'routerTreeRouter', type: 'TreeIncludeNode', from: 'routerTree', to: 'Router' }, // 106
-    // routerTreeRoute
-    { id: 'routerTreeRoute', type: 'TreeIncludeNode', from: 'routerTree', to: 'Route' }, // 107
-    // routerTreePort
-    { id: 'routerTreePort', type: 'TreeIncludeNode', from: 'routerTree', to: 'Port' }, // 108
-    // routerTreeRouterProvider
-    { id: 'routerTreeRouterProvider', type: 'TreeIncludeDown', from: 'routerTree', to: 'RouterProvider' }, // 109
-    // routerTreeRouterUse
-    { id: 'routerTreeRouterUse', type: 'TreeIncludeDown', from: 'routerTree', to: 'RouterUse' }, // 110
-    // routerTreeHandleRoute
-    { id: 'routerTreeHandleRoute', type: 'TreeIncludeDown', from: 'routerTree', to: 'HandleRoute' }, // 111
-    // routerTreeHandler
-    { id: 'routerTreeHandler', type: 'TreeIncludeDown', from: 'routerTree', to: 'Handler' }, // 112
+    // routeTree
+    { id: 'routeTree', type: 'Tree' }, // 105
+    // routeTreeRouter
+    { id: 'routeTreeRouter', type: 'TreeIncludeNode', from: 'routeTree', to: 'Router' }, // 106
+    // routeTreeRoute
+    { id: 'routeTreeRoute', type: 'TreeIncludeNode', from: 'routeTree', to: 'Route' }, // 107
+    // routeTreePort
+    { id: 'routeTreePort', type: 'TreeIncludeNode', from: 'routeTree', to: 'Port' }, // 108
+    // routeTreeRouterListening
+    { id: 'routeTreeRouterListening', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterListening' }, // 109
+    // routeTreeRouterStringUse
+    { id: 'routeTreeRouterStringUse', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterStringUse' }, // 110
+    // routeTreeHandleRoute
+    { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 111
+    // routeTreeHandler
+    { id: 'routeTreeHandler', type: 'TreeIncludeDown', from: 'routeTree', to: 'Handler' }, // 112
   ],
   errors: [],
   strict: true,
