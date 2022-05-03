@@ -764,6 +764,73 @@ describe('handle port', () => {
   });
 });
 
+describe('handle port route', () => {
+  it(`handle port`, async () => {
+    const port = await getPort();
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    const portId = (await deep.insert({
+      type_id: portTypeId,
+      number: { data: { value: port } }
+    }))?.data?.[0]?.id;
+
+    const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
+    const routeId = (await deep.insert({
+      type_id: routeTypeId,
+    }))?.data?.[0]?.id;
+
+    const routerTypeId = await deep.id('@deep-foundation/core', 'Router');
+    const routerId = (await deep.insert({
+      type_id: routerTypeId,
+    }))?.data?.[0]?.id;
+
+    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+    const routerListeningId = (await deep.insert({
+      type_id: routerListeningTypeId,
+      from_id: routerId,
+      to_id: portId,
+    }))?.data?.[0]?.id;
+
+    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+    const routerStringUseId = (await deep.insert({
+      type_id: routerStringUseTypeId,
+      to_id: routerId,
+      from_id: routeId,
+      string: { data: { value: '/' } }
+    }))?.data?.[0]?.id;
+
+    const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
+
+    const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+    const handlerJSFile = (await deep.insert({
+      type_id: syncTextFileTypeId,
+    }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
+    const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: `async (req, res) => { res.send('ok'); return { result: 'test' } }` }, { table: 'strings' })).data[0];
+    
+    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+    const handlerId = (await deep.insert({
+      type_id: handlerTypeId,
+      from_id: jsDockerIsolationProviderId,
+      to_id: handlerJSFile?.id,
+    }))?.data?.[0]?.id;
+
+    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+    const hanleRouteLinkId = (await deep.insert({
+      from_id: routeId,
+      type_id: handleRouteTypeId,
+      to_id: handlerId,
+    }))?.data?.[0]?.id;
+    // const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
+    // const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
+
+    // await deep.await(hanlePortLinkId);
+
+    // await delay(10000);
+
+    log("waiting for route to be created");
+    await waitOn({ resources: [`http://localhost:${port}/`] });
+  });
+});
+
 export async function insertSelector() {
   const typeTypeId = await deep.id('@deep-foundation/core', 'Type');
   const { data: [{ id: ty0 }] } = await deep.insert({
@@ -1037,14 +1104,5 @@ describe('handle by selector', () => {
     await deleteHandler(handler);
     assert.isTrue(!!matchedPromiseResults);
     assert.equal(matchedPromiseResults.length, 2);
-  });
-});
-
-describe.skip('debug', () => {
-  it(`log`, async () => {
-    log('this message should be log');
-  });
-  it(`error`, async () => {
-    error('this message should be error');
   });
 });
