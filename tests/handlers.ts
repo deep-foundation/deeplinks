@@ -768,10 +768,14 @@ describe('handle port route', () => {
   it(`handle port`, async () => {
     const port = await getPort();
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    
     const portId = (await deep.insert({
       type_id: portTypeId,
-      number: { data: { value: port } }
     }))?.data?.[0]?.id;
+    const portValue = (await deep.insert({ 
+      link_id: portId, 
+      value: port 
+    }, { table: 'numbers' }))?.data?.[0];
 
     const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
     const routeId = (await deep.insert({
@@ -814,20 +818,26 @@ describe('handle port route', () => {
     }))?.data?.[0]?.id;
 
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
-    const hanleRouteLinkId = (await deep.insert({
+    const handleRouteLinkId = (await deep.insert({
       from_id: routeId,
       type_id: handleRouteTypeId,
       to_id: handlerId,
     }))?.data?.[0]?.id;
-    // const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
-    // const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
-
-    // await deep.await(hanlePortLinkId);
-
-    // await delay(10000);
 
     log("waiting for route to be created");
     await waitOn({ resources: [`http://localhost:${port}/`] });
+
+    // delete all
+    // await deleteId(handleRouteLinkId);
+    // await deleteId(handlerId);
+    // await deleteId(handlerJSFileValue.id);
+    // await deleteId(handlerJSFile.id);
+    // await deleteId(routerStringUseId);
+    // await deleteId(routerListeningId);
+    // await deleteId(routerId);
+    // await deleteId(routeId);
+    // await deleteId(portValue.id);
+    // await deleteId(portId);
   });
 });
 
