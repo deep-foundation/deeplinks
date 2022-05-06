@@ -10,6 +10,9 @@ import expressPlayground from 'graphql-playground-middleware-express';
 import moesif from 'moesif-nodejs';
 import Debug from 'debug';
 import waitOn from 'wait-on';
+import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { DeepClient } from './imports/client';
+import gql from 'graphql-tag';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
@@ -99,3 +102,69 @@ const start = async () => {
 }
 
 start();
+
+const client = generateApolloClient({
+  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
+});
+
+const deep = new DeepClient({
+  apolloClient: client,
+})
+
+const handleRoutes = async () => {
+  const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
+  const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+  const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+  const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+
+  const routes = await client.query({
+    query: gql`
+      query {
+        links(where: {
+          type_id: { _eq: "${routeTypeId}" }
+        }) {
+          id
+          handleRoute: out(where: {
+            type_id: { _eq: "${handleRouteTypeId}" }
+          }) {
+            id
+            supports: from {
+              id
+              isolation: from {
+                id
+                image: value
+              }
+            }
+            handler: to {
+              id
+              file: to {
+                id
+                code: value
+              }
+            }
+          }
+          routerStringUse: out(where: {
+            type_id: { _eq: "${routerStringUseTypeId}" }
+          }) {
+            id
+            router: to {
+              id
+              routerListening: out(where: {
+                type_id: { _eq: "${routerListeningTypeId}" }
+              }) {
+                id
+              }
+            }
+          }
+        }
+      }
+    `, variables: {} });
+};
+
+const startRouteHandling = async () => {
+  setInterval(handleRoutes, 1000);
+};
+
+startRouteHandling();
