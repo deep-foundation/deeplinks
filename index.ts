@@ -114,7 +114,7 @@ const deep = new DeepClient({
 })
 
 const handleRoutes = async () => {
-  const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
+  const portTypeId = await deep.id('@deep-foundation/core', 'Port');
   const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
   const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
   const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
@@ -123,44 +123,49 @@ const handleRoutes = async () => {
     query: gql`
       query {
         links(where: {
-          type_id: { _eq: "${routeTypeId}" }
+          type_id: { _eq: "${portTypeId}" }
         }) {
           id
-          handleRoute: out(where: {
-            type_id: { _eq: "${handleRouteTypeId}" }
+          routerListening: in(where: {
+            type_id: { _eq: "${routerListeningTypeId}" }
           }) {
             id
-            supports: from {
+            router: from {
               id
-              isolation: from {
-                id
-                image: value
-              }
-            }
-            handler: to {
-              id
-              file: to {
-                id
-                code: value
-              }
-            }
-          }
-          routerStringUse: out(where: {
-            type_id: { _eq: "${routerStringUseTypeId}" }
-          }) {
-            id
-            router: to {
-              id
-              routerListening: out(where: {
-                type_id: { _eq: "${routerListeningTypeId}" }
+              routerStringUse: in(where: {
+                type_id: { _eq: "${routerStringUseTypeId}" }
               }) {
                 id
+                route: from {
+                  id
+                  handleRoute: out(where: {
+                    type_id: { _eq: "${handleRouteTypeId}" }
+                  }) {
+                    id
+                    supports: from {
+                      id
+                      isolation: from {
+                        id
+                        image: value
+                      }
+                    }
+                    handler: to {
+                      id
+                      file: to {
+                        id
+                        code: value
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         }
       }
     `, variables: {} });
+  const links = routes.data.links;
+  console.log(JSON.stringify(links, null, 2));
 };
 
 const startRouteHandling = async () => {
