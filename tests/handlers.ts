@@ -764,7 +764,7 @@ describe('handle port', () => {
   });
 });
 
-describe('handle port route', () => {
+describe.only('handle port route', () => {
   it(`handle port`, async () => {
     const port = await getPort();
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
@@ -824,7 +824,7 @@ describe('handle port route', () => {
     }))?.data?.[0]?.id;
 
     log("waiting for route to be created");
-    await waitOn({ resources: [`http://localhost:${port}/`] });
+    // await waitOn({ resources: [`http://localhost:${port}/`] });
 
     // delete all
     // await deleteId(handleRouteLinkId);
