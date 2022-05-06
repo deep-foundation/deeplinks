@@ -113,6 +113,8 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
+let currentServers = [];
+
 const handleRoutes = async () => {
   try {
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
@@ -120,13 +122,14 @@ const handleRoutes = async () => {
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
   
-    const routes = await client.query({
+    const routesResult = await client.query({
       query: gql`
         query {
-          links(where: {
+          ports: links(where: {
             type_id: { _eq: "${portTypeId}" }
           }) {
             id
+            port: value
             routerListening: in(where: {
               type_id: { _eq: "${routerListeningTypeId}" }
             }) {
@@ -165,8 +168,29 @@ const handleRoutes = async () => {
           }
         }
       `, variables: {} });
-    const links = routes.data.links;
-    console.log(JSON.stringify(links, null, 2));
+    const ports = routesResult.data.ports;
+
+    // clean up old servers
+    currentServers.forEach(server => {
+      server.close();
+    });
+    currentServers = [];
+
+    // for each port
+    for (const port of ports) {
+      if (port.routerListening.length > 0) {
+        // create express server
+        const portServer = express();
+        // // listen on port
+        const portValue = port.port.value;
+        portServer.listen(portValue);
+        // handle get requests
+        portServer.get('/', (req, res) => {
+          res.send(`ok`);
+        });
+        currentServers.push(portServer);
+      }
+    }
   } catch(e) {
     console.log(JSON.stringify(e, null, 2));
   }
