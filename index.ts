@@ -114,46 +114,48 @@ const deep = new DeepClient({
 })
 
 const handleRoutes = async () => {
-  const portTypeId = await deep.id('@deep-foundation/core', 'Port');
-  const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
-  const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
-  const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
-
-  const routes = await client.query({
-    query: gql`
-      query {
-        links(where: {
-          type_id: { _eq: "${portTypeId}" }
-        }) {
-          id
-          routerListening: in(where: {
-            type_id: { _eq: "${routerListeningTypeId}" }
+  try {
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+  
+    const routes = await client.query({
+      query: gql`
+        query {
+          links(where: {
+            type_id: { _eq: "${portTypeId}" }
           }) {
             id
-            router: from {
+            routerListening: in(where: {
+              type_id: { _eq: "${routerListeningTypeId}" }
+            }) {
               id
-              routerStringUse: in(where: {
-                type_id: { _eq: "${routerStringUseTypeId}" }
-              }) {
+              router: from {
                 id
-                route: from {
+                routerStringUse: in(where: {
+                  type_id: { _eq: "${routerStringUseTypeId}" }
+                }) {
                   id
-                  handleRoute: out(where: {
-                    type_id: { _eq: "${handleRouteTypeId}" }
-                  }) {
+                  route: from {
                     id
-                    supports: from {
+                    handleRoute: out(where: {
+                      type_id: { _eq: "${handleRouteTypeId}" }
+                    }) {
                       id
-                      isolation: from {
+                      supports: from {
                         id
-                        image: value
+                        isolation: from {
+                          id
+                          image: value
+                        }
                       }
-                    }
-                    handler: to {
-                      id
-                      file: to {
+                      handler: to {
                         id
-                        code: value
+                        file: to {
+                          id
+                          code: value
+                        }
                       }
                     }
                   }
@@ -162,10 +164,12 @@ const handleRoutes = async () => {
             }
           }
         }
-      }
-    `, variables: {} });
-  const links = routes.data.links;
-  console.log(JSON.stringify(links, null, 2));
+      `, variables: {} });
+    const links = routes.data.links;
+    console.log(JSON.stringify(links, null, 2));
+  } catch(e) {
+    console.log(JSON.stringify(e, null, 2));
+  }
 };
 
 const startRouteHandling = async () => {
