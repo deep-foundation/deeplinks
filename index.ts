@@ -118,7 +118,9 @@ let currentServers = [];
 const handleRoutes = async () => {
   // clean up old servers
   currentServers.forEach(server => {
-    server.close();
+    if (typeof server.close === 'function') {
+      server.close();
+    }
   });
   currentServers = [];
 

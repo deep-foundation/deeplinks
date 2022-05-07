@@ -827,16 +827,16 @@ describe.only('handle port route', () => {
     await waitOn({ resources: [`http://localhost:${port}/`] });
 
     // delete all
-    // await deleteId(handleRouteLinkId);
-    // await deleteId(handlerId);
-    // await deleteId(handlerJSFileValue.id);
-    // await deleteId(handlerJSFile.id);
-    // await deleteId(routerStringUseId);
-    // await deleteId(routerListeningId);
-    // await deleteId(routerId);
-    // await deleteId(routeId);
-    // await deleteId(portValue.id);
-    // await deleteId(portId);
+    await deleteId(handleRouteLinkId);
+    await deleteId(handlerId);
+    await deleteId(handlerJSFileValue.id);
+    await deleteId(handlerJSFile.id);
+    await deleteId(routerStringUseId);
+    await deleteId(routerListeningId);
+    await deleteId(routerId);
+    await deleteId(routeId);
+    await deleteId(portValue.id);
+    await deleteId(portId);
   });
 });
 
