@@ -169,6 +169,7 @@ const handleRoutes = async () => {
         }
       `, variables: {} });
     const ports = routesResult.data.ports;
+    console.log(JSON.stringify(ports, null, 2));
 
     // clean up old servers
     currentServers.forEach(server => {
