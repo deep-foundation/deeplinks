@@ -116,6 +116,12 @@ const deep = new DeepClient({
 let currentServers = [];
 
 const handleRoutes = async () => {
+  // clean up old servers
+  currentServers.forEach(server => {
+    server.close();
+  });
+  currentServers = [];
+
   try {
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
@@ -171,12 +177,6 @@ const handleRoutes = async () => {
     const ports = routesResult.data.ports;
     console.log(JSON.stringify(ports, null, 2));
 
-    // clean up old servers
-    currentServers.forEach(server => {
-      server.close();
-    });
-    currentServers = [];
-
     // for each port
     for (const port of ports) {
       if (port.routerListening.length > 0) {
@@ -198,7 +198,7 @@ const handleRoutes = async () => {
 };
 
 const startRouteHandling = async () => {
-  setInterval(handleRoutes, 1000);
+  setInterval(handleRoutes, 2000);
 };
 
 startRouteHandling();

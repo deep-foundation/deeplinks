@@ -824,7 +824,7 @@ describe.only('handle port route', () => {
     }))?.data?.[0]?.id;
 
     log("waiting for route to be created");
-    // await waitOn({ resources: [`http://localhost:${port}/`] });
+    await waitOn({ resources: [`http://localhost:${port}/`] });
 
     // delete all
     // await deleteId(handleRouteLinkId);
