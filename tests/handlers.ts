@@ -825,18 +825,28 @@ describe.only('handle port route', () => {
 
     log("waiting for route to be created");
     await waitOn({ resources: [`http://localhost:${port}/`] });
+    log("route handler is up");
 
     // delete all
     await deleteId(handleRouteLinkId);
     await deleteId(handlerId);
-    await deleteId(handlerJSFileValue.id);
+    await deleteId(handlerJSFileValue.id, { table: 'strings' });
     await deleteId(handlerJSFile.id);
     await deleteId(routerStringUseId);
     await deleteId(routerListeningId);
     await deleteId(routerId);
     await deleteId(routeId);
-    await deleteId(portValue.id);
+    await deleteId(portValue.id, { table: 'numbers' });
     await deleteId(portId);
+
+    log("waiting for route to be deleted");
+    await waitOn({
+      resources: [
+        `http://localhost:${port}/`
+      ],
+      reverse: true,
+    });
+    log("route handler is down");
   });
 });
 

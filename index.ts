@@ -118,9 +118,7 @@ let currentServers = [];
 const handleRoutes = async () => {
   // clean up old servers
   currentServers.forEach(server => {
-    if (typeof server.close === 'function') {
-      server.close();
-    }
+    server.close();
   });
   currentServers = [];
 
@@ -186,12 +184,12 @@ const handleRoutes = async () => {
         const portServer = express();
         // // listen on port
         const portValue = port.port.value;
-        portServer.listen(portValue);
+        const httpServer = portServer.listen(portValue);
         // handle get requests
         portServer.get('/', (req, res) => {
           res.send(`ok`);
         });
-        currentServers.push(portServer);
+        currentServers.push(httpServer);
       }
     }
   } catch(e) {
