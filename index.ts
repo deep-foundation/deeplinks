@@ -114,14 +114,23 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-let currentServers = [];
+let currentServers = {};
+let busy = false;
 
 const handleRoutes = async () => {
+  if (busy)
+    return;
+  busy = true;
+
   // clean up old servers
-  currentServers.forEach(server => {
-    server.close();
-  });
-  currentServers = [];
+  const keys = Object.keys(currentServers);
+  for (const key of keys) {
+    if (!currentServers[key]) {
+      currentServers[key].close();
+      delete currentServers[key];
+    }
+  }
+  currentServers = {};
 
   try {
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
@@ -208,7 +217,7 @@ const handleRoutes = async () => {
         console.log(`code ${code}`);
         const handlerId = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.id;
         console.log(`handler id ${handlerId}`);
-        const jwt = getJwt(handlerId, console.log);
+        const jwt = await getJwt(handlerId, console.log);
         console.log(`jwt ${jwt}`);
 
         // proxy to container
@@ -232,12 +241,15 @@ const handleRoutes = async () => {
         // portServer.get('/', (req, res) => {
         //   res.send(`ok`);
         // });
-        currentServers.push(httpServer);
+        // currentServers.push(httpServer);
+        currentServers[portValue] = httpServer;
       }
     }
   } catch(e) {
     console.log(JSON.stringify(e, null, 2));
   }
+  
+  busy = false;
 };
 
 const startRouteHandling = async () => {
