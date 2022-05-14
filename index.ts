@@ -154,15 +154,15 @@ const handleRoutes = async () => {
                       type_id: { _eq: "${handleRouteTypeId}" }
                     }) {
                       id
-                      supports: from {
-                        id
-                        isolation: from {
-                          id
-                          image: value
-                        }
-                      }
                       handler: to {
                         id
+                        supports: from {
+                          id
+                          isolation: from {
+                            id
+                            image: value
+                          }
+                        }
                         file: to {
                           id
                           code: value
@@ -183,7 +183,7 @@ const handleRoutes = async () => {
     for (const port of ports) {
       if (port.routerListening.length > 0) {
         // prepare container
-        const image = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].supports[0].isolation.image.value;
+        const image = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.supports[0].isolation.image.value;
         console.log(`preparing container ${image}`);
 
         const container = await containerController.newContainer({
@@ -210,7 +210,7 @@ const handleRoutes = async () => {
         console.log(`handler id ${handlerId}`);
         const jwt = getJwt(handlerId, console.log);
         console.log(`jwt ${jwt}`);
-        
+
         // proxy to container
         // using container host and port
         // without https
