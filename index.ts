@@ -183,7 +183,7 @@ const handleRoutes = async () => {
     for (const port of ports) {
       if (port.routerListening.length > 0) {
         // prepare container
-        const image = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.supports[0].isolation.image.value;
+        const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
         console.log(`preparing container ${image}`);
 
         const container = await containerController.newContainer({
