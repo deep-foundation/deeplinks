@@ -13,6 +13,7 @@ import waitOn from 'wait-on';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from './imports/client';
 import gql from 'graphql-tag';
+import { containerController, DOCKER, getJwt } from './imports/router/links';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
@@ -146,6 +147,7 @@ const handleRoutes = async () => {
                   type_id: { _eq: "${routerStringUseTypeId}" }
                 }) {
                   id
+                  routeString: value
                   route: from {
                     id
                     handleRoute: out(where: {
@@ -180,15 +182,56 @@ const handleRoutes = async () => {
     // for each port
     for (const port of ports) {
       if (port.routerListening.length > 0) {
+        // prepare container
+        const image = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].supports[0].isolation.image.value;
+        console.log(`preparing container ${image}`);
+
+        const container = await containerController.newContainer({
+          handler: image,
+          forceRestart: true,
+          publish: +DOCKER ? false : true,
+          code: '', // TODO: Remove
+          jwt: '',
+          data: {}
+        });
+
         // create express server
         const portServer = express();
         // // listen on port
         const portValue = port.port.value;
+        console.log(`listening on port ${portValue}`);
         const httpServer = portServer.listen(portValue);
-        // handle get requests
-        portServer.get('/', (req, res) => {
-          res.send(`ok`);
+
+        const routeString = port.routerListening[0].router.routerStringUse[0].routeString.value;
+        console.log(`route string ${routeString}`);
+        const code = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.to.file.to.code.value;
+        console.log(`code ${code}`);
+        const handlerId = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.id;
+        console.log(`handler id ${handlerId}`);
+        const jwt = getJwt(handlerId, console.log);
+        console.log(`jwt ${jwt}`);
+        
+        // proxy to container
+        // using container host and port
+        // without https
+        const proxy = createProxyMiddleware({
+          target: `http://${container.host}:${container.port}/http-call`,
+          changeOrigin: true,
+          onProxyReq: (proxyReq, req, res) => {
+            proxyReq.setHeader('deep-call-options', JSON.stringify({
+              jwt,
+              code,
+              data: {},
+            }));
+          }
         });
+
+        portServer.use(routeString, proxy);
+
+        // // handle get requests
+        // portServer.get('/', (req, res) => {
+        //   res.send(`ok`);
+        // });
         currentServers.push(httpServer);
       }
     }
