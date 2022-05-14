@@ -215,7 +215,7 @@ const handleRoutes = async () => {
           currentServers[portValue].close();
         }
 
-        delay(2000);
+        await delay(10000);
 
         console.log(`listening on port ${portValue}`);
         const httpServer = portServer.listen(portValue);
