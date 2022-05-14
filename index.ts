@@ -27,6 +27,8 @@ const error = debug.extend('error');
 const namespaces = Debug.disable();
 Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
+export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
+
 const app = express();
 const httpServer = http.createServer(app);
 
@@ -208,6 +210,13 @@ const handleRoutes = async () => {
         const portServer = express();
         // // listen on port
         const portValue = port.port.value;
+
+        if (currentServers[portValue]) {
+          currentServers[portValue].close();
+        }
+
+        delay(2000);
+
         console.log(`listening on port ${portValue}`);
         const httpServer = portServer.listen(portValue);
 
