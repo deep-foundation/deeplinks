@@ -125,13 +125,24 @@ const handleRoutes = async () => {
   busy = true;
 
   // clean up old servers
-  const keys = Object.keys(currentServers);
-  for (const key of keys) {
-    if (!currentServers[key]) {
-      currentServers[key].close();
+  for (const key in currentServers) {
+    console.log(`Closing (0) ${key} server.`);
+    if (Object.prototype.hasOwnProperty.call(currentServers, key)) {
+      const element = currentServers[key];
+      console.log(`Closing (1) ${key} server.`);
+      element.close();
       delete currentServers[key];
     }
   }
+  // const keys = Object.keys(currentServers);
+  // for (const key of keys) {
+  //   console.log(`Closing (0) ${key} server.`);
+  //   if (!currentServers[key]) {
+  //     console.log(`Closing (1) ${key} server.`);
+  //     currentServers[key].close();
+  //     delete currentServers[key];
+  //   }
+  // }
   currentServers = {};
 
   try {
@@ -197,14 +208,15 @@ const handleRoutes = async () => {
         const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
         console.log(`preparing container ${image}`);
 
-        const container = await containerController.newContainer({
-          handler: image,
-          forceRestart: true,
-          publish: +DOCKER ? false : true,
-          code: '', // TODO: Remove
-          jwt: '',
-          data: {}
-        });
+        // const container = await containerController.newContainer({
+        //   handler: image,
+        //   forceRestart: true,
+        //   publish: +DOCKER ? false : true,
+        //   code: '', // TODO: Remove
+        //   jwt: '',
+        //   data: {}
+        // });
+        // const container = { host: "localhost", port: 80 };
 
         // create express server
         const portServer = express();
@@ -212,39 +224,41 @@ const handleRoutes = async () => {
         const portValue = port.port.value;
 
         if (currentServers[portValue]) {
+          console.log(`Closing (2) ${portValue} server.`);
           currentServers[portValue].close();
         }
 
-        await delay(10000);
+        // await delay(10000);
 
         console.log(`listening on port ${portValue}`);
         const httpServer = portServer.listen(portValue);
 
         const routeString = port.routerListening[0].router.routerStringUse[0].routeString.value;
         console.log(`route string ${routeString}`);
-        const code = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.to.file.to.code.value;
+        const code = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.file.code.value;
         console.log(`code ${code}`);
         const handlerId = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.id;
         console.log(`handler id ${handlerId}`);
+        // TODO: Fix getJWT
         const jwt = await getJwt(handlerId, console.log);
         console.log(`jwt ${jwt}`);
 
         // proxy to container
         // using container host and port
         // without https
-        const proxy = createProxyMiddleware({
-          target: `http://${container.host}:${container.port}/http-call`,
-          changeOrigin: true,
-          onProxyReq: (proxyReq, req, res) => {
-            proxyReq.setHeader('deep-call-options', JSON.stringify({
-              jwt,
-              code,
-              data: {},
-            }));
-          }
-        });
+        // const proxy = createProxyMiddleware({
+        //   target: `http://${container.host}:${container.port}/http-call`,
+        //   changeOrigin: true,
+        //   onProxyReq: (proxyReq, req, res) => {
+        //     proxyReq.setHeader('deep-call-options', JSON.stringify({
+        //       jwt,
+        //       code,
+        //       data: {},
+        //     }));
+        //   }
+        // });
 
-        portServer.use(routeString, proxy);
+        // portServer.use(routeString, proxy);
 
         // // handle get requests
         // portServer.get('/', (req, res) => {
@@ -255,6 +269,7 @@ const handleRoutes = async () => {
       }
     }
   } catch(e) {
+    // TODO: Fix error output
     console.log(JSON.stringify(e, null, 2));
   }
   
