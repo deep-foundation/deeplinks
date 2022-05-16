@@ -124,6 +124,8 @@ const handleRoutes = async () => {
     return;
   busy = true;
 
+  const beforeServers = currentServers;
+
   // clean up old servers
   for (const key in currentServers) {
     console.log(`Closing (0) ${key} server.`);
@@ -131,7 +133,6 @@ const handleRoutes = async () => {
       const element = currentServers[key];
       console.log(`Closing (1) ${key} server.`);
       element.close();
-      delete currentServers[key];
     }
   }
   // const keys = Object.keys(currentServers);
@@ -239,7 +240,7 @@ const handleRoutes = async () => {
         console.log(`code ${code}`);
         const handlerId = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.id;
         console.log(`handler id ${handlerId}`);
-        // TODO: Fix getJWT
+        // TODO: Fix getJWT (handler should be owned by user or package)
         const jwt = await getJwt(handlerId, console.log);
         console.log(`jwt ${jwt}`);
 
@@ -271,6 +272,7 @@ const handleRoutes = async () => {
   } catch(e) {
     // TODO: Fix error output
     console.log(JSON.stringify(e, null, 2));
+    currentServers = beforeServers;
   }
   
   busy = false;

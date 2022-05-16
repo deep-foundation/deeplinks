@@ -817,6 +817,15 @@ describe.only('handle port route', () => {
       to_id: handlerJSFile?.id,
     }))?.data?.[0]?.id;
 
+    const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+    // const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+    const ownerId = await deep.id('@deep-foundation/core', 'system', 'admin');
+    const ownerContainHandler = (await deep.insert({
+      from_id: ownerId,
+      type_id: containTypeId,
+      to_id: handlerId,
+    }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
+
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
     const handleRouteLinkId = (await deep.insert({
       from_id: routeId,
@@ -830,6 +839,7 @@ describe.only('handle port route', () => {
 
     // delete all
     await deleteId(handleRouteLinkId);
+    await deleteId(ownerContainHandler.id);
     await deleteId(handlerId);
     await deleteId(handlerJSFileValue.id, { table: 'strings' });
     await deleteId(handlerJSFile.id);

@@ -118,7 +118,9 @@ export const containerController = new ContainerController({
 
 export async function getJwt(handlerId: number, useRunnerDebug: any) {
   const userTypeId = await deep.id('@deep-foundation/core', 'User');
+  useRunnerDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
   const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
+  useRunnerDebug("packageTypeId: ", JSON.stringify(packageTypeId, null, 2));
   const queryString = `query {
     mpUp: mp(where: {
       item_id: {_eq: "${handlerId}"},
