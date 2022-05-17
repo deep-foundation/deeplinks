@@ -209,15 +209,14 @@ const handleRoutes = async () => {
         const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
         console.log(`preparing container ${image}`);
 
-        // const container = await containerController.newContainer({
-        //   handler: image,
-        //   forceRestart: true,
-        //   publish: +DOCKER ? false : true,
-        //   code: '', // TODO: Remove
-        //   jwt: '',
-        //   data: {}
-        // });
-        // const container = { host: "localhost", port: 80 };
+        const container = await containerController.newContainer({
+          handler: image,
+          forceRestart: true,
+          publish: +DOCKER ? false : true,
+          code: '', // TODO: Remove
+          jwt: '',
+          data: {}
+        });
 
         // create express server
         const portServer = express();
@@ -247,19 +246,19 @@ const handleRoutes = async () => {
         // proxy to container
         // using container host and port
         // without https
-        // const proxy = createProxyMiddleware({
-        //   target: `http://${container.host}:${container.port}/http-call`,
-        //   changeOrigin: true,
-        //   onProxyReq: (proxyReq, req, res) => {
-        //     proxyReq.setHeader('deep-call-options', JSON.stringify({
-        //       jwt,
-        //       code,
-        //       data: {},
-        //     }));
-        //   }
-        // });
+        const proxy = createProxyMiddleware({
+          target: `http://${container.host}:${container.port}/http-call`,
+          changeOrigin: true,
+          onProxyReq: (proxyReq, req, res) => {
+            proxyReq.setHeader('deep-call-options', JSON.stringify({
+              jwt,
+              code,
+              data: {},
+            }));
+          }
+        });
 
-        // portServer.use(routeString, proxy);
+        portServer.use(routeString, proxy);
 
         // // handle get requests
         // portServer.get('/', (req, res) => {
