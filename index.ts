@@ -206,7 +206,7 @@ const handleRoutes = async () => {
     console.log('imageList', imageList);
 
     // prepare containers
-    imageList.forEach(async image => {
+    for (const image of imageList) {
       console.log(`preparing container ${image}`);
       imageContainers[image] = await containerController.newContainer({
         handler: image,
@@ -216,7 +216,7 @@ const handleRoutes = async () => {
         jwt: '',
         data: {}
       });
-    });
+    }
 
     // for each port
     for (const port of ports) {
@@ -249,7 +249,7 @@ const handleRoutes = async () => {
 
               // get container
               const image = handler?.supports?.isolation?.image?.value;
-              console.log(`preparing container ${image}`);
+              console.log(`image`, image);
               const container = imageContainers[image];
               console.log(`container`, JSON.stringify(container, null, 2));
 
