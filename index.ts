@@ -126,26 +126,13 @@ const handleRoutes = async () => {
     return;
   busy = true;
 
-  const beforeServers = currentServers;
-
   // clean up old servers
   for (const key in currentServers) {
-    console.log(`Closing (0) ${key} server.`);
     if (Object.prototype.hasOwnProperty.call(currentServers, key)) {
       const element = currentServers[key];
-      console.log(`Closing (1) ${key} server.`);
       element.close();
     }
   }
-  // const keys = Object.keys(currentServers);
-  // for (const key of keys) {
-  //   console.log(`Closing (0) ${key} server.`);
-  //   if (!currentServers[key]) {
-  //     console.log(`Closing (1) ${key} server.`);
-  //     currentServers[key].close();
-  //     delete currentServers[key];
-  //   }
-  // }
   currentServers = {};
 
   try {
@@ -272,7 +259,6 @@ const handleRoutes = async () => {
     }
   } catch(e) {
     console.log(toJSON(e));
-    currentServers = beforeServers;
   }
   
   busy = false;
