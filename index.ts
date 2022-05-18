@@ -189,15 +189,15 @@ const handleRoutes = async () => {
         }
       `, variables: {} });
     const ports = routesResult.data.ports;
-    console.log(JSON.stringify(ports, null, 2));
+    console.log('ports', JSON.stringify(ports, null, 2));
 
     // get all image values
     const imageContainers = {};
     ports.forEach(port => {
       port.routerListening.forEach(routerListening => {
-        routerListening.router.routerStringUse.forEach(routerStringUse => {
-          routerStringUse.route.handleRoute.forEach(handleRoute => {
-            imageContainers[handleRoute.handler.supports.isolation.image.value] = {};
+        routerListening?.router?.routerStringUse.forEach(routerStringUse => {
+          routerStringUse?.route?.handleRoute.forEach(handleRoute => {
+            imageContainers[handleRoute?.handler?.supports?.isolation?.image?.value] = {};
           });
         });
       });
@@ -224,43 +224,54 @@ const handleRoutes = async () => {
         // start express server
         const portServer = express();
         // listen on port
-        const portValue = port.port.value;
+        const portValue = port?.port?.value;
         console.log(`listening on port ${portValue}`);
         currentServers[portValue] = portServer.listen(portValue);
 
-        // // for each router
-        // for (const routerListening of port.routerListening) {
-        //   const router = routerListening.router;
+        // for each router
+        for (const routerListening of port.routerListening) {
+          const router = routerListening?.router;
+          
+          // for each routerStringUse
+          for (const routerStringUse of router.routerStringUse) {
+            const routeString = routerStringUse?.routeString?.value;
+            console.log(`route string ${routeString}`);
+            const route = routerStringUse?.route;
 
-        const routeString = port.routerListening[0].router.routerStringUse[0].routeString.value;
-        console.log(`route string ${routeString}`);
-        const code = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.file.code.value;
-        console.log(`code ${code}`);
-        const handlerId = port.routerListening[0].router.routerStringUse[0].route.handleRoute[0].handler.id;
-        console.log(`handler id ${handlerId}`);
-        // TODO: Fix getJWT (handler should be owned by user or package)
-        const jwt = await getJwt(handlerId, console.log);
-        console.log(`jwt ${jwt}`);
+            // for each handleRoute
+            for (const handleRoute of route.handleRoute) {
+              const handler = handleRoute?.handler;
+              const handlerId = handler?.id;
+              console.log(`handler id ${handlerId}`);
 
-        // get container
-        const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
-        console.log(`preparing container ${image}`);
+              const jwt = await getJwt(handlerId, console.log);
+              console.log(`jwt ${jwt}`);
 
-        const container = imageContainers[image];
+              // get container
+              const image = handler?.supports?.isolation?.image?.value;
+              console.log(`preparing container ${image}`);
+              const container = imageContainers[image];
+              console.log(`container`, JSON.stringify(container, null, 2));
 
-        // proxy to container using its host and port
-        const proxy = createProxyMiddleware({
-          target: `http://${container.host}:${container.port}/http-call`,
-          changeOrigin: true,
-          onProxyReq: (proxyReq, req, res) => {
-            proxyReq.setHeader('deep-call-options', JSON.stringify({
-              jwt,
-              code,
-              data: {},
-            }));
+              const code = handler?.file?.code?.value;
+              console.log(`code ${code}`);
+
+              // proxy to container using its host and port
+              const proxy = createProxyMiddleware({
+                target: `http://${container.host}:${container.port}/http-call`,
+                changeOrigin: true,
+                onProxyReq: (proxyReq, req, res) => {
+                  proxyReq.setHeader('deep-call-options', JSON.stringify({
+                    jwt,
+                    code,
+                    data: {},
+                  }));
+                },
+              });
+              portServer.use(routeString, proxy);
+            }
           }
-        });
-        portServer.use(routeString, proxy);
+        }
       }
     }
   } catch(e) {
