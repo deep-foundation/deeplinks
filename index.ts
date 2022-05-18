@@ -191,36 +191,46 @@ const handleRoutes = async () => {
     const ports = routesResult.data.ports;
     console.log(JSON.stringify(ports, null, 2));
 
+    // get all image values
+    const imageContainers = {};
+    ports.forEach(port => {
+      port.routerListening.forEach(routerListening => {
+        routerListening.router.routerStringUse.forEach(routerStringUse => {
+          routerStringUse.route.handleRoute.forEach(handleRoute => {
+            imageContainers[handleRoute.handler.supports.isolation.image.value] = {};
+          });
+        });
+      });
+    });
+    const imageList = Object.keys(imageContainers);
+    console.log('imageList', imageList);
+
+    // prepare containers
+    imageList.forEach(async image => {
+      console.log(`preparing container ${image}`);
+      imageContainers[image] = await containerController.newContainer({
+        handler: image,
+        forceRestart: true,
+        publish: +DOCKER ? false : true,
+        code: '', // TODO: Remove
+        jwt: '',
+        data: {}
+      });
+    });
+
     // for each port
     for (const port of ports) {
       if (port.routerListening.length > 0) {
-        // prepare container
-        const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
-        console.log(`preparing container ${image}`);
-
-        const container = await containerController.newContainer({
-          handler: image,
-          forceRestart: true,
-          publish: +DOCKER ? false : true,
-          code: '', // TODO: Remove
-          jwt: '',
-          data: {}
-        });
-
-        // create express server
+        // start express server
         const portServer = express();
-        // // listen on port
+        // listen on port
         const portValue = port.port.value;
-
-        if (currentServers[portValue]) {
-          console.log(`Closing (2) ${portValue} server.`);
-          currentServers[portValue].close();
-        }
-
-        // await delay(10000);
-
         console.log(`listening on port ${portValue}`);
-        const httpServer = portServer.listen(portValue);
+        currentServers[portValue] = portServer.listen(portValue);
+
+        // // for each router
+        // for (const routerListening of port.routerListening) {
+        //   const router = routerListening.router;
 
         const routeString = port.routerListening[0].router.routerStringUse[0].routeString.value;
         console.log(`route string ${routeString}`);
@@ -232,9 +242,13 @@ const handleRoutes = async () => {
         const jwt = await getJwt(handlerId, console.log);
         console.log(`jwt ${jwt}`);
 
-        // proxy to container
-        // using container host and port
-        // without https
+        // get container
+        const image = port?.routerListening[0]?.router?.routerStringUse[0]?.route?.handleRoute[0]?.handler?.supports?.isolation?.image?.value;
+        console.log(`preparing container ${image}`);
+
+        const container = imageContainers[image];
+
+        // proxy to container using its host and port
         const proxy = createProxyMiddleware({
           target: `http://${container.host}:${container.port}/http-call`,
           changeOrigin: true,
@@ -246,15 +260,7 @@ const handleRoutes = async () => {
             }));
           }
         });
-
         portServer.use(routeString, proxy);
-
-        // // handle get requests
-        // portServer.get('/', (req, res) => {
-        //   res.send(`ok`);
-        // });
-        // currentServers.push(httpServer);
-        currentServers[portValue] = httpServer;
       }
     }
   } catch(e) {
