@@ -119,6 +119,8 @@ const deep = new DeepClient({
 let currentServers = {};
 let busy = false;
 
+const toJSON = (data) => JSON.stringify(data, Object.getOwnPropertyNames(data), 2);
+
 const handleRoutes = async () => {
   if (busy)
     return;
@@ -269,8 +271,7 @@ const handleRoutes = async () => {
       }
     }
   } catch(e) {
-    // TODO: Fix error output
-    console.log(JSON.stringify(e, null, 2));
+    console.log(toJSON(e));
     currentServers = beforeServers;
   }
   
