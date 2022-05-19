@@ -3,6 +3,7 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
 import Debug from 'debug';
+import fetch from 'node-fetch';
 
 const debug = Debug('deeplinks:tests:handlers');
 const log = debug.extend('log');
@@ -833,12 +834,14 @@ describe.only('handle port route', () => {
       to_id: handlerId,
     }))?.data?.[0]?.id;
 
+    const url = `http://localhost:${port}/`
+
     log("waiting for route to be created");
-    await waitOn({ resources: [`http://localhost:${port}/`] });
+    await waitOn({ resources: [url] });
     log("route handler is up");
 
-    // check if response is ok
-    const response = await fetch(`http://localhost:${port}/`);
+    // ensure response is ok
+    const response = await fetch(url);
     const text = await response.text();
     assert.equal(text, 'ok');
 
@@ -856,12 +859,7 @@ describe.only('handle port route', () => {
     await deleteId(portId);
 
     log("waiting for route to be deleted");
-    await waitOn({
-      resources: [
-        `http://localhost:${port}/`
-      ],
-      reverse: true,
-    });
+    await waitOn({ resources: [url], reverse: true });
     log("route handler is down");
   });
 });
