@@ -837,6 +837,11 @@ describe.only('handle port route', () => {
     await waitOn({ resources: [`http://localhost:${port}/`] });
     log("route handler is up");
 
+    // check if response is ok
+    const response = await fetch(`http://localhost:${port}/`);
+    const text = await response.text();
+    assert.equal(text, 'ok');
+
     // delete all
     await deleteId(handleRouteLinkId);
     await deleteId(ownerContainHandler.id);
