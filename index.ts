@@ -14,6 +14,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from './imports/client';
 import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
+import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
@@ -190,6 +191,58 @@ const handleRoutes = async () => {
       `, variables: {} });
     const ports = routesResult.data.ports;
     console.log('ports', JSON.stringify(ports, null, 2));
+
+    // TODO: Add route mp tree
+    const mlRoutesResult = await client.query({
+      query: gql`
+        query {
+          ports: links(where: {
+            type_id: { _eq: "${portTypeId}" }
+          }) {
+            id
+            type_id
+            from_id
+            to_id
+            value
+          }
+        }
+      `, variables: {} });
+    const mlPorts = mlRoutesResult.data.ports;
+    console.log('mlPorts', JSON.stringify(mlPorts, null, 2));
+
+    const ml = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    ml.apply(mlPorts);
+
+    const addedListener = (nl, recursive = true, history = {}) => {
+      if (nl.type_id == portTypeId) {
+        // TODO: Start server
+        console.log('server should be started at port', nl.value);
+      } else {
+        // TODO: Get list of servers affected by this change and restart them
+        console.log('impossible');
+      }
+    };
+    const updatedListener = (ol, nl, recursive = true, history = {}) => {
+      if (ol.type_id == portTypeId && nl.type_id == portTypeId) {
+        // TODO: Restart server
+        console.log('server should be restarted at port', nl.value);
+      } else {
+        // TODO: Get list of servers affected by this change and restart them
+        console.log('impossible');
+      }
+    };
+    const removedListener = (ol, recursive = true, history = {}) => {
+      if (ol.type_id == portTypeId) {
+        // TODO: Stop server
+        console.log('server should be stopped at port', ol.value);
+      } else {
+        // TODO: Get list of servers affected by this change and restart them
+        console.log('impossible');
+      }
+    };
+    ml.emitter.on('added', addedListener);
+    ml.emitter.on('updated', updatedListener);
+    ml.emitter.on('removed', removedListener);
 
     // get all image values
     const imageContainers = {};
