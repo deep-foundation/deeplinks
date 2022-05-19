@@ -808,7 +808,7 @@ describe.only('handle port route', () => {
     const handlerJSFile = (await deep.insert({
       type_id: syncTextFileTypeId,
     }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
-    const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: `async (req, res) => { res.send('ok'); return { result: 'test' } }` }, { table: 'strings' })).data[0];
+    const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: `async (req, res) => { res.send('ok'); }` }, { table: 'strings' })).data[0];
     
     const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
     const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
