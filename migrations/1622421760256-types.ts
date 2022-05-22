@@ -203,20 +203,20 @@ const corePckg: Package = {
     { id: 'HandleRoute', type: 'HandleOperation', from: 'Route', to: 'Handler' }, // 104
     // routeTree
     { id: 'routeTree', type: 'Tree' }, // 105
-    // routeTreeRouter
-    { id: 'routeTreeRouter', type: 'TreeIncludeNode', from: 'routeTree', to: 'Router' }, // 106
-    // routeTreeRoute
-    { id: 'routeTreeRoute', type: 'TreeIncludeNode', from: 'routeTree', to: 'Route' }, // 107
     // routeTreePort
-    { id: 'routeTreePort', type: 'TreeIncludeNode', from: 'routeTree', to: 'Port' }, // 108
-    // routeTreeRouterListening
-    { id: 'routeTreeRouterListening', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterListening' }, // 109
-    // routeTreeRouterStringUse
-    { id: 'routeTreeRouterStringUse', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterStringUse' }, // 110
-    // routeTreeHandleRoute
-    { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 111
+    { id: 'routeTreePort', type: 'TreeIncludeNode', from: 'routeTree', to: 'Port' }, // 106
+    // routeTreeRouter
+    { id: 'routeTreeRouter', type: 'TreeIncludeNode', from: 'routeTree', to: 'Router' }, // 107
+    // routeTreeRoute
+    { id: 'routeTreeRoute', type: 'TreeIncludeNode', from: 'routeTree', to: 'Route' }, // 108
     // routeTreeHandler
-    { id: 'routeTreeHandler', type: 'TreeIncludeDown', from: 'routeTree', to: 'Handler' }, // 112
+    { id: 'routeTreeHandler', type: 'TreeIncludeNode', from: 'routeTree', to: 'Handler' }, // 109
+    // routeTreeRouterListening
+    { id: 'routeTreeRouterListening', type: 'TreeIncludeUp', from: 'routeTree', to: 'RouterListening' }, // 110
+    // routeTreeRouterStringUse
+    { id: 'routeTreeRouterStringUse', type: 'TreeIncludeUp', from: 'routeTree', to: 'RouterStringUse' }, // 111
+    // routeTreeHandleRoute
+    { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 112
   ],
   errors: [],
   strict: true,
