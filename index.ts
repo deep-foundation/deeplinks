@@ -119,6 +119,39 @@ const deep = new DeepClient({
 
 let currentServers = {};
 let busy = false;
+let portTypeId = 0;
+
+const ml = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+const addedListener = (nl, recursive = true, history = {}) => {
+  if (nl.type_id == portTypeId) {
+    // TODO: Start server
+    console.log('server should be started at port', nl.value);
+  } else {
+    // TODO: Get list of servers affected by this change and restart them
+    console.log('impossible');
+  }
+};
+const updatedListener = (ol, nl, recursive = true, history = {}) => {
+  if (ol.type_id == portTypeId && nl.type_id == portTypeId) {
+    // TODO: Restart server
+    console.log('server should be restarted at port', nl.value);
+  } else {
+    // TODO: Get list of servers affected by this change and restart them
+    console.log('impossible');
+  }
+};
+const removedListener = (ol, recursive = true, history = {}) => {
+  if (ol.type_id == portTypeId) {
+    // TODO: Stop server
+    console.log('server should be stopped at port', ol.value);
+  } else {
+    // TODO: Get list of servers affected by this change and restart them
+    console.log('impossible');
+  }
+};
+ml.emitter.on('added', addedListener);
+ml.emitter.on('updated', updatedListener);
+ml.emitter.on('removed', removedListener);
 
 const toJSON = (data) => JSON.stringify(data, Object.getOwnPropertyNames(data), 2);
 
@@ -137,7 +170,7 @@ const handleRoutes = async () => {
   currentServers = {};
 
   try {
-    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    portTypeId = await deep.id('@deep-foundation/core', 'Port');
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
@@ -197,7 +230,10 @@ const handleRoutes = async () => {
       query: gql`
         query {
           ports: links(where: {
-            type_id: { _eq: "${portTypeId}" }
+            _or: [
+              { type_id: { _eq: "${portTypeId}" } },
+              {  }
+            ]
           }) {
             id
             type_id
@@ -210,39 +246,7 @@ const handleRoutes = async () => {
     const mlPorts = mlRoutesResult.data.ports;
     console.log('mlPorts', JSON.stringify(mlPorts, null, 2));
 
-    const ml = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
     ml.apply(mlPorts);
-
-    const addedListener = (nl, recursive = true, history = {}) => {
-      if (nl.type_id == portTypeId) {
-        // TODO: Start server
-        console.log('server should be started at port', nl.value);
-      } else {
-        // TODO: Get list of servers affected by this change and restart them
-        console.log('impossible');
-      }
-    };
-    const updatedListener = (ol, nl, recursive = true, history = {}) => {
-      if (ol.type_id == portTypeId && nl.type_id == portTypeId) {
-        // TODO: Restart server
-        console.log('server should be restarted at port', nl.value);
-      } else {
-        // TODO: Get list of servers affected by this change and restart them
-        console.log('impossible');
-      }
-    };
-    const removedListener = (ol, recursive = true, history = {}) => {
-      if (ol.type_id == portTypeId) {
-        // TODO: Stop server
-        console.log('server should be stopped at port', ol.value);
-      } else {
-        // TODO: Get list of servers affected by this change and restart them
-        console.log('impossible');
-      }
-    };
-    ml.emitter.on('added', addedListener);
-    ml.emitter.on('updated', updatedListener);
-    ml.emitter.on('removed', removedListener);
 
     // get all image values
     const imageContainers = {};

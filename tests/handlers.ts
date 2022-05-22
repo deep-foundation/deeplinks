@@ -845,22 +845,22 @@ describe.only('handle port route', () => {
     const text = await response.text();
     assert.equal(text, 'ok');
 
-    // delete all
-    await deleteId(handleRouteLinkId);
-    await deleteId(ownerContainHandler.id);
-    await deleteId(handlerId);
-    await deleteId(handlerJSFileValue.id, { table: 'strings' });
-    await deleteId(handlerJSFile.id);
-    await deleteId(routerStringUseId);
-    await deleteId(routerListeningId);
-    await deleteId(routerId);
-    await deleteId(routeId);
-    await deleteId(portValue.id, { table: 'numbers' });
-    await deleteId(portId);
+    // // delete all
+    // await deleteId(handleRouteLinkId);
+    // await deleteId(ownerContainHandler.id);
+    // await deleteId(handlerId);
+    // await deleteId(handlerJSFileValue.id, { table: 'strings' });
+    // await deleteId(handlerJSFile.id);
+    // await deleteId(routerStringUseId);
+    // await deleteId(routerListeningId);
+    // await deleteId(routerId);
+    // await deleteId(routeId);
+    // await deleteId(portValue.id, { table: 'numbers' });
+    // await deleteId(portId);
 
-    log("waiting for route to be deleted");
-    await waitOn({ resources: [url], reverse: true });
-    log("route handler is down");
+    // log("waiting for route to be deleted");
+    // await waitOn({ resources: [url], reverse: true });
+    // log("route handler is down");
   });
 });
 
