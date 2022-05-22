@@ -225,14 +225,13 @@ const handleRoutes = async () => {
     const ports = routesResult.data.ports;
     console.log('ports', JSON.stringify(ports, null, 2));
 
-    // TODO: Add route mp tree
     const mlRoutesResult = await client.query({
       query: gql`
-        query {
+        {
           ports: links(where: {
             _or: [
-              { type_id: { _eq: "${portTypeId}" } },
-              {  }
+              {type_id: {_eq: "${portTypeId}"}}, 
+              {_by_item: {path_item: {type_id: {_eq: "${portTypeId}"}}}}
             ]
           }) {
             id
