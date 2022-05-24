@@ -69,7 +69,7 @@ export const up = async () => {
     to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
     out: { data: {
       type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      to_id: await deep.id('@deep-foundation/core', 'joinTree'),
     } },
   };
   const adminWhere = {

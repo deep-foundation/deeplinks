@@ -38,6 +38,18 @@ export const up = async () => {
           can_object: {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
             subject_id: { _eq: subjectId },
+            _or: [
+              {
+                user_upper_id: {
+                  _eq: 'X-Hasura-User-Id',
+                },
+              },
+              {
+                user_upper_id: {
+                  _is_null: true,
+                },
+              },
+            ]
           },
         },
         {
@@ -61,6 +73,18 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
               subject_id: { _eq: subjectId },
+              _or: [
+                {
+                  user_upper_id: {
+                    _eq: 'X-Hasura-User-Id',
+                  },
+                },
+                {
+                  user_upper_id: {
+                    _is_null: true,
+                  },
+                },
+              ]
             },
           },
         },
@@ -84,6 +108,18 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
               subject_id: { _eq: subjectId },
+              _or: [
+                {
+                  user_upper_id: {
+                    _eq: 'X-Hasura-User-Id',
+                  },
+                },
+                {
+                  user_upper_id: {
+                    _is_null: true,
+                  },
+                },
+              ]
             },
           },
         },
@@ -108,8 +144,17 @@ export const up = async () => {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
               subject_id: { _eq: subjectId },
               _or: [
-                { subject_id: { _eq: subjectId } },
-              ],
+                {
+                  user_upper_id: {
+                    _eq: 'X-Hasura-User-Id',
+                  },
+                },
+                {
+                  user_upper_id: {
+                    _is_null: true,
+                  },
+                },
+              ]
             },
           },
         },

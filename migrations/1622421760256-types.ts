@@ -137,10 +137,10 @@ const corePckg: Package = {
     { id: 'AllowLogin', type: 'Operation' }, // 64
 
     { id: 'guests', type: 'Any' }, // 65
-    { id: 'Join', type: 'Type' }, // 66
+    { id: 'Join', type: 'Type', from: 'Any', to: 'Any' }, // 66
 
     { id: 'joinTree', type: 'Tree' }, // 67
-    { id: 'joinTreeContain', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
+    { id: 'joinTreeJoin', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
     { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 69
 
     { id: 'SelectorTree', type: 'Type', from: 'Any', to: 'Tree' }, // 70
@@ -190,6 +190,8 @@ const corePckg: Package = {
 
     { id: 'PackagerInstalled', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 98
     { id: 'PackagerPublished', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 99
+
+    { id: 'SelectorExistsUp', type: 'Type', from: 'SelectorInclude', to: 'Any' }, // 100
   ],
   errors: [],
   strict: true,

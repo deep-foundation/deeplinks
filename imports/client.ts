@@ -544,12 +544,14 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { linkId: 0, token: '' };
   };
 
-  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[]) {
-    const result = await this.select({
+  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[], userIds: number | number[] = this.linkId) {
+    const where: any = {
       object_id: typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds },
       subject_id: typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds },
       action_id: typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds },
-    }, { table: 'can', returning: 'rule_id' });
+    };
+    if (userIds) where.user_upper_id = typeof(userIds) === 'number' ? { _eq: +userIds } : { _in: userIds };
+    const result = await this.select(where, { table: 'can', returning: 'rule_id user_upper_id' });
     return !!result?.data?.length;
   }
 }

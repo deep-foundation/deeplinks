@@ -35,10 +35,12 @@ const resolvers = {
     guest: async (source, args, context, info) => {
       const { data: [{ id }] } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'User'),
-        in: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Contain'),
-          from_id: await deep.id('@deep-foundation/core', 'system', 'users')
-        } },
+        in: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'Join'),
+            from_id: await deep.id('@deep-foundation/core', 'system', 'users')
+          },
+        ] },
       });
       await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'Rule'),

@@ -23,7 +23,7 @@ let deep = root;
 
 describe('permissions', () => {
   describe('select', () => {
-    it(`user contain range`, async () => {
+    it.skip(`user contain range`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const d1 = new DeepClient({ deep, ...a1 });
@@ -42,7 +42,7 @@ describe('permissions', () => {
       const n3 = await admin.select({ id });
       assert.lengthOf(n3?.data, 1, `item_id ${id} must be selectable by ${admin.linkId}`);
     });
-    it(`rule select include 1 depth but exclude 2 depth`, async () => {
+    it.skip(`rule select include 1 depth but exclude 2 depth`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});
@@ -141,16 +141,109 @@ describe('permissions', () => {
       const n8 = await admin.select({ id: id2 });
       assert.lengthOf(n8?.data, 1);
     });
+    it('IncludeExistsUp', async () => {
+      const a1 = await deep.guest({});
+      const a2 = await deep.guest({});
+      const d1 = new DeepClient({ deep, ...a1 });
+      const d2 = new DeepClient({ deep, ...a2 });
+      const { data: [{ id: N }] } = await deep.insert({ type_id: await deep.id('@deep-foundation/core', 'Type') });
+      const { data: [{ id: L }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Type'),
+        from_id: await deep.id('@deep-foundation/core', 'Any'),
+        to_id: await deep.id('@deep-foundation/core', 'Any'),
+      });
+      // (n1) |= l1 => (a1) |= l2 => (n2) |= l3 => (n3)
+      const { data: [{ id: n1 }] } = await deep.insert({ type_id: N });
+      const { data: [{ id: l1 }] } = await deep.insert({ type_id: L, from_id: n1, to_id: a1.linkId });
+      const { data: [{ id: n2 }] } = await deep.insert({ type_id: N });
+      const { data: [{ id: l2 }] } = await deep.insert({ type_id: L, from_id: a1.linkId, to_id: n2 });
+      const { data: [{ id: n3 }] } = await deep.insert({ type_id: N });
+      const { data: [{ id: l3 }] } = await deep.insert({ type_id: L, from_id: n2, to_id: n3 });
+      const { data: [{ id: tree }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Tree'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'TreeIncludeDown'),
+            to_id: L,
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+            to_id: N,
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+            to_id: await deep.id('@deep-foundation/core', 'User'),
+          },
+        ] }
+      });
+      await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'system', 'users'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'joinTree'),
+                } },
+              } }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: n1,
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: tree,
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorExistsUp'),
+                      to_id: await deep.id('@deep-foundation/core', 'User'),
+                    },
+                  ] },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+      assert.isTrue(await d1.can(n3, a1.linkId, await deep.id('@deep-foundation/core', 'AllowSelect')));
+      assert.isFalse(await d2.can(n3, a2.linkId, await deep.id('@deep-foundation/core', 'AllowSelect')));
+    });
   });
-  describe('insert', () => {
-    it(`root can insert`, async () => {
+  describe.skip('insert', () => {
+    it.skip(`root can insert`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
       });
       const n1 = await deep.select({ id });
       assert.lengthOf(n1?.data, 1);
     });
-    it(`guest cant insert by default`, async () => {
+    it.skip(`guest cant insert by default`, async () => {
       const a1 = await deep.guest({});
       const d1 = new DeepClient({ deep, ...a1, silent: true });
       const { data, error } = await d1.insert({
@@ -158,7 +251,7 @@ describe('permissions', () => {
       });
       assert.isNotEmpty(error);
     });
-    it(`insert permission can be gived to guest`, async () => {
+    it.skip(`insert permission can be gived to guest`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});
@@ -246,7 +339,7 @@ describe('permissions', () => {
       expect(da3).to.be.undefined;
       expect(e3).to.not.be.undefined;
     });
-    it(`insert permission with SelectorFilter`, async () => {
+    it.skip(`insert permission with SelectorFilter`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});
@@ -442,8 +535,8 @@ describe('permissions', () => {
       expect(e3t).to.be.undefined;
     });
   });
-  describe('update', () => {
-    it(`root can update string value`, async () => {
+  describe.skip('update', () => {
+    it.skip(`root can update string value`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
         string: { data: { value: 'abc' } },
@@ -455,7 +548,7 @@ describe('permissions', () => {
       assert.lengthOf(n1?.data, 1);
       assert.equal(n1?.data?.[0]?.value?.value, 'def');
     });
-    it(`guest cant update string value`, async () => {
+    it.skip(`guest cant update string value`, async () => {
       const a1 = await deep.guest({});
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
@@ -470,7 +563,7 @@ describe('permissions', () => {
       assert.lengthOf(n1?.data, 1);
       assert.equal(n1?.data?.[0]?.value?.value, 'abc');
     });
-    it(`update permission can be gived to guest`, async () => {
+    it.skip(`update permission can be gived to guest`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
         string: { data: { value: 'abc' } },
@@ -566,8 +659,8 @@ describe('permissions', () => {
       assert.equal(n3?.data?.[0]?.value?.value, 'efg');
     });
   });
-  describe('delete', () => {
-    it(`root can delete`, async () => {
+  describe.skip('delete', () => {
+    it.skip(`root can delete`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
       });
@@ -578,7 +671,7 @@ describe('permissions', () => {
       const n2 = await deep.select({ id });
       assert.lengthOf(n2?.data, 0);
     });
-    it(`guest cant delete by default`, async () => {
+    it.skip(`guest cant delete by default`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
       });
@@ -590,7 +683,7 @@ describe('permissions', () => {
       assert.lengthOf(deleted, 0);
       const n2 = await deep.select({ id });
     });
-    it(`delete permission can be gived to guest`, async () => {
+    it.skip(`delete permission can be gived to guest`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});
@@ -683,7 +776,7 @@ describe('permissions', () => {
       const n3 = await deep.select({ id: id3 });
       assert.lengthOf(n3?.data, 1);
     });
-    it(`delete permission with SelectorFilter`, async () => {
+    it.skip(`delete permission with SelectorFilter`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});
@@ -865,8 +958,8 @@ describe('permissions', () => {
       expect(da3d).to.be.undefined;
     });
   });
-  describe('login', () => {
-    it(`login permission can be granted`, async () => {
+  describe.skip('login', () => {
+    it.skip(`login permission can be granted`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
       const a3 = await deep.guest({});

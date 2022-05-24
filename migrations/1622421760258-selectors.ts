@@ -32,19 +32,46 @@ export const up = async () => {
     CREATE VIEW ${SELECTORS_TABLE_NAME} AS
     SELECT 
       mp_include."item_id" as "item_id",
-      include_link."from_id" as "selector_id", (
-      SELECT "to_id" FROM ${TABLE_NAME} WHERE
-      "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
-      "from_id" = include_link."from_id"
-    ) as "bool_exp_id"
+      include_link."from_id" as "selector_id",
+      include_link."id" as "selector_include_id",
+      (
+        SELECT "to_id" FROM ${TABLE_NAME} WHERE
+        "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
+        "from_id" = include_link."from_id"
+      ) as "bool_exp_id",
+      mp_users."path_item_id" as "user_upper_id"
     FROM
-      ${MP_TABLE_NAME} as mp_include,
+      ${MP_TABLE_NAME} as mp_include LEFT JOIN ${MP_TABLE_NAME} as mp_users ON mp_users."group_id" = mp_include."group_id" AND mp_users."item_id" = mp_include."item_id",
       ${TABLE_NAME} as include_link,
       ${TABLE_NAME} as include_tree_link
     WHERE
-      (include_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorInclude')}) AND
+      (include_link."type_id" = ${await deep.id('@deep-foundation/core','SelectorInclude')}) AND
       (mp_include."path_item_id" = include_link."to_id") AND
-      (mp_include."group_id" = include_tree_link."to_id" AND include_tree_link."from_id" = include_link."id" AND include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
+      (mp_include."group_id" = include_tree_link."to_id" AND
+      include_tree_link."from_id" = include_link."id" AND
+      include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
+
+      (
+        NOT EXISTS (
+          SELECT *
+          FROM
+          ${TABLE_NAME} as SEU
+          WHERE
+          SEU."type_id" = ${await deep.id('@deep-foundation/core','SelectorExistsUp')} AND
+          SEU."from_id" = include_link."id" AND
+          SEU."to_id" != ${await deep.id('@deep-foundation/core','User')} AND 
+          NOT EXISTS (
+            SELECT *
+            FROM
+            ${MP_TABLE_NAME} as mp_upper
+            WHERE
+            mp_upper."group_id" = mp_include."group_id" AND
+            mp_upper."item_id" = mp_include."item_id" AND
+            mp_upper."path_item_id" = SEU."to_id"
+          )
+        )
+      ) AND
+
       NOT EXISTS (
         SELECT mp_exclude."id"
         FROM
