@@ -9,6 +9,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import expressPlayground from 'graphql-playground-middleware-express';
 import moesif from 'moesif-nodejs';
 import Debug from 'debug';
+import waitOn from 'wait-on';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
@@ -81,18 +82,17 @@ const start = async () => {
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
-    setTimeout(() => {
-      axios({
-        method: 'post',
-        url: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}/v1/metadata`,
-        headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
-        data: { type: 'reload_metadata', args: {}}
-      }).then(() => {
-        log('hasura metadata reloaded');
-      }, () => {
-        error('hasura metadata broken');
-      });
-    }, 5000);
+    await waitOn({ resources: [`http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}-get://${DEEPLINKS_HASURA_PATH}/console`] });
+    await axios({
+      method: 'post',
+      url: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}/v1/metadata`,
+      headers: { 'x-hasura-admin-secret': DEEPLINKS_HASURA_SECRET, 'Content-Type': 'application/json'},
+      data: { type: 'reload_metadata', args: {}}
+    }).then(() => {
+      log('hasura metadata reloaded');
+    }, () => {
+      error('hasura metadata broken');
+    });
   } catch(e){
     error(e);
   }

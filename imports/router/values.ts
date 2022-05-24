@@ -14,6 +14,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import { 
   handleOperation,
+  handleSelectorOperation,
 } from './links';
 import { boolExpToSQL } from '../bool_exp_to_sql';
 
@@ -81,32 +82,12 @@ export default async (req, res) => {
 
       try {
         await handleOperation('Update', oldRow, newRow);
+        await handleSelectorOperation('Update', oldRow, newRow);
         
-        // log("done");
-
-        // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-        //   log('resolve', current.id);
-        //   await resolve({
-        //     id: current.id, client,
-        //     Then: await deep.id('@deep-foundation/core', 'Then'),
-        //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
-        //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-        //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
-        //   });
-        // }
         return res.status(200).json({});
       } catch(e) {
+        error('Error', e);
         throw e;
-        // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
-        //   log('reject', current.id);
-        //   await reject({
-        //     id: current.id, client,
-        //     Then: await deep.id('@deep-foundation/core', 'Then'),
-        //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
-        //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-        //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
-        //   });
-        // }
       }
 
       return res.status(500).json({ error: 'notexplained' });

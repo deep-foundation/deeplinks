@@ -139,7 +139,12 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$
+  DECLARE
+    PROMISE bigint;
+    SELECTOR record;
+    user_id bigint;
+    hasura_session json;
   BEGIN
     IF (
         EXISTS(
@@ -154,10 +159,34 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
     END IF;
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
+    
+    FOR SELECTOR IN
+      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
+      FROM selectors s, links h
+      WHERE
+          s.item_id = NEW."link_id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${handleUpdateTypeId}
+    LOOP
+      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
+      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.bool_exp_id, user_id) THEN
+        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
+        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+      END IF;
+    END LOOP;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${tableName}__promise__insert__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__insert__function();`);
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__update__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__update__function() RETURNS TRIGGER AS $trigger$
+  DECLARE
+    PROMISE bigint;
+    SELECTOR record;
+    user_id bigint;
+    hasura_session json;
   BEGIN
     IF (
         EXISTS(
@@ -172,10 +201,34 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
     END IF;
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
+    
+    FOR SELECTOR IN
+      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
+      FROM selectors s, links h
+      WHERE
+          s.item_id = NEW."link_id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${handleUpdateTypeId}
+    LOOP
+      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
+      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.bool_exp_id, user_id) THEN
+        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
+        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+      END IF;
+    END LOOP;
     RETURN NEW;
   END; $trigger$ LANGUAGE plpgsql;`);
-  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER INSERT ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__delete__function() RETURNS TRIGGER AS $trigger$ DECLARE PROMISE bigint;
+  await api.sql(sql`CREATE TRIGGER ${tableName}__promise__update__trigger AFTER UPDATE ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__update__function();`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__delete__function() RETURNS TRIGGER AS $trigger$
+  DECLARE
+    PROMISE bigint;
+    SELECTOR record;
+    user_id bigint;
+    hasura_session json;
   BEGIN
     IF (
         EXISTS(
@@ -190,6 +243,25 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."link_id",PROMISE);
     END IF;
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
+    
+    FOR SELECTOR IN
+      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
+      FROM selectors s, links h
+      WHERE
+          s.item_id = OLD."link_id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${handleUpdateTypeId}
+    LOOP
+      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, OLD."link_id");
+      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(OLD."link_id", SELECTOR.bool_exp_id, user_id) THEN
+        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
+        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+      END IF;
+    END LOOP;
     RETURN OLD;
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${tableName}__promise__delete__trigger BEFORE DELETE ON "${tableName}" FOR EACH ROW EXECUTE PROCEDURE ${tableName}__promise__delete__function();`);
