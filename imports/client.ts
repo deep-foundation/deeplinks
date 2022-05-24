@@ -450,6 +450,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
             // @ts-ignore
             setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
+          } else if (type === 'object' && exp[key].hasOwnProperty('_type_of') && !!~['type_id', 'from_id', 'to_id'].indexOf(key)) {
+            setted = result[key.slice(0, -3)] = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } }
           }
         } else if (env === 'value') {
           if (type === 'string' || type === 'number') {

@@ -11,37 +11,37 @@ const apolloClient = generateApolloClient({
 const deepClient = new DeepClient({ apolloClient });
 
 describe('serialize', () => {
-  it(`{ id: 5 }`, () => {
+  it.skip(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });
-  it(`{ id: { _eq: 5 } }`, () => {
+  it.skip(`{ id: { _eq: 5 } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: { _eq: 5 } }), { id: { _eq: 5 } });
   });
-  it(`{ value: 5 }`, () => {
+  it.skip(`{ value: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ value: 5 }), { number: { value: { _eq: 5 } } });
   });
-  it(`{ value: 'a' }`, () => {
+  it.skip(`{ value: 'a' }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ value: 'a' }), { string: { value: { _eq: 'a' } } });
   });
-  it(`{ number: 5 }`, () => {
+  it.skip(`{ number: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ number: 5 }), { number: { value: { _eq: 5 } } });
   });
-  it(`{ string: 'a' }`, () => {
+  it.skip(`{ string: 'a' }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ string: 'a' }), { string: { value: { _eq: 'a' } } });
   });
-  it(`{ number: { value: { _eq: 5 } } }`, () => {
+  it.skip(`{ number: { value: { _eq: 5 } } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ number: { value: { _eq: 5 } } }), { number: { value: { _eq: 5 } } });
   });
-  it(`{ string: { value: { _eq: 'a' } } }`, () => {
+  it.skip(`{ string: { value: { _eq: 'a' } } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ string: { value: { _eq: 'a' } } }), { string: { value: { _eq: 'a' } } });
   });
-  it(`{ object: { value: { _contains: { a: 'b' } } } }`, () => {
+  it.skip(`{ object: { value: { _contains: { a: 'b' } } } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ object: { value: { _contains: { a: 'b' } } } }), { object: { value: { _contains: { a: 'b' } } } });
   });
-  it(`{ from: { value: 5 } }`, () => {
+  it.skip(`{ from: { value: 5 } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ from: { value: 5 } }), { from: { number: { value: { _eq: 5 } } } });
   });
-  it(`{ out: { type_id: Contain, value: item, from: where } }`, async () => {
+  it.skip(`{ out: { type_id: Contain, value: item, from: where } }`, async () => {
     assert.deepEqual(deepClient.serializeWhere(
       {
         out: {
@@ -64,7 +64,7 @@ describe('serialize', () => {
       }
     });
   });
-  it(`{ value: 5, link: { type_id: 7 } }`, () => {
+  it.skip(`{ value: 5, link: { type_id: 7 } }`, () => {
     assert.deepEqual(deepClient.serializeWhere(
       { value: 5, link: { type_id: 7 } },
       'value'
@@ -75,7 +75,7 @@ describe('serialize', () => {
       },
     });
   });
-  it(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
+  it.skip(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
     assert.deepEqual(
       deepClient.serializeWhere({
         type: ["@deep-foundation/core", "Value"],
@@ -94,7 +94,7 @@ describe('serialize', () => {
       },
     );
   });
-  it(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
+  it.skip(`{ type: ['@deep-foundation/core', 'Value'] }`, () => {
     assert.deepEqual(
       deepClient.serializeWhere({
         _or: [{
@@ -130,8 +130,17 @@ describe('serialize', () => {
       },
     );
   });
-  it(`id(packageName,contain)`, async () => {
+  it.skip(`id(packageName,contain)`, async () => {
     const id = await deepClient.id('@deep-foundation/core', 'Value');
     assert.equal(id, 4);
+  });
+  it(`{ type_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ type_id: { _type_of: 25 } }), { type: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
+  });
+  it(`{ from_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ from_id: { _type_of: 25 } }), { from: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
+  });
+  it(`{ to_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ to_id: { _type_of: 25 } }), { to: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
   });
 });
