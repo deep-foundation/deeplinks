@@ -43,9 +43,17 @@ export const up = async () => {
                 user_upper_id: {
                   _eq: 'X-Hasura-User-Id',
                 },
+                seu_id: {
+                  _eq: await deep.id('@deep-foundation/core', 'User'),
+                },
               },
               {
-                user_upper_id: {
+                seu_id: {
+                  _neq: await deep.id('@deep-foundation/core', 'User'),
+                },
+              },
+              {
+                seu_id: {
                   _is_null: true,
                 },
               },
@@ -78,9 +86,17 @@ export const up = async () => {
                   user_upper_id: {
                     _eq: 'X-Hasura-User-Id',
                   },
+                  seu_id: {
+                    _eq: await deep.id('@deep-foundation/core', 'User'),
+                  },
                 },
                 {
-                  user_upper_id: {
+                  seu_id: {
+                    _neq: await deep.id('@deep-foundation/core', 'User'),
+                  },
+                },
+                {
+                  seu_id: {
                     _is_null: true,
                   },
                 },
@@ -113,9 +129,17 @@ export const up = async () => {
                   user_upper_id: {
                     _eq: 'X-Hasura-User-Id',
                   },
+                  seu_id: {
+                    _eq: await deep.id('@deep-foundation/core', 'User'),
+                  },
                 },
                 {
-                  user_upper_id: {
+                  seu_id: {
+                    _neq: await deep.id('@deep-foundation/core', 'User'),
+                  },
+                },
+                {
+                  seu_id: {
                     _is_null: true,
                   },
                 },
@@ -148,9 +172,17 @@ export const up = async () => {
                   user_upper_id: {
                     _eq: 'X-Hasura-User-Id',
                   },
+                  seu_id: {
+                    _eq: await deep.id('@deep-foundation/core', 'User'),
+                  },
                 },
                 {
-                  user_upper_id: {
+                  seu_id: {
+                    _neq: await deep.id('@deep-foundation/core', 'User'),
+                  },
+                },
+                {
+                  seu_id: {
                     _is_null: true,
                   },
                 },
