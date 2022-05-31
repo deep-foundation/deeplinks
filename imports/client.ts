@@ -552,8 +552,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       subject_id: typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds },
       action_id: typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds },
     };
-    if (userIds) where.user_upper_id = typeof(userIds) === 'number' ? { _eq: +userIds } : { _in: userIds };
-    const result = await this.select(where, { table: 'can', returning: 'rule_id user_upper_id' });
+    const result = await this.select(where, { table: 'can', returning: 'rule_id' });
     return !!result?.data?.length;
   }
 }

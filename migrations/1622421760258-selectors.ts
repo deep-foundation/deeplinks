@@ -38,21 +38,10 @@ export const up = async () => {
         SELECT "to_id" FROM ${TABLE_NAME} WHERE
         "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
         "from_id" = include_link."from_id"
-      ) as "bool_exp_id",
-      mp_users."path_item_id" as "user_upper_id",
-      seu."to_id" as "seu_id"
+      ) as "bool_exp_id"
     FROM
-      ${MP_TABLE_NAME} as mp_include
-        LEFT JOIN ${MP_TABLE_NAME} as mp_users ON (
-          mp_users."group_id" = mp_include."group_id" AND mp_users."item_id" = mp_include."item_id"
-        )
-      ,
-      ${TABLE_NAME} as include_link
-        LEFT JOIN ${TABLE_NAME} as seu ON (
-          seu."type_id" = ${await deep.id('@deep-foundation/core','SelectorExistsUp')} AND
-          seu."from_id" = include_link."id"
-        )
-      ,
+      ${MP_TABLE_NAME} as mp_include,
+      ${TABLE_NAME} as include_link,
       ${TABLE_NAME} as include_tree_link
     WHERE
       (include_link."type_id" = ${await deep.id('@deep-foundation/core','SelectorInclude')}) AND
@@ -60,30 +49,6 @@ export const up = async () => {
       (mp_include."group_id" = include_tree_link."to_id" AND
       include_tree_link."from_id" = include_link."id" AND
       include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
-
-      -- Не должно быть SEU который бы был !=User и при этом отсутствовал бы в mp_upper.
-      -- Таким образом верно что item допустим если SEU нету, или SEU=User или (SEU!=User и имеется выше в mp_upper)
-      -- Но если SEU нету, то LEFT JOIN не null потому что он всегда имеет значение из mp_upper
-      (
-        NOT EXISTS (
-          SELECT *
-          FROM
-          ${TABLE_NAME} as SEU
-          WHERE
-          SEU."type_id" = ${await deep.id('@deep-foundation/core','SelectorExistsUp')} AND
-          SEU."from_id" = include_link."id" AND
-          SEU."to_id" != ${await deep.id('@deep-foundation/core','User')} AND 
-          NOT EXISTS (
-            SELECT *
-            FROM
-            ${MP_TABLE_NAME} as mp_upper
-            WHERE
-            mp_upper."group_id" = mp_include."group_id" AND
-            mp_upper."item_id" = mp_include."item_id" AND
-            mp_upper."path_item_id" = SEU."to_id"
-          )
-        )
-      ) AND
 
       NOT EXISTS (
         SELECT mp_exclude."id"

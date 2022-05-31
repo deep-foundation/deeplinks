@@ -38,26 +38,6 @@ export const up = async () => {
           can_object: {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
             subject_id: { _eq: subjectId },
-            _or: [
-              {
-                user_upper_id: {
-                  _eq: 'X-Hasura-User-Id',
-                },
-                seu_id: {
-                  _eq: await deep.id('@deep-foundation/core', 'User'),
-                },
-              },
-              {
-                seu_id: {
-                  _neq: await deep.id('@deep-foundation/core', 'User'),
-                },
-              },
-              {
-                seu_id: {
-                  _is_null: true,
-                },
-              },
-            ]
           },
         },
         {
@@ -81,26 +61,6 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
               subject_id: { _eq: subjectId },
-              _or: [
-                {
-                  user_upper_id: {
-                    _eq: 'X-Hasura-User-Id',
-                  },
-                  seu_id: {
-                    _eq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _neq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _is_null: true,
-                  },
-                },
-              ]
             },
           },
         },
@@ -124,26 +84,6 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
               subject_id: { _eq: subjectId },
-              _or: [
-                {
-                  user_upper_id: {
-                    _eq: 'X-Hasura-User-Id',
-                  },
-                  seu_id: {
-                    _eq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _neq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _is_null: true,
-                  },
-                },
-              ]
             },
           },
         },
@@ -167,26 +107,6 @@ export const up = async () => {
             can_object: {
               action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
               subject_id: { _eq: subjectId },
-              _or: [
-                {
-                  user_upper_id: {
-                    _eq: 'X-Hasura-User-Id',
-                  },
-                  seu_id: {
-                    _eq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _neq: await deep.id('@deep-foundation/core', 'User'),
-                  },
-                },
-                {
-                  seu_id: {
-                    _is_null: true,
-                  },
-                },
-              ]
             },
           },
         },
@@ -209,23 +129,35 @@ export const up = async () => {
   });
   await permissions(api, MP_TABLE_NAME, {
     role: 'link',
-  
+
     select: {},
-    insert: {},
-    update: {},
-    delete: {},
-    
+    insert: {
+      id: { _is_null: true }
+    },
+    update: {
+      id: { _is_null: true }
+    },
+    delete: {
+      id: { _is_null: true }
+    },
+
     columns: '*',
     computed_fields: [],
   });
   await permissions(api, MP_TABLE_NAME, {
     role: 'undefined',
-  
+
     select: {},
-    insert: {},
-    update: {},
-    delete: {},
-    
+    insert: {
+      id: { _is_null: true }
+    },
+    update: {
+      id: { _is_null: true }
+    },
+    delete: {
+      id: { _is_null: true }
+    },
+
     columns: '*',
     computed_fields: [],
   });

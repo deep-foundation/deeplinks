@@ -28,8 +28,7 @@ export const up = async () => {
   log('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
-    SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_o_ex_up."to_id" as "object_exists_up_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id",
-      sr_o."user_upper_id" as "user_upper_id", sr_o."seu_id" as "seu_id"
+    SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_o_ex_up."to_id" as "object_exists_up_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
     FROM
     ${TABLE_NAME} as r,
     ${TABLE_NAME} as o,
