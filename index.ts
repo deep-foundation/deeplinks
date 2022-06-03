@@ -246,6 +246,7 @@ const handleRoutes = async () => {
     console.log('mlPorts', JSON.stringify(mlPorts, null, 2));
 
     ml.apply(mlPorts);
+    console.log('ml', JSON.stringify(ml, null, 2));
 
     // get all image values
     const imageContainers = {};
