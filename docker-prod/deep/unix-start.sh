@@ -11,4 +11,4 @@ echo 'It will be faster soon, but now please wait...'
 curl -s -X POST http://localhost:3007/api/deeplinks --data '{"operation":"run"}' --header "Content-Type: application/json" > /dev/null
 echo 'Migrations done!'
 # (macos) || (linux) open default browser
-(open http://localhost:3007/) || (xdg-open http://localhost:3007/)
+(open http://localhost:3007/) || (xdg-open http://localhost:3007/ 1>/dev/null 2>&1)
