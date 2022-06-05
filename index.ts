@@ -246,7 +246,9 @@ const handleRoutes = async () => {
     console.log('mlPorts', JSON.stringify(mlPorts, null, 2));
 
     ml.apply(mlPorts);
-    console.log('ml', JSON.stringify(ml, null, 2));
+    console.log('ml', toJSON(ml));
+
+    console.log('ml.byType', toJSON(ml.byType));
 
     // get all image values
     const imageContainers = {};
@@ -273,6 +275,56 @@ const handleRoutes = async () => {
         jwt: '',
         data: {}
       });
+    }
+
+    // for each port
+    for (const port of ml.byType[portTypeId]) {
+      console.log('port', toJSON(port));
+      const routerListeningLinks = port.in.filter(l => l.type_id == routerListeningTypeId);
+      console.log('routerListeningLinks', toJSON(routerListeningLinks));
+      if (routerListeningLinks.length > 0) {
+        const portValue = port?.value?.value;
+        console.log('portValue', portValue);
+        // console.log(`listening on port ${portValue}`);
+
+        // for each router
+        for (const routerListening of routerListeningLinks) {
+          // console.log('routerListening', toJSON(routerListening));
+          const router = routerListening.from;
+          console.log('router', toJSON(router));
+
+          const routerStringUseLinks = router.in.filter(l => l.type_id == routerStringUseTypeId);
+          // for each routerStringUse
+          for (const routerStringUse of routerStringUseLinks) {
+            const routeString = routerStringUse?.value?.value;
+            console.log(`route string ${routeString}`);
+            const route = routerStringUse?.from;
+
+            const handleRouteLinks = route.out.filter(l => l.type_id == handleRouteTypeId);
+            // for each handleRoute
+            for (const handleRoute of handleRouteLinks) {
+              const handler = handleRoute?.to;
+              const handlerId = handler?.id;
+              console.log(`handler id ${handlerId}`);
+
+              const jwt = await getJwt(handlerId, console.log);
+              console.log(`jwt ${jwt}`);
+
+              // get container
+              const supports = handler?.from;
+              const isolation = supports?.from;
+              const image = isolation?.value?.value;
+              console.log(`image`, image);
+              const container = imageContainers[image];
+              console.log(`container`, JSON.stringify(container, null, 2));
+
+              const file = handler?.to;
+              const code = file?.value?.value;
+              console.log(`code ${code}`);
+            }
+          }
+        }
+      }
     }
 
     // for each port
