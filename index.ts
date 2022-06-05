@@ -27,8 +27,6 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const app = express();
 const httpServer = http.createServer(app);
 
-console.log(process.env);
-
 app.get('/gql', expressPlayground({
   tabs: [{ 
     endpoint: `${DEEPLINKS_PUBLIC_URL}/gql`,
