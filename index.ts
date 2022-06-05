@@ -15,6 +15,7 @@ const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:80
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
+const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || '';
 
 const debug = Debug('deeplinks');
 const log = debug.extend('log');
@@ -26,9 +27,11 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const app = express();
 const httpServer = http.createServer(app);
 
+console.log(process.env);
+
 app.get('/gql', expressPlayground({
   tabs: [{ 
-    endpoint: '/gql',
+    endpoint: `${DEEPLINKS_PUBLIC_URL}/gql`,
     query: `query MyQuery {
       links(limit: 1) {
         id
