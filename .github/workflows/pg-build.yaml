@@ -1,4 +1,4 @@
-name: Deploy deeplinks app
+name: Deploy pg-v8
 on:
   push:
     branches: [ main ]
