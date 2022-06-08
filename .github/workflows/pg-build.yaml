@@ -12,7 +12,6 @@ on:
 defaults:
   run:
     working-directory: ./postgresql
-env:
 jobs:
   build:
     name: dockerize
