@@ -4,8 +4,7 @@ RUN apt-get update \
 RUN pip install pgxnclient
 RUN pgxn install plv8
 FROM postgres:12 AS final
-RUN apt-get update && apt-get upgrade \
-    && apt-get install -y libc++-dev
+RUN apt-get update && apt-get install -y libc++-dev
 
 COPY --from=build /usr/share/postgresql/12/extension/plv8* /usr/share/postgresql/12/extension/
 COPY --from=build /usr/lib/postgresql/12/lib/plv8*.so /usr/lib/postgresql/12/lib/
