@@ -278,7 +278,7 @@ const handleRoutes = async () => {
     }
 
     // for each port
-    for (const port of ml.byType[portTypeId]) {
+    for (const port of ml.byType[portTypeId] ?? []) {
       console.log('port', toJSON(port));
       const routerListeningLinks = port.in.filter(l => l.type_id == routerListeningTypeId);
       console.log('routerListeningLinks', toJSON(routerListeningLinks));
@@ -304,6 +304,7 @@ const handleRoutes = async () => {
             // for each handleRoute
             for (const handleRoute of handleRouteLinks) {
               const handler = handleRoute?.to;
+              console.log(`handler`, handler);
               const handlerId = handler?.id;
               console.log(`handler id ${handlerId}`);
 
@@ -311,14 +312,16 @@ const handleRoutes = async () => {
               console.log(`jwt ${jwt}`);
 
               // get container
-              const supports = handler?.from;
-              const isolation = supports?.from;
+              const supports = ml.byId[handler?.from_id];
+              console.log(`supports`, supports);
+              const isolation = ml.byId[supports?.from_id];
+              console.log(`isolation`, isolation);
               const image = isolation?.value?.value;
               console.log(`image`, image);
               const container = imageContainers[image];
               console.log(`container`, JSON.stringify(container, null, 2));
 
-              const file = handler?.to;
+              const file = ml.byId[handler?.to_id];
               const code = file?.value?.value;
               console.log(`code ${code}`);
             }
