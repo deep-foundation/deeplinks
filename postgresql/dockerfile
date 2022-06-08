@@ -3,7 +3,6 @@ RUN apt-get update \
     && apt-get install -y git curl glib2.0 libc++-dev python python3-pip libv8-dev postgresql-server-dev-12
 RUN pip install pgxnclient
 RUN pgxn install plv8
-
 FROM postgres:12 AS final
 RUN apt-get update && apt-get upgrade \
     && apt-get install -y libc++-dev
