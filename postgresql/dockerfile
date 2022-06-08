@@ -1,0 +1,16 @@
+FROM postgres:12 AS build
+RUN apt-get update \
+    && apt-get install -y git curl glib2.0 libc++-dev python python3-pip libv8-dev postgresql-server-dev-12
+RUN pip install pgxnclient
+RUN pgxn install plv8
+
+FROM postgres:12 AS final
+RUN apt-get update && apt-get upgrade \
+    && apt-get install -y libc++-dev
+COPY --from=build /usr/share/postgresql/12/extension/plv8* /usr/share/postgresql/12/extension/
+COPY --from=build /usr/lib/postgresql/12/lib/plv8*.so /usr/lib/postgresql/12/lib/
+COPY --from=build /usr/lib/postgresql/12/lib/pgxs* /usr/lib/postgresql/12/lib/
+COPY --from=build /usr/lib/postgresql/12/bin/pg_config /usr/lib/postgresql/12/bin/pg_config
+RUN chmod -R 644 /usr/share/postgresql/12/extension/plv8* \
+    && chmod 755 /usr/lib/postgresql/12/lib/plv8*.so \
+    && chmod 755 /usr/lib/postgresql/12/bin/pg_config
