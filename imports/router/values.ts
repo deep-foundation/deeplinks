@@ -65,8 +65,11 @@ export default async (req, res) => {
       const newRow = { ...linkRow, value: newValueRow };
 
       log('operation', operation);
+      log('linkId', linkId);
+      log('linkRow', linkRow);
       log('oldValueRow', oldValueRow);
       log('newValueRow', newValueRow);
+      log('newRow', newRow);
       log('oldRow', oldRow);
 
       if(oldValueRow && !newValueRow) {
@@ -86,6 +89,13 @@ export default async (req, res) => {
         
         return res.status(200).json({});
       } catch(e) {
+        log('operation', operation);
+        log('linkId', linkId);
+        log('linkRow', linkRow);
+        log('oldValueRow', oldValueRow);
+        log('newValueRow', newValueRow);
+        log('newRow', newRow);
+        log('oldRow', oldRow);
         error('Error', e);
         throw e;
       }
