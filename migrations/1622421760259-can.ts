@@ -28,7 +28,7 @@ export const up = async () => {
   log('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
-    SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_o_ex_up."to_id" as "object_exists_up_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
+    SELECT DISTINCT r."id" as "rule_id", sr_o."item_id" as "object_id", sr_s."item_id" as "subject_id", sr_a."item_id" as "action_id"
     FROM
     ${TABLE_NAME} as r,
     ${TABLE_NAME} as o,
@@ -40,20 +40,10 @@ export const up = async () => {
     ${SELECTORS_TABLE_NAME} as sr_a
     WHERE
     r."type_id" = ${await deep.id('@deep-foundation/core', 'Rule')} AND
+
     o."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
     o."from_id" = r."id" AND
     (o."to_id" = sr_o."selector_id" OR o."to_id" = ${await deep.id('@deep-foundation/core', 'Any')}) AND
-
-    (
-      (
-        sr_o_ex_up."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorExistsUp')} AND
-        sr_o_ex_up."from_id" = sr_o."selector_include_id"
-      ) OR (
-        sr_o_ex_up."type_id" = ${await deep.id('@deep-foundation/core', 'Contain')} AND
-        sr_o_ex_up."from_id" = ${await deep.id('@deep-foundation/core')} AND
-        sr_o_ex_up."to_id" = ${await deep.id('@deep-foundation/core', 'Any')}
-      )
-    ) AND
 
     s."type_id" = ${await deep.id('@deep-foundation/core', 'RuleSubject')} AND
     s."from_id" = r."id" AND
@@ -140,25 +130,6 @@ export const up = async () => {
           },
           column_mapping: {
             action_id: 'id',
-          },
-          insertion_order: 'before_parent',
-        },
-      },
-    },
-  });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: CAN_TABLE_NAME,
-      name: 'object_exists_up',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: SCHEMA,
-            name: TABLE_NAME,
-          },
-          column_mapping: {
-            object_exists_up_id: 'id',
           },
           insertion_order: 'before_parent',
         },

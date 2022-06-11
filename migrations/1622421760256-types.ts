@@ -97,7 +97,7 @@ const corePckg: Package = {
     { id: 'Handler', type: 'Type', from: 'Supports', to: 'Any' }, // 35
 
     { id: 'Tree', type: 'Type' }, // 36
-    // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
+
     { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any' }, // 37
     { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any' }, // 38
     { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any' }, // 39
@@ -218,7 +218,14 @@ const corePckg: Package = {
     // routeTreeHandler
     { id: 'routeTreeHandler', type: 'TreeIncludeDown', from: 'routeTree', to: 'Handler' }, // 112
 
-    { id: 'SelectorExistsUp', type: 'Type', from: 'SelectorInclude', to: 'Any' }, // 113
+    { id: 'TreeIncludeIn', type: 'Type', from: 'Tree', to: 'Any' }, // 113
+    { id: 'TreeIncludeOut', type: 'Type', from: 'Tree', to: 'Any' }, // 114
+    { id: 'TreeIncludeFromCurrent', type: 'Type', from: 'Tree', to: 'Any' }, // 115
+    { id: 'TreeIncludeToCurrent', type: 'Type', from: 'Tree', to: 'Any' }, // 116
+    { id: 'TreeIncludeCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 117
+    { id: 'TreeIncludeCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 118
+    { id: 'TreeIncludeFromCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 119
+    { id: 'TreeIncludeToCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 120
   ],
   errors: [],
   strict: true,

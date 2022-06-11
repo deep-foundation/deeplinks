@@ -5,7 +5,7 @@ import { down as downRels, up as upRels } from '@deep-foundation/materialized-pa
 import { down as downTable, up as upTable } from '@deep-foundation/materialized-path/table';
 import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import Debug from 'debug';
-import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_ID_INCLUDE_UP, GLOBAL_ID_TREE } from '../imports/client';
+import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_ID_INCLUDE_UP, GLOBAL_ID_TREE, GLOBAL_ID_INCLUDE_IN, GLOBAL_ID_INCLUDE_OUT, GLOBAL_ID_INCLUDE_FROM_CURRENT, GLOBAL_ID_INCLUDE_TO_CURRENT, GLOBAL_ID_INCLUDE_CURRENT_FROM, GLOBAL_ID_INCLUDE_CURRENT_TO, GLOBAL_ID_INCLUDE_FROM_CURRENT_TO, GLOBAL_ID_INCLUDE_TO_CURRENT_FROM } from '../imports/client';
 import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
@@ -40,7 +40,7 @@ const trigger = Trigger({
     ${LINKS_TABLE_NAME} as mpGroup,
     ${LINKS_TABLE_NAME} as mpInclude
     WHERE
-    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
     mpInclude."to_id" IN (NEW.type_id, ${GLOBAL_ID_ANY}) AND
     mpInclude."from_id" = mpGroup."id" AND
     mpGroup."type_id" = ${GLOBAL_ID_TREE} AND
@@ -56,7 +56,7 @@ const trigger = Trigger({
     ${LINKS_TABLE_NAME} as mpGroup,
     ${LINKS_TABLE_NAME} as mpInclude
     WHERE
-    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+    mpInclude."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
     mpInclude."to_id" IN (OLD.type_id, ${GLOBAL_ID_ANY}) AND
     mpInclude."from_id" = mpGroup."id" AND
     mpGroup."type_id" = ${GLOBAL_ID_TREE}
@@ -67,59 +67,59 @@ const trigger = Trigger({
   // TODO optimize duplicating equal selects
 
   isAllowSpreadFromCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
   )`,
   isAllowSpreadCurrentTo: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}) AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
     AND
     EXISTS (SELECT * FROM ${LINKS_TABLE_NAME} as child, ${LINKS_TABLE_NAME} as include WHERE
       child."id" = CURRENT."to_id" AND
-      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
       include."from_id" = groupRow.id AND
       include."to_id" IN (child.type_id, ${GLOBAL_ID_ANY})
     )
   )`,
 
   isAllowSpreadToCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_UP}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
   )`,
   isAllowSpreadCurrentFrom: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_UP}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (CURRENT.type_id)
     AND
     EXISTS (SELECT * FROM ${LINKS_TABLE_NAME} as child, ${LINKS_TABLE_NAME} as include WHERE
       child."id" = CURRENT."from_id" AND
-      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}) AND
+      include."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
       include."from_id" = groupRow.id AND
       include."to_id" IN (child.type_id, ${GLOBAL_ID_ANY})
     )
   )`,
 
   isAllowSpreadToInCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_DOWN} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentFromOut: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_DOWN} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_DOWN}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
 
   isAllowSpreadFromOutCurrent: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_UP}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
   isAllowSpreadCurrentToIn: `EXISTS (SELECT l.* FROM ${LINKS_TABLE_NAME} as l WHERE
-    l.type_id = ${GLOBAL_ID_INCLUDE_UP} AND
+    l.type_id IN (${GLOBAL_ID_INCLUDE_UP}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}) AND
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${GLOBAL_ID_ANY})
   )`,
@@ -143,7 +143,7 @@ export const up = async () => {
   await api.sql(trigger.upTriggerInsert());
   await api.sql(sql`select create_btree_indexes_for_all_columns('${SCHEMA}', '${MP_TABLE_NAME}');`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
-    IF (NEW."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
+    IF (NEW."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM})) THEN
       PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id" OR NEW."to_id"=${GLOBAL_ID_ANY};
     END IF;
@@ -153,7 +153,7 @@ export const up = async () => {
   DECLARE groupRow RECORD;
   BEGIN
     -- if delete link - is group include link
-    IF (OLD."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE})) THEN
+    IF (OLD."type_id" IN (${GLOBAL_ID_INCLUDE_DOWN},${GLOBAL_ID_INCLUDE_UP},${GLOBAL_ID_INCLUDE_NODE}, ${GLOBAL_ID_INCLUDE_IN}, ${GLOBAL_ID_INCLUDE_OUT}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT}, ${GLOBAL_ID_INCLUDE_TO_CURRENT}, ${GLOBAL_ID_INCLUDE_CURRENT_FROM}, ${GLOBAL_ID_INCLUDE_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_FROM_CURRENT_TO}, ${GLOBAL_ID_INCLUDE_TO_CURRENT_FROM})) THEN
       SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = ${GLOBAL_ID_TREE};
       PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
       FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id" OR OLD."to_id"=${GLOBAL_ID_ANY};
