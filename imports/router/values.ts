@@ -64,26 +64,34 @@ export default async (req, res) => {
       const oldRow = { ...linkRow, value: oldValueRow };
       const newRow = { ...linkRow, value: newValueRow };
 
-      log('operation', operation);
-      log('linkId', linkId);
-      log('linkRow', linkRow);
-      log('oldValueRow', oldValueRow);
-      log('newValueRow', newValueRow);
-      log('newRow', newRow);
-      log('oldRow', oldRow);
-
-      if(oldValueRow && !newValueRow) {
-          // delete bool_exp trash
-          await deep.delete({
-            link_id: { _eq: oldValueRow.link_id },
-          }, { table: 'bool_exp' });
-      }
-      if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
-          // generate new bool_exp sql version
-          await boolExpToSQL(newRow.id, newRow?.value?.value);
-      }
-
       try {
+        if (!linkRow) {
+          if(newValueRow?.link_id) {
+            throw new Error('Value insert is handled before the link is added.'); 
+          } else { // if(oldValueRow?.link_id) {
+            throw new Error('Value deletion is handled after its link is deleted.'); 
+          }
+        }
+
+        log('operation', operation);
+        log('linkId', linkId);
+        log('linkRow', linkRow);
+        log('oldValueRow', oldValueRow);
+        log('newValueRow', newValueRow);
+        log('newRow', newRow);
+        log('oldRow', oldRow);
+
+        if(oldValueRow && !newValueRow) {
+            // delete bool_exp trash
+            await deep.delete({
+              link_id: { _eq: oldValueRow.link_id },
+            }, { table: 'bool_exp' });
+        }
+        if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+            // generate new bool_exp sql version
+            await boolExpToSQL(newRow.id, newRow?.value?.value);
+        }
+      
         await handleOperation('Update', oldRow, newRow);
         await handleSelectorOperation('Update', oldRow, newRow);
         
@@ -99,8 +107,6 @@ export default async (req, res) => {
         error('Error', e);
         throw e;
       }
-
-      return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
   } catch(e) {

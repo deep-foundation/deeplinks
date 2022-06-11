@@ -216,10 +216,10 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
 
 const deletePackageWithPermissions = async ($package: any) => {
   await deleteId($package.typeId);
-  await deleteId($package.containId);
   await deleteId($package.containValueId, { table: 'strings' });
-  await deleteId($package.packageId);
+  await deleteId($package.containId);
   await deleteId($package.packageValueId, { table: 'strings' });
+  await deleteId($package.packageId);
   await deleteIds($package.ruleIds);
 };
 
@@ -342,20 +342,20 @@ export async function deletePromiseResult(promiseResult: any, linkId?: any) {
   const promiseReasonId = promiseResult?.in?.[0]?.out?.[0]?.id;
   await deleteId(promiseReasonId);
   await deleteIds([resultLinkId, thenLinkId]);
-  await deleteIds([promiseResultId, promiseId, linkId]);
   await deleteId(valueId, { table: 'objects' });
+  await deleteIds([promiseResultId, promiseId, linkId]);
 }
 
 export const deleteHandler = async (handler) => {
+  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
   await deleteId(handler.ownerContainHandlerId);
   await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
-  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
 };
 
 export const deleteScheduleHandler = async (handler) => {
   await deleteHandler(handler);
-  await deleteId(handler.scheduleId);
   await deleteId(handler.scheduleValueId, { table: 'strings' });
+  await deleteId(handler.scheduleId);
 };
 
 export async function ensureLinkIsCreated(typeId: number) {
