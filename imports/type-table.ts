@@ -145,19 +145,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECTOR record;
     user_id bigint;
     hasura_session json;
+    updated_link links;
+    handle_update links;
   BEGIN
-    IF (
-        EXISTS(
-          SELECT 1
-          FROM links handle_update, links updated_link
-          WHERE
-              updated_link.id = NEW."link_id"
-          AND handle_update.from_id = updated_link."type_id"
-          AND handle_update.type_id = ${handleUpdateTypeId}
-        )
-    ) THEN
+    SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
+    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
+    IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,NEW."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -171,7 +167,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
+      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
@@ -187,19 +183,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECTOR record;
     user_id bigint;
     hasura_session json;
+    updated_link links;
+    handle_update links;
   BEGIN
-    IF (
-        EXISTS(
-          SELECT 1
-          FROM links handle_update, links updated_link
-          WHERE
-              updated_link.id = NEW."link_id"
-          AND handle_update.from_id = updated_link."type_id"
-          AND handle_update.type_id = ${handleUpdateTypeId}
-        )
-    ) THEN
+    SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
+    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
+    IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,NEW."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -213,7 +205,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
+      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, NEW."link_id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
@@ -229,19 +221,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECTOR record;
     user_id bigint;
     hasura_session json;
+    updated_link links;
+    handle_update links;
   BEGIN
-    IF (
-        EXISTS(
-          SELECT 1
-          FROM links handle_update, links updated_link
-          WHERE
-              updated_link.id = OLD."link_id"
-          AND handle_update.from_id = updated_link."type_id"
-          AND handle_update.type_id = ${handleUpdateTypeId}
-        )
-    ) THEN
+    SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
+    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
+    IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."link_id",PROMISE);
+      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
+      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,NEW."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -255,7 +243,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, OLD."link_id");
+      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, OLD."link_id");
       IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(OLD."link_id", SELECTOR.bool_exp_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
