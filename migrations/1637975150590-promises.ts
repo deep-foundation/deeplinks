@@ -108,6 +108,26 @@ export const up = async () => {
     },
   });
 
+  await api.query({
+    type: 'create_array_relationship',
+    args: {
+      table: 'promise_selectors',
+      name: 'promise_links',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: 'public',
+            name: 'promise_links',
+          },
+          column_mapping: {
+            promise_id: 'promise_id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
+
   // await api.sql(sql`CREATE TABLE IF NOT EXISTS public.debug_output (promises bigint, new_id bigint);`);
   // await api.query({
   //   type: 'track_table',
@@ -155,6 +175,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN TRUE;
@@ -201,6 +222,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN OLD;

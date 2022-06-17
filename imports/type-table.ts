@@ -152,8 +152,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
-      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,NEW."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
+      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
+      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -172,6 +172,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN NEW;
@@ -190,8 +191,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},NEW."link_id",PROMISE);
-      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,NEW."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
+      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
+      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.handle_operation_id);
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -210,6 +211,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN NEW;
@@ -228,8 +230,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id","from_id","to_id") VALUES (${thenTypeId},OLD."link_id",PROMISE);
-      INSERT INTO promise_links ("promise_id","link_id","link_type_id","link_from_id","link_to_id","handle_operation_id") VALUES (PROMISE,OLD."link_id",updated_link."type_id",updated_link."from_id",updated_link."to_id",handle_update."id");
+      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
+      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -248,6 +250,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN OLD;
