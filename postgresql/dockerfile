@@ -1,9 +1,7 @@
 FROM postgres:12
 
-MAINTAINER Chia-liang Kao <clkao@clkao.org>
-
 ENV PLV8_VERSION=3.0.0 \
-    PLV8_SHASUM="1a96c559d98ad757e7494bf7301f0e6b0dd2eec6066ad76ed36cc13fec4f2390"
+    PLV8_SHASUM="de030f5d6b0439710efa05f4c35ffb8ef36ae754fa0e3c46d334352cf1507661"
 
 RUN buildDependencies="build-essential \
     ca-certificates \
