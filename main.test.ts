@@ -10,4 +10,5 @@ import './tests/handlers';
 import './tests/minilinks';
 import './tests/demo';
 import './tests/packager';
+import './tests/plv8';
 // TODO error if duplicates

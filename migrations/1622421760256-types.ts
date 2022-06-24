@@ -226,6 +226,10 @@ const corePckg: Package = {
     { id: 'TreeIncludeCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 118
     { id: 'TreeIncludeFromCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 119
     { id: 'TreeIncludeToCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 120
+
+    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 121
+    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 122
+    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 123
   ],
   errors: [],
   strict: true,
