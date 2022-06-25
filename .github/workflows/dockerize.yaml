@@ -32,8 +32,6 @@ jobs:
         run: npm ci
       - name: docker init
         run: cd docker-prod/deep && docker-compose up -d
-      - name: wait 10 sec
-        run: sleep 10
       - name: migrate
         run: npm run migrate
       - name: backup dir
