@@ -23,7 +23,7 @@ const deep = new DeepClient({ apolloClient });
 
 (async () => {
   var suite = new Suite();
-  const admin = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+  const admin = await deep.jwt({ linkId: await deep.id('deep', 'admin') });
   const deepAdmin = new DeepClient({ deep: deep, token: admin.token, linkId: admin.linkId });
   const Query = await deep.id('@deep-foundation/core', 'Query');
   const guest = await deep.guest({});
@@ -68,7 +68,7 @@ const deep = new DeepClient({ apolloClient });
           type_id: await deep.id('@deep-foundation/core', 'Selector'),
           out: { data: {
             type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-            to_id: await deep.id('@deep-foundation/core', 'AllowInsert'),
+            to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
             out: { data: {
               type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
               to_id: await deep.id('@deep-foundation/core', 'containTree'),

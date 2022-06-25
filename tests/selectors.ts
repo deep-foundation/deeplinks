@@ -16,7 +16,7 @@ let adminToken: string;
 let admin: any;
 
 beforeAll(async () => {
-  const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+  const { linkId, token } = await deep.jwt({ linkId: await deep.id('deep', 'admin') });
   adminToken = token;
   admin = new DeepClient({ deep, token: adminToken, linkId });
 });

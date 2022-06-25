@@ -7,7 +7,7 @@ services:
     ports:
     - "5432:5432"
     restart: always
-    command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
+    command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true  -с default_transaction_isolation=serializable
     volumes:
     - db_data:/var/lib/postgresql/data
     environment:
