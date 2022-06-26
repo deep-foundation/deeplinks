@@ -83,7 +83,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
   const SelectorInclude = await deep.id('@deep-foundation/core', 'SelectorInclude');
   const SelectorTree = await deep.id('@deep-foundation/core', 'SelectorTree');
   const AllowSelect = await deep.id('@deep-foundation/core', 'AllowSelect');
-  const AllowInsert = await deep.id('@deep-foundation/core', 'AllowInsert');
+  const AllowInsertType = await deep.id('@deep-foundation/core', 'AllowInsertType');
   const containTree = await deep.id('@deep-foundation/core', 'containTree');
   const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
   
@@ -175,7 +175,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
           out: { data: [
             {
               type_id: SelectorInclude,
-              to_id: AllowInsert,
+              to_id: AllowInsertType,
               out: { data: {
                 type_id: SelectorTree,
                 to_id: containTree,
@@ -237,7 +237,7 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: containTypeId,
@@ -270,7 +270,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: await deep.id('@deep-foundation/core', 'Contain'),

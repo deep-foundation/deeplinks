@@ -28,6 +28,7 @@ export interface LinkRelations<L> {
   outByType: { [id: number]: L[] };
   from: L;
   to: L;
+  _applies: string[];
 }
 
 export interface LinkHashFields {
@@ -60,6 +61,7 @@ export class MinilinksLink<Ref extends number> {
   outByType: { [id: number]: MinilinksLink<Ref>[] };
   from: MinilinksLink<Ref>;
   to: MinilinksLink<Ref>;
+  _applies: string[] = [];
   constructor(link: any) {
     Object.assign(this, link);
   }
@@ -139,7 +141,15 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (byId[linksArray[l][options.id]]) {
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
-        const link = new this.options.Link({ ...linksArray[l], [options.typed]: [], [options.in]: [], [options.out]: [], [options.inByType]: {}, [options.outByType]: {} });
+        const link = new this.options.Link({
+          _applies: [],
+          ...linksArray[l],
+          [options.typed]: [],
+          [options.in]: [],
+          [options.out]: [],
+          [options.inByType]: {},
+          [options.outByType]: {},
+        });
         byId[link[options.id]] = link;
 
         // byFrom[link.from_id]: link[]; // XXX
@@ -310,7 +320,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     };
   }
   _updating: boolean = false;
-  apply(linksArray: any[]): {
+  apply(linksArray: any[], applyName: string = ''): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
@@ -324,16 +334,32 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     for (let l = 0; l < linksArray.length; l++) {
       const link = linksArray[l];
       const old = byId[link.id];
-      if (!old) toAdd.push(link);
-      else if (!options.equal(old, link)) {
-        toUpdate.push(link);
-        beforeUpdate[link.id] = old;
+      if (!old) {
+        link._applies = [applyName];
+        toAdd.push(link);
+      }
+      else {
+        const index = old._applies.indexOf(applyName);
+        if (!~index) link._applies = old._applies = [...old._applies, applyName];
+        if (!options.equal(old, link)) {
+          toUpdate.push(link);
+          beforeUpdate[link.id] = old;
+        }
       }
       _byId[link.id] = link;
     }
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
-      if (!_byId[link.id]) toRemove.push(link);
+      if (!_byId[link.id]) {
+        const index = link._applies.indexOf(applyName);
+        if (!!~index) {
+          if (link._applies.length === 1) {
+            toRemove.push(link);
+          } else {
+            link._applies.splice(index, 1);
+          }
+        }
+      }
     }
     const r1 = this.remove(toRemove.map(l => l[options.id]));
     const a1 = this.add(toAdd);

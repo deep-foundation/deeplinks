@@ -30,10 +30,45 @@ const deep = new DeepClient({
 export const up = async () => {
   log('up');
   log('hasura permissions');
+
+  // const isAdminBoolExp = { _by_item: {
+  //   group_id: { _eq: await deep.id('@deep-foundation/core', 'joinTree') },
+  //   path_item: {
+  //     to: {
+  //       type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
+  //       from_id: { _eq: await deep.id('deep') },
+  //       string: { value: { _eq: "admin" } },
+  //     }
+  //   }
+  // } };
+  // const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
+  //   object_id: { _eq: subjectId },
+  //   subject_id: { _eq: subjectId },
+  //   action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+  // });
+  const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
+    "_table": {
+      "schema": "public",
+      "name": "can"
+    },
+    _where: {
+      object_id: { _eq: subjectId },
+      subject_id: { _eq: subjectId },
+      action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+    },
+  });
   const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
     role,
     select: {
       _or: [
+        {
+          type: {
+            can_object: {
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelectType') },
+              subject_id: { _eq: subjectId },
+            },
+          }
+        },
         {
           can_object: {
             action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
@@ -41,15 +76,7 @@ export const up = async () => {
           },
         },
         {
-          _exists: {
-            _table: 'links',
-            _where: {
-              type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
-              from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
-              string: { value: { _eq: 'admin' } },
-              to_id: { _eq: subjectId },
-            },
-          },
+          _exists: await isAdminBoolExp(subjectId),
         },
       ],
     },
@@ -59,67 +86,55 @@ export const up = async () => {
         {
           type: {
             can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsert') },
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsertType') },
               subject_id: { _eq: subjectId },
             },
           },
         },
         {
-          _exists: {
-            _table: 'links',
-            _where: {
-              type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
-              from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
-              string: { value: { _eq: 'admin' } },
-              to_id: { _eq: subjectId },
-            },
-          },
+          _exists: await isAdminBoolExp(subjectId),
         },
       ]
     },
     update: {
       _or: [
         {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+            subject_id: { _eq: subjectId },
+          },
+        },
+        {
           type: {
             can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdateType') },
               subject_id: { _eq: subjectId },
             },
           },
         },
         {
-          _exists: {
-            _table: 'links',
-            _where: {
-              type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
-              from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
-              string: { value: { _eq: 'admin' } },
-              to_id: { _eq: subjectId },
-            },
-          },
+          _exists: await isAdminBoolExp(subjectId),
         },
       ]
     },
     delete: {
       _or: [
         {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+            subject_id: { _eq: subjectId },
+          },
+        },
+        {
           type: {
             can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDeleteType') },
               subject_id: { _eq: subjectId },
             },
           },
         },
         {
-          _exists: {
-            _table: 'links',
-            _where: {
-              type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
-              from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
-              string: { value: { _eq: 'admin' } },
-              to_id: { _eq: subjectId },
-            },
-          },
+          _exists: await isAdminBoolExp(subjectId),
         },
       ]
     },
@@ -130,7 +145,16 @@ export const up = async () => {
   await permissions(api, MP_TABLE_NAME, {
     role: 'link',
 
-    select: {},
+    select: {
+      _and: [
+        {
+          item: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          path_item: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+      ]
+    },
     insert: {
       id: { _is_null: true }
     },
@@ -147,7 +171,9 @@ export const up = async () => {
   await permissions(api, MP_TABLE_NAME, {
     role: 'undefined',
 
-    select: {},
+    select: {
+      id: { _is_null: true },
+    },
     insert: {
       id: { _is_null: true }
     },
@@ -163,8 +189,23 @@ export const up = async () => {
   });
   await permissions(api, CAN_TABLE_NAME, {
     role: 'link',
-  
-    select: {},
+
+    select: {
+      _and: [
+        {
+          subject: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          object: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          action: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          rule: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+      ]
+    },
     insert: {},
     update: {},
     delete: {},
@@ -175,7 +216,12 @@ export const up = async () => {
   await permissions(api, CAN_TABLE_NAME, {
     role: 'undefined',
   
-    select: {},
+    select: {
+      object_id: { _is_null: true },
+      subject_id: { _is_null: true },
+      action_id: { _is_null: true },
+      rule_id: { _is_null: true },
+    },
     insert: {},
     update: {},
     delete: {},
@@ -186,7 +232,16 @@ export const up = async () => {
   await permissions(api, SELECTORS_TABLE_NAME, {
     role: 'link',
   
-    select: {},
+    select: {
+      _and: [
+        {
+          selector: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          item: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+      ]
+    },
     insert: {},
     update: {},
     delete: {},
@@ -197,7 +252,10 @@ export const up = async () => {
   await permissions(api, SELECTORS_TABLE_NAME, {
     role: 'undefined',
   
-    select: {},
+    select: {
+      selector_id: { _is_null: true },
+      item_id: { _is_null: true },
+    },
     insert: {},
     update: {},
     delete: {},

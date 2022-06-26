@@ -38,20 +38,23 @@ export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
 export const GLOBAL_ID_HANDLE_UPDATE=50;
+export const GLOBAL_ID_JOIN=66;
+export const GLOBAL_ID_ALLOW_ADMIN=71;
 export const GLOBAL_ID_SELECTOR_FILTER=75;
 
-export const GLOBAL_ID_INCLUDE_IN = 114;
-export const GLOBAL_ID_INCLUDE_OUT = 115;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 116;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT = 117;
-export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 118;
-export const GLOBAL_ID_INCLUDE_CURRENT_TO = 119;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 120;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 121;
+export const GLOBAL_ID_INCLUDE_IN = 113;
+export const GLOBAL_ID_INCLUDE_OUT = 114;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 115;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT = 116;
+export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 117;
+export const GLOBAL_ID_INCLUDE_CURRENT_TO = 118;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 119;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 120;
 
 const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
+    'Join': GLOBAL_ID_JOIN,
     'containTree': GLOBAL_ID_CONTAIN_TREE,
     'Package': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
@@ -62,6 +65,7 @@ const _ids = {
     'Resolved': GLOBAL_ID_RESOLVED,
     'Rejected': GLOBAL_ID_REJECTED,
     'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
+    'AllowAdmin': GLOBAL_ID_ALLOW_ADMIN,
   },
 };
 
