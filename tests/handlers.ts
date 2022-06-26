@@ -765,8 +765,8 @@ describe('handle port', () => {
   });
 });
 
-describe.only('handle port route', () => {
-  it(`handle port`, async () => {
+describe('handle route', () => {
+  it(`handle route`, async () => {
     // const port = await getPort(); // conflicts with container-controller port allocation
     const port = 55555;
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
@@ -819,8 +819,8 @@ describe.only('handle port route', () => {
     }))?.data?.[0]?.id;
 
     const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-    // const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
-    const ownerId = await deep.id('@deep-foundation/core', 'system', 'admin');
+    // const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
+    const ownerId = await deep.id('deep', 'admin');
     const ownerContainHandler = (await deep.insert({
       from_id: ownerId,
       type_id: containTypeId,
@@ -845,22 +845,22 @@ describe.only('handle port route', () => {
     const text = await response.text();
     assert.equal(text, 'ok');
 
-    // // delete all
-    // await deleteId(handleRouteLinkId);
-    // await deleteId(ownerContainHandler.id);
-    // await deleteId(handlerId);
-    // await deleteId(handlerJSFileValue.id, { table: 'strings' });
-    // await deleteId(handlerJSFile.id);
-    // await deleteId(routerStringUseId);
-    // await deleteId(routerListeningId);
-    // await deleteId(routerId);
-    // await deleteId(routeId);
-    // await deleteId(portValue.id, { table: 'numbers' });
-    // await deleteId(portId);
+    // delete all
+    await deleteId(handleRouteLinkId);
+    await deleteId(ownerContainHandler.id);
+    await deleteId(handlerId);
+    await deleteId(handlerJSFileValue.id, { table: 'strings' });
+    await deleteId(handlerJSFile.id);
+    await deleteId(routerStringUseId);
+    await deleteId(routerListeningId);
+    await deleteId(routerId);
+    await deleteId(routeId);
+    await deleteId(portValue.id, { table: 'numbers' });
+    await deleteId(portId);
 
-    // log("waiting for route to be deleted");
-    // await waitOn({ resources: [url], reverse: true });
-    // log("route handler is down");
+    log("waiting for route to be deleted");
+    await waitOn({ resources: [url], reverse: true });
+    log("route handler is down");
   });
 });
 
