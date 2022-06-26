@@ -15,6 +15,7 @@ import { DeepClient } from './imports/client';
 import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
+import _ from 'lodash';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
@@ -118,7 +119,11 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
+const routesDebug = Debug('deeplinks').extend('eh').extend('routes');
+const routesDebugLog = routesDebug.extend('log');
+
 let currentServers = {};
+let currentPorts = {};
 let busy = false;
 let portTypeId = 0;
 
@@ -126,28 +131,28 @@ const ml = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
 const addedListener = (nl, recursive = true, history = {}) => {
   if (nl.type_id == portTypeId) {
     // TODO: Start server
-    console.log('server should be started at port', nl.value);
+    routesDebugLog('server should be started at port', nl.value);
   } else {
     // TODO: Get list of servers affected by this change and restart them
-    console.log('impossible');
+    routesDebugLog('impossible');
   }
 };
 const updatedListener = (ol, nl, recursive = true, history = {}) => {
   if (ol.type_id == portTypeId && nl.type_id == portTypeId) {
     // TODO: Restart server
-    console.log('server should be restarted at port', nl.value);
+    routesDebugLog('server should be restarted at port', nl.value);
   } else {
     // TODO: Get list of servers affected by this change and restart them
-    console.log('impossible');
+    routesDebugLog('impossible');
   }
 };
 const removedListener = (ol, recursive = true, history = {}) => {
   if (ol.type_id == portTypeId) {
     // TODO: Stop server
-    console.log('server should be stopped at port', ol.value);
+    routesDebugLog('server should be stopped at port', ol.value);
   } else {
     // TODO: Get list of servers affected by this change and restart them
-    console.log('impossible');
+    routesDebugLog('impossible');
   }
 };
 ml.emitter.on('added', addedListener);
@@ -162,13 +167,13 @@ const handleRoutes = async () => {
   busy = true;
 
   // clean up old servers
-  for (const key in currentServers) {
-    if (Object.prototype.hasOwnProperty.call(currentServers, key)) {
-      const element = currentServers[key];
-      element.close();
-    }
-  }
-  currentServers = {};
+  // for (const key in currentServers) {
+  //   if (Object.prototype.hasOwnProperty.call(currentServers, key)) {
+  //     const element = currentServers[key];
+  //     element.close();
+  //   }
+  // }
+  // currentServers = {};
 
   try {
     portTypeId = await deep.id('@deep-foundation/core', 'Port');
@@ -223,8 +228,44 @@ const handleRoutes = async () => {
           }
         }
       `, variables: {} });
-    const ports = routesResult.data.ports;
-    console.log('ports', JSON.stringify(ports, null, 2));
+    const portsResult = routesResult.data.ports;
+    routesDebugLog('portsResult', JSON.stringify(portsResult, null, 2));
+
+    const ports = {};
+    for (const port of portsResult) {
+      const portValue = port?.port?.value;
+      ports[portValue] = port;
+    }
+    routesDebugLog('ports', JSON.stringify(ports, null, 2));
+
+    const updatedOrAddedPorts = [];
+    for (const key in currentPorts) {
+      if (currentPorts.hasOwnProperty(key)) {
+        if (ports.hasOwnProperty(key)) {
+          if(!_.isEqual(currentPorts[key], ports[key])) {
+            currentPorts[key] = ports[key];
+            updatedOrAddedPorts.push(ports[key]);
+          } else {
+            // do nothing
+          }
+        } else {
+          const element = currentServers[key];
+          element.close();
+          delete currentServers[key];
+          delete currentPorts[key];
+        }
+      }
+    }
+    for (const key in ports) {
+      if (ports.hasOwnProperty(key)) {
+        if (!currentPorts.hasOwnProperty(key)) {
+          currentPorts[key] = ports[key];
+          updatedOrAddedPorts.push(ports[key]);
+        }
+      }
+    }
+    routesDebugLog('updatedOrAddedPorts', JSON.stringify(updatedOrAddedPorts, null, 2));
+    routesDebugLog('currentPorts', JSON.stringify(currentPorts, null, 2));
 
     const mlRoutesResult = await client.query({
       query: gql`
@@ -244,16 +285,16 @@ const handleRoutes = async () => {
         }
       `, variables: {} });
     const mlPorts = mlRoutesResult.data.ports;
-    console.log('mlPorts', JSON.stringify(mlPorts, null, 2));
+    routesDebugLog('mlPorts', JSON.stringify(mlPorts, null, 2));
 
     ml.apply(mlPorts);
-    console.log('ml', toJSON(ml));
+    routesDebugLog('ml', toJSON(ml));
 
-    console.log('ml.byType', toJSON(ml.byType));
+    routesDebugLog('ml.byType', toJSON(ml.byType));
 
     // get all image values
     const imageContainers = {};
-    ports.forEach(port => {
+    updatedOrAddedPorts.forEach(port => {
       port.routerListening.forEach(routerListening => {
         routerListening?.router?.routerStringUse.forEach(routerStringUse => {
           routerStringUse?.route?.handleRoute.forEach(handleRoute => {
@@ -263,11 +304,11 @@ const handleRoutes = async () => {
       });
     });
     const imageList = Object.keys(imageContainers);
-    console.log('imageList', imageList);
+    routesDebugLog('imageList', imageList);
 
     // prepare containers
     for (const image of imageList) {
-      console.log(`preparing container ${image}`);
+      routesDebugLog(`preparing container ${image}`);
       imageContainers[image] = await containerController.newContainer({
         handler: image,
         forceRestart: true,
@@ -280,51 +321,51 @@ const handleRoutes = async () => {
 
     // for each port
     for (const port of ml.byType[portTypeId] ?? []) {
-      console.log('port', toJSON(port));
+      routesDebugLog('port', toJSON(port));
       const routerListeningLinks = port.in.filter(l => l.type_id == routerListeningTypeId);
-      console.log('routerListeningLinks', toJSON(routerListeningLinks));
+      routesDebugLog('routerListeningLinks', toJSON(routerListeningLinks));
       if (routerListeningLinks.length > 0) {
         const portValue = port?.value?.value;
-        console.log('portValue', portValue);
-        // console.log(`listening on port ${portValue}`);
+        routesDebugLog('portValue', portValue);
+        // routesDebugLog(`listening on port ${portValue}`);
 
         // for each router
         for (const routerListening of routerListeningLinks) {
-          // console.log('routerListening', toJSON(routerListening));
+          // routesDebugLog('routerListening', toJSON(routerListening));
           const router = routerListening.from;
-          console.log('router', toJSON(router));
+          routesDebugLog('router', toJSON(router));
 
           const routerStringUseLinks = router.in.filter(l => l.type_id == routerStringUseTypeId);
           // for each routerStringUse
           for (const routerStringUse of routerStringUseLinks) {
             const routeString = routerStringUse?.value?.value;
-            console.log(`route string ${routeString}`);
+            routesDebugLog(`route string ${routeString}`);
             const route = routerStringUse?.from;
 
             const handleRouteLinks = route.out.filter(l => l.type_id == handleRouteTypeId);
             // for each handleRoute
             for (const handleRoute of handleRouteLinks) {
               const handler = handleRoute?.to;
-              console.log(`handler`, handler);
+              routesDebugLog(`handler`, handler);
               const handlerId = handler?.id;
-              console.log(`handler id ${handlerId}`);
+              routesDebugLog(`handler id ${handlerId}`);
 
-              const jwt = await getJwt(handlerId, console.log);
-              console.log(`jwt ${jwt}`);
+              const jwt = await getJwt(handlerId, routesDebugLog);
+              routesDebugLog(`jwt ${jwt}`);
 
               // get container
               const supports = ml.byId[handler?.from_id];
-              console.log(`supports`, supports);
+              routesDebugLog(`supports`, supports);
               const isolation = ml.byId[supports?.from_id];
-              console.log(`isolation`, isolation);
+              routesDebugLog(`isolation`, isolation);
               const image = isolation?.value?.value;
-              console.log(`image`, image);
+              routesDebugLog(`image`, image);
               const container = imageContainers[image];
-              console.log(`container`, JSON.stringify(container, null, 2));
+              routesDebugLog(`container`, JSON.stringify(container, null, 2));
 
               const file = ml.byId[handler?.to_id];
               const code = file?.value?.value;
-              console.log(`code ${code}`);
+              routesDebugLog(`code ${code}`);
             }
           }
         }
@@ -332,13 +373,18 @@ const handleRoutes = async () => {
     }
 
     // for each port
-    for (const port of ports) {
+    for (const port of updatedOrAddedPorts) {
       if (port.routerListening.length > 0) {
-        // start express server
-        const portServer = express();
         // listen on port
         const portValue = port?.port?.value;
-        console.log(`listening on port ${portValue}`);
+
+        if (currentServers.hasOwnProperty(portValue)) {
+          currentServers[portValue].close();
+        }
+
+        routesDebugLog(`listening on port ${portValue}`);
+        // start express server
+        const portServer = express();
         currentServers[portValue] = portServer.listen(portValue);
 
         // for each router
@@ -348,26 +394,26 @@ const handleRoutes = async () => {
           // for each routerStringUse
           for (const routerStringUse of router.routerStringUse) {
             const routeString = routerStringUse?.routeString?.value;
-            console.log(`route string ${routeString}`);
+            routesDebugLog(`route string ${routeString}`);
             const route = routerStringUse?.route;
 
             // for each handleRoute
             for (const handleRoute of route.handleRoute) {
               const handler = handleRoute?.handler;
               const handlerId = handler?.id;
-              console.log(`handler id ${handlerId}`);
+              routesDebugLog(`handler id ${handlerId}`);
 
-              const jwt = await getJwt(handlerId, console.log);
-              console.log(`jwt ${jwt}`);
+              const jwt = await getJwt(handlerId, routesDebugLog);
+              routesDebugLog(`jwt ${jwt}`);
 
               // get container
               const image = handler?.supports?.isolation?.image?.value;
-              console.log(`image`, image);
+              routesDebugLog(`image`, image);
               const container = imageContainers[image];
-              console.log(`container`, JSON.stringify(container, null, 2));
+              routesDebugLog(`container`, JSON.stringify(container, null, 2));
 
               const code = handler?.file?.code?.value;
-              console.log(`code ${code}`);
+              routesDebugLog(`code ${code}`);
 
               // proxy to container using its host and port
               const proxy = createProxyMiddleware({
@@ -388,14 +434,14 @@ const handleRoutes = async () => {
       }
     }
   } catch(e) {
-    console.log(toJSON(e));
+    routesDebugLog(toJSON(e));
   }
   
   busy = false;
 };
 
 const startRouteHandling = async () => {
-  setInterval(handleRoutes, 2000);
+  setInterval(handleRoutes, 5000);
 };
 
 startRouteHandling();
