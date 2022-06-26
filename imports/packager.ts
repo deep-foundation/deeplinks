@@ -386,6 +386,7 @@ export class Packager<L extends Link<any>> {
     namespaceId: number;
   }> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
+    const Join = await this.client.id('@deep-foundation/core', 'Join');
     const Package = await this.client.id('@deep-foundation/core', 'Package');
     const PackageNamespace = await this.client.id('@deep-foundation/core', 'PackageNamespace');
     const Active = await this.client.id('@deep-foundation/core', 'PackageActive');
@@ -479,14 +480,24 @@ export class Packager<L extends Link<any>> {
         _: true,
       });
       // user contain package namespace
-      if (this.client.linkId) data.push({
-        id: ++counter,
-        type: Contain,
-        from: this.client.linkId,
-        to: namespaceId,
-        // @ts-ignore
-        _: true,
-      });
+      if (this.client.linkId) {
+        data.push({
+          id: ++counter,
+          type: Contain,
+          from: this.client.linkId,
+          to: namespaceId,
+          // @ts-ignore
+          _: true,
+        });
+        data.push({
+          id: ++counter,
+          type: Join,
+          from: namespaceId,
+          to: this.client.linkId,
+          // @ts-ignore
+          _: true,
+        });
+      }
       // active link if first in namespace
       data.push({
         id: ++counter,
@@ -516,6 +527,25 @@ export class Packager<L extends Link<any>> {
       // @ts-ignore
       _: true,
     });
+    if (pckg.package.name !== corePackage) {
+      const packages = await this.client.id('deep', 'users', 'packages');
+      data.push({
+        id: ++counter,
+        type: Join,
+        from: containsHash[packageId],
+        to: packages,
+        // @ts-ignore
+        _: true,
+      });
+      data.push({
+        id: ++counter,
+        type: Contain,
+        from: packages,
+        to: containsHash[packageId],
+        // @ts-ignore
+        _: true,
+      });
+    }
     // user contain package
     if (this.client.linkId) data.push({
       id: ++counter,

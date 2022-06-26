@@ -38,11 +38,23 @@ export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
 export const GLOBAL_ID_HANDLE_UPDATE=50;
+export const GLOBAL_ID_JOIN=66;
+export const GLOBAL_ID_ALLOW_ADMIN=71;
 export const GLOBAL_ID_SELECTOR_FILTER=75;
+
+export const GLOBAL_ID_INCLUDE_IN = 113;
+export const GLOBAL_ID_INCLUDE_OUT = 114;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 115;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT = 116;
+export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 117;
+export const GLOBAL_ID_INCLUDE_CURRENT_TO = 118;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 119;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 120;
 
 const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
+    'Join': GLOBAL_ID_JOIN,
     'containTree': GLOBAL_ID_CONTAIN_TREE,
     'Package': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
@@ -53,6 +65,7 @@ const _ids = {
     'Resolved': GLOBAL_ID_RESOLVED,
     'Rejected': GLOBAL_ID_REJECTED,
     'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
+    'AllowAdmin': GLOBAL_ID_ALLOW_ADMIN,
   },
 };
 
@@ -450,6 +463,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
             // @ts-ignore
             setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
+          } else if (type === 'object' && exp[key].hasOwnProperty('_type_of') && !!~['type_id', 'from_id', 'to_id'].indexOf(key)) {
+            setted = result[key.slice(0, -3)] = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } }
           }
         } else if (env === 'value') {
           if (type === 'string' || type === 'number') {
@@ -544,12 +559,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { linkId: 0, token: '' };
   };
 
-  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[]) {
-    const result = await this.select({
+  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[], userIds: number | number[] = this.linkId) {
+    const where: any = {
       object_id: typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds },
       subject_id: typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds },
       action_id: typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds },
-    }, { table: 'can', returning: 'rule_id' });
+    };
+    const result = await this.select(where, { table: 'can', returning: 'rule_id' });
     return !!result?.data?.length;
   }
 }

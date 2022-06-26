@@ -2,8 +2,12 @@ name: Deploy deeplinks app
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'postgresql/**'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'postgresql/**'
   workflow_dispatch:
 defaults:
   run:

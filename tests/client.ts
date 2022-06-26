@@ -134,4 +134,13 @@ describe('serialize', () => {
     const id = await deepClient.id('@deep-foundation/core', 'Value');
     assert.equal(id, 4);
   });
+  it(`{ type_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ type_id: { _type_of: 25 } }), { type: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
+  });
+  it(`{ from_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ from_id: { _type_of: 25 } }), { from: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
+  });
+  it(`{ to_id: { _type_of: 25 } }`, () => {
+    assert.deepEqual(deepClient.serializeWhere({ to_id: { _type_of: 25 } }), { to: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
+  });
 });

@@ -33,12 +33,14 @@ export const up = async () => {
     ${TABLE_NAME} as r,
     ${TABLE_NAME} as o,
     ${SELECTORS_TABLE_NAME} as sr_o,
+    ${TABLE_NAME} as sr_o_ex_up, -- ANY OR REALY IDS
     ${TABLE_NAME} as s,
     ${SELECTORS_TABLE_NAME} as sr_s,
     ${TABLE_NAME} as a,
     ${SELECTORS_TABLE_NAME} as sr_a
     WHERE
     r."type_id" = ${await deep.id('@deep-foundation/core', 'Rule')} AND
+
     o."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
     o."from_id" = r."id" AND
     (o."to_id" = sr_o."selector_id" OR o."to_id" = ${await deep.id('@deep-foundation/core', 'Any')}) AND

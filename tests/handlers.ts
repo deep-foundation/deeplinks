@@ -84,7 +84,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
   const SelectorInclude = await deep.id('@deep-foundation/core', 'SelectorInclude');
   const SelectorTree = await deep.id('@deep-foundation/core', 'SelectorTree');
   const AllowSelect = await deep.id('@deep-foundation/core', 'AllowSelect');
-  const AllowInsert = await deep.id('@deep-foundation/core', 'AllowInsert');
+  const AllowInsertType = await deep.id('@deep-foundation/core', 'AllowInsertType');
   const containTree = await deep.id('@deep-foundation/core', 'containTree');
   const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
   
@@ -176,7 +176,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
           out: { data: [
             {
               type_id: SelectorInclude,
-              to_id: AllowInsert,
+              to_id: AllowInsertType,
               out: { data: {
                 type_id: SelectorTree,
                 to_id: containTree,
@@ -217,10 +217,10 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
 
 const deletePackageWithPermissions = async ($package: any) => {
   await deleteId($package.typeId);
-  await deleteId($package.containId);
   await deleteId($package.containValueId, { table: 'strings' });
-  await deleteId($package.packageId);
+  await deleteId($package.containId);
   await deleteId($package.packageValueId, { table: 'strings' });
+  await deleteId($package.packageId);
   await deleteIds($package.ruleIds);
 };
 
@@ -238,7 +238,7 @@ const insertHandler = async (handleOperationTypeId: number, typeId: number, code
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: containTypeId,
@@ -271,7 +271,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: await deep.id('@deep-foundation/core', 'Contain'),
@@ -343,20 +343,20 @@ export async function deletePromiseResult(promiseResult: any, linkId?: any) {
   const promiseReasonId = promiseResult?.in?.[0]?.out?.[0]?.id;
   await deleteId(promiseReasonId);
   await deleteIds([resultLinkId, thenLinkId]);
-  await deleteIds([promiseResultId, promiseId, linkId]);
   await deleteId(valueId, { table: 'objects' });
+  await deleteIds([promiseResultId, promiseId, linkId]);
 }
 
 export const deleteHandler = async (handler) => {
+  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
   await deleteId(handler.ownerContainHandlerId);
   await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
-  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
 };
 
 export const deleteScheduleHandler = async (handler) => {
   await deleteHandler(handler);
-  await deleteId(handler.scheduleId);
   await deleteId(handler.scheduleValueId, { table: 'strings' });
+  await deleteId(handler.scheduleId);
 };
 
 export async function ensureLinkIsCreated(typeId: number) {

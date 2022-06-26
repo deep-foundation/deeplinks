@@ -1,13 +1,13 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.65",
+  "version": "0.0.70",
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey PORT=3006 npm run launch",
     "launch": "ts-node ./index.ts;",
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./benchmarks && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && cd ..) && (cd ./imports/router && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./tests && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
-    "test": "cross-env DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey jest --testTimeout=30000",
+    "test": "cross-env DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey jest --testTimeout=50000",
     "benchmark": "export DEEPLINKS_HASURA_PATH=localhost:8080; export DEEPLINKS_HASURA_SSL=0; export DEEPLINKS_HASURA_SECRET=myadminsecretkey; ts-node benchmarks/index.ts",
     "migrate": "npx migrate up --compiler=ts:./compiler/index.js",
     "unmigrate": "npx migrate down --compiler=ts:./compiler/index.js",
@@ -22,7 +22,7 @@
   "dependencies": {
     "@apollo/client": "^3.5.8",
     "@deep-foundation/hasura": "0.0.15",
-    "@deep-foundation/materialized-path": "^0.0.10",
+    "@deep-foundation/materialized-path": "^0.0.11",
     "@deep-foundation/react-hasura": "0.0.5",
     "@deep-foundation/store": "0.0.6",
     "@types/jest": "^26.0.22",

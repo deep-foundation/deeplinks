@@ -46,7 +46,7 @@ const resolvers = {
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !(await deep.select({
           type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
-          from_id: { _eq: await deep.id('@deep-foundation/core', 'system') },
+          from_id: { _eq: await deep.id('deep') },
           string: { value: { _eq: 'admin' } },
           to_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
         }))?.data?.[0] &&
