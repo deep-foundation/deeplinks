@@ -1,7 +1,15 @@
 import { assert } from 'chai';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
-import { insertHandler, ensureLinkIsCreated, getPromiseResults, deletePromiseResult, deleteHandler } from './handlers'
+import { insertHandler, insertSelector, insertSelectorItem, ensureLinkIsCreated, getPromiseResults, deletePromiseResult, deleteHandler, deleteSelector, deleteId } from './handlers'
+import Debug from 'debug';
+
+const debug = Debug('deeplinks:tests:in-transaction-handlers');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -28,13 +36,26 @@ describe('In-transaction handlers', () => {
     const handler = await insertHandler(handleInsertTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`, undefined, supportsId);
 
     const linkId = await ensureLinkIsCreated(typeId);
-    await deep.await(linkId);
 
-    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-    const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
-    const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
-    await deletePromiseResult(promiseResult, linkId);
     await deleteHandler(handler);
-    assert.isTrue(!!promiseResult);
+  });
+  it.only(`handle insert on selector`, async () => {
+    // const numberToReturn = randomInteger(5000000, 9999999999);
+    const numberToReturn = nextHandlerResult();
+
+    const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const selector = await insertSelector();
+    const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
+    const handler = await insertHandler(handleInsertTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
+    const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+    console.log('selectorItems', selectorItems)
+
+    for (const selectorItem of selectorItems) {
+      await deleteId(selectorItem.linkId);
+      await deleteId(selectorItem.nodeId);
+    }
+    
+    await deleteSelector(selector);
+    await deleteHandler(handler);
   });
 });
