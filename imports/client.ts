@@ -542,7 +542,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         if (!!token && relogin) {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
-        console.log({ linkId, token });
         return { linkId, token, error: (!linkId || !token) ? 'unexepted' : undefined };
       } catch(e) {
         return { error: e };
@@ -553,7 +552,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!error && !!token && relogin) {
         if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
       }
-      console.log({ options, error, linkId, token });
       return { linkId, token, error: error ? error : (!linkId) ? 'unexepted' : undefined };
     } else return { error: `linkId or token must be provided` };
   };
