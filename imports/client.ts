@@ -70,14 +70,19 @@ const _ids = {
 };
 
 // https://stackoverflow.com/a/38552302/4448999
-export function parseJwt (token) {
+export function parseJwt (token): { userId: number; role: string; roles: string[], [key: string]: any; } {
   var base64Url = token.split('.')[1];
   var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
 
-  return JSON.parse(jsonPayload);
+  const parsed = JSON.parse(jsonPayload);
+  const { 'x-hasura-allowed-roles': roles, 'x-hasura-default-role': role, 'x-hasura-user-id': userId, ...other } = parsed['https://hasura.io/jwt/claims'] || {};
+  return {
+    userId: +userId, role, roles,
+    ...other,
+  };
 };
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
@@ -523,6 +528,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!error && !!token && relogin) {
       if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
     }
+    console.log({ linkId, token, error });
     return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
   };
 
@@ -532,10 +538,11 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       try {
         const token = options?.token;
         const decoded = parseJwt(token);
-        const linkId = decoded?.[`https://hasura.io/jwt/claims`]?.['x-hasura-user-id'];
+        const linkId = decoded?.userId;
         if (!!token && relogin) {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
+        console.log({ linkId, token });
         return { linkId, token, error: (!linkId || !token) ? 'unexepted' : undefined };
       } catch(e) {
         return { error: e };
@@ -546,7 +553,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!error && !!token && relogin) {
         if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
       }
-      return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
+      console.log({ options, error, linkId, token });
+      return { linkId, token, error: error ? error : (!linkId) ? 'unexepted' : undefined };
     } else return { error: `linkId or token must be provided` };
   };
 
