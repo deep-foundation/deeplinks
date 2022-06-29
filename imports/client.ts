@@ -556,6 +556,16 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } else return { error: `linkId or token must be provided` };
   };
 
+  /**
+   * Return is of current authorized user linkId.
+   * Refill client.linkId and return.
+   */
+  async whoami(): Promise<number | undefined> {
+    const result = await this.apolloClient.query({ query: WHOISME });
+    this.linkId = result?.data?.jwt?.linkId;
+    return result?.data?.jwt?.linkId;
+  }
+
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
     return await this.jwt({ ...options, relogin: true });
   };
@@ -583,6 +593,12 @@ export const JWT = gql`query JWT($linkId: Int) {
   }
 }`;
 
+export const WHOISME = gql`query WHOISME {
+  jwt(input: {}) {
+    linkId
+  }
+}`;
+
 export const GUEST = gql`query GUEST {
   guest {
     linkId
@@ -605,6 +621,7 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
+    console.log({ linkId, token });
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {
