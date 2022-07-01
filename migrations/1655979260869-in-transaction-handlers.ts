@@ -25,11 +25,9 @@ export const up = async () => {
   log('up');
 
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-  const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-  const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__in__trasaction__handler__prepare__function(link json, handletypeid bigint) RETURNS jsonb AS $$
-  const typeHandlers = plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_links"."from_id") = ($1 :: bigint)) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ link.type_id, handletypeid ]);
+  const typeHandlers = plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_links"."from_id") = ($1 :: bigint)) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ link.type_id, handletypeid ])[0].root.map((handler)=>handler?.value);
 
   const testedSelectors = [];
   const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
@@ -41,9 +39,9 @@ export const up = async () => {
     if (!selectors[i].bool_exp_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].bool_exp_id, user_id])) testedSelectors.push(selectors[i].selector_id);
   }
 
-  const selectorHandlers = plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_2__be_2_links"."from_id") = ANY($1 :: bigint array) ) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ testedSelectors, handletypeid]).map((handler)=>handler.root[0].value);
+  const selectorHandlers = plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_2__be_2_links"."from_id") = ANY($1 :: bigint array) ) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ testedSelectors, handletypeid ])[0].root.map((handler)=>handler?.value);
 
-  return { typeHandlers, selectorHandlers };
+  return typeHandlers.concat(selectorHandlers);
   $$ LANGUAGE plv8;`);
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__in__trasaction__insert__handler__function() RETURNS TRIGGER AS $$ 
@@ -51,14 +49,24 @@ export const up = async () => {
     const prepared = prepare(NEW, ${handleInsertTypeId});
     const deep = {
       insert: (options) => {
-        const { type_id, from_id, to_id, number, string, object }
+        const { id, type_id, from_id, to_id, number, string, object } = options;
+        const ids = {};
+        let insertString = \`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\`;
+        const link = plv8.execute(insertString)[0].id;
+        ids.link = link;
+        const value = number || string || object;
+        if (!value) return ids;
+        const insertValue = \`; INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${link} , '\${value}') RETURNING ID\`
+        ids.value = plv8.execute(insertValue)[0].id;
+        return ids;
       }
     }
-
+    for (let i = 0; i < prepared.length; i++) eval(prepared[i]);
+    
     return NEW;
   $$ LANGUAGE plv8;`);
 
-  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__in__trasaction__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__insert__function();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__in__trasaction__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__in__trasaction__insert__handler__function();`);
 
 };
 
