@@ -1,11 +1,11 @@
 name: Deploy pg-v8
 on:
   push:
-    branches: [ main ]
+    branches: [ deeplinks-70-menzorg ]
     paths:
       - postgresql/**
   pull_request:
-    branches: [ main ]
+    branches: [ deeplinks-70-menzorg ]
     paths:
       - postgresql/**
   workflow_dispatch:

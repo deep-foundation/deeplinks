@@ -10,4 +10,5 @@ import './tests/handlers';
 import './tests/minilinks';
 import './tests/demo';
 import './tests/packager';
+import './tests/in-transaction-handlers';
 // TODO error if duplicates

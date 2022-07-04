@@ -232,6 +232,10 @@ const corePckg: Package = {
     { id: 'AllowUpdateType', type: 'Operation' }, // 122
     { id: 'AllowDeleteType', type: 'Operation' }, // 123
     { id: 'AllowSelectType', type: 'Operation' }, // 124
+
+    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 125
+    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 126
+    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 127
   ],
   errors: [],
   strict: true,
