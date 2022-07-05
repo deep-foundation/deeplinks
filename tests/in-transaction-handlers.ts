@@ -2,6 +2,8 @@ import { assert } from 'chai';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { insertHandler, insertSelector, insertSelectorItem, ensureLinkIsCreated, getPromiseResults, deletePromiseResult, deleteHandler, deleteSelector, deleteId } from './handlers'
+import { HasuraApi } from'@deep-foundation/hasura/api';
+import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:tests:in-transaction-handlers');
@@ -10,6 +12,16 @@ const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
 Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
+
+const HASURA_PATH='localhost:8080'
+const HASURA_SSL=0
+const HASURA_SECRET='myadminsecretkey'
+
+export const api = new HasuraApi({
+  path: HASURA_PATH,
+  ssl: !!+HASURA_SSL,
+  secret: HASURA_SECRET,
+});
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -25,8 +37,16 @@ const nextHandlerResult = () => {
   return lastHandlerLinkId;
 };
 
+describe.only('Deep client-mini', () => {
+  it(`id`, async () => {
+    const result = await api.sql(sql`select links__deep__client('id', '{"start": "@deep-foundation/core", "path":["RuleSubject"]}'::json)`);
+    const clientResult = await deep.id('@deep-foundation/core', 'RuleSubject');
+    assert.equal(result?.data?.result?.[1]?.[0], clientResult);
+  });
+});
+
 describe('In-transaction handlers', () => {
-  it.only(`handle insert`, async () => {
+  it(`handle insert`, async () => {
     const CustomNumber = nextHandlerResult();
 
     const typeId = await deep.id('@deep-foundation/core', 'Type');
