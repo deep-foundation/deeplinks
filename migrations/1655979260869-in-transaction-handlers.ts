@@ -88,13 +88,14 @@ export const up = async () => {
     const prepared = prepare(NEW, ${handleInsertTypeId});
     const deep = {
       id: (start, ...path) => {
-        const pathToWhere = ({start, path}) => {
+        const pathToWhere = (start, path) => {
           const pckg = typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=2 AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\`;
           let query_id = plv8.execute(pckg)[0].id;
           for (let p = 0; p < path.length; p++) {
             const item = path[p]
             if (typeof(item) !== 'boolean') {
-              query_id = plv8.execute(\`SELECT links.id as id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0].id
+              const newSelect = plv8.execute(\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0];
+              return p === path.length-1 ? newSelect.to_id : newSelect.id;
               if (!query_id) return undefined;
             }
           }
