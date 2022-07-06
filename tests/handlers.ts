@@ -681,7 +681,7 @@ describe('handle port', () => {
 describe('handle route', () => {
   it(`handle route`, async () => {
     // const port = await getPort(); // conflicts with container-controller port allocation
-    const port = 55555;
+    const port = 40005;
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     
     const portId = (await deep.insert({
