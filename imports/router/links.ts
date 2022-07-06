@@ -618,7 +618,7 @@ export default async (req, res) => {
         }
         return res.status(200).json({});
       } catch(e) {
-        error('error', e);
+        error('error', e, e?.graphQLErrors?.[0]?.extensions);
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           log('reject', current.id);
           await reject({
