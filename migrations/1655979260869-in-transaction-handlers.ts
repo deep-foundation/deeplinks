@@ -26,6 +26,41 @@ export const up = async () => {
 
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
 
+  const deepClient = `{
+    id: (start, ...path) => {
+      const pathToWhere = (start, path) => {
+        const pckg = typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=2 AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\`;
+        let query_id = plv8.execute(pckg)[0].id;
+        for (let p = 0; p < path.length; p++) {
+          const item = path[p]
+          if (typeof(item) !== 'boolean') {
+            const newSelect = plv8.execute(\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0];
+            return p === path.length-1 ? newSelect.to_id : newSelect.id;
+            if (!query_id) return undefined;
+          }
+        }
+        return query_id;
+      }
+      const result = pathToWhere(start, path);
+      if (!result && path[path.length - 1] !== true) {
+        return({error: \`Id not found by [\${JSON.stringify([start, ...path])}]\`});
+      }
+      return result;
+    },
+    insert: (options) => {
+      const { id, type_id, from_id, to_id, number, string, object } = options;
+      const ids = {};
+      let insertString = \`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\`;
+      const link = plv8.execute(insertString)[0].id;
+      ids.link = link;
+      const value = number || string || object;
+      if (!value) return ids;
+      const insertValue = \`; INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${link} , '\${value}') RETURNING ID\`
+      ids.value = plv8.execute(insertValue)[0].id;
+      return ids;
+    }
+  }`;
+
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__in__transaction__handler__prepare__function(link json, handletypeid bigint) RETURNS jsonb AS $$
   const typeHandlers = plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_links"."from_id") = ($1 :: bigint)) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ link.type_id, handletypeid ])[0].root.map((handler)=>handler?.value);
 
@@ -45,40 +80,7 @@ export const up = async () => {
   $$ LANGUAGE plv8;`);
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(operation text, args json) RETURNS JSON AS $$
-    const deep = {
-      id: (start, ...path) => {
-        const pathToWhere = (start, path) => {
-          const pckg = typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=2 AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\`;
-          let query_id = plv8.execute(pckg)[0].id;
-          for (let p = 0; p < path.length; p++) {
-            const item = path[p]
-            if (typeof(item) !== 'boolean') {
-              const newSelect = plv8.execute(\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0];
-              return p === path.length-1 ? newSelect.to_id : newSelect.id;
-              if (!query_id) return undefined;
-            }
-          }
-          return query_id;
-        }
-        const result = pathToWhere(start, path);
-        if (!result && path[path.length - 1] !== true) {
-          return({error: \`Id not found by [\${JSON.stringify([start, ...path])}]\`});
-        }
-        return result;
-      },
-      insert: (options) => {
-        const { id, type_id, from_id, to_id, number, string, object } = options;
-        const ids = {};
-        let insertString = \`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\`;
-        const link = plv8.execute(insertString)[0].id;
-        ids.link = link;
-        const value = number || string || object;
-        if (!value) return ids;
-        const insertValue = \`; INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${link} , '\${value}') RETURNING ID\`
-        ids.value = plv8.execute(insertValue)[0].id;
-        return ids;
-      }
-    }
+    const deep = ${deepClient};
     return deep[operation](args.start, ...args.path);
   $$ LANGUAGE plv8;`);
 
@@ -86,40 +88,7 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__in__transaction__insert__handler__function() RETURNS TRIGGER AS $$ 
     const prepare = plv8.find_function("${LINKS_TABLE_NAME}__in__transaction__handler__prepare__function");
     const prepared = prepare(NEW, ${handleInsertTypeId});
-    const deep = {
-      id: (start, ...path) => {
-        const pathToWhere = (start, path) => {
-          const pckg = typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=2 AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\`;
-          let query_id = plv8.execute(pckg)[0].id;
-          for (let p = 0; p < path.length; p++) {
-            const item = path[p]
-            if (typeof(item) !== 'boolean') {
-              const newSelect = plv8.execute(\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0];
-              return p === path.length-1 ? newSelect.to_id : newSelect.id;
-              if (!query_id) return undefined;
-            }
-          }
-          return query_id;
-        }
-        const result = pathToWhere(start, path);
-        if (!result && path[path.length - 1] !== true) {
-          return({error: \`Id not found by [\${JSON.stringify([start, ...path])}]\`});
-        }
-        return result;
-      },
-      insert: (options) => {
-        const { id, type_id, from_id, to_id, number, string, object } = options;
-        const ids = {};
-        let insertString = \`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\`;
-        const link = plv8.execute(insertString)[0].id;
-        ids.link = link;
-        const value = number || string || object;
-        if (!value) return ids;
-        const insertValue = \`; INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${link} , '\${value}') RETURNING ID\`
-        ids.value = plv8.execute(insertValue)[0].id;
-        return ids;
-      }
-    }
+    const deep = ${deepClient};
     for (let i = 0; i < prepared.length; i++) eval(prepared[i]);
     
     return NEW;
