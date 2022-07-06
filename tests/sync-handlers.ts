@@ -47,7 +47,7 @@ describe('sync handlers', () => {
     });
   });
   describe('Handle operations', () => {
-    it(`Handle insert`, async () => {
+    it(`Handle insert on type`, async () => {
       const CustomNumber = nextHandlerResult();
 
       const typeId = await deep.id('@deep-foundation/core', 'Type');
