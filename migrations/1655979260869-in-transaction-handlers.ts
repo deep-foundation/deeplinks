@@ -88,8 +88,14 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__in__transaction__insert__handler__function() RETURNS TRIGGER AS $$ 
     const prepare = plv8.find_function("${LINKS_TABLE_NAME}__in__transaction__handler__prepare__function");
     const prepared = prepare(NEW, ${handleInsertTypeId});
-    const deep = ${deepClient};
-    for (let i = 0; i < prepared.length; i++) eval(prepared[i]);
+    const deep = ${deepClient}; 
+    for (let i = 0; i < prepared.length; i++) {
+    (()=>{
+      const checkLinkPermission = undefined;
+      const checkValuePermission = undefined;
+      const plv8 = undefined; 
+      return eval(prepared[i])(deep, {oldLink: OLD, newLink: NEW});
+    })()};
     
     return NEW;
   $$ LANGUAGE plv8;`);
