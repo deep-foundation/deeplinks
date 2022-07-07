@@ -796,12 +796,14 @@ describe('handle route', () => {
       to_id: portId,
     }))?.data?.[0]?.id;
 
+    const route = '/passport';
+
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerStringUseId = (await deep.insert({
       type_id: routerStringUseTypeId,
       to_id: routerId,
       from_id: routeId,
-      string: { data: { value: '/' } }
+      string: { data: { value: route } }
     }))?.data?.[0]?.id;
 
     const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
@@ -834,7 +836,7 @@ describe('handle route', () => {
       to_id: handlerId,
     }))?.data?.[0]?.id;
 
-    const url = `http://localhost:${port}/`
+    const url = `http://localhost:${port}${route}`
 
     log("waiting for route to be created");
     await waitOn({ resources: [url] });
