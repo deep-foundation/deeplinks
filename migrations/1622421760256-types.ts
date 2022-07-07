@@ -232,6 +232,21 @@ const corePckg: Package = {
     { id: 'AllowUpdateType', type: 'Operation' }, // 122
     { id: 'AllowDeleteType', type: 'Operation' }, // 123
     { id: 'AllowSelectType', type: 'Operation' }, // 124
+
+    { id: 'ruleTree', type: 'Tree' }, // 125
+    { id: 'ruleTreeRule', type: 'TreeIncludeNode', from: 'ruleTree', to: 'Rule' }, // 126
+    { id: 'ruleTreeRuleAction', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleAction' }, // 127
+    { id: 'ruleTreeRuleObject', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleObject' }, // 128
+    { id: 'ruleTreeRuleSubject', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleSubject' }, // 129
+    { id: 'ruleTreeRuleSelector', type: 'TreeIncludeNode', from: 'ruleTree', to: 'Selector' }, // 130
+    { id: 'ruleTreeRuleBoolExp', type: 'TreeIncludeNode', from: 'ruleTree', to: 'BoolExp' }, // 131
+    { id: 'ruleTreeRuleSelectorInclude', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorInclude' }, // 132
+    { id: 'ruleTreeRuleSelectorExclude', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorExclude' }, // 133
+    { id: 'ruleTreeRuleSelectorFilter', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorFilter' }, // 134
+
+    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 140
+    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 141
+    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 142
   ],
   errors: [],
   strict: true,
@@ -241,7 +256,7 @@ export const up = async () => {
   log('up');
   const packager = new Packager(root);
   const { errors, packageId, namespaceId } = await packager.import(corePckg);
-  if (errors.length) {
+  if (errors?.length) {
     log(errors);
     log(errors[0]?.graphQLErrors?.[0]?.message);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
@@ -361,6 +376,109 @@ export const up = async () => {
                     {
                       type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
                       to_id: await root.id('@deep-foundation/core', 'AllowAdmin'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    const promisePermission = await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Rule'),
+      out: {
+        data: [
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleSubject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('deep', 'users'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'joinTree'),
+                        },
+                      },
+                    },
+                  ]
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleObject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Then'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Promise'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Resolved'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Rejected'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleAction'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'AllowSelectType'),
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),

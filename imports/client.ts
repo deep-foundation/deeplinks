@@ -528,7 +528,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!error && !!token && relogin) {
       if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
     }
-    console.log({ linkId, token, error });
     return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
   };
 
