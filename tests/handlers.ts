@@ -782,7 +782,7 @@ describe('handle route', () => {
     const port = 4001;
     const route = '/passport';
 
-    await deep.insert({
+    const insertResult = await deep.insert({
       type_id: await deep.id('@deep-foundation/core', 'Port'),
       number: { data: { value: port } },
       in: { data: {
@@ -817,7 +817,57 @@ describe('handle route', () => {
           } },
         } },
       } },
-    });
+    }, { 
+      returning: `
+        id
+        number {
+          id
+        }
+        in {
+          id
+          from {
+            id
+            in {
+              id
+              from {
+                id
+                out {
+                  id
+                  to {
+                    id
+                    in {
+                      id
+                      string {
+                        id
+                      }
+                    }
+                    to {
+                      id
+                      string {
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `, 
+      name: 'INSERT_HANDLE_ROUTE_HIERARCHICAL',
+    }) as any;
+
+    const portId = insertResult?.data?.[0]?.id;
+    const portValueId = insertResult?.data?.[0]?.number?.id;
+    const routerListeningId = insertResult?.data?.[0]?.in?.[0]?.id;
+    const routerId = insertResult?.data?.[0]?.in?.[0]?.from?.id;
+    const routerStringUseId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.id;
+    const routeId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.id;
+    const handleRouteId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.id;
+    const handlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
+    const handlerJSFileId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
+    const handlerJSFileValueId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.string?.id;
+    const ownerContainHandlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.in?.[0]?.id;
 
     const url = `http://localhost:${port}${route}`
 
@@ -831,21 +881,21 @@ describe('handle route', () => {
     assert.equal(text, 'ok');
 
     // delete all
-    // await deleteId(handleRouteLinkId);
-    // await deleteId(ownerContainHandler.id);
-    // await deleteId(handlerId);
-    // await deleteId(handlerJSFileValue.id, { table: 'strings' });
-    // await deleteId(handlerJSFile.id);
-    // await deleteId(routerStringUseId);
-    // await deleteId(routerListeningId);
-    // await deleteId(routerId);
-    // await deleteId(routeId);
-    // await deleteId(portValue.id, { table: 'numbers' });
-    // await deleteId(portId);
+    await deleteId(handleRouteId);
+    await deleteId(ownerContainHandlerId);
+    await deleteId(handlerId);
+    await deleteId(handlerJSFileValueId, { table: 'strings' });
+    await deleteId(handlerJSFileId);
+    await deleteId(routerStringUseId);
+    await deleteId(routerListeningId);
+    await deleteId(routerId);
+    await deleteId(routeId);
+    await deleteId(portValueId, { table: 'numbers' });
+    await deleteId(portId);
 
-    // log("waiting for route to be deleted");
-    // await waitOn({ resources: [url], reverse: true });
-    // log("route handler is down");
+    log("waiting for route to be deleted");
+    await waitOn({ resources: [url], reverse: true });
+    log("route handler is down");
   });
 });
 
