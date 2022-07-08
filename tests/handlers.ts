@@ -777,6 +777,76 @@ describe('handle route', () => {
     await waitOn({ resources: [url], reverse: true });
     log("route handler is down");
   });
+  it(`handle route hierarchical insert`, async () => {
+    // const port = await getPort(); // conflicts with container-controller port allocation
+    const port = 4001;
+    const route = '/passport';
+
+    await deep.insert({
+      type_id: await deep.id('@deep-foundation/core', 'Port'),
+      number: { data: { value: port } },
+      in: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+        from: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Router'),
+          in: { data: {
+            type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+            string: { data: { value: route } },
+            from: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Route'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Handler'),
+                  from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                  in: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                    // from_id: deep.linkId,
+                    from_id: await deep.id('deep', 'admin'),
+                    string: { data: { value: 'passport' } },
+                  } },
+                  to: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                    string: { data: {
+                      value: /*javascript*/`async (req, res) => { res.send('ok'); }`,
+                    } },
+                  } },
+                } },
+              } },
+            } },
+          } },
+        } },
+      } },
+    });
+
+    const url = `http://localhost:${port}${route}`
+
+    log("waiting for route to be created");
+    await waitOn({ resources: [url] });
+    log("route handler is up");
+
+    // ensure response is ok
+    const response = await fetch(url);
+    const text = await response.text();
+    assert.equal(text, 'ok');
+
+    // delete all
+    // await deleteId(handleRouteLinkId);
+    // await deleteId(ownerContainHandler.id);
+    // await deleteId(handlerId);
+    // await deleteId(handlerJSFileValue.id, { table: 'strings' });
+    // await deleteId(handlerJSFile.id);
+    // await deleteId(routerStringUseId);
+    // await deleteId(routerListeningId);
+    // await deleteId(routerId);
+    // await deleteId(routeId);
+    // await deleteId(portValue.id, { table: 'numbers' });
+    // await deleteId(portId);
+
+    // log("waiting for route to be deleted");
+    // await waitOn({ resources: [url], reverse: true });
+    // log("route handler is down");
+  });
 });
 
 describe('handle by selector', () => {
