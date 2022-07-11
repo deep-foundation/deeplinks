@@ -347,7 +347,7 @@ afterAll(async () => {
   deletePackageWithPermissions(packageWithPermissions);
 });
 
-describe('sync function handle by type with resolve', () => {
+describe.skip('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
@@ -470,7 +470,7 @@ describe('sync function handle by type with resolve', () => {
   });
 });
 
-describe('sync function handle by type with reject', () => {
+describe.skip('sync function handle by type with reject', () => {
   it(`handle insert`, async () => {
     // const numberToThrow = randomInteger(5000000, 9999999999);
     const numberToThrow = nextHandlerResult();
@@ -681,7 +681,7 @@ describe('handle port', () => {
 describe('handle route', () => {
   it(`handle route`, async () => {
     // const port = await getPort(); // conflicts with container-controller port allocation
-    const port = 40005;
+    const port = 4005;
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     
     const portId = (await deep.insert({

@@ -3,6 +3,7 @@ import router from './imports/router/index';
 import generateJwtServer from './imports/router/jwt';
 import generateGuestServer from './imports/router/guest';
 import generatePackagerServer from './imports/router/packager';
+import generateAuthorizationServer from './imports/router/authorization';
 import axios from 'axios';
 import http from 'http';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -80,13 +81,16 @@ app.use('/', router);
 
 const start = async () => {
   const jwtServer = generateJwtServer(httpServer);
+  const authorizationServer = generateAuthorizationServer(httpServer);
   const guestServer = generateGuestServer(httpServer);
   const packagerServer = generatePackagerServer(httpServer);
   await jwtServer.start();
   await guestServer.start();
+  await authorizationServer.start();
   await packagerServer.start();
   jwtServer.applyMiddleware({ path: '/api/jwt', app });
   guestServer.applyMiddleware({ path: '/api/guest', app });
+  authorizationServer.applyMiddleware({ path: '/api/authorization', app });
   packagerServer.applyMiddleware({ path: '/api/packager', app });
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
@@ -418,10 +422,16 @@ const handleRoutes = async () => {
               const code = handler?.file?.code?.value;
               routesDebugLog(`code ${code}`);
 
+              console.log('container', container);
+
               // proxy to container using its host and port
               const proxy = createProxyMiddleware({
-                target: `http://${container.host}:${container.port}/http-call`,
+                target: `http://${container.host}:${container.port}`,
                 changeOrigin: true,
+                ws: true,
+                pathRewrite: {
+                  [routeString]: "/http-call",
+                },
                 onProxyReq: (proxyReq, req, res) => {
                   proxyReq.setHeader('deep-call-options', JSON.stringify({
                     jwt,

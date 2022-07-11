@@ -8,11 +8,11 @@ jest.setTimeout(1000000);
 // import './tests/selectors';
 // import './tests/bool_exp';
 // import './tests/permissions';
-// import './tests/handlers';
+import './tests/handlers';
 // import './tests/minilinks';
 // import './tests/demo';
 // import './tests/packager';
 // import './tests/in-transaction-handlers';
-import './tests/messanger';
+// import './tests/messanger';
 
 // TODO error if duplicates
