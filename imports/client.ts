@@ -1,4 +1,4 @@
-import * as atob from 'atob';
+import { atob } from 'atob';
 import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
