@@ -63,80 +63,89 @@ const tries = {};
 
 const resolvers = {
   Query: {
-    authorization: {
-      try: async (source, args, context, info) => {
-        const { linkId } = args.input;
-        if (linkId && linkId !== +context?.headers?.['x-hasura-user-id']) {
-          return {
-            error: '!currentUser'
-          };
-        }
-        const id = chance.string({ length: 16 });
-        tries[id] = {
-          linkId,
-          jwt: undefined,
+    authorization: () => ({}),
+  },
+  Authorization: {
+    try: async (source, args, context, info) => {
+      const { linkId } = args.input;
+      if (linkId && linkId !== +context?.headers?.['x-hasura-user-id']) {
+        return {
+          error: '!currentUser'
         };
-      },
-      set: async (source, args, context, info) => {
-        const { id, linkId: authLinkId, error } = args.input;
-        if (!tries[id]) {
+      }
+      const id = chance.string({ length: 16, pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' });
+      tries[id] = {
+        linkId,
+        jwt: undefined,
+      };
+      return {
+        id,
+      };
+    },
+    set: async (source, args, context, info) => {
+      const { id, linkId: authLinkId, error } = args.input;
+      if (!tries[id]) {
+        return {
+          error: '!try'
+        };
+      }
+      let { linkId } = tries[id];
+      if (error) {
+        tries[id].error = error;
+        return;
+      }
+      let jwt;
+      const auth = await deep.select({
+        type_id: await deep.id('@deep-foundation/core', 'Authorization'),
+        to_id: authLinkId,
+      });
+      console.log('seeet', { jwt, auth: auth?.data, linkId });
+      if (auth?.data?.length) {
+        console.log(`authorization already attached to link ${linkId}`);
+        if (linkId) {
           return {
-            error: '!try'
+            error: `authorization already attached to link ${linkId}`,
           };
+        } else {
+          linkId = auth?.data?.[0].from_id;
+          jwt = await deep.jwt({ linkId });
         }
-        let { linkId } = tries[id];
-        if (error) {
-          tries[id].error = error;
-          return;
+      } else if (!auth?.data?.length) {
+        if (!linkId) {
+          jwt = await deep.guest();
+          linkId = jwt.linkId;
+        } else {
+          jwt = await deep.jwt({ linkId });
         }
-        let jwt;
-        const auth = await deep.select({
+        await deep.insert({
           type_id: await deep.id('@deep-foundation/core', 'Authorization'),
+          from_id: jwt.linkId,
           to_id: authLinkId,
         });
-        if (auth?.data?.length) {
-          if (linkId) {
-            return {
-              error: `authorization already attached to link ${linkId}`,
-            };
-          } else {
-            linkId = auth?.data?.[0].from_id;
-            jwt = await deep.jwt({ linkId });
-          }
-        } else if (!auth?.data?.length) {
-          if (!linkId) {
-            jwt = await deep.guest();
-            linkId = jwt.linkId;
-          } else {
-            jwt = await deep.jwt({ linkId });
-          }
-          await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Authorization'),
-            from_id: jwt.linkId,
-            to_id: authLinkId,
-          });
-        }
-        tries[id].jwt = jwt;
-      },
-      get: async (source, args, context, info) => {
-        const { id } = args.input;
-        if (!tries[id]) {
-          return {
-            error: '!try'
-          };
-        }
-        const { linkId } = tries[id];
-        if (linkId && linkId !== +context?.headers?.['x-hasura-user-id']) {
-          return {
-            error: '!currentUser'
-          };
-        }
-        return {
-          jwt: tries[id].jwt,
-        };
-      },
+      }
+      tries[id].jwt = jwt;
+      return {};
     },
-  }
+    get: async (source, args, context, info) => {
+      const { id } = args.input;
+      if (!tries[id]) {
+        return {
+          error: '!try'
+        };
+      }
+      const { linkId } = tries[id];
+      if (linkId && linkId !== +context?.headers?.['x-hasura-user-id']) {
+        return {
+          error: '!currentUser'
+        };
+      }
+      const jwt = tries[id].jwt;
+      tries[id].jwt = undefined;
+      return {
+        jwt,
+      };
+    },
+  },
 };
 
 const context = ({ req }) => {
