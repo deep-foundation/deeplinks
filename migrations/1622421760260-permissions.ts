@@ -27,6 +27,104 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
+export const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
+  "_table": {
+    "schema": "public",
+    "name": "can"
+  },
+  _where: {
+    object_id: { _eq: subjectId },
+    subject_id: { _eq: subjectId },
+    action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+  },
+});
+
+export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
+  role,
+  select: {
+    _or: [
+      {
+        type: {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelectType') },
+            subject_id: { _eq: subjectId },
+          },
+        }
+      },
+      {
+        can_object: {
+          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
+          subject_id: { _eq: subjectId },
+        },
+      },
+      {
+        _exists: await isAdminBoolExp(subjectId),
+      },
+    ],
+  },
+  insert: {
+    type: {},
+    _or: [
+      {
+        type: {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsertType') },
+            subject_id: { _eq: subjectId },
+          },
+        },
+      },
+      {
+        _exists: await isAdminBoolExp(subjectId),
+      },
+    ]
+  },
+  update: {
+    _or: [
+      {
+        can_object: {
+          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+          subject_id: { _eq: subjectId },
+        },
+      },
+      {
+        type: {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdateType') },
+            subject_id: { _eq: subjectId },
+          },
+        },
+      },
+      {
+        _exists: await isAdminBoolExp(subjectId),
+      },
+    ]
+  },
+  delete: {
+    _or: [
+      {
+        can_object: {
+          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+          subject_id: { _eq: subjectId },
+        },
+      },
+      {
+        type: {
+          can_object: {
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDeleteType') },
+            subject_id: { _eq: subjectId },
+          },
+        },
+      },
+      {
+        _exists: await isAdminBoolExp(subjectId),
+      },
+    ]
+  },
+
+  columns: ['id','from_id','to_id','type_id'],
+  computed_fields: ['value'],
+});
+
 export const up = async () => {
   log('up');
   log('hasura permissions');
@@ -46,102 +144,6 @@ export const up = async () => {
   //   subject_id: { _eq: subjectId },
   //   action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
   // });
-  const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
-    "_table": {
-      "schema": "public",
-      "name": "can"
-    },
-    _where: {
-      object_id: { _eq: subjectId },
-      subject_id: { _eq: subjectId },
-      action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
-    },
-  });
-  const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
-    role,
-    select: {
-      _or: [
-        {
-          type: {
-            can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelectType') },
-              subject_id: { _eq: subjectId },
-            },
-          }
-        },
-        {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
-            subject_id: { _eq: subjectId },
-          },
-        },
-        {
-          _exists: await isAdminBoolExp(subjectId),
-        },
-      ],
-    },
-    insert: {
-      type: {},
-      _or: [
-        {
-          type: {
-            can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsertType') },
-              subject_id: { _eq: subjectId },
-            },
-          },
-        },
-        {
-          _exists: await isAdminBoolExp(subjectId),
-        },
-      ]
-    },
-    update: {
-      _or: [
-        {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
-            subject_id: { _eq: subjectId },
-          },
-        },
-        {
-          type: {
-            can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdateType') },
-              subject_id: { _eq: subjectId },
-            },
-          },
-        },
-        {
-          _exists: await isAdminBoolExp(subjectId),
-        },
-      ]
-    },
-    delete: {
-      _or: [
-        {
-          can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
-            subject_id: { _eq: subjectId },
-          },
-        },
-        {
-          type: {
-            can_object: {
-              action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDeleteType') },
-              subject_id: { _eq: subjectId },
-            },
-          },
-        },
-        {
-          _exists: await isAdminBoolExp(subjectId),
-        },
-      ]
-    },
-
-    columns: ['id','from_id','to_id','type_id'],
-    computed_fields: ['value'],
-  });
   await permissions(api, MP_TABLE_NAME, {
     role: 'link',
 

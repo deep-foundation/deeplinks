@@ -249,6 +249,7 @@ const corePckg: Package = {
     { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 142
 
     { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' }, // 143
+    { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' }, // 144
   ],
   errors: [],
   strict: true,
