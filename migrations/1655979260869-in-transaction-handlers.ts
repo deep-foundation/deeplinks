@@ -19,10 +19,10 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-
-
 export const up = async () => {
   log('up');
+
+  await api.sql(sql`CREATE EXTENSION IF NOT EXISTS plv8;`);
 
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
 
@@ -111,4 +111,6 @@ export const down = async () => {
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__in__transaction__handler__prepare__function;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__in__transaction__handler__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__in__transaction__handler__function CASCADE;`);
+
+  await api.sql(sql`DROP EXTENSION IF EXISTS plv8 CASCADE;`);
 };

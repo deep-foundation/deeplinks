@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   postgres:
-    image: postgres:12
+    image: deepf/pg12-plv8:deeplinks-70-menzorg
     networks:
       - network
     ports:
