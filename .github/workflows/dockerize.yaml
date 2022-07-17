@@ -31,7 +31,7 @@ jobs:
       - name: ci
         run: npm ci
       - name: docker init
-        run: cd docker-prod/deep && docker-compose up -d
+        run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
         run: npm run migrate
       - name: backup dir
