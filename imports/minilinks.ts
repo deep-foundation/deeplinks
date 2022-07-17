@@ -237,7 +237,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     }
     for (let l = 0; l < newLinks.length; l++) {
       const link: L = newLinks[l];
-      if (!this._updating) this.emitter.emit('added', link);
+      if (!this._updating) this.emitter.emit('added', undefined, link);
     }
     return {
       anomalies,
@@ -407,15 +407,24 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
   const [state, setState] = useState<L|L[]>();
   useEffect(() => {
     const addedListener = (ol, nl) => {
-      if (filter(nl)) setState(results(nl, ml));
+      if (filter(nl)) {
+        console.log('added', ol, nl);
+        setState(results(nl, ml));
+      }
     };
     ml.emitter.on('added', addedListener);
     const updatedListener = (ol, nl) => {
-      if (filter(nl)) setState(results(nl, ml));
+      if (filter(nl)) {
+        console.log('updated', ol, nl);
+        setState(results(nl, ml));
+      }
     };
     ml.emitter.on('updated', updatedListener);
     const removedListener = (ol, nl) => {
-      if (filter(nl)) setState(results(ol, ml));
+      if (filter(nl)) {
+        console.log('removed', ol, nl);
+        setState(results(ol, ml));
+      }
     };
     ml.emitter.on('removed', removedListener);
     setState(results(undefined, ml));
@@ -424,6 +433,6 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
       ml.emitter.removeListener('updated', updatedListener);
       ml.emitter.removeListener('removed', removedListener);
     };
-  });
+  }, []);
   return state;
 };
