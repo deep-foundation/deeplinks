@@ -250,6 +250,9 @@ const corePckg: Package = {
 
     { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' }, // 143
     { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' }, // 144
+
+    { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' }, // 145
+    { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },  // 146
   ],
   errors: [],
   strict: true,
