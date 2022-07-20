@@ -652,5 +652,9 @@ export function useDeepQuery(query: any, options?: any): any {
       name: options?.name || 'USE_DEEP_QUERY',
     });
   }, []);
-  return useQuery(wq.query, { variables: wq?.variables });
+  const result = useQuery(wq.query, { variables: wq?.variables });
+  return {
+    ...result,
+    data: result?.data?.q0,
+  };
 }
