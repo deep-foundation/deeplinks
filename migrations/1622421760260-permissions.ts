@@ -193,20 +193,20 @@ export const up = async () => {
     role: 'link',
 
     select: {
-      _and: [
-        {
-          subject: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
-        },
-        {
-          object: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
-        },
-        {
-          action: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
-        },
-        {
-          rule: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
-        },
-      ]
+      // _and: [
+      //   {
+      //     subject: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+      //   },
+      //   {
+      //     object: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+      //   },
+      //   {
+      //     action: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+      //   },
+      //   {
+      //     rule: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+      //   },
+      // ]
     },
     insert: {},
     update: {},

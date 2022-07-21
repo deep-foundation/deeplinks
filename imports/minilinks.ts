@@ -403,8 +403,8 @@ export function useMinilinksConstruct<L extends Link<number>>(options?: any): Mi
   return { ml, ref: mlRef };
 }
 
-export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => boolean, results: (l: L, ml) => L[]): L | L[] {
-  const [state, setState] = useState<L|L[]>();
+export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => boolean, results: (l: L, ml) => L[]): L[] {
+  const [state, setState] = useState<L[]>();
   useEffect(() => {
     const addedListener = (ol, nl) => {
       if (filter(nl)) {
@@ -427,12 +427,14 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
       }
     };
     ml.emitter.on('removed', removedListener);
-    setState(results(undefined, ml));
     return () => {
       ml.emitter.removeListener('added', addedListener);
       ml.emitter.removeListener('updated', updatedListener);
       ml.emitter.removeListener('removed', removedListener);
     };
   }, []);
+  useEffect(() => {
+    setState(results(undefined, ml));
+  }, [filter, results]);
   return state;
 };

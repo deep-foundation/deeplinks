@@ -647,11 +647,12 @@ export function useDeepQuery(query: any, options?: any): any {
           number { id value }
           object { id value }
         `,
+        ...options,
         variables: { ...sq, ...options?.variables }
       })],
       name: options?.name || 'USE_DEEP_QUERY',
     });
-  }, []);
+  }, [query, options]);
   const result = useQuery(wq.query, { variables: wq?.variables });
   return {
     ...result,

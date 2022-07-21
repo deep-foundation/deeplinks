@@ -253,6 +253,16 @@ const corePckg: Package = {
 
     { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' }, // 145
     { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },  // 146
+
+    { id: 'Symbol', type: 'Type', from: 'Any', to: 'Any' }, // 147
+    { id: 'symbolValue', type: 'Value', from: 'Symbol', to: 'String' }, // 148
+    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Any' }, // 149
+
+    { id: 'containTreeThen', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Then' }, // 150
+    { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' }, // 151
+    { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 152
+
+    { id: 'querySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔭' } }, // 153
   ],
   errors: [],
   strict: true,
