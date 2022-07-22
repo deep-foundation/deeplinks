@@ -171,7 +171,7 @@ export interface DeepClientInstance<L = Link<number>> {
     returning?: string;
     variables?: any;
     name?: string;
-  }):Promise<DeepClientResult<{ returning: { id }[] }>>;
+  }):Promise<DeepClientResult<{ id }[]>>;
 
   reserve<LL = L>(count: number): Promise<number[]>;
 
@@ -379,7 +379,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     variables?: any;
     name?: string;
     silent?: boolean;
-  }):Promise<DeepClientResult<{ returning: { id }[] }>> {
+  }):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
