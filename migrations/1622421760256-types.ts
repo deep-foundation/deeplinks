@@ -140,12 +140,13 @@ const corePckg: Package = {
     { id: 'Join', type: 'Type', from: 'Any', to: 'Any' }, // 66
 
     { id: 'joinTree', type: 'Tree' }, // 67
-    { id: 'joinTreeJoin', type: 'TreeIncludeDown', from: 'joinTree', to: 'Join' }, // 68
+    { id: 'joinTreeJoin', type: 'TreeIncludeUp', from: 'joinTree', to: 'Join' }, // 68
     { id: 'joinTreeAny', type: 'TreeIncludeNode', from: 'joinTree', to: 'Any' }, // 69
 
     { id: 'SelectorTree', type: 'Type', from: 'Any', to: 'Tree' }, // 70
 
-    { id: 'system', type: 'Type' }, // 71
+    { id: 'AllowAdmin', type: 'Operation' }, // 71
+    // { id: 'system', type: 'Package' }, // 71
 
     { id: 'SelectorExclude', type: 'Type', from: 'Selector', to: 'Any' }, // 72
 
@@ -203,20 +204,20 @@ const corePckg: Package = {
     { id: 'HandleRoute', type: 'HandleOperation', from: 'Route', to: 'Handler' }, // 104
     // routeTree
     { id: 'routeTree', type: 'Tree' }, // 105
-    // routeTreeRouter
-    { id: 'routeTreeRouter', type: 'TreeIncludeNode', from: 'routeTree', to: 'Router' }, // 106
-    // routeTreeRoute
-    { id: 'routeTreeRoute', type: 'TreeIncludeNode', from: 'routeTree', to: 'Route' }, // 107
     // routeTreePort
-    { id: 'routeTreePort', type: 'TreeIncludeNode', from: 'routeTree', to: 'Port' }, // 108
-    // routeTreeRouterListening
-    { id: 'routeTreeRouterListening', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterListening' }, // 109
-    // routeTreeRouterStringUse
-    { id: 'routeTreeRouterStringUse', type: 'TreeIncludeDown', from: 'routeTree', to: 'RouterStringUse' }, // 110
-    // routeTreeHandleRoute
-    { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 111
+    { id: 'routeTreePort', type: 'TreeIncludeNode', from: 'routeTree', to: 'Port' }, // 106
+    // routeTreeRouter
+    { id: 'routeTreeRouter', type: 'TreeIncludeNode', from: 'routeTree', to: 'Router' }, // 107
+    // routeTreeRoute
+    { id: 'routeTreeRoute', type: 'TreeIncludeNode', from: 'routeTree', to: 'Route' }, // 108
     // routeTreeHandler
-    { id: 'routeTreeHandler', type: 'TreeIncludeDown', from: 'routeTree', to: 'Handler' }, // 112
+    { id: 'routeTreeHandler', type: 'TreeIncludeNode', from: 'routeTree', to: 'Handler' }, // 109
+    // routeTreeRouterListening
+    { id: 'routeTreeRouterListening', type: 'TreeIncludeUp', from: 'routeTree', to: 'RouterListening' }, // 110
+    // routeTreeRouterStringUse
+    { id: 'routeTreeRouterStringUse', type: 'TreeIncludeUp', from: 'routeTree', to: 'RouterStringUse' }, // 111
+    // routeTreeHandleRoute
+    { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 112
 
     { id: 'TreeIncludeIn', type: 'Type', from: 'Tree', to: 'Any' }, // 113
     { id: 'TreeIncludeOut', type: 'Type', from: 'Tree', to: 'Any' }, // 114
@@ -227,9 +228,41 @@ const corePckg: Package = {
     { id: 'TreeIncludeFromCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 119
     { id: 'TreeIncludeToCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 120
 
-    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 121
-    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 122
-    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 123
+    { id: 'AllowInsertType', type: 'Operation' }, // 121
+    { id: 'AllowUpdateType', type: 'Operation' }, // 122
+    { id: 'AllowDeleteType', type: 'Operation' }, // 123
+    { id: 'AllowSelectType', type: 'Operation' }, // 124
+
+    { id: 'ruleTree', type: 'Tree' }, // 125
+    { id: 'ruleTreeRule', type: 'TreeIncludeNode', from: 'ruleTree', to: 'Rule' }, // 126
+    { id: 'ruleTreeRuleAction', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleAction' }, // 127
+    { id: 'ruleTreeRuleObject', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleObject' }, // 128
+    { id: 'ruleTreeRuleSubject', type: 'TreeIncludeDown', from: 'ruleTree', to: 'RuleSubject' }, // 129
+    { id: 'ruleTreeRuleSelector', type: 'TreeIncludeNode', from: 'ruleTree', to: 'Selector' }, // 130
+    { id: 'ruleTreeRuleBoolExp', type: 'TreeIncludeNode', from: 'ruleTree', to: 'BoolExp' }, // 131
+    { id: 'ruleTreeRuleSelectorInclude', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorInclude' }, // 132
+    { id: 'ruleTreeRuleSelectorExclude', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorExclude' }, // 133
+    { id: 'ruleTreeRuleSelectorFilter', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorFilter' }, // 134
+
+    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 140
+    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 141
+    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 142
+
+    { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' }, // 143
+    { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' }, // 144
+
+    { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' }, // 145
+    { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },  // 146
+
+    { id: 'Symbol', type: 'Type', from: 'Any', to: 'Any' }, // 147
+    { id: 'symbolValue', type: 'Value', from: 'Symbol', to: 'String' }, // 148
+    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Any' }, // 149
+
+    { id: 'containTreeThen', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Then' }, // 150
+    { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' }, // 151
+    { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 152
+
+    { id: 'querySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔭' } }, // 153
   ],
   errors: [],
   strict: true,
@@ -239,31 +272,243 @@ export const up = async () => {
   log('up');
   const packager = new Packager(root);
   const { errors, packageId, namespaceId } = await packager.import(corePckg);
-  if (errors.length) {
+  if (errors?.length) {
     log(errors);
     log(errors[0]?.graphQLErrors?.[0]?.message);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
-    throw new Error('Import error');
+    throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}`);
   } else {
     await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Package'),
+      string: { data: { value: 'deep' } },
+    });
+    await root.insert({
       type_id: await root.id('@deep-foundation/core', 'User'),
-      in: { data: {
+      in: { data: [{
+        from_id: await root.id('deep'),
         type_id: await root.id('@deep-foundation/core', 'Contain'),
-        from_id: await root.id('@deep-foundation/core', 'system'),
         string: { data: { value: 'users' } },
-      } },
+      }] },
+    });
+    // Packages
+    await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'User'),
+      in: { data: [{
+        from_id: await root.id('deep', 'users'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'packages' } },
+      }] },
+      out: { data: [{
+        to_id: await root.id('deep', 'users'),
+        type_id: await root.id('@deep-foundation/core', 'Join'),
+        string: { data: { value: 'packages' } },
+      }] },
+    });
+    await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Contain'),
+      to_id: await root.id('@deep-foundation/core'),
+      from_id: await root.id('deep', 'users', 'packages'),
+    });
+    await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Join'),
+      from_id: await root.id('@deep-foundation/core'),
+      to_id: await root.id('deep', 'users', 'packages'),
     });
     // System
     const { data: [{ id: adminId }] } = await root.insert({
       type_id: await root.id('@deep-foundation/core', 'User'),
-      in: { data: [
-        {
-          type_id: await root.id('@deep-foundation/core', 'Contain'),
-          from_id: await root.id('@deep-foundation/core', 'system'),
-          string: { data: { value: 'admin' } },
-        },
-      ], },
+      in: { data: [{
+        from_id: await root.id('deep', 'users'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'admin' } },
+      },{
+        from_id: await root.id('deep'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'admin' } },
+      }] },
+      out: { data: [{
+        to_id: await root.id('deep', 'users'),
+        type_id: await root.id('@deep-foundation/core', 'Join'),
+        string: { data: { value: 'admin' } },
+      }] },
+    });
+    console.log('admin', adminId);
+    const adminPermission = await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Rule'),
+      out: {
+        data: [
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleSubject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: adminId,
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'joinTree'),
+                        },
+                      },
+                    },
+                  ]
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleObject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: adminId,
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleAction'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'AllowAdmin'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    const promisePermission = await root.insert({
+      type_id: await root.id('@deep-foundation/core', 'Rule'),
+      out: {
+        data: [
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleSubject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('deep', 'users'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'joinTree'),
+                        },
+                      },
+                    },
+                  ]
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleObject'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Then'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Promise'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Resolved'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'Rejected'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            type_id: await root.id('@deep-foundation/core', 'RuleAction'),
+            to: {
+              data: {
+                type_id: await root.id('@deep-foundation/core', 'Selector'),
+                out: {
+                  data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'AllowSelectType'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      },
     });
   }
 };

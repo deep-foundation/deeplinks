@@ -1,3 +1,4 @@
+import { atob } from 'atob';
 import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
@@ -38,20 +39,23 @@ export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
 export const GLOBAL_ID_PACKAGE_ACTIVE=45;
 export const GLOBAL_ID_PACKAGE_VERSION=46;
 export const GLOBAL_ID_HANDLE_UPDATE=50;
+export const GLOBAL_ID_JOIN=66;
+export const GLOBAL_ID_ALLOW_ADMIN=71;
 export const GLOBAL_ID_SELECTOR_FILTER=75;
 
-export const GLOBAL_ID_INCLUDE_IN = 114;
-export const GLOBAL_ID_INCLUDE_OUT = 115;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 116;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT = 117;
-export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 118;
-export const GLOBAL_ID_INCLUDE_CURRENT_TO = 119;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 120;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 121;
+export const GLOBAL_ID_INCLUDE_IN = 113;
+export const GLOBAL_ID_INCLUDE_OUT = 114;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 115;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT = 116;
+export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 117;
+export const GLOBAL_ID_INCLUDE_CURRENT_TO = 118;
+export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 119;
+export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 120;
 
 const _ids = {
   '@deep-foundation/core': {
     'Contain': GLOBAL_ID_CONTAIN,
+    'Join': GLOBAL_ID_JOIN,
     'containTree': GLOBAL_ID_CONTAIN_TREE,
     'Package': GLOBAL_ID_PACKAGE,
     'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
@@ -62,18 +66,24 @@ const _ids = {
     'Resolved': GLOBAL_ID_RESOLVED,
     'Rejected': GLOBAL_ID_REJECTED,
     'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
+    'AllowAdmin': GLOBAL_ID_ALLOW_ADMIN,
   },
 };
 
 // https://stackoverflow.com/a/38552302/4448999
-export function parseJwt (token) {
+export function parseJwt (token): { userId: number; role: string; roles: string[], [key: string]: any; } {
   var base64Url = token.split('.')[1];
   var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
 
-  return JSON.parse(jsonPayload);
+  const parsed = JSON.parse(jsonPayload);
+  const { 'x-hasura-allowed-roles': roles, 'x-hasura-default-role': role, 'x-hasura-user-id': userId, ...other } = parsed['https://hasura.io/jwt/claims'] || {};
+  return {
+    userId: +userId, role, roles,
+    ...other,
+  };
 };
 export interface DeepClientOptions<L = Link<number>> {
   linkId?: number;
@@ -528,7 +538,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       try {
         const token = options?.token;
         const decoded = parseJwt(token);
-        const linkId = decoded?.[`https://hasura.io/jwt/claims`]?.['x-hasura-user-id'];
+        const linkId = decoded?.userId;
         if (!!token && relogin) {
           if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
         }
@@ -542,9 +552,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!error && !!token && relogin) {
         if (this?.handleAuth) setTimeout(() => this?.handleAuth(+linkId, token), 0);
       }
-      return { linkId, token, error: !error && (!linkId || !token) ? 'unexepted' : error };
+      return { linkId, token, error: error ? error : (!linkId) ? 'unexepted' : undefined };
     } else return { error: `linkId or token must be provided` };
   };
+
+  /**
+   * Return is of current authorized user linkId.
+   * Refill client.linkId and return.
+   */
+  async whoami(): Promise<number | undefined> {
+    const result = await this.apolloClient.query({ query: WHOISME });
+    this.linkId = result?.data?.jwt?.linkId;
+    return result?.data?.jwt?.linkId;
+  }
 
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
     return await this.jwt({ ...options, relogin: true });
@@ -573,6 +593,12 @@ export const JWT = gql`query JWT($linkId: Int) {
   }
 }`;
 
+export const WHOISME = gql`query WHOISME {
+  jwt(input: {}) {
+    linkId
+  }
+}`;
+
 export const GUEST = gql`query GUEST {
   guest {
     linkId
@@ -595,6 +621,7 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
+    console.log({ linkId, token });
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {
@@ -620,10 +647,15 @@ export function useDeepQuery(query: any, options?: any): any {
           number { id value }
           object { id value }
         `,
+        ...options,
         variables: { ...sq, ...options?.variables }
       })],
       name: options?.name || 'USE_DEEP_QUERY',
     });
-  }, []);
-  return useQuery(wq.query, { variables: wq?.variables });
+  }, [query, options]);
+  const result = useQuery(wq.query, { variables: wq?.variables });
+  return {
+    ...result,
+    data: result?.data?.q0,
+  };
 }

@@ -143,13 +143,13 @@ export const up = async () => {
     SELECTOR record;
     user_id bigint;
     hasura_session json;
-    handle_update links;
+    handle_insert links;
   BEGIN
-    SELECT * INTO handle_update FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId};
+    SELECT * INTO handle_insert FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId};
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, link."id", link."type_id", link."from_id", link."to_id", handle_update."id");
+      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, link."id", link."type_id", link."from_id", link."to_id", handle_insert."id");
     END IF;
 
     IF (
@@ -197,13 +197,13 @@ export const up = async () => {
     SELECTOR record;
     user_id bigint;
     hasura_session json;
-    handle_update links;
+    handle_delete links;
   BEGIN
-    SELECT * INTO handle_update FROM links WHERE "from_id" = OLD."type_id" AND "type_id" = ${handleDeleteTypeId};
+    SELECT * INTO handle_delete FROM links WHERE "from_id" = OLD."type_id" AND "type_id" = ${handleDeleteTypeId};
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", handle_update."id");
+      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", handle_delete."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');

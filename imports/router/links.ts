@@ -24,7 +24,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
-const DOCKER = process.env.DOCKER || '0';
+export const DOCKER = process.env.DOCKER || '0';
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -109,23 +109,18 @@ export async function processPromises(promises: any[], handleInsertsIds: any[], 
       });
 }
 
-const containerController = new ContainerController({
+export const containerController = new ContainerController({
   gql_docker_domain: +DOCKER ? 'links' : 'graphql-engine',
   gql_port_path: +DOCKER ? '3006/gql' : '8080/v1/graphql',
   network: 'deep_network',
   handlersHash: {}
-})
+});
 
-export const useRunner = async ({
-  code, handler, handlerId, oldLink, newLink, moment, promiseId,
-} : {
-  code: string, handlerId: number, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
-}) => {
-  const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
-  useRunnerDebug("handler4: ");
-
+export async function getJwt(handlerId: number, useRunnerDebug: any) {
   const userTypeId = await deep.id('@deep-foundation/core', 'User');
+  useRunnerDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
   const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
+  useRunnerDebug("packageTypeId: ", JSON.stringify(packageTypeId, null, 2));
   const queryString = `query {
     mpUp: mp(where: {
       item_id: {_eq: "${handlerId}"},
@@ -183,9 +178,20 @@ export const useRunner = async ({
   // } else {
   //   no jwt
   // }
-
   const jwt = (await deep.jwt({ linkId: ownerId })).token;
   useRunnerDebug('jwt', jwt);
+  return jwt;
+}
+
+export const useRunner = async ({
+  code, handler, handlerId, oldLink, newLink, moment, promiseId,
+} : {
+  code: string, handlerId: number, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
+}) => {
+  const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
+  useRunnerDebug("handler4: ");
+
+  const jwt = await getJwt(handlerId, useRunnerDebug);
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
   useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
@@ -612,7 +618,7 @@ export default async (req, res) => {
         }
         return res.status(200).json({});
       } catch(e) {
-        error('error', e);
+        error('error', e, e?.graphQLErrors?.[0]?.extensions);
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           log('reject', current.id);
           await reject({

@@ -32,7 +32,7 @@ export const insertHandler = async (handleOperationTypeId: number, typeId: numbe
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
   const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: containTypeId,

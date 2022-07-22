@@ -77,7 +77,7 @@ describe('packager', () => {
   if (GIST_URL) {
     describe('links', () => {
       it(`install and publish`, async () => {
-        const { linkId, token } = await deep.jwt({ linkId: await deep.id('@deep-foundation/core', 'system', 'admin') });
+        const { linkId, token } = await deep.jwt({ linkId: await deep.id('deep', 'admin') });
         const admin = new DeepClient({ deep, token, linkId });
 
         // insert query

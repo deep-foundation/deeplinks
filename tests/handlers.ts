@@ -3,6 +3,7 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
 import Debug from 'debug';
+import fetch from 'node-fetch';
 import { insertHandler, insertSelector, insertSelectorItem, ensureLinkIsCreated, deleteHandler, deleteSelector, deleteId, deleteIds }  from "../imports/handlers";
 
 const debug = Debug('deeplinks:tests:handlers');
@@ -84,7 +85,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
   const SelectorInclude = await deep.id('@deep-foundation/core', 'SelectorInclude');
   const SelectorTree = await deep.id('@deep-foundation/core', 'SelectorTree');
   const AllowSelect = await deep.id('@deep-foundation/core', 'AllowSelect');
-  const AllowInsert = await deep.id('@deep-foundation/core', 'AllowInsert');
+  const AllowInsertType = await deep.id('@deep-foundation/core', 'AllowInsertType');
   const containTree = await deep.id('@deep-foundation/core', 'containTree');
   const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
   
@@ -176,7 +177,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
           out: { data: [
             {
               type_id: SelectorInclude,
-              to_id: AllowInsert,
+              to_id: AllowInsertType,
               out: { data: {
                 type_id: SelectorTree,
                 to_id: containTree,
@@ -237,7 +238,7 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string,
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
-  const ownerId = forceOwnerId || (await deep.id('@deep-foundation/core', 'system', 'admin'));
+  const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
     type_id: await deep.id('@deep-foundation/core', 'Contain'),
@@ -346,7 +347,7 @@ afterAll(async () => {
   deletePackageWithPermissions(packageWithPermissions);
 });
 
-describe('sync function handle by type with resolve', () => {
+describe.skip('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
@@ -469,7 +470,7 @@ describe('sync function handle by type with resolve', () => {
   });
 });
 
-describe('sync function handle by type with reject', () => {
+describe.skip('sync function handle by type with reject', () => {
   it(`handle insert`, async () => {
     // const numberToThrow = randomInteger(5000000, 9999999999);
     const numberToThrow = nextHandlerResult();
@@ -677,6 +678,227 @@ describe('handle port', () => {
   });
 });
 
+describe('handle route', () => {
+  it(`handle route`, async () => {
+    // const port = await getPort(); // conflicts with container-controller port allocation
+    const port = 4005;
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    
+    const portId = (await deep.insert({
+      type_id: portTypeId,
+    }))?.data?.[0]?.id;
+    const portValue = (await deep.insert({ 
+      link_id: portId, 
+      value: port 
+    }, { table: 'numbers' }))?.data?.[0];
+
+    const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
+    const routeId = (await deep.insert({
+      type_id: routeTypeId,
+    }))?.data?.[0]?.id;
+
+    const routerTypeId = await deep.id('@deep-foundation/core', 'Router');
+    const routerId = (await deep.insert({
+      type_id: routerTypeId,
+    }))?.data?.[0]?.id;
+
+    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+    const routerListeningId = (await deep.insert({
+      type_id: routerListeningTypeId,
+      from_id: routerId,
+      to_id: portId,
+    }))?.data?.[0]?.id;
+
+    const route = '/passport';
+
+    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+    const routerStringUseId = (await deep.insert({
+      type_id: routerStringUseTypeId,
+      to_id: routerId,
+      from_id: routeId,
+      string: { data: { value: route } }
+    }))?.data?.[0]?.id;
+
+    const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+    const handlerJSFile = (await deep.insert({
+      type_id: syncTextFileTypeId,
+    }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
+    const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: `async (req, res) => { res.send('ok'); }` }, { table: 'strings' })).data[0];
+    
+    const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+    const handlerId = (await deep.insert({
+      type_id: handlerTypeId,
+      from_id: isolationProviderThatSupportsJSExecutionProviderId,
+      to_id: handlerJSFile?.id,
+    }))?.data?.[0]?.id;
+
+    const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+    // const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
+    const ownerId = await deep.id('deep', 'admin');
+    const ownerContainHandler = (await deep.insert({
+      from_id: ownerId,
+      type_id: containTypeId,
+      to_id: handlerId,
+    }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
+
+    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+    const handleRouteLinkId = (await deep.insert({
+      from_id: routeId,
+      type_id: handleRouteTypeId,
+      to_id: handlerId,
+    }))?.data?.[0]?.id;
+
+    const url = `http://localhost:${port}${route}`
+
+    log("waiting for route to be created");
+    await waitOn({ resources: [url] });
+    log("route handler is up");
+
+    // ensure response is ok
+    const response = await fetch(url);
+    const text = await response.text();
+    assert.equal(text, 'ok');
+
+    // delete all
+    await deleteId(handleRouteLinkId);
+    await deleteId(ownerContainHandler.id);
+    await deleteId(handlerId);
+    await deleteId(handlerJSFileValue.id, { table: 'strings' });
+    await deleteId(handlerJSFile.id);
+    await deleteId(routerStringUseId);
+    await deleteId(routerListeningId);
+    await deleteId(routerId);
+    await deleteId(routeId);
+    await deleteId(portValue.id, { table: 'numbers' });
+    await deleteId(portId);
+
+    log("waiting for route to be deleted");
+    await waitOn({ resources: [url], reverse: true });
+    log("route handler is down");
+  });
+  it(`handle route hierarchical insert`, async () => {
+    // const port = await getPort(); // conflicts with container-controller port allocation
+    const port = 4001;
+    const route = '/passport';
+
+    const insertResult = await deep.insert({
+      type_id: await deep.id('@deep-foundation/core', 'Port'),
+      number: { data: { value: port } },
+      in: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+        from: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Router'),
+          in: { data: {
+            type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+            string: { data: { value: route } },
+            from: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Route'),
+              out: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Handler'),
+                  from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                  in: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                    // from_id: deep.linkId,
+                    from_id: await deep.id('deep', 'admin'),
+                    string: { data: { value: 'passport' } },
+                  } },
+                  to: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                    string: { data: {
+                      value: /*javascript*/`async (req, res) => { res.send('ok'); }`,
+                    } },
+                  } },
+                } },
+              } },
+            } },
+          } },
+        } },
+      } },
+    }, { 
+      returning: `
+        id
+        number {
+          id
+        }
+        in {
+          id
+          from {
+            id
+            in {
+              id
+              from {
+                id
+                out {
+                  id
+                  to {
+                    id
+                    in {
+                      id
+                      string {
+                        id
+                      }
+                    }
+                    to {
+                      id
+                      string {
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `, 
+      name: 'INSERT_HANDLE_ROUTE_HIERARCHICAL',
+    }) as any;
+
+    const portId = insertResult?.data?.[0]?.id;
+    const portValueId = insertResult?.data?.[0]?.number?.id;
+    const routerListeningId = insertResult?.data?.[0]?.in?.[0]?.id;
+    const routerId = insertResult?.data?.[0]?.in?.[0]?.from?.id;
+    const routerStringUseId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.id;
+    const routeId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.id;
+    const handleRouteId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.id;
+    const handlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
+    const handlerJSFileId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
+    const handlerJSFileValueId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.string?.id;
+    const ownerContainHandlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.in?.[0]?.id;
+
+    const url = `http://localhost:${port}${route}`
+
+    log("waiting for route to be created");
+    await waitOn({ resources: [url] });
+    log("route handler is up");
+
+    // ensure response is ok
+    const response = await fetch(url);
+    const text = await response.text();
+    assert.equal(text, 'ok');
+
+    // delete all
+    await deleteId(handleRouteId);
+    await deleteId(ownerContainHandlerId);
+    await deleteId(handlerId);
+    await deleteId(handlerJSFileValueId, { table: 'strings' });
+    await deleteId(handlerJSFileId);
+    await deleteId(routerStringUseId);
+    await deleteId(routerListeningId);
+    await deleteId(routerId);
+    await deleteId(routeId);
+    await deleteId(portValueId, { table: 'numbers' });
+    await deleteId(portId);
+
+    log("waiting for route to be deleted");
+    await waitOn({ resources: [url], reverse: true });
+    log("route handler is down");
+  });
+});
+
 describe('handle by selector', () => {
   it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
@@ -822,14 +1044,5 @@ describe('handle by selector', () => {
     await deleteHandler(handler);
     assert.isTrue(!!matchedPromiseResults);
     assert.equal(matchedPromiseResults.length, 2);
-  });
-});
-
-describe.skip('debug', () => {
-  it(`log`, async () => {
-    log('this message should be log');
-  });
-  it(`error`, async () => {
-    error('this message should be error');
   });
 });
