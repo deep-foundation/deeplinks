@@ -438,3 +438,25 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
   }, [filter, results]);
   return state;
 };
+
+export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, oldLink, newLink) => any): void {
+  useEffect(() => {
+    const addedListener = (ol, nl) => {
+      handler('added', ol, nl);
+    };
+    ml.emitter.on('added', addedListener);
+    const updatedListener = (ol, nl) => {
+      handler('updated', ol, nl);
+    };
+    ml.emitter.on('updated', updatedListener);
+    const removedListener = (ol, nl) => {
+      handler('removed', ol, nl);
+    };
+    ml.emitter.on('removed', removedListener);
+    return () => {
+      ml.emitter.removeListener('added', addedListener);
+      ml.emitter.removeListener('updated', updatedListener);
+      ml.emitter.removeListener('removed', removedListener);
+    };
+  }, []);
+};
