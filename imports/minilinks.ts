@@ -98,7 +98,6 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   inByType: 'inByType',
   outByType: 'outByType',
   equal: (ol, nl) => {
-    console.log('equal'+nl.id, ol.value, nl.value);
     return ol.type_id == nl.type_id && ol.from_id == nl.from_id && ol.to_id == nl.to_id && _isEqual(ol.value, nl.value);
   },
   Link: MinilinksLink,
@@ -336,15 +335,12 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       const link = linksArray[l];
       const old = byId[link.id];
       if (!old) {
-        console.log(`link${link.id}._applies = [${applyName}];`);
         link._applies = [applyName];
         toAdd.push(link);
       }
       else {
-        console.log(`old${old.id}._applies.indexOf(${applyName})`, old._applies.indexOf(applyName));
         const index = old._applies.indexOf(applyName);
         if (!~index) {
-          console.log(`link${link.id}._applies = old${old.id}._applies = [${[...old._applies, applyName].join(',')}];`);
           link._applies = old._applies = [...old._applies, applyName];
         } else {
           link._applies = old._applies;
@@ -359,14 +355,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
       if (!_byId[link.id]) {
-        console.log(`link${link.id}._applies.indexOf(${applyName})`, link._applies.indexOf(applyName));
         const index = link._applies.indexOf(applyName);
         if (!!~index) {
-          console.log(`link${link.id}._applies.length`, link._applies.length);
           if (link._applies.length === 1) {
             toRemove.push(link);
           } else {
-            console.log(`link${link.id}._applies.splice(${index}, 1);`);
             link._applies.splice(index, 1);
           }
         }
@@ -419,21 +412,18 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
   useEffect(() => {
     const addedListener = (ol, nl) => {
       if (filter(nl)) {
-        console.log('added', ol, nl);
         setState(results(nl, ml));
       }
     };
     ml.emitter.on('added', addedListener);
     const updatedListener = (ol, nl) => {
       if (filter(nl)) {
-        console.log('updated', ol, nl);
         setState(results(nl, ml));
       }
     };
     ml.emitter.on('updated', updatedListener);
     const removedListener = (ol, nl) => {
       if (filter(nl)) {
-        console.log('removed', ol, nl);
         setState(results(ol, ml));
       }
     };
