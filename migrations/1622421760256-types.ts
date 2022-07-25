@@ -263,6 +263,8 @@ const corePckg: Package = {
     { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 152
 
     { id: 'querySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔭' } }, // 153
+
+    { id: 'AsyncFile', type: 'File' }, // 154
   ],
   errors: [],
   strict: true,

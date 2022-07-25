@@ -98,6 +98,7 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   inByType: 'inByType',
   outByType: 'outByType',
   equal: (ol, nl) => {
+    console.log('equal'+nl.id, ol.value, nl.value);
     return ol.type_id == nl.type_id && ol.from_id == nl.from_id && ol.to_id == nl.to_id && _isEqual(ol.value, nl.value);
   },
   Link: MinilinksLink,
@@ -335,12 +336,19 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       const link = linksArray[l];
       const old = byId[link.id];
       if (!old) {
+        console.log(`link${link.id}._applies = [${applyName}];`);
         link._applies = [applyName];
         toAdd.push(link);
       }
       else {
+        console.log(`old${old.id}._applies.indexOf(${applyName})`, old._applies.indexOf(applyName));
         const index = old._applies.indexOf(applyName);
-        if (!~index) link._applies = old._applies = [...old._applies, applyName];
+        if (!~index) {
+          console.log(`link${link.id}._applies = old${old.id}._applies = [${[...old._applies, applyName].join(',')}];`);
+          link._applies = old._applies = [...old._applies, applyName];
+        } else {
+          link._applies = old._applies;
+        }
         if (!options.equal(old, link)) {
           toUpdate.push(link);
           beforeUpdate[link.id] = old;
@@ -351,11 +359,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
       if (!_byId[link.id]) {
+        console.log(`link${link.id}._applies.indexOf(${applyName})`, link._applies.indexOf(applyName));
         const index = link._applies.indexOf(applyName);
         if (!!~index) {
+          console.log(`link${link.id}._applies.length`, link._applies.length);
           if (link._applies.length === 1) {
             toRemove.push(link);
           } else {
+            console.log(`link${link.id}._applies.splice(${index}, 1);`);
             link._applies.splice(index, 1);
           }
         }
