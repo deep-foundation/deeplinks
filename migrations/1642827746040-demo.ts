@@ -225,6 +225,14 @@ export const up = async () => {
         } },
       },
       {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        out: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        } },
+      },
+      {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
           type_id: await deep.id('@deep-foundation/core', 'BoolExp'),

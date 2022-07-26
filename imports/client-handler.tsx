@@ -1,4 +1,25 @@
 import { DeepClient } from "./client";
+import { gql } from '@apollo/client';
+
+export function evalClientHandler({
+  value,
+  deep,
+}: {
+  value: string;
+  deep: DeepClient;
+}): {
+  error?: any;
+  data?: any;
+} {
+  try {
+    const data = eval(value);
+    return {
+      data: data({ deep, require, gql }),
+    };
+  } catch(error) {
+    return { error };
+  }
+}
 
 export async function callClientHandler({
   linkId,
@@ -35,12 +56,5 @@ export async function callClientHandler({
   if (handler) return { error: '!handler' };
   const value = handler?.dist?.value?.value;
   if (handler?.dist?.value?.value) return { error: '!value' };
-  try {
-    const data = eval(value);
-    return {
-      data,
-    };
-  } catch(error) {
-    return { error };
-  }
+  return evalClientHandler({ value, deep });
 }
