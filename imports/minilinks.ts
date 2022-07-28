@@ -269,24 +269,24 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
 
       // link.in += byTo[link.id] // XXX
-      _remove(link?.[options.to]?.[options.in], (r) => r.id === id);
+      _remove(link?.[options.to]?.[options.in], (r: { id?: number }) => r.id === id);
       // link.out += byFrom[link.id] // XXX
-      _remove(link?.[options.from]?.[options.out], (r) => r.id === id);
+      _remove(link?.[options.from]?.[options.out], (r: { id?: number }) => r.id === id);
 
       // byFrom[link.from_id]: link[]; // XXX
-      _remove(byFrom?.[link?.[options.from_id]] || [], r => r.id === id);
+      _remove(byFrom?.[link?.[options.from_id]] || [], (r: { id?: number }) => r.id === id);
 
       // byTo[link.to_id]: link[]; // XXX
-      _remove(byTo?.[link?.[options.to_id]] || [], r => r.id === id);
+      _remove(byTo?.[link?.[options.to_id]] || [], (r: { id?: number }) => r.id === id);
 
       // byType[link.type_id]: link[]; // XXX
-      _remove(byType?.[link?.[options.type_id]] || [], r => r.id === id);
+      _remove(byType?.[link?.[options.type_id]] || [], (r: { id?: number }) => r.id === id);
 
       // from.outByType[link.type_id] += link; // XXX
-      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], r => r.id === id)
+      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
       // to.inByType[link.type_id] += link; // XXX
-      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], r => r.id === id)
+      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
       for (let i = 0; i < byFrom?.[id]?.length; i++) {
         const dep = byFrom?.[id]?.[i];
