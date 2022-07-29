@@ -407,24 +407,28 @@ export function useMinilinksConstruct<L extends Link<number>>(options?: any): Mi
   return { ml, ref: mlRef };
 }
 
-export function useMinilinksFilter<L extends Link<number>>(ml, filter: (currentLink: L, oldLink: L, newLink: L) => boolean, results: (l: L, ml) => L[]): L[] {
-  const [state, setState] = useState<L[]>();
+export function useMinilinksFilter<L extends Link<number>, R = any>(
+  ml,
+  filter: (currentLink: L, oldLink: L, newLink: L) => boolean,
+  results: (l: L, ml, oldLink: L, newLink: L) => R,
+): R {
+  const [state, setState] = useState<R>();
   useEffect(() => {
     const addedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
-        setState(results(nl, ml));
+        setState(results(nl, ml, ol, nl));
       }
     };
     ml.emitter.on('added', addedListener);
     const updatedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
-        setState(results(nl, ml));
+        setState(results(nl, ml, ol, nl));
       }
     };
     ml.emitter.on('updated', updatedListener);
     const removedListener = (ol, nl) => {
       if (filter(ol, ol, nl)) {
-        setState(results(ol, ml));
+        setState(results(ol, ml, ol, nl));
       }
     };
     ml.emitter.on('removed', removedListener);
@@ -435,7 +439,7 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (currentL
     };
   }, []);
   useEffect(() => {
-    setState(results(undefined, ml));
+    setState(results(undefined, ml, undefined, undefined));
   }, [filter, results]);
   return state;
 };
