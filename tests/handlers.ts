@@ -347,7 +347,7 @@ afterAll(async () => {
   deletePackageWithPermissions(packageWithPermissions);
 });
 
-describe('sync function handle by type with resolve', () => {
+describe.only('sync function handle by type with resolve', () => {
   it(`handle insert`, async () => {
     // const numberToReturn = randomInteger(5000000, 9999999999);
     const numberToReturn = nextHandlerResult();
@@ -470,7 +470,7 @@ describe('sync function handle by type with resolve', () => {
   });
 });
 
-describe('sync function handle by type with reject', () => {
+describe.only('sync function handle by type with reject', () => {
   it(`handle insert`, async () => {
     // const numberToThrow = randomInteger(5000000, 9999999999);
     const numberToThrow = nextHandlerResult();
