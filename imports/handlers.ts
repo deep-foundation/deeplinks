@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "./client";
-import gql from "graphql-tag";
+import _ from 'lodash';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -17,7 +17,6 @@ const nextFreeId = () => {
   lastFreeId -= 1;
   return lastFreeId;
 };
-
 
 export const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string, forceOwnerId?: number, supportsId?: number) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
@@ -185,52 +184,12 @@ export async function ensureLinkIsCreated(typeId: number) {
 }
 
 export const deleteHandler = async (handler) => {
-  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
-  await deleteId(handler.ownerContainHandlerId);
-  await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
+  const result = { links: [], strings: []};
+  if (handler.handlerJSFileValueId) result.strings.push(await deep.delete(handler.handlerJSFileValueId), { table: 'strings' });
+  result.links.push(await deep.delete(_.compact([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId, handler.ownerContainHandlerId])));
 };
 
 export const deleteSelector = async (selector: any) => {
-  await deleteId(selector.linkTypeId);
-  await deleteId(selector.nodeTypeId);
-  await deleteId(selector.treeId);
-  await deleteIds(selector.treeIncludesIds);
-  await deleteId(selector.selectorId);
-  await deleteId(selector.selectorIncludeId);
-  await deleteId(selector.selectorTreeId);
-  await deleteId(selector.rootId);
+  const ids = Object.values(selector)
+  await deep.delete(_.compact(ids));
 };
-
-export async function deleteId(id: number, options: {
-  table?: string;
-  returning?: string;
-  variables?: any;
-  name?: string;
-} = { table: 'links' })
-{
-  await deleteIds([id], options);
-}
-
-export async function deleteIds(ids: number[], options: {
-  table?: string;
-  returning?: string;
-  variables?: any;
-  name?: string;
-} = { table: 'links' }) {
-  // return await deep.delete(ids, options); // should work, but doesn't
-
-  const idsFiltered = ids?.filter(linkId => typeof linkId === 'number');
-  if (idsFiltered?.length > 0) {
-    // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
-    try
-    {
-      return await deep.delete(idsFiltered, options);
-    }
-    catch (e)
-    {
-      console.error(`Error deleting ids: ${idsFiltered.join(', ')}`, JSON.stringify(e, null, 2));
-    }
-  } else {
-    return { data: [] };
-  }
-}
