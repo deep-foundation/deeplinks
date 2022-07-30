@@ -117,10 +117,11 @@ export const containerController = new ContainerController({
 });
 
 export async function getJwt(handlerId: number, useRunnerDebug: any) {
+  const getJwtDebug = Debug('deeplinks:eh:links:getJwt');
   const userTypeId = await deep.id('@deep-foundation/core', 'User');
-  useRunnerDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
+  getJwtDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
   const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
-  useRunnerDebug("packageTypeId: ", JSON.stringify(packageTypeId, null, 2));
+  getJwtDebug("packageTypeId: ", JSON.stringify(packageTypeId, null, 2));
   const queryString = `query {
     mpUp: mp(where: {
       item_id: {_eq: "${handlerId}"},
@@ -142,7 +143,7 @@ export async function getJwt(handlerId: number, useRunnerDebug: any) {
     }
   }`;
   const ownerResults = await client.query({ query: gql`${queryString}` });
-  useRunnerDebug("ownerResults: ", JSON.stringify(ownerResults, null, 2));
+  getJwtDebug("ownerResults: ", JSON.stringify(ownerResults, null, 2));
 
   const mpUp = ownerResults.data.mpUp;
   const mpMe = ownerResults.data.mpMe;
@@ -152,7 +153,7 @@ export async function getJwt(handlerId: number, useRunnerDebug: any) {
     const closestUp = up.sort((a, b) => getDepthDifference(a.path_item_depth) - getDepthDifference(b.path_item_depth))[0];
     return closestUp?.path_item;
   }).filter(r => !!r);
-  useRunnerDebug("possibleOwners: ", JSON.stringify(possibleOwners, null, 2));
+  getJwtDebug("possibleOwners: ", JSON.stringify(possibleOwners, null, 2));
 
   const ownerPackage = possibleOwners.find(r => r.type_id == packageTypeId);
   const ownerUser = possibleOwners.find(r => r.type_id == userTypeId);
@@ -160,14 +161,14 @@ export async function getJwt(handlerId: number, useRunnerDebug: any) {
   let ownerId;
   if (ownerPackage) {
     ownerId = ownerPackage.id;
-    useRunnerDebug("owner is package");
+    getJwtDebug("owner is package");
   } else if (ownerUser) {
     ownerId = ownerUser.id;
-    useRunnerDebug("owner is user");
+    getJwtDebug("owner is user");
   } else {
     throw new Error("No handler owner found.");
   }
-  useRunnerDebug("ownerId: ", ownerId);
+  getJwtDebug("ownerId: ", ownerId);
 
   // TODO:
   // const currentLink = newLink || oldLink;
