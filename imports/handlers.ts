@@ -131,7 +131,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   //     from_id: rootId,
   //   } }
   // });
-  const { data: [{ id: linkId1, to: { id: nodeId1 } }] } = await deep.insert({
+  const { data: [{ id: linkId1 }] } = await deep.insert({
     type_id: linkTypeId,
     from_id: rootId,
     to: { data: {
@@ -148,13 +148,13 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   //     from_id: id1,
   //   } }
   // });
-  const { data: [{ id: linkId2, to: { id: nodeId2 } }] } = await deep.insert({
-    from_id: nodeId1,
-    type_id: linkTypeId,
-    to: { data: {
-      type_id: nodeTypeId,
-    } }
-  }, { returning: 'id to { id }' }) as any;
+  // const { data: [{ id: linkId2, to: { id: nodeId2 } }] } = await deep.insert({
+  //   from_id: nodeId1,
+  //   type_id: linkTypeId,
+  //   to: { data: {
+  //     type_id: nodeTypeId,
+  //   } }
+  // }, { returning: 'id to { id }' }) as any;
   
   // const n1 = await deep.select({
   //   item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
@@ -163,8 +163,8 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
 
   // return linkId2;
   return [
-    { linkId: linkId1, nodeId: nodeId1 },
-    { linkId: linkId2, nodeId: nodeId2 },
+    { linkId: linkId1 },
+    // { linkId: linkId2, nodeId: nodeId2 },
   ]
 };
 
@@ -190,6 +190,7 @@ export const deleteHandler = async (handler) => {
 };
 
 export const deleteSelector = async (selector: any) => {
-  const ids = Object.values(selector)
-  await deep.delete(_.compact(ids));
+  const { treeIncludesIds, ...withoutTreeIncluds } = selector;
+  const ids = (_.concat(treeIncludesIds, Object.values(withoutTreeIncluds)));
+  await deep.delete({id: {_in: _.compact(ids)}});
 };

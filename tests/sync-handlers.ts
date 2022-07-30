@@ -137,11 +137,12 @@ describe('sync handlers', () => {
       log('delete handler', await deleteHandler(handler));
       assert.equal(error, 'testError');
     });
-    it.skip(`Handle insert on selector`, async () => {
+    it.only(`Handle insert on selector`, async () => {
       const CustomNumber = nextHandlerResult();
 
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
       const selector = await insertSelector();
+      log('selector', selector)
       const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
       const handler = await insertHandler(
         handleInsertTypeId,
@@ -151,11 +152,10 @@ describe('sync handlers', () => {
         }`);
     
       const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
-      log('selectorItems', selectorItems)
 
       for (const selectorItem of selectorItems) {
         await deep.delete(selectorItem.linkId);
-        await deep.delete(selectorItem.nodeId);
+        // await deep.delete(selectorItem.nodeId);
       }
       await deleteSelector(selector);
       await deleteHandler(handler);
