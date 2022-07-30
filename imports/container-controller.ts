@@ -39,6 +39,7 @@ export interface Container {
   name?: string;
   host?: string;
   port?: number;
+  options?: NewContainerOptions;
   error?: string;
 }
 export interface CallOptions {
@@ -62,7 +63,7 @@ export class ContainerController {
   gql_port_path: string;
   network: string;
   delimiter: string;
-  runContainerHash: { [id: string]: Boolean } = {};
+  runContainerHash: { [id: string]: Promise<any> } = {};
   handlersHash: { [id: string]: Container } = {};
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
@@ -88,13 +89,14 @@ export class ContainerController {
         dockerRunResult = dockerRunResultObject?.stdout;
         log('_runContainer dockerRunResultString', { dockerRunResult });
       } catch (e) {
-        error('_runContainer error', e);
         dockerRunResult = e.stderr;
       }
       if (dockerRunResult.indexOf('port is already allocated') !== -1) {
+        error('port is already allocated');
         if (forcePort) return { error: 'port is already allocated' };
         continue;
       } else if (dockerRunResult.indexOf('is already in use by container') !== -1) {
+        error('is already in use by container');
         if (!forceRestart) return { error: 'is already in use by container' };
         await this._dropContainer(containerName);
       } else {
@@ -103,7 +105,7 @@ export class ContainerController {
         // execute docker inspect 138d60d2a0fd040bfe13e80d143de80d
         if (!publish && !+DOCKER) throw new Error('Need proxy, dl issue https://github.com/deep-foundation/deeplinks/issues/45')
         let host = publish ? +DOCKER ? 'host.docker.internal' : 'localhost' : +DOCKER ? containerName : '';
-        const container = { name: containerName, host, port: dockerPort };
+        const container = { name: containerName, host, port: dockerPort, options };
         log('_runContainer container', container);
         
         // wait on
@@ -111,22 +113,6 @@ export class ContainerController {
         log('_runContainer npx done', { waitResult });
 
         return container;
-      }
-    }
-  }
-  async _waitContainer( containerName: string ) {
-    const { runContainerHash } = this;
-    let done = false;
-    let count = 100;
-    while (!done) {
-      log('_waitContainer count', { count });
-      if (count < 0) return { error: 'timeout _waitContainer' };
-      count--;
-
-      if (runContainerHash[containerName]) {
-        await delay(1000);
-      } else {
-        done = true;
       }
     }
   }
@@ -143,46 +129,36 @@ export class ContainerController {
   async newContainer( options: NewContainerOptions ): Promise<Container> {
     const { handler, forcePort, forceName } = options;
     const { network, handlersHash, runContainerHash } = this;
-    log('newContainer options, network, handlersHash', { options, network, handlersHash });
     const containerName = forceName || `deep${await this.getDelimiter()}${crypto.createHash('md5').update(handler).digest("hex")}`;
-    log('newContainer containerName, forceName', { containerName, forceName });
+    log('newContainer options, network, handlersHash, containerName, forceName', { options, network, handlersHash, containerName, forceName });
     let container = await this.findContainer(containerName);
+    log('newContainer container', { container });
     if (container) return container;
     let dockerPort = forcePort || await getPort();
-    
-    let done = false;
-    let count = 30;
-    while (!done) {
-      log('newContainer count newContainer', { count });
-      if (count < 0) return { error: 'timeout findPort' };
-      count--;
-      if (runContainerHash[containerName]) {
-        await this._waitContainer(containerName);
-        if (!!handlersHash[containerName]) {
-          container = handlersHash[containerName];
-        }
-      }
-      else {
-        runContainerHash[containerName] = true;
+    runContainerHash[containerName] = new Promise(async (resolve)=> {
+      let done = false;
+      let count = 10;
+      while (!done){
+        log('newContainer while count', { count });
+        count--;
         container = await this._runContainer(containerName, dockerPort, options);
-        log('newContainer _runContainer result', { container });
-      }
-      if (!!container && !container?.error) {
-        done = true;
+        log('newContainer while container', { container });
+        if ( container?.error) {
+          if (!forcePort) dockerPort = await getPort();
+          continue;
+        }
         handlersHash[containerName] = container;
-        runContainerHash[containerName] = undefined;
         log('newContainer done true', { containerName, handlersHash, runContainerHash});
+        done=true;
       }
-      if (!done && !forcePort) dockerPort = await getPort();
-    }
-    log('newContainer hashes', { handlersHash, runContainerHash });
-    return container;
+      resolve(undefined);
+    });
+    await runContainerHash[containerName];
+    return handlersHash[containerName];
   }
   async findContainer( containerName: string ) {
     const { handlersHash, runContainerHash } = this;
-    log('findContainer hashes', { handlersHash, runContainerHash });
-    if (runContainerHash[containerName]) await this._waitContainer(containerName);
-    log('findContainer result', handlersHash[containerName]);
+    await runContainerHash[containerName]
     return handlersHash[containerName];
   }
   async _dropContainer( containerName: string ) {
@@ -191,41 +167,72 @@ export class ContainerController {
   }
   async dropContainer( container: Container ) {
     const { handlersHash, runContainerHash } = this;
-    if (runContainerHash[container.name]) await this._waitContainer(container.name);
+    await runContainerHash[container.name];
     if (!handlersHash[container.name]) return;
     let dockerStopResult = await this._dropContainer(container.name);
     handlersHash[container.name] = undefined;
     log('dropContainer dockerStopResult', { dockerStopResult });
   }
+  async _chekAndRestart(container: Container ): Promise<{ error?: string; }> {
+    const { handlersHash, runContainerHash } = this;
+    try {
+      const healthz = `http://${container.host}:${container.port}/healthz`
+      await axios.get(healthz);
+      return { error: 'healthz ok'};
+    } catch (e) {
+      error('heatlthz error code', e.code);
+      runContainerHash[container.name] = new Promise(async(resolve)=> {
+        handlersHash[container.name] = undefined;
+        container.options.forcePort = container.port
+        container.options.forceName = container.name;
+        const newContainer = await this._runContainer(container.name, container.port, container.options);
+        handlersHash[container.name] = newContainer;
+        resolve(undefined);
+      });
+      await runContainerHash[container.name];
+      log('_chekAndRestart handlersHash[container.name]', handlersHash[container.name]);
+      return handlersHash[container.name];
+    }
+  }
   async initHandler( container: Container ): Promise<{ error?: string; }> {
+    const { runContainerHash } = this;
     const { host, port } = container;
     let initResult;
+    await runContainerHash[container.name];
     try {
       const initRunner = `http://${host}:${port}/init`
       log('initHandler initRunner', { initRunner })
       initResult = await axios.post(initRunner);
-      log('initHandler initResult', { initResult });
+      log('initHandler initResult status', { status: initResult.status });
     } catch (e) {
-      error('initHandler error', e);
+      error('init error code', e.code);
+      const checkResult = await this._chekAndRestart(container);
+      if (checkResult?.error) return {...checkResult};
+      await this.initHandler(container);
       return ({ error: e });
     }
     if (initResult?.data?.error) return { error: initResult?.data?.error};
     return {};
   }
   async callHandler( options: CallOptions ): Promise<{ error?: string; }> {
+    const { handlersHash, runContainerHash } = this;
     const { container } = options;
+    await runContainerHash[container.name];
     try {
       const callRunner = `http://${container.host}:${container.port}/call`
       log('callHandler', { callRunner, params: options })
       const callResult = await axios.post(callRunner, { params: options });
-      log('callHandler callResult', { callResult });
+      log('callHandler callResult status', { status: callResult.status });
       if (callResult?.data?.error) return { error: callResult?.data?.error };
       if (callResult?.data?.resolved) {
         return callResult.data.resolved;
       }
       return Promise.reject(callResult?.data?.rejected);
     } catch (e) {
-      error('error', e);
+      error('call error', e);
+      const checkResult = await this._chekAndRestart(container);
+      if (checkResult?.error) return {...checkResult};
+      await this.callHandler(options);
       return ({ error: e });
     }
   }

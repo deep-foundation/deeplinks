@@ -269,24 +269,24 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
 
       // link.in += byTo[link.id] // XXX
-      _remove(link?.[options.to]?.[options.in], (r) => r.id === id);
+      _remove(link?.[options.to]?.[options.in], (r: { id?: number }) => r.id === id);
       // link.out += byFrom[link.id] // XXX
-      _remove(link?.[options.from]?.[options.out], (r) => r.id === id);
+      _remove(link?.[options.from]?.[options.out], (r: { id?: number }) => r.id === id);
 
       // byFrom[link.from_id]: link[]; // XXX
-      _remove(byFrom?.[link?.[options.from_id]] || [], r => r.id === id);
+      _remove(byFrom?.[link?.[options.from_id]] || [], (r: { id?: number }) => r.id === id);
 
       // byTo[link.to_id]: link[]; // XXX
-      _remove(byTo?.[link?.[options.to_id]] || [], r => r.id === id);
+      _remove(byTo?.[link?.[options.to_id]] || [], (r: { id?: number }) => r.id === id);
 
       // byType[link.type_id]: link[]; // XXX
-      _remove(byType?.[link?.[options.type_id]] || [], r => r.id === id);
+      _remove(byType?.[link?.[options.type_id]] || [], (r: { id?: number }) => r.id === id);
 
       // from.outByType[link.type_id] += link; // XXX
-      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], r => r.id === id)
+      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
       // to.inByType[link.type_id] += link; // XXX
-      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], r => r.id === id)
+      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
       for (let i = 0; i < byFrom?.[id]?.length; i++) {
         const dep = byFrom?.[id]?.[i];
@@ -340,7 +340,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       }
       else {
         const index = old._applies.indexOf(applyName);
-        if (!~index) link._applies = old._applies = [...old._applies, applyName];
+        if (!~index) {
+          link._applies = old._applies = [...old._applies, applyName];
+        } else {
+          link._applies = old._applies;
+        }
         if (!options.equal(old, link)) {
           toUpdate.push(link);
           beforeUpdate[link.id] = old;
@@ -403,27 +407,28 @@ export function useMinilinksConstruct<L extends Link<number>>(options?: any): Mi
   return { ml, ref: mlRef };
 }
 
-export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => boolean, results: (l: L, ml) => L[]): L[] {
-  const [state, setState] = useState<L[]>();
+export function useMinilinksFilter<L extends Link<number>, R = any>(
+  ml,
+  filter: (currentLink: L, oldLink: L, newLink: L) => boolean,
+  results: (l: L, ml, oldLink: L, newLink: L) => R,
+): R {
+  const [state, setState] = useState<R>();
   useEffect(() => {
     const addedListener = (ol, nl) => {
-      if (filter(nl)) {
-        console.log('added', ol, nl);
-        setState(results(nl, ml));
+      if (filter(nl, ol, nl)) {
+        setState(results(nl, ml, ol, nl));
       }
     };
     ml.emitter.on('added', addedListener);
     const updatedListener = (ol, nl) => {
-      if (filter(nl)) {
-        console.log('updated', ol, nl);
-        setState(results(nl, ml));
+      if (filter(nl, ol, nl)) {
+        setState(results(nl, ml, ol, nl));
       }
     };
     ml.emitter.on('updated', updatedListener);
     const removedListener = (ol, nl) => {
-      if (filter(nl)) {
-        console.log('removed', ol, nl);
-        setState(results(ol, ml));
+      if (filter(ol, ol, nl)) {
+        setState(results(ol, ml, ol, nl));
       }
     };
     ml.emitter.on('removed', removedListener);
@@ -434,7 +439,29 @@ export function useMinilinksFilter<L extends Link<number>>(ml, filter: (l) => bo
     };
   }, []);
   useEffect(() => {
-    setState(results(undefined, ml));
+    setState(results(undefined, ml, undefined, undefined));
   }, [filter, results]);
   return state;
+};
+
+export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, oldLink, newLink) => any): void {
+  useEffect(() => {
+    const addedListener = (ol, nl) => {
+      handler('added', ol, nl);
+    };
+    ml.emitter.on('added', addedListener);
+    const updatedListener = (ol, nl) => {
+      handler('updated', ol, nl);
+    };
+    ml.emitter.on('updated', updatedListener);
+    const removedListener = (ol, nl) => {
+      handler('removed', ol, nl);
+    };
+    ml.emitter.on('removed', removedListener);
+    return () => {
+      ml.emitter.removeListener('added', addedListener);
+      ml.emitter.removeListener('updated', updatedListener);
+      ml.emitter.removeListener('removed', removedListener);
+    };
+  }, []);
 };

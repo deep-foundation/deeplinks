@@ -1,6 +1,6 @@
 import { HasuraApi } from "@deep-foundation/hasura/api";
 
-export const permissions = async (api: HasuraApi, table: string, actions: {
+export const permissions = async (api: HasuraApi, table: string | { name: string; schema: string; }, actions: {
   role: string;
 
   select: any;
