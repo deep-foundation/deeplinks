@@ -308,7 +308,6 @@ export const down = async () => {
   log('down');
   log('relationships');
 
-
   await api.query({
     type: 'drop_relationship',
     args: {

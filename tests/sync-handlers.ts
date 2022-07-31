@@ -46,8 +46,33 @@ beforeAll(async () => {
   await api.sql(sql`${createSyncInsertTriggerFunction}`);
 });
 
+// deeplinks:tests:sync-handlers:log selector {
+//   nodeTypeId: 464,
+//   linkTypeId: 465,
+//   treeId: 466,
+//   treeIncludesIds: [ 468, 467 ],
+//   selectorId: 470,
+//   selectorIncludeId: 471,
+//   selectorTreeId: 472,
+//   rootId: 469
+// } +412ms
+//   deeplinks:tests:sync-handlers:log handler {
+//   handlerId: 474,
+//   handleOperationId: 476,
+//   handlerJSFileId: 473,
+//   handlerJSFileValueId: 166,
+//   ownerContainHandlerId: 475
+// } +127ms
+//   deeplinks:tests:sync-handlers:log selectorItems [ { linkId: 478, nodeId: 477 }, { linkId: 482, nodeId: 481 } ] 
+
 describe('sync handlers', () => {
   describe('Prepare fuction', () => {
+    it.only(`handleInsert seletorNode`, async () => {
+      const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const link = JSON.stringify({id: 477, type_id: 464});
+      const result = await api.sql(sql`select links__sync__handler__prepare__function('${link}'::jsonb, ${handlerId}::bigint)`);
+      log('result', result?.data?.result?.[1]?.[0]);
+    });
   });
   describe('DeepClient mini', () => {
     it(`id`, async () => {
@@ -137,28 +162,42 @@ describe('sync handlers', () => {
       log('delete handler', await deleteHandler(handler));
       assert.equal(error, 'testError');
     });
-    it.only(`Handle insert on selector`, async () => {
+    it(`Handle insert on selector`, async () => {
       const CustomNumber = nextHandlerResult();
 
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
       const selector = await insertSelector();
-      log('selector', selector)
+      log('selector', selector);
       const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
       const handler = await insertHandler(
         handleInsertTypeId,
         selectorId,
-        `(arg) => {
-          plv8.execute("INSERT INTO strings (link_id, value) VALUES(${rootId}, 'test')");
-        }`);
-    
-      const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+        `(arg) => { plv8.execute("deep.insert({id: ${CustomNumber}, type_id: 2});}`,
+        undefined,
+        supportsId);
 
-      for (const selectorItem of selectorItems) {
-        await deep.delete(selectorItem.linkId);
-        // await deep.delete(selectorItem.nodeId);
+      let selectorItems;
+      log('handler', handler);
+      try {
+        selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+        log('selectorItems', selectorItems);
+      } catch (e){
+        error(e);
       }
-      await deleteSelector(selector);
-      await deleteHandler(handler);
+      // delay(10000);
+      // for (const selectorItem of selectorItems) {
+      //   await deep.delete(selectorItem.linkId);
+      //   // await deep.delete(selectorItem.nodeId);
+      // }
+      // const insertedByHandler = (await deep.select({ id: { _eq: CustomNumber } }));
+      // log('insertedByHandler', insertedByHandler?.data[0]?.id);
+      // if (insertedByHandler?.data[0]?.id) await deep.delete({ id: { _eq: CustomNumber } });
+
+      // log('deleteSelector');
+      // await deleteSelector(selector);
+      // log('deleteHandler');
+      // await deleteHandler(handler);
     });
   });
 });

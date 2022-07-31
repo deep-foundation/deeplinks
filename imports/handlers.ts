@@ -131,7 +131,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   //     from_id: rootId,
   //   } }
   // });
-  const { data: [{ id: linkId1 }] } = await deep.insert({
+  const { data: [{ id: linkId1, to: { id: nodeId1 } }] } = await deep.insert({
     type_id: linkTypeId,
     from_id: rootId,
     to: { data: {
@@ -148,13 +148,13 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   //     from_id: id1,
   //   } }
   // });
-  // const { data: [{ id: linkId2, to: { id: nodeId2 } }] } = await deep.insert({
-  //   from_id: nodeId1,
-  //   type_id: linkTypeId,
-  //   to: { data: {
-  //     type_id: nodeTypeId,
-  //   } }
-  // }, { returning: 'id to { id }' }) as any;
+  const { data: [{ id: linkId2, to: { id: nodeId2 } }] } = await deep.insert({
+    from_id: nodeId1,
+    type_id: linkTypeId,
+    to: { data: {
+      type_id: nodeTypeId,
+    } }
+  }, { returning: 'id to { id }' }) as any;
   
   // const n1 = await deep.select({
   //   item_id: { _eq: id2 }, selector_id: { _eq: selectorId }
@@ -163,8 +163,8 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
 
   // return linkId2;
   return [
-    { linkId: linkId1 },
-    // { linkId: linkId2, nodeId: nodeId2 },
+    { linkId: linkId1, nodeId: nodeId1 },
+    { linkId: linkId2, nodeId: nodeId2 },
   ]
 };
 
@@ -184,9 +184,10 @@ export async function ensureLinkIsCreated(typeId: number) {
 }
 
 export const deleteHandler = async (handler) => {
+  const { handlerJSFileValueId, ...ids } = handler;
   const result = { links: [], strings: []};
-  if (handler.handlerJSFileValueId) result.strings.push(await deep.delete(handler.handlerJSFileValueId), { table: 'strings' });
-  result.links.push(await deep.delete(_.compact([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId, handler.ownerContainHandlerId])));
+  if (handlerJSFileValueId) result.strings.push(await deep.delete(handlerJSFileValueId), { table: 'strings' });
+  result.links.push(await deep.delete(_.compact(Object.values(ids))));
 };
 
 export const deleteSelector = async (selector: any) => {
