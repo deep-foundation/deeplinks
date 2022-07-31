@@ -94,7 +94,11 @@ export const up = async () => {
       const checkLinkPermission = undefined;
       const checkValuePermission = undefined;
       const plv8 = undefined; 
-      return eval(prepared[i])(deep, {oldLink: OLD, newLink: NEW});
+      try {
+        return result = eval(prepared[i])(deep, {oldLink: OLD, newLink: NEW});
+      } catch (e){
+        return;
+      }
     })()};
     
     return NEW;
