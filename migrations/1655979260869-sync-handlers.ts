@@ -20,23 +20,66 @@ const deep = new DeepClient({
 })
 
 const handleInsertTypeId = 49; // await deep.id('@deep-foundation/core', 'HandleInsert');
+const userTypeId = 22 // await deep.id('@deep-foundation/core', 'User');
+const packageTypeId = 2 // await deep.id('@deep-foundation/core', 'Package');
 
-const newSelect = `plv8.execute(\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\`)[0];`;
+const newSelect = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkString = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
 const insertValueString = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkId} , '\${value}') RETURNING ID\``
 const deleteString = `\`DELETE FROM links WHERE id=\${id}::bigint RETURNING ID\``;
 
-const typeHandlers = `plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value",  "_3_root.base"."id" AS "id"  ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_links"."from_id") = ($1 :: bigint)) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ link.type_id, handletypeid ])[0].root.map((handler)=>{return {value: handler?.value, id: handler?.id}} )`;
+const typeHandlers = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value",  "_3_root.base"."id" AS "id"  ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_links"."from_id") = ($1 :: bigint)) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\``;
 
-const selectorHandlers = `plv8.execute(\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value", "_3_root.base"."id" AS "id" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_2__be_2_links"."from_id") = ANY($1 :: bigint array) ) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\`, [ testedSelectors, handletypeid ])[0].root.map((handler)=>{return{value: handler?.value, id: handler?.id}})`;
+const selectorHandlers = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."value" AS "value", "_3_root.base"."id" AS "id" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."strings" WHERE ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."strings"."link_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."to_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_2__be_2_links" WHERE ( ( ( ("_2__be_2_links"."to_id") = ("_1__be_1_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_2__be_2_links"."from_id") = ANY($1 :: bigint array) ) AND ('true') ) AND ( ( (("_2__be_2_links"."type_id") = ($2 :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_1__be_1_links"."type_id") = (('35') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ( ( (("_0__be_0_links"."type_id") = (('30') :: bigint)) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) ) AS "_3_root.base" ) AS "_5_root"\``;
 
 const pckg = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=2 AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const checkInsertLink = `\`SELECT count(id) > 0 FROM "public"."links" WHERE ( ( ( EXISTS ( SELECT 1 FROM "public"."can" WHERE ("public"."can"."object_id") = ("public"."links"."id") AND (("public"."can"."action_id") = (28 :: bigint)) AND ("public"."can"."subject_id") = ($1 :: bigint) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."links" WHERE EXISTS ( SELECT 1 FROM "public"."strings" WHERE ("public"."strings"."link_id") = ("public"."links"."id") AND ("public"."strings"."value" = 'admin'::text) ) AND ("public"."links"."from_id" = 71::bigint) AND ("public"."links"."type_id" = 3::bigint) AND ("public"."links"."to_id" = $1::bigint) ) ) ) AND (("public"."links"."id") = ($2 :: bigint)) )\``;
+const checkInsertLink = `\`SELECT count(id) > 0 as "root" FROM "public"."links" WHERE ( ( ( EXISTS ( SELECT 1 FROM "public"."can" WHERE ("public"."can"."object_id") = ("public"."links"."id") AND (("public"."can"."action_id") = (28 :: bigint)) AND ("public"."can"."subject_id") = ($1 :: bigint) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."links" WHERE EXISTS ( SELECT 1 FROM "public"."strings" WHERE ("public"."strings"."link_id") = ("public"."links"."id") AND ("public"."strings"."value" = 'admin'::text) ) AND ("public"."links"."from_id" = 71::bigint) AND ("public"."links"."type_id" = 3::bigint) AND ("public"."links"."to_id" = $1::bigint) ) ) ) AND (("public"."links"."id") = ($2 :: bigint)) )\``;
 
-const checkLinkPermission = `(linkId, userId) => {
-  return true;
+const mpUp = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id", "_4_root.or.path_item"."path_item" AS "path_item", "_1_root.base"."path_item_depth" AS "path_item_depth", "_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( ( ("public"."mp"."item_id") = ($1::bigint) ) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ("_0__be_0_links"."id") = ("public"."mp"."path_item_id")AND ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id", "_2_root.or.path_item.base"."type_id" AS "type_id", "public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"\``;
+
+const mpMe = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( ( ("public"."mp"."item_id") = ($1 :: bigint) ) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"\``;
+
+const checkLinkPermission =  /*javascript*/`(userId, linkId ) => {
+  return !!plv8.execute(${checkInsertLink}, [ linkId, userId ])[0]?.root;
 }`
+
+
+const prepareFunction = /*javascript*/`
+
+  const getOwner = (handlerId) => {
+    const mpUp = plv8.execute(${mpUp}, [ handlerId, ${userTypeId}, ${packageTypeId} ])[0]?.root;
+    const mpMe = plv8.execute(${mpMe}, [ handlerId ])[0]?.root;
+    
+    const possibleOwners = mpMe.map((me) => {
+      const getDepthDifference = (depth) => me.path_item_depth - depth;
+      const up = mpUp.filter((up) => up.position_id == me.position_id);
+      const closestUp = up.sort((a, b) => getDepthDifference(a.path_item_depth) - getDepthDifference(b.path_item_depth))[0];;
+      
+      return closestUp?.path_item;
+    }).filter(r => !!r);
+
+    const ownerPackage = possibleOwners.find(r => r.type_id == ${packageTypeId});
+    const ownerUser = possibleOwners.find(r => r.type_id == ${userTypeId});
+    const ownerId = ownerPackage ? ownerPackage?.id : ownerUser ? ownerUser?.id : null;
+    
+    return {ownerId};
+  };
+
+  const typeHandlers = plv8.execute(${typeHandlers}, [ link.type_id, handletypeid ])[0].root.map((handler)=>{return {value: handler?.value, id: handler?.id}} );
+  for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = getOwner(typeHandlers[i].id); }
+
+  const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
+
+  const testedSelectors = [];
+  for (let i = 0; i < selectors.length; i++){ if (!selectors[i].bool_exp_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].bool_exp_id, user_id])) testedSelectors.push(selectors[i].selector_id); }
+  
+
+  const selectorHandlers = plv8.execute(${selectorHandlers}, [ testedSelectors, handletypeid ])[0].root.map((handler)=>{return{value: handler?.value, id: handler?.id}});
+  for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = getOwner(selectorHandlers[i].id); }
+
+  return typeHandlers.concat(selectorHandlers);
+`;
 
 const deepFabric =  /*javascript*/`(ownerId) => { 
   return {
@@ -48,7 +91,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
         for (let p = 0; p < path.length; p++) {
           const item = path[p]
           if (typeof(item) !== 'boolean') {
-            const newSelect = ${newSelect};
+            const newSelect = plv8.execute(${newSelect})[0];;
             query_id = p === path.length-1 ? newSelect.to_id : newSelect.id;
             if (!query_id) return undefined;
           }
@@ -82,37 +125,18 @@ const deepFabric =  /*javascript*/`(ownerId) => {
     delete: function(options) {
       const { id } = options;
       const deleteString = ${deleteString};
+      const linkCheck = checkLinkPermission(linkId, ownerId);
+      if (!linkCheck) return { error: 'permission failed' };
       const linkId = plv8.execute(deleteString)[0].id;
       return linkId;
     }
   }
 }`;
 
-const prepareFunction = /*javascript*/`
-
-  const getOwner = () => 1;
-
-  const typeHandlers = ${typeHandlers};
-  for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = getOwner(typeHandlers[i].id); }
-
-  const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
-
-  const testedSelectors = [];
-  for (let i = 0; i < selectors.length; i++){ if (!selectors[i].bool_exp_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].bool_exp_id, user_id])) testedSelectors.push(selectors[i].selector_id); }
-  
-
-  const selectorHandlers = ${selectorHandlers};
-  for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = getOwner(selectorHandlers[i].id); }
-
-  return typeHandlers.concat(selectorHandlers);
-`;
-
 const insertHandlerFunction = /*javascript*/`
   const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
   const prepared = prepare(NEW, ${handleInsertTypeId});
-
   const checkLinkPermission = ${checkLinkPermission};
-
   const deepFabric = ${deepFabric};
 
   for (let i = 0; i < prepared.length; i++) {
