@@ -17,7 +17,7 @@ env:
   MIGRATIONS_HASURA_PATH: localhost:8080
   MIGRATIONS_HASURA_SSL: 0
   MIGRATIONS_HASURA_SECRET: myadminsecretkey
-  MIGRATIONS_DEEPLINKS_URL: http://host.docker.internal:3006
+  MIGRATIONS_DEEPLINKS_URL: http://graphql-engine:3006
   JWT_SECRET: '{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 jobs:
   dockerize:
