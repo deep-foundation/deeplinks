@@ -34,8 +34,6 @@ jobs:
         run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
         run: npm run migrate
-      - name: backup dir
-        run: mkdir backup
       - name: snapshot:create
         run: 'npm run snapshot:create'
       - name: build
