@@ -129,7 +129,6 @@ describe('minilinks', () => {
         { id: 1, type_id: 3 },
       ], '1');
       expect(mlc?.links?.length).to.be.equal(3);
-      console.log(mlc?.byId?.[1]?._applies);
       expect(mlc?.byId?.[1]?._applies.length).to.be.equal(1);
       expect(mlc?.byId?.[2]?._applies.length).to.be.equal(1);
       expect(mlc?.byId?.[3]?._applies.length).to.be.equal(1);

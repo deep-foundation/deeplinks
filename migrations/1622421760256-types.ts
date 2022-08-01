@@ -93,14 +93,14 @@ const corePckg: Package = {
     { id: 'ExecutionProvider', type: 'Type' }, // 32
     { id: 'JSExecutionProvider', type: 'ExecutionProvider' }, // 33
 
-    { id: 'Allow', type: 'Type', from: 'Type', to: 'Operation' }, // 34
+    { id: 'TreeInclude', type: 'Type', from: 'Type', to: 'Any' }, // 34
     { id: 'Handler', type: 'Type', from: 'Supports', to: 'Any' }, // 35
 
     { id: 'Tree', type: 'Type' }, // 36
 
-    { id: 'TreeIncludeDown', type: 'Type', from: 'Tree', to: 'Any' }, // 37
-    { id: 'TreeIncludeUp', type: 'Type', from: 'Tree', to: 'Any' }, // 38
-    { id: 'TreeIncludeNode', type: 'Type', from: 'Tree', to: 'Any' }, // 39
+    { id: 'TreeIncludeDown', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 37
+    { id: 'TreeIncludeUp', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 38
+    { id: 'TreeIncludeNode', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 39
 
     { id: 'containTree', type: 'Tree' }, // 40
     { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' }, // 41
@@ -126,11 +126,11 @@ const corePckg: Package = {
 
     { id: 'Focus', type: 'Type', from: 'Any', to: 'Any' }, // 55
     { id: 'focusValue', type: 'Value', from: 'Focus', to: 'Object' }, // 56
-    { id: 'Unfocus', type: 'Type', from: 'Focus', to: 'Focus' }, // 57
+    { id: 'AsyncFile', type: 'File' }, // 57
     { id: 'Query', type: 'Type' }, // 58
     { id: 'queryValue', type: 'Value', from: 'Query', to: 'Object' }, // 59
-    { id: 'Fixed', type: 'Type' }, // 60
-    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 61
+    { id: 'Fixed', type: 'Type' }, // 60 // TODO
+    { id: 'fixedValue', type: 'Value', from: 'Fixed', to: 'Object' }, // 61 // TODO
     { id: 'Space', type: 'Type' }, // 62
     { id: 'spaceValue', type: 'Value', from: 'Space', to: 'String' }, // 63
 
@@ -189,8 +189,8 @@ const corePckg: Package = {
     { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' }, // 96
     { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' }, // 97
 
-    { id: 'PackagerInstalled', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 98
-    { id: 'PackagerPublished', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 99
+    { id: 'PackagerInstalled', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 98 // #TODO
+    { id: 'PackagerPublished', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // 99 // #TODO
 
     // Route
     { id: 'Route', type: 'Type' }, // 100
@@ -219,14 +219,14 @@ const corePckg: Package = {
     // routeTreeHandleRoute
     { id: 'routeTreeHandleRoute', type: 'TreeIncludeDown', from: 'routeTree', to: 'HandleRoute' }, // 112
 
-    { id: 'TreeIncludeIn', type: 'Type', from: 'Tree', to: 'Any' }, // 113
-    { id: 'TreeIncludeOut', type: 'Type', from: 'Tree', to: 'Any' }, // 114
-    { id: 'TreeIncludeFromCurrent', type: 'Type', from: 'Tree', to: 'Any' }, // 115
-    { id: 'TreeIncludeToCurrent', type: 'Type', from: 'Tree', to: 'Any' }, // 116
-    { id: 'TreeIncludeCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 117
-    { id: 'TreeIncludeCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 118
-    { id: 'TreeIncludeFromCurrentTo', type: 'Type', from: 'Tree', to: 'Any' }, // 119
-    { id: 'TreeIncludeToCurrentFrom', type: 'Type', from: 'Tree', to: 'Any' }, // 120
+    { id: 'TreeIncludeIn', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 113
+    { id: 'TreeIncludeOut', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 114
+    { id: 'TreeIncludeFromCurrent', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 115
+    { id: 'TreeIncludeToCurrent', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 116
+    { id: 'TreeIncludeCurrentFrom', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 117
+    { id: 'TreeIncludeCurrentTo', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 118
+    { id: 'TreeIncludeFromCurrentTo', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 119
+    { id: 'TreeIncludeToCurrentFrom', type: 'TreeInclude', from: 'Tree', to: 'Any' }, // 120
 
     { id: 'AllowInsertType', type: 'Operation' }, // 121
     { id: 'AllowUpdateType', type: 'Operation' }, // 122
@@ -262,9 +262,61 @@ const corePckg: Package = {
     { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' }, // 151
     { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 152
 
-    { id: 'querySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔭' } }, // 153
+    { id: 'HandleClient', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 154
 
-    { id: 'AsyncFile', type: 'File' }, // 154
+    { id: 'TypeSymbol', type: 'Symbol', from: 'Type', to: 'Type', value: { value: '⭐️' } },
+    { id: 'PackageSymbol', type: 'Symbol', from: 'Package', to: 'Package', value: { value: '📦' } },
+    { id: 'ContainSymbol', type: 'Symbol', from: 'Contain', to: 'Contain', value: { value: '🗂' } },
+    { id: 'ValueSymbol', type: 'Symbol', from: 'Value', to: 'Value', value: { value: '📎' } },
+    { id: 'PromiseSymbol', type: 'Symbol', from: 'Promise', to: 'Promise', value: { value: '⏳' } },
+    { id: 'ThenSymbol', type: 'Symbol', from: 'Then', to: 'Then', value: { value: '🔗' } },
+    { id: 'ResolvedSymbol', type: 'Symbol', from: 'Resolved', to: 'Resolved', value: { value: '🟢' } },
+    { id: 'RejectedSymbol', type: 'Symbol', from: 'Rejected', to: 'Rejected', value: { value: '🔴' } },
+    { id: 'SelectorSymbol', type: 'Symbol', from: 'Selector', to: 'Selector', value: { value: '🪢' } },
+    { id: 'SelectorIncludeSymbol', type: 'Symbol', from: 'SelectorInclude', to: 'SelectorInclude', value: { value: '🪢🪡' } },
+    { id: 'SelectorExcludeSymbol', type: 'Symbol', from: 'SelectorExclude', to: 'SelectorExclude', value: { value: '🪢🪡' } },
+    { id: 'RuleSymbol', type: 'Symbol', from: 'Rule', to: 'Rule', value: { value: '📜' } },
+    { id: 'RuleSubjectSymbol', type: 'Symbol', from: 'RuleSubject', to: 'RuleSubject', value: { value: '📜👤' } },
+    { id: 'RuleObjectSymbol', type: 'Symbol', from: 'RuleObject', to: 'RuleObject', value: { value: '📜🍏' } },
+    { id: 'RuleActionSymbol', type: 'Symbol', from: 'Rule', to: 'Rule', value: { value: '📜🔥' } },
+    { id: 'UserSymbol', type: 'Symbol', from: 'User', to: 'User', value: { value: '👤' } },
+    { id: 'OperationSymbol', type: 'Symbol', from: 'Operation', to: 'Operation', value: { value: '🔥' } },
+    { id: 'FileSymbol', type: 'Symbol', from: 'File', to: 'File', value: { value: '💾' } },
+    { id: 'SyncTextFileSymbol', type: 'Symbol', from: 'SyncTextFile', to: 'SyncTextFile', value: { value: '📄' } },
+    { id: 'ExecutionProviderSymbol', type: 'Symbol', from: 'ExecutionProvider', to: 'ExecutionProvider', value: { value: '🔌' } },
+    { id: 'IsolationProviderSymbol', type: 'Symbol', from: 'IsolationProvider', to: 'IsolationProvider', value: { value: '📡' } },
+    { id: 'AsyncFileSymbol', type: 'Symbol', from: 'AsyncFile', to: 'AsyncFile', value: { value: '💽' } },
+    { id: 'HandlerSymbol', type: 'Symbol', from: 'Handler', to: 'Handler', value: { value: '💡' } },
+    { id: 'TreeSymbol', type: 'Symbol', from: 'Tree', to: 'Tree', value: { value: '🌲' } },
+    { id: 'TreeIncludeSymbol', type: 'Symbol', from: 'TreeInclude', to: 'TreeInclude', value: { value: '🌿' } },
+    { id: 'PackageNamespaceSymbol', type: 'Symbol', from: 'PackageNamespace', to: 'PackageNamespace', value: { value: '🎁' } },
+    { id: 'PackageActiveSymbol', type: 'Symbol', from: 'PackageActive', to: 'PackageActive', value: { value: '📯' } },
+    { id: 'PackageVersionSymbol', type: 'Symbol', from: 'PackageVersion', to: 'PackageVersion', value: { value: '🏷' } },
+    { id: 'HandleOperationSymbol', type: 'Symbol', from: 'HandleOperation', to: 'HandleOperation', value: { value: '🛠' } },
+    { id: 'PromiseResultSymbol', type: 'Symbol', from: 'PromiseResult', to: 'PromiseResult', value: { value: '🔖' } },
+    { id: 'PromiseReasonSymbol', type: 'Symbol', from: 'PromiseReason', to: 'PromiseReason', value: { value: '🧲' } },
+    { id: 'FocusSymbol', type: 'Symbol', from: 'Focus', to: 'Focus', value: { value: '📌' } },
+    { id: 'QuerySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔎' } },
+    { id: 'SpaceSymbol', type: 'Symbol', from: 'Space', to: 'Space', value: { value: '🔮' } },
+    { id: 'JoinSymbol', type: 'Symbol', from: 'Join', to: 'Join', value: { value: '🤝' } },
+    { id: 'SelectorTreeSymbol', type: 'Symbol', from: 'SelectorTree', to: 'SelectorTree', value: { value: '🪢🌲' } },
+    { id: 'SelectorFilterSymbol', type: 'Symbol', from: 'SelectorFilter', to: 'SelectorFilter', value: { value: '🪢🔎' } },
+    { id: 'BoolExpSymbol', type: 'Symbol', from: 'BoolExp', to: 'BoolExp', value: { value: '🔎' } },
+    { id: 'ScheduleSymbol', type: 'Symbol', from: 'Schedule', to: 'Schedule', value: { value: '⏲' } },
+    { id: 'RouterSymbol', type: 'Symbol', from: 'Router', to: 'Router', value: { value: '🚦' } },
+    { id: 'SupportsSymbol', type: 'Symbol', from: 'Supports', to: 'Supports', value: { value: '🔋' } },
+    { id: 'PackagerInstallSymbol', type: 'Symbol', from: 'PackagerInstall', to: 'PackagerInstall', value: { value: '📥' } },
+    { id: 'PackagerPublishSymbol', type: 'Symbol', from: 'PackagerPublish', to: 'PackagerPublish', value: { value: '📤' } },
+    { id: 'ActiveSymbol', type: 'Symbol', from: 'Active', to: 'Active', value: { value: '💡' } },
+    { id: 'PromiseOutSymbol', type: 'Symbol', from: 'PromiseOut', to: 'PromiseOut', value: { value: '🧷' } },
+    { id: 'PackagerQuerySymbol', type: 'Symbol', from: 'PackagerQuery', to: 'PackagerQuery', value: { value: '📦🏷' } },
+    { id: 'PortSymbol', type: 'Symbol', from: 'Port', to: 'Port', value: { value: '🗜' } },
+    { id: 'RouteSymbol', type: 'Symbol', from: 'Route', to: 'Route', value: { value: '🚏' } },
+    { id: 'RouterListeningSymbol', type: 'Symbol', from: 'RouterListening', to: 'RouterListening', value: { value: '🔗' } },
+    { id: 'RouterStringUseSymbol', type: 'Symbol', from: 'RouterStringUse', to: 'RouterStringUse', value: { value: '🔗' } },
+    { id: 'AuthorizationSymbol', type: 'Symbol', from: 'Authorization', to: 'Authorization', value: { value: '🔑' } },
+    { id: 'GeneratedFromSymbol', type: 'Symbol', from: 'GeneratedFrom', to: 'GeneratedFrom', value: { value: '🏗' } },
+    { id: 'SymbolSymbol', type: 'Symbol', from: 'Symbol', to: 'Symbol', value: { value: '🙂' } },
   ],
   errors: [],
   strict: true,
@@ -279,7 +331,8 @@ export const up = async () => {
     log(errors[0]?.graphQLErrors?.[0]?.message);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
-    throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}`);
+    const error = errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.error;
+    throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}${error?.message ? ` ${error?.message} ${error?.request?.method} ${error?.request?.host}:${error?.request?.port}${error?.request?.path}` : ''}`);
   } else {
     await root.insert({
       type_id: await root.id('@deep-foundation/core', 'Package'),

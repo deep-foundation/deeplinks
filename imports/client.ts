@@ -1,4 +1,4 @@
-import { atob } from 'atob';
+import atob from 'atob';
 import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
@@ -621,7 +621,6 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
-    console.log({ linkId, token });
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {

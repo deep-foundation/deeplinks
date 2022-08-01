@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.6'
 services:
   postgres:
     image: deepf/pg12-plv8:deeplinks-70-menzorg
@@ -37,7 +37,42 @@ services:
       - 'HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey'
       - 'HASURA_GRAPHQL_JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
       - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true'
-      - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=link'
+      - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=undefined'
+  storage:
+    container_name: hasura-storage
+    image: nhost/hasura-storage:0.2.3
+    depends_on:
+      - graphql-engine
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    environment:
+      - 'DEBUG=true'
+      - 'HASURA_METADATA=1'
+      - 'HASURA_ENDPOINT=http://host.docker.internal:8080/v1'
+      - 'HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey'
+      - 'S3_ENDPOINT=http://host.docker.internal:9000'
+      - 'S3_ACCESS_KEY=minioaccesskey'
+      - 'S3_SECRET_KEY=miniosecretkey'
+      - 'S3_BUCKET=default'
+      - 'S3_ROOT_FOLDER=default'
+      - 'POSTGRES_MIGRATIONS=0'
+      - 'POSTGRES_MIGRATIONS_SOURCE=postgres://postgres:postgrespassword@host.docker.internal:5432/postgres?sslmode=disable'
+    command: serve
+  minio:
+    image: minio/minio
+    restart: always
+    volumes:
+      - 'minio_data:/export'
+      - 'minio_config:/root/.minio'
+    ports:
+      - '9000:9000'
+      - '32765:32765'
+    environment:
+      - 'MINIO_ROOT_USER=minioaccesskey'
+      - 'MINIO_ROOT_PASSWORD=miniosecretkey'
+    entrypoint: sh
+    command: '-c ''mkdir -p /export/default && /opt/bin/minio server --address 0.0.0.0:9000 --console-address 0.0.0.0:32765 /export'''
   case:
     image: deepf/deepcase:main
     networks:
@@ -67,6 +102,9 @@ services:
       - 'JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 volumes:
   db_data:
+  storage_rules:
+  minio_data:
+  minio_config:
 networks:
   network:
     driver: bridge
