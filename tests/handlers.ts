@@ -471,7 +471,7 @@ describe('sync function handle by type with resolve', () => {
 });
 
 describe('sync function handle by type with reject', () => {
-  it.only(`handle insert`, async () => {
+  it(`handle insert`, async () => {
     // const numberToThrow = randomInteger(5000000, 9999999999);
     const numberToThrow = nextHandlerResult();
 
