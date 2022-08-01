@@ -36,12 +36,8 @@ jobs:
         run: npm run migrate
       - name: backup dir
         run: mkdir backup
-      - name: backup pg
-        run: pg_dump --clean --if-exists -d postgres://postgres:postgrespassword@127.0.0.1:5432/postgres > backup/migrated_pg.dump
-      - name: backup volume
-        run: docker run --rm --volumes-from deep_postgres_1 -v $(pwd):/temp ubuntu tar -c -v -C /var/lib/postgresql -f /temp/backup/volume.tar ./data
-      - name: backup migrations log
-        run: cp .migrate backup/.migrate
+      - name: snapshot:create
+        run: 'npm run snapshot:create'
       - name: build
         run: npm run package:build
       - name: Log in to Docker Hub
