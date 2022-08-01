@@ -300,7 +300,7 @@ export const up = async () => {
   });
 
   log('wait untill storage restart');
-  await waitOn({ resources: [`http-get://localhost:8000/healthz`] });
+  // await waitOn({ resources: [`http-get://localhost:8000/healthz`] });
 
 };
 

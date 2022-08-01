@@ -17,6 +17,7 @@ export interface LinkPlain<Ref extends number> {
   type_id: Ref;
   from_id?: Ref;
   to_id?: Ref;
+  value?: any;
 }
 
 export interface LinkRelations<L> {
@@ -61,9 +62,19 @@ export class MinilinksLink<Ref extends number> {
   outByType: { [id: number]: MinilinksLink<Ref>[] };
   from: MinilinksLink<Ref>;
   to: MinilinksLink<Ref>;
+  value?: any;
   _applies: string[] = [];
   constructor(link: any) {
     Object.assign(this, link);
+  }
+  toPlain(): LinkPlain<Ref> {
+    return {
+      id: this.id,
+      type_id: this.type_id,
+      from_id: this.from_id,
+      to_id: this.to_id,
+      value: this.value,
+    };
   }
 }
 export interface MinilinksGeneratorOptions {

@@ -621,7 +621,6 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
-    console.log({ linkId, token });
     return new DeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {
