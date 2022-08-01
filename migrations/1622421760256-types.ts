@@ -244,25 +244,25 @@ const corePckg: Package = {
     { id: 'ruleTreeRuleSelectorExclude', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorExclude' }, // 133
     { id: 'ruleTreeRuleSelectorFilter', type: 'TreeIncludeDown', from: 'ruleTree', to: 'SelectorFilter' }, // 134
 
-    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 140
-    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 141
-    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 142
+    { id: 'Plv8IsolationProvider', type: 'IsolationProvider' }, // 135
+    { id: 'JSminiExecutionProvider', type: 'ExecutionProvider' }, // 136
+    { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },  // 137
 
-    { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' }, // 143
-    { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' }, // 144
+    { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' }, // 138
+    { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' }, // 139
 
-    { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' }, // 145
-    { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },  // 146
+    { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' }, // 140
+    { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },  // 141
 
-    { id: 'Symbol', type: 'Type', from: 'Any', to: 'Any' }, // 147
-    { id: 'symbolValue', type: 'Value', from: 'Symbol', to: 'String' }, // 148
-    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Any' }, // 149
+    { id: 'Symbol', type: 'Type', from: 'Any', to: 'Any' }, // 142
+    { id: 'symbolValue', type: 'Value', from: 'Symbol', to: 'String' }, // 143
+    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Any' }, // 144
 
-    { id: 'containTreeThen', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Then' }, // 150
-    { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' }, // 151
-    { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 152
+    { id: 'containTreeThen', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Then' }, // 145
+    { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' }, // 146
+    { id: 'containTreeRejected', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Rejected' }, // 147
 
-    { id: 'HandleClient', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 154
+    { id: 'HandleClient', type: 'HandleOperation', from: 'Any', to: 'Handler' }, // 148
 
     { id: 'TypeSymbol', type: 'Symbol', from: 'Type', to: 'Type', value: { value: '⭐️' } },
     { id: 'PackageSymbol', type: 'Symbol', from: 'Package', to: 'Package', value: { value: '📦' } },
