@@ -1,14 +1,12 @@
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
-import { generateDown, generateUp } from '../imports/type-table';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { MP_TABLE_NAME } from './1621815803572-materialized-path';
+import { DeepClient, _ids } from '../imports/client';
 import { permissions } from '../imports/permission';
-import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { MP_TABLE_NAME, TREE_TABLE_NAME } from './1621815803572-materialized-path';
 import { SELECTORS_TABLE_NAME } from './1622421760258-selectors';
 import { CAN_TABLE_NAME } from './1622421760259-can';
-import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
 
 const debug = Debug('deeplinks:migrations:permissions');
 const log = debug.extend('log');
@@ -189,6 +187,51 @@ export const up = async () => {
     columns: '*',
     computed_fields: [],
   });
+  await permissions(api, TREE_TABLE_NAME, {
+    role: 'link',
+
+    select: {
+      _and: [
+        {
+          link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+        {
+          parent: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+        },
+      ]
+    },
+    insert: {
+      id: { _is_null: true }
+    },
+    update: {
+      id: { _is_null: true }
+    },
+    delete: {
+      id: { _is_null: true }
+    },
+
+    columns: '*',
+    computed_fields: [],
+  });
+  await permissions(api, TREE_TABLE_NAME, {
+    role: 'undefined',
+
+    select: {
+      id: { _is_null: true },
+    },
+    insert: {
+      id: { _is_null: true }
+    },
+    update: {
+      id: { _is_null: true }
+    },
+    delete: {
+      id: { _is_null: true }
+    },
+
+    columns: '*',
+    computed_fields: [],
+  });
   await permissions(api, CAN_TABLE_NAME, {
     role: 'link',
 
@@ -290,20 +333,20 @@ export const up = async () => {
     await permissions(api, 'objects', valuesPermissions);
   })();
   await (async () => {
-    await permissions(api, LINKS_TABLE_NAME, (await linksPermissions(['$','id'], GLOBAL_ID_ANY, 'undefined')));
+    await permissions(api, LINKS_TABLE_NAME, (await linksPermissions(['$','id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')));
     const valuesPermissions = {
-      ...(await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')),
+      ...(await linksPermissions(['$','link_id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')),
       select: {
-        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).select,
+        link: (await linksPermissions(['$','link_id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')).select,
       },
       insert: {
-        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).insert,
+        link: (await linksPermissions(['$','link_id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')).insert,
       },
       update: {
-        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).update,
+        link: (await linksPermissions(['$','link_id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')).update,
       },
       delete: {
-        link: (await linksPermissions(['$','link_id'], GLOBAL_ID_ANY, 'undefined')).delete,
+        link: (await linksPermissions(['$','link_id'], _ids?.['@deep-foundation/core']?.Any, 'undefined')).delete,
       },
 
       columns: ['id','link_id','value'],
@@ -346,14 +389,14 @@ export const up = async () => {
         WHERE t."id" = NEW."to_id";
 
         IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
-          IF (typeLink."from_id" != ${GLOBAL_ID_ANY} AND typeLink."from_id" != fromLink."type_id") THEN
+          IF (typeLink."from_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."from_id" != fromLink."type_id") THEN
             RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
               NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
           END IF;
-          IF (typeLink."to_id" != ${GLOBAL_ID_ANY} AND typeLink."to_id" != toLink."type_id") THEN
+          IF (typeLink."to_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."to_id" != toLink."type_id") THEN
             RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
               NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",

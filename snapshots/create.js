@@ -21,7 +21,7 @@ const create = async () => {
   const last = snapshots[snapshots.length - 1];
   const time = (new Date()).getTime();
   const containerName = await getCompose() === '2' ? 'deep-postgres-1' : 'deep_postgres_1';
-  const { stdout, stderr } = await execP(`cd docker-prod/deep && docker-compose -f docker-compose.yml stop graphql-engine postgres && docker run -v ${_deeplinks}:/deeplinks --volumes-from ${containerName} --rm --name links --entrypoint \"sh\" deepf/deeplinks:main -c \"cd / && ls var/lib/postgresql && tar -c -v -C /var/lib/postgresql -f /deeplinks/snapshots/${time} ./data" && docker-compose -f docker-compose.yml start graphql-engine postgres && cd ../.. && cp .migrate snapshots/${time}.migrate`);
+  const { stdout, stderr } = await execP(`cd docker-prod/deep && (docker-compose -f docker-compose.yml stop graphql-engine postgres || true) && docker run -v ${_deeplinks}:/deeplinks --volumes-from ${containerName} --rm --name links --entrypoint \"sh\" deepf/deeplinks:main -c \"cd / && ls var/lib/postgresql && tar -c -v -C /var/lib/postgresql -f /deeplinks/snapshots/${time} ./data" && docker-compose -f docker-compose.yml start graphql-engine postgres && cd ../.. && cp .migrate snapshots/${time}.migrate`);
   console.log('stdout',stdout);
   console.log('stderr',stderr);
 }

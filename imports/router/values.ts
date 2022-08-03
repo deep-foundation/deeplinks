@@ -87,7 +87,7 @@ export default async (req, res) => {
               link_id: { _eq: oldValueRow.link_id },
             }, { table: 'bool_exp' });
         }
-        if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','BoolExp')) {
+        if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','Query')) {
             // generate new bool_exp sql version
             await boolExpToSQL(newRow.id, newRow?.value?.value);
         }

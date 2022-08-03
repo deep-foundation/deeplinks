@@ -244,7 +244,7 @@ describe('selectors', () => {
           {
             type_id: await admin.id('@deep-foundation/core', 'SelectorFilter'),
             to: { data: {
-              type_id: await admin.id('@deep-foundation/core', 'BoolExp'),
+              type_id: await admin.id('@deep-foundation/core', 'Query'),
               object: { data: { value: { string: { value: { _in: ['id3', 'id5'] } } } } }
             } },
           },

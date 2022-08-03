@@ -38,7 +38,7 @@ describe('bool_exp', () => {
         type_id: await deep.id('@deep-foundation/core', 'Any'),
       });
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
       });
       await deep.insert({
         link_id: boolExpId,
@@ -63,7 +63,7 @@ describe('bool_exp', () => {
         type_id: await deep.id('@deep-foundation/core', 'Any'),
       });
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
         object: { data: { value: { id: { _eq: t1 } } } },
       });
       await deep.await(boolExpId);
@@ -85,7 +85,7 @@ describe('bool_exp', () => {
         type_id: await deep.id('@deep-foundation/core', 'Any'),
       });
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
         object: { data: { value: { id: { _eq: t1 } } } },
       });
       await deep.await(boolExpId);
@@ -112,7 +112,7 @@ describe('bool_exp', () => {
         type_id: await deep.id('@deep-foundation/core', 'Any'),
       });
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
         object: { data: { value: { id: { _eq: t1 } } } },
       });
       await deep.await(boolExpId);
@@ -128,7 +128,7 @@ describe('bool_exp', () => {
     it(`X-Deep-User-Id`, async () => {
       const g1 = await deep.guest({});
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
         object: { data: { value: { id: { _eq: 'X-Deep-User-Id' } } } },
         in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Contain'),
@@ -150,7 +150,7 @@ describe('bool_exp', () => {
     });
     it(`X-Deep-Item-Id`, async () => {
       const { data: [{ id: boolExpId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+        type_id: await deep.id('@deep-foundation/core', 'Query'),
         object: { data: { value: { id: { _eq: 'X-Deep-Item-Id' } } } },
       });
       await deep.await(boolExpId);

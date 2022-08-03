@@ -1,12 +1,7 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
-import { down as downRels, up as upRels } from '@deep-foundation/materialized-path/relationships';
-import { down as downTable, up as upTable } from '@deep-foundation/materialized-path/table';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
 import Debug from 'debug';
-import { GLOBAL_ID_ANY, GLOBAL_ID_INCLUDE_DOWN, GLOBAL_ID_INCLUDE_NODE, GLOBAL_ID_INCLUDE_UP, GLOBAL_ID_TREE } from '../imports/client';
-import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 
 const debug = Debug('deeplinks:migrations:auto-indexes');
 const log = debug.extend('log');

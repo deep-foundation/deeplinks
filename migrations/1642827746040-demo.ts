@@ -227,7 +227,7 @@ export const up = async () => {
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+          type_id: await deep.id('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             _or: [
               { from_id: { _eq: 0 } },
@@ -283,7 +283,7 @@ export const up = async () => {
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+          type_id: await deep.id('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             from: {
               _by_item: {
@@ -344,7 +344,7 @@ export const up = async () => {
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+          type_id: await deep.id('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             from: {
               _by_item: {

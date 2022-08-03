@@ -1,16 +1,14 @@
 import Debug from 'debug';
 
-import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { HasuraApi } from "@deep-foundation/hasura/api";
+import { generateApolloClient } from '@deep-foundation/hasura/client';
 // import { sql } from '@deep-foundation/hasura/sql';
 import { gql } from 'apollo-boost';
-import vm from 'vm';
 
-import { permissions } from '../permission';
-import { findPromiseLink, reject, resolve } from '../promise';
 import { DeepClient } from '../client';
-import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { ContainerController } from '../container-controller';
+import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
+import { findPromiseLink, reject, resolve } from '../promise';
 
 const SCHEMA = 'public';
 
