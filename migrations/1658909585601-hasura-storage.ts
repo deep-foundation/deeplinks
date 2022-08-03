@@ -330,19 +330,23 @@ export const down = async () => {
   await api.query({
     type: 'untrack_table',
     args: {
-      schema: 'storage',
-      name: 'files',
+      table: {
+        schema: 'storage',
+        name: 'files',
+      },
+      cascade: true,
     },
-    cascade: true
   });
 
   await api.query({
     type: 'untrack_table',
     args: {
-      schema: 'storage',
-      name: 'buckets',
+      table: {
+        schema: 'storage',
+        name: 'buckets',
+      },
+      cascade: true,
     },
-    cascade: true
   });
 
   log('sql');

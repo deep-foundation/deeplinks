@@ -22,7 +22,6 @@ const root = new DeepClient({
   apolloClient: rootClient,
 });
 
-
 export const up = async () => {
   log('up');
   const packager = new Packager(root);
@@ -32,7 +31,8 @@ export const up = async () => {
     log(errors[0]?.graphQLErrors?.[0]?.message);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal);
     log(errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.request);
-    throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}`);
+    const error = errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.error;
+    throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}${error?.message ? ` ${error?.message} ${error?.request?.method} ${error?.request?.host}:${error?.request?.port}${error?.request?.path}` : ''}`);
   } else {
     await root.insert({
       type_id: await root.id('@deep-foundation/core', 'Package'),
