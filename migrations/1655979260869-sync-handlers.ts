@@ -22,15 +22,18 @@ const deep = new DeepClient({
 // plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
 const handleInsertTypeId = 49; // await deep.id('@deep-foundation/core', 'HandleInsert');
+const handleUpdateTypeId = 50; // await deep.id('@deep-foundation/core', 'HandleUpdate');
+const handleDeleteTypeId = 51; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = 22 // await deep.id('@deep-foundation/core', 'User');
 const packageTypeId = 2 // await deep.id('@deep-foundation/core', 'Package');
 
 const newSelect = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=3 AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkString = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
+const updateLinkString = `\`UPDATE links SET \${set} WHERE \${where} RETURNING id;\``;
 
 const insertValueString = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``
 
-const deleteString = `\`DELETE FROM links WHERE id=\${id}::bigint RETURNING ID\``;
+const deleteString = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 
 const typeHandlers = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" as "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "SyncTextFile" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("SyncTextFile"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( (("supports"."type_id") = (('84') :: bigint)) ) AND ( ( (("supports"."id") = (137 :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "typeHandlerType" WHERE ( ( ( ("typeHandlerType"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("typeHandlerType"."type_id") = ($1 :: bigint)) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) AND ('true') ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (('35') :: bigint)) ) ) ) ) ) ) ) ) ) AND (("SyncTextFile"."type_id") = (('30') :: bigint)) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = 35 :: bigint ) AS "_6_root"\``;
 
@@ -44,10 +47,14 @@ const mpUp = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT r
 
 const mpMe = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"\``;
 
-const checkLinkPermission =  /*javascript*/`(linkid, userId ) => {
+const checkSelectLinkPermission =  /*javascript*/`(linkid, userId ) => {
   const result = !!plv8.execute(${checkInsertLink}, [ linkid, userId ])[0]?.root;
   return !!result;
 }`
+
+// const checkSelectLinkPermission = `() => {return true}`;
+const checkUpdateLinkPermission = `() => {return true}`;
+const checkDeleteLinkPermission = `() => {return true}`;
 
 
 const prepareFunction = /*javascript*/`
@@ -75,7 +82,6 @@ const prepareFunction = /*javascript*/`
   for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = getOwner(typeHandlers[i].id); }
 
   const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
-
   const testedSelectors = [];
   for (let i = 0; i < selectors.length; i++){ if (!selectors[i].bool_exp_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].bool_exp_id, user_id])) testedSelectors.push(selectors[i].selector_id); }
   
@@ -83,10 +89,39 @@ const prepareFunction = /*javascript*/`
   const selectorHandlers = plv8.execute(${selectorHandlers}, [ testedSelectors, handletypeid ])[0].root.map((textFile)=>{return{value: textFile?.valuseResult?.value, id: textFile?.handler}});
   for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = getOwner(selectorHandlers[i].id); }
 
-  return typeHandlers.concat(selectorHandlers);
+  const handlers = typeHandlers.concat(selectorHandlers);
+
+  const sortById = ( a, b ) => {
+    if ( a.id < b.id ){
+      return -1;
+    }
+    if ( a.id > b.id ){
+      return 1;
+    }
+    return 0;
+  }
+
+  return handlers.sort(sortById);
 `;
 
-const deepFabric =  /*javascript*/`(ownerId) => { 
+const generateSqlOptions =  `({ _set, ..._where }) => {
+  if ( !(!_set?.to_id && !_set?.from_id) && !(_set?.to_id && _set?.from_id)) {
+    throw new Error('Partial update not permited');
+  }
+  const where = [];
+  const set = [];
+  const whereFileds = Object.keys(_where).filter(key=>_where[key]);
+  for (let i = 0; i < whereFileds.length; i++ ){
+    where.push(\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\`);
+  }
+  const setFileds = Object.keys(_set).filter(key=>_set[key]);
+  for (let i = 0; i < setFileds.length; i++ ){
+    set.push(\`\${setFileds[i]} = \${_set[setFileds[i]]}\`);
+  }
+  return { where: where.join(', '), set: set.join(', ') };
+}`;
+
+const deepFabric =  /*javascript*/`(ownerId) => {
   return {
     id: (options) => {
       const { start, path } = options;
@@ -115,11 +150,8 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       let insertLinkString = ${insertLinkString};
       const linkid = plv8.execute(insertLinkString)[0]?.id;
       ids.link = linkid;
-      const linkCheck = checkLinkPermission(linkid, ownerId);
-      if (!linkCheck) {
-        plv8.execute(insertLinkString)[0]?.id;
-        return ids;
-      }
+      const linkCheck = checkSelectLinkPermission(linkid, ownerId);
+      if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = number || string || object;
       if (!value) return ids;
       const insertValueString = ${insertValueString};
@@ -127,25 +159,39 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       ids.value = valueId
       return ids;
     },
+    update: function(options) {
+      const { id, type_id, from_id, to_id, _set } = options;
+      const ids = {};
+      const linkCheck = checkUpdateLinkPermission(id, ownerId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
+      const generateSqlOptions = ${generateSqlOptions};
+      const { where, set } = generateSqlOptions(options);
+      let updateLinkString = ${updateLinkString};
+      const linkid = plv8.execute(updateLinkString)[0].id;
+      ids.link = linkid;
+      return ids;
+    },
     delete: function(options) {
       const { id } = options;
+      const linkCheck = checkDeleteLinkPermission(id, ownerId);
+      if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
       const deleteString = ${deleteString};
-      const linkid = plv8.execute(deleteString)[0].id;
-      return linkid;
+      const linkid = plv8.execute(deleteString, [ id ])[0].id;
+      return { link: linkid };
     }
   }
 }`;
 
-const insertHandlerFunction = /*javascript*/`
+const handlerFuncion = handleOperationTypeId => /*javascript*/`
   const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
-  const prepared = prepare(NEW, ${handleInsertTypeId});
-  const checkLinkPermission = ${checkLinkPermission};
+  const prepared = prepare(${handleOperationTypeId === handleInsertTypeId ? 'NEW' : 'OLD'}, ${handleOperationTypeId});
+  const checkSelectLinkPermission = ${checkSelectLinkPermission};
+  const checkUpdateLinkPermission = ${checkUpdateLinkPermission};
+  const checkDeleteLinkPermission = ${checkDeleteLinkPermission};
   const deepFabric = ${deepFabric};
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
-        const checkLinkPermission = undefined;
-        const hasura_session = undefined;
-        const user_id = undefined;
+        const checkSelectLinkPermission = undefined;
         const deep = deepFabric(prepared[i].id);
         const func = eval(prepared[i].value);
         func(deep, {oldLink: OLD, newLink: NEW});
@@ -154,17 +200,29 @@ const insertHandlerFunction = /*javascript*/`
   return NEW;
 `;
 
-const deepClientFunction = /*javascript*/`const checkLinkPermission = ${checkLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](args);  return result;`;
+const deepClientFunction = /*javascript*/`const checkSelectLinkPermission = ${checkSelectLinkPermission}; const checkUpdateLinkPermission = ${checkUpdateLinkPermission}; const checkDeleteLinkPermission = ${checkDeleteLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](args);  return result;`;
 
 export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handler__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
-export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(clientLinkId bigint, operation text, args jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
-export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__handler__function() RETURNS TRIGGER AS $$ ${insertHandlerFunction} $$ LANGUAGE plv8;`;
-export const createSyncInsertTrigger = sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__sync__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__handler__function();`;
-
 export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__deep__client CASCADE;`;
+
+export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(clientLinkId bigint, operation text, args jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
 export const dropDeepClientFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handler__prepare__function CASCADE;`;
-export const dropSyncInsertTrigger = sql`DROP TRIGGER ${LINKS_TABLE_NAME}__sync__insert__handler__trigger ON "${LINKS_TABLE_NAME}";`;
+
+export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleInsertTypeId)} $$ LANGUAGE plv8;`;
+export const createSyncInsertTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__handler__function();`;
+export const dropSyncInsertTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__handler__function CASCADE;`;
+
+export const createSyncUpdateTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleUpdateTypeId)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__handler__function();`;
+export const dropSyncUpdateTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger ON "${LINKS_TABLE_NAME}";`;
+export const dropSyncUpdateTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__handler__function CASCADE;`;
+
+export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleDeleteTypeId)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__handler__function();`;
+export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger ON "${LINKS_TABLE_NAME}";`;
+export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__handler__function CASCADE;`;
+
 
 export const up = async () => {
   log('up');
@@ -172,9 +230,17 @@ export const up = async () => {
   await api.sql(sql`CREATE EXTENSION IF NOT EXISTS plv8;`);
 
   await api.sql(createPrepareFunction);
+
   await api.sql(createDeepClientFunction);
+  
   await api.sql(createSyncInsertTriggerFunction);
   await api.sql(createSyncInsertTrigger);
+
+  await api.sql(createSyncUpdateTriggerFunction);
+  await api.sql(createSyncUpdateTrigger);
+
+  await api.sql(createSyncDeleteTriggerFunction);
+  await api.sql(createSyncDeleteTrigger);
 
 };
 
@@ -182,9 +248,17 @@ export const down = async () => {
   log('down');
 
   await api.sql(dropPrepareFunction);
+
   await api.sql(dropDeepClientFunction);
+
   await api.sql(dropSyncInsertTrigger);
   await api.sql(dropSyncInsertTriggerFunction);
+
+  await api.sql(dropSyncUpdateTrigger);
+  await api.sql(dropSyncUpdateTriggerFunction);
+
+  await api.sql(dropSyncDeleteTrigger);
+  await api.sql(dropSyncDeleteTriggerFunction);
 
   await api.sql(sql`DROP EXTENSION IF EXISTS plv8 CASCADE;`);
 };

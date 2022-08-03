@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import gql from "graphql-tag";
 import Debug from 'debug';
 import fetch from 'node-fetch';
-import { insertHandler, insertSelector, insertSelectorItem, ensureLinkIsCreated, deleteHandler, deleteSelector }  from "../imports/handlers";
+import { insertHandler, insertSelector, insertSelectorItems, ensureLinkIsCreated, deleteHandler, deleteSelector }  from "../imports/handlers";
 import _ from 'lodash';
 
 const debug = Debug('deeplinks:tests:handlers');
@@ -917,7 +917,7 @@ describe('Async handlers', () => {
       // console.log(`selectorTreeId: ${selectorTreeId}`);
       // console.log(`rootId: ${rootId}`);
       const handler = await insertHandler(handleInsertTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-      const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+      const selectorItems = await insertSelectorItems({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
       // log('awaiting starts...');
       // await deep.await(idToWait);
@@ -941,8 +941,8 @@ describe('Async handlers', () => {
       // console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
 
       for (const selectorItem of selectorItems) {
-        await deep.delete(selectorItem.linkId);
-        await deep.delete(selectorItem.nodeId);
+        if (selectorItem?.linkId) await deep.delete(selectorItem.linkId);
+        if (selectorItem?.nodeId) await deep.delete(selectorItem.nodeId);
       }
       
       await deleteSelector(selector);
@@ -969,7 +969,7 @@ describe('Async handlers', () => {
       // console.log(`selectorTreeId: ${selectorTreeId}`);
       // console.log(`rootId: ${rootId}`);
       const handler = await insertHandler(handleDeleteTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-      const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+      const selectorItems = await insertSelectorItems({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
       // log('awaiting starts...');
       // await deep.await(idToWait);
@@ -1016,7 +1016,7 @@ describe('Async handlers', () => {
       const selector = await insertSelector();
       const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
       const handler = await insertHandler(handleUpdateTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
-      const selectorItems = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+      const selectorItems = await insertSelectorItems({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
 
       const linkId = selectorItems[1].linkId;
       // const linkId = selectorItems[0].linkId;

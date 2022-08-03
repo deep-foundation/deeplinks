@@ -123,7 +123,7 @@ export async function insertSelector() {
   };
 };
 
-export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
+export async function insertSelectorItems({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
   // const { data: [{ id: id1 }] } = await deep.insert({
   //   type_id: nodeTypeId,
   //   in: { data: {
@@ -168,6 +168,18 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   ]
 };
 
+export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
+  const { data: [{ id: linkId }] } = await deep.insert({
+    type_id: linkTypeId,
+    from_id: rootId,
+    to: { data: {
+      type_id: nodeTypeId,
+    } }
+  }, { returning: 'id to { id }' }) as any;
+  return { linkId };
+};
+
+
 export async function ensureLinkIsCreated(typeId: number) {
   // const freeId = randomInteger(5000000, 9999999999);
   const freeId = nextFreeId();
@@ -185,13 +197,19 @@ export async function ensureLinkIsCreated(typeId: number) {
 
 export const deleteHandler = async (handler) => {
   const { handlerJSFileValueId, ...ids } = handler;
+  console.log('deleteHandler ids', ids);
   const result = { links: [], strings: []};
-  if (handlerJSFileValueId) result.strings.push(await deep.delete(handlerJSFileValueId), { table: 'strings' });
-  result.links.push(await deep.delete(_.compact(Object.values(ids))));
+  console.log('deleteHandler handlerJSFileValueId', handlerJSFileValueId);
+  const compact = {id: {_in: _.compact(Object.values(ids))}}
+  console.log('deleteHandler compact', compact);
+  result.links.push(await deep.delete(compact));
+  return result;
 };
 
 export const deleteSelector = async (selector: any) => {
   const { treeIncludesIds, ...withoutTreeIncluds } = selector;
   const ids = (_.concat(treeIncludesIds, Object.values(withoutTreeIncluds)));
-  await deep.delete({id: {_in: _.compact(ids)}});
+  const compact = {id: {_in: _.compact(ids)}};
+  console.log('deleteSelector compact', compact);
+  await deep.delete(compact);
 };
