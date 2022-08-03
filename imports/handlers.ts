@@ -197,11 +197,8 @@ export async function ensureLinkIsCreated(typeId: number) {
 
 export const deleteHandler = async (handler) => {
   const { handlerJSFileValueId, ...ids } = handler;
-  console.log('deleteHandler ids', ids);
   const result = { links: [], strings: []};
-  console.log('deleteHandler handlerJSFileValueId', handlerJSFileValueId);
   const compact = {id: {_in: _.compact(Object.values(ids))}}
-  console.log('deleteHandler compact', compact);
   result.links.push(await deep.delete(compact));
   return result;
 };
@@ -210,6 +207,5 @@ export const deleteSelector = async (selector: any) => {
   const { treeIncludesIds, ...withoutTreeIncluds } = selector;
   const ids = (_.concat(treeIncludesIds, Object.values(withoutTreeIncluds)));
   const compact = {id: {_in: _.compact(ids)}};
-  console.log('deleteSelector compact', compact);
   await deep.delete(compact);
 };
