@@ -104,22 +104,8 @@ const prepareFunction = /*javascript*/`
   return handlers.sort(sortById);
 `;
 
-const generateSqlOptions =  `({ _set, ..._where }) => {
-  if ( !(!_set?.to_id && !_set?.from_id) && !(_set?.to_id && _set?.from_id)) {
-    throw new Error('Partial update not permited');
-  }
-  const where = [];
-  const set = [];
-  const whereFileds = Object.keys(_where).filter(key=>_where[key]);
-  for (let i = 0; i < whereFileds.length; i++ ){
-    where.push(\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\`);
-  }
-  const setFileds = Object.keys(_set).filter(key=>_set[key]);
-  for (let i = 0; i < setFileds.length; i++ ){
-    set.push(\`\${setFileds[i]} = \${_set[setFileds[i]]}\`);
-  }
-  return { where: where.join(', '), set: set.join(', ') };
-}`;
+const wherePush =  `\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\``;
+const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
 
 const deepFabric =  /*javascript*/`(ownerId) => {
   return {
@@ -160,12 +146,26 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       return ids;
     },
     update: function(options) {
-      const { id, type_id, from_id, to_id, _set } = options;
+      const { _set, ..._where } = options;
+      const { id, type_id, from_id, to_id } = _where;
       const ids = {};
       const linkCheck = checkUpdateLinkPermission(id, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
-      const generateSqlOptions = ${generateSqlOptions};
-      const { where, set } = generateSqlOptions(options);
+      if ( !(!_set?.to_id && !_set?.from_id) && !(_set?.to_id && _set?.from_id)) {
+        throw new Error('Partial update not permited');
+      }
+      const whereArr = [];
+      const setArr = [];
+      const whereFileds = Object.keys(_where).filter(key=>_where[key]);
+      for (let i = 0; i < whereFileds.length; i++ ){
+        whereArr.push(${wherePush});
+      }
+      const setFileds = Object.keys(_set).filter(key=>_set[key]);
+      for (let i = 0; i < setFileds.length; i++ ){
+        setArr.push(${setPush});
+      }
+      const where = whereArr.join(', ');
+      const set = setArr.join(', ');
       let updateLinkString = ${updateLinkString};
       const linkid = plv8.execute(updateLinkString)[0].id;
       ids.link = linkid;

@@ -89,7 +89,7 @@ describe('sync handlers', () => {
       if (JSON.parse(result?.data?.result?.[1]?.[0])?.link === clientResult?.data?.[0]?.id) deep.delete({id: {_eq: CustomNumber}});
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0]).link, clientResult?.data?.[0]?.id);
     });
-    it(`update`, async () => {
+    it.only(`update`, async () => {
       const CustomNumber = nextHandlerResult();
       const inserted = await deep.insert({id: CustomNumber, type_id: 1});
       log('inserted', inserted );
