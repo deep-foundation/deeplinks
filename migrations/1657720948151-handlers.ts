@@ -1,12 +1,9 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
-import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
-import { api, SCHEMA } from './1616701513782-links';
-import { MP_TABLE_NAME } from './1621815803572-materialized-path';
-import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
-import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql';
+import { DeepClient } from '../imports/client';
 import { permissions } from '../imports/permission';
+import { api, SCHEMA } from './1616701513782-links';
 import { linksPermissions } from './1622421760260-permissions';
 
 const debug = Debug('deeplinks:migrations:handlers');

@@ -10,6 +10,7 @@ import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
 import Debug from 'debug';
+import { corePckg } from './core';
 
 const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
@@ -18,56 +19,13 @@ const error = debug.extend('error');
 const namespaces = Debug.disable();
 Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
-export const ALLOWED_IDS = [5];
-export const DENIED_IDS = [0, 10, 11, 12, 13];
-export const GLOBAL_ID_PACKAGE=2;
-export const GLOBAL_ID_CONTAIN=3;
-export const GLOBAL_ID_STRING=5;
-export const GLOBAL_ID_NUMBER=6;
-export const GLOBAL_ID_OBJECT=7;
-export const GLOBAL_ID_ANY=8;
-export const GLOBAL_ID_PROMISE=9;
-export const GLOBAL_ID_THEN=10;
-export const GLOBAL_ID_RESOLVED=11;
-export const GLOBAL_ID_REJECTED=12;
-export const GLOBAL_ID_TREE=36;
-export const GLOBAL_ID_INCLUDE_DOWN=37;
-export const GLOBAL_ID_INCLUDE_UP=38;
-export const GLOBAL_ID_INCLUDE_NODE=39;
-export const GLOBAL_ID_CONTAIN_TREE=40;
-export const GLOBAL_ID_PACKAGE_NAMESPACE=43;
-export const GLOBAL_ID_PACKAGE_ACTIVE=45;
-export const GLOBAL_ID_PACKAGE_VERSION=46;
-export const GLOBAL_ID_HANDLE_UPDATE=50;
-export const GLOBAL_ID_JOIN=66;
-export const GLOBAL_ID_ALLOW_ADMIN=71;
-export const GLOBAL_ID_SELECTOR_FILTER=75;
+const corePckgIds: { [key: string]: number; } = {};
+corePckg.data.filter(l => !!l.type).forEach((l, i) => {
+  corePckgIds[l.id] = i+1;
+});
 
-export const GLOBAL_ID_INCLUDE_IN = 113;
-export const GLOBAL_ID_INCLUDE_OUT = 114;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT = 115;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT = 116;
-export const GLOBAL_ID_INCLUDE_CURRENT_FROM = 117;
-export const GLOBAL_ID_INCLUDE_CURRENT_TO = 118;
-export const GLOBAL_ID_INCLUDE_FROM_CURRENT_TO = 119;
-export const GLOBAL_ID_INCLUDE_TO_CURRENT_FROM = 120;
-
-const _ids = {
-  '@deep-foundation/core': {
-    'Contain': GLOBAL_ID_CONTAIN,
-    'Join': GLOBAL_ID_JOIN,
-    'containTree': GLOBAL_ID_CONTAIN_TREE,
-    'Package': GLOBAL_ID_PACKAGE,
-    'PackageActive': GLOBAL_ID_PACKAGE_ACTIVE,
-    'PackageVersion': GLOBAL_ID_PACKAGE_VERSION,
-    'PackageNamespace': GLOBAL_ID_PACKAGE_NAMESPACE,
-    'Promise': GLOBAL_ID_PROMISE,
-    'Then': GLOBAL_ID_THEN,
-    'Resolved': GLOBAL_ID_RESOLVED,
-    'Rejected': GLOBAL_ID_REJECTED,
-    'HandleUpdate': GLOBAL_ID_HANDLE_UPDATE,
-    'AllowAdmin': GLOBAL_ID_ALLOW_ADMIN,
-  },
+export const _ids = {
+  '@deep-foundation/core': corePckgIds,
 };
 
 // https://stackoverflow.com/a/38552302/4448999
@@ -117,7 +75,6 @@ export interface DeepClientResult<R> extends ApolloQueryResult<R> {
 export type DeepClientPackageSelector = string;
 export type DeepClientPackageContain = string;
 export type DeepClientLinkId = number;
-// export type DeepClientBoolExp = number;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
@@ -492,12 +449,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   pathToWhere(start: DeepClientStartItem, ...path: DeepClientPathItem[]): any {
-    const pckg = typeof(start) === 'string' ? { type_id: GLOBAL_ID_PACKAGE, value: start } : { id: start };
+    const pckg = typeof(start) === 'string' ? { type_id: _ids?.['@deep-foundation/core']?.Package, value: start } : { id: start };
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
       const item = path[p];
       if (typeof(item) !== 'boolean') {
-        const nextWhere = { in: { type_id: GLOBAL_ID_CONTAIN, value: item, from: where } };
+        const nextWhere = { in: { type_id: _ids?.['@deep-foundation/core']?.Contain, value: item, from: where } };
         where = nextWhere;
       }
     }

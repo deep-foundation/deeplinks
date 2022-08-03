@@ -1,11 +1,11 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
-import { DeepClient, GLOBAL_ID_ANY } from '../imports/client';
+import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql';
+import { DeepClient, _ids } from '../imports/client';
 import { api, SCHEMA } from './1616701513782-links';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path';
 import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
-import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql';
 
 const debug = Debug('deeplinks:migrations:selectors');
 const log = debug.extend('log');
@@ -75,7 +75,7 @@ export const up = async () => {
       WHERE be.link_id=bool_exp_link_id;
       IF boolExp IS NOT NULL THEN
         IF (user_id IS NULL) THEN
-          user_id := ${GLOBAL_ID_ANY};
+          user_id := ${_ids?.['@deep-foundation/core']?.Any};
         END IF;
         SELECT REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text) INTO query;
         EXECUTE query INTO sqlResult;

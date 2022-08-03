@@ -373,7 +373,7 @@ describe('permissions', () => {
                 {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+                    type_id: await deep.id('@deep-foundation/core', 'Query'),
                     object: { data: { value: {
                       to_id: { _eq: 'X-Deep-User-Id' } ,// <== HERE
                     }, }, },
@@ -805,7 +805,7 @@ describe('permissions', () => {
                 {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'BoolExp'),
+                    type_id: await deep.id('@deep-foundation/core', 'Query'),
                     object: { data: { value: {
                       string: { value: { _eq: 'abc2' } },// <== HERE
                     }, }, },

@@ -1,19 +1,14 @@
-import gql from 'graphql-tag';
-import Gists from 'gists';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { GLOBAL_ID_PACKAGE_VERSION } from '../client';
-import { Packager } from '../packager';
-import { ApolloServer } from 'apollo-server-express';
-import { DeepClient } from '../client';
-import fs from 'fs';
-import os from 'os';
-import { v4 as uuid } from 'uuid';
-import child_process from 'child_process';
-import * as semver from 'semver';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import url from 'url';
-import path from 'path';
+import { ApolloServer } from 'apollo-server-express';
+import Gists from 'gists';
+import gql from 'graphql-tag';
 import { isEmpty } from 'lodash';
+import os from 'os';
+import path from 'path';
+import url from 'url';
+import { DeepClient } from '../client';
+import { Packager } from '../packager';
 
 const tmpdir = os.tmpdir();
 
@@ -189,7 +184,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
     // }
     // await deep.update({
     //   link: {
-    //     type_id: { _eq: GLOBAL_ID_PACKAGE_VERSION },
+    //     type_id: { _eq: _ids?.['@deep-foundation/core']?.PackageVersion },
     //     to_id: { _eq: id },
     //   },
     // }, { value: nextVersion }, { table: 'strings' });
