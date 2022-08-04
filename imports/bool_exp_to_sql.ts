@@ -40,7 +40,11 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
   log('boolExpToSQL', boolExpId, boolExpValue);
   let gql, explained, sql;
   try {
-    gql = JSON.stringify(boolExpValue).replace(/"([^"]+)":/g, '$1:');
+    if (typeof(boolExpValue) !== 'object') {
+      throw new Error('boolExpValue must be object');
+    }
+    const serializedQuery = deep.serializeQuery(boolExpValue);
+    gql = JSON.stringify(serializedQuery?.where).replace(/"([^"]+)":/g, '$1:');
     gql = gql.replace(new RegExp(`'${userPublicSymbol}'`, 'g'), userReplaceSymbol);
     gql = gql.replace(new RegExp(`"${userPublicSymbol}"`, 'g'), userReplaceSymbol);
     gql = gql.replace(new RegExp(`'${itemPublicSymbol}'`, 'g'), itemReplaceSymbol);

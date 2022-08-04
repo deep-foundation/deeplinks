@@ -13,6 +13,6 @@ import './tests/minilinks';
 import './tests/demo';
 import './tests/packager';
 import './tests/in-transaction-handlers';
-import './tests/messanger';
+// import './tests/messanger';
 
 // TODO error if duplicates
