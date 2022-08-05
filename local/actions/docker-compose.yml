@@ -85,7 +85,8 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
   links:
-    image: deepf/deeplinks:main
+    build:
+      context: '../../'
     networks:
       - network
     ports:
