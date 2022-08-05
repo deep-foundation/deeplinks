@@ -33,7 +33,7 @@ jobs:
       - name: build
         run: npm run package:build
       - name: docker init
-        run: cd local/actions && docker-compose -p githubDeep up -d
+        run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
         run: npm run migrate
       - name: snapshot:create
