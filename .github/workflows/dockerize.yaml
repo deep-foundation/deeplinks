@@ -32,14 +32,14 @@ jobs:
         run: npm ci
       - name: build
         run: npm run package:build
-      - name: docker init
+      - name: docker-compose up
         run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
         run: npm run migrate
       - name: snapshot:create
         run: 'npm run snapshot:create'
-      - name: remove last image
-        run: docker image rm deepf/deeplinks:main
+      - name: snapshot:create
+        run: cd snapshots ls
       - name: docker init
         run: cd local/actions && docker-compose -p deep down
       - name: Log in to Docker Hub
