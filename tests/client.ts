@@ -10,7 +10,7 @@ const apolloClient = generateApolloClient({
 
 const deepClient = new DeepClient({ apolloClient });
 
-describe('serialize', () => {
+describe('client', () => {
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });

@@ -24,17 +24,17 @@ describe('typing', () => {
     let throwed = false;
     try { await deep.insert({ type_id: 999999 }); }
     catch (error) { throwed = true; }
-    assert(throwed, true);
+    assert.equal(throwed, true);
   });
   it(`particular links`, async () => {
     let throwed = false;
     try { await deep.insert({ type_id: 1, from_id: 1 }); }
     catch (error) { throwed = true; }
-    assert(throwed, true);
+    assert.equal(throwed, true);
   });
   it(`type 1`, async () => {
     const { data: [{ id }] } = await deep.insert({ type_id: 1 });
-    assert(typeof(id), 'number');
+    assert.equal(typeof(id), 'number');
   });
   it(`link equal from/to type`, async () => {
     const { data: [{ id: typeFromId }] } = await deep.insert({ type_id: 1 });
@@ -54,9 +54,9 @@ describe('typing', () => {
     let throwed = false;
     try { await deep.insert({ type_id: typeId, from_id: fromId, to_id: toId }); }
     catch (error) {
-      assert(error.message, `Type conflict link: { type: ${typeId}, from: ${fromId}, to: ${toId} } expected type: { type: ${typeId}, from: ${typeFromToId}, to: ${typeFromToId} } received type: { type: ${typeId}, from: ${typeFromToId}, to: ${invalidTypeId} }`);
+      assert.equal(error.message, `Type conflict link: { type: ${typeId}, from: ${fromId}, to: ${toId} } expected type: { type: ${typeId}, from: ${typeFromToId}, to: ${typeFromToId} } received type: { type: ${typeId}, from: ${typeFromToId}, to: ${invalidTypeId} }`);
       throwed = true;
     }
-    assert(throwed, true);
+    assert.equal(throwed, true);
   });
 });

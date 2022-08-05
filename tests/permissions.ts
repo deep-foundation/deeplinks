@@ -29,7 +29,7 @@ describe('permissions', () => {
       const d1 = new DeepClient({ deep, ...a1 });
       const d2 = new DeepClient({ deep, ...a2 });
       const { data: [{ id }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Contain'),
           from_id: a1.linkId,
@@ -50,14 +50,14 @@ describe('permissions', () => {
       const d2 = new DeepClient({ deep, ...a2 });
       const d3 = new DeepClient({ deep, ...a3 });
       const { data: [{ id: id1 }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Contain'),
           from_id: a1.linkId,
         } }
       });
       const { data: [{ id: id2 }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         in: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Contain'),
           from_id: id1,
@@ -145,7 +145,7 @@ describe('permissions', () => {
   describe('insert', () => {
     it(`root can insert`, async () => {
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const n1 = await deep.select({ id });
       assert.lengthOf(n1?.data, 1);
@@ -154,7 +154,7 @@ describe('permissions', () => {
       const a1 = await deep.guest({});
       const d1 = new DeepClient({ deep, ...a1, silent: true });
       const { data, error } = await d1.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       assert.isNotEmpty(error);
     });
@@ -229,19 +229,19 @@ describe('permissions', () => {
       });
       const d1 = new DeepClient({ deep, ...a1, silent: true });
       const { data: da1, error: e1 } = await d1.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da1).to.not.be.undefined;
       expect(e1).to.be.undefined;
       const d2 = new DeepClient({ deep, ...a2, silent: true });
       const { data: da2, error: e2 } = await d2.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da2).to.not.be.undefined;
       expect(e2).to.be.undefined;
       const d3 = new DeepClient({ deep, ...a3, silent: true });
       const { data: da3, error: e3 } = await d3.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da3).to.be.undefined;
       expect(e3).to.not.be.undefined;
@@ -403,7 +403,7 @@ describe('permissions', () => {
 
       const d1 = new DeepClient({ deep, ...a1, silent: true });
       const { data: da1, error: e1 } = await d1.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da1).to.not.be.undefined;
       expect(e1).to.be.undefined;
@@ -416,7 +416,7 @@ describe('permissions', () => {
       expect(e1t).to.be.undefined;
       const d2 = new DeepClient({ deep, ...a2, silent: true });
       const { data: da2, error: e2 } = await d2.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da2).to.not.be.undefined;
       expect(e2).to.be.undefined;
@@ -429,7 +429,7 @@ describe('permissions', () => {
       expect(e2t).to.not.be.undefined;
       const d3 = new DeepClient({ deep, ...a3, silent: true });
       const { data: da3, error: e3 } = await d3.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       expect(da3).to.not.be.undefined;
       expect(e3).to.be.undefined;
@@ -445,7 +445,7 @@ describe('permissions', () => {
   describe('update', () => {
     it(`root can update string value`, async () => {
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc' } },
       });
       await deep.update({ link_id: id }, {
@@ -458,7 +458,7 @@ describe('permissions', () => {
     it(`guest cant update string value`, async () => {
       const a1 = await deep.guest({});
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc' } },
       });
       const d1 = new DeepClient({ deep, ...a1 });
@@ -472,7 +472,7 @@ describe('permissions', () => {
     });
     it(`update permission can be gived to guest`, async () => {
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc' } },
       });
       const a1 = await deep.guest({});
@@ -569,7 +569,7 @@ describe('permissions', () => {
   describe('delete', () => {
     it(`root can delete`, async () => {
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const n1 = await deep.select({ id });
       assert.lengthOf(n1?.data, 1);
@@ -580,7 +580,7 @@ describe('permissions', () => {
     });
     it(`guest cant delete by default`, async () => {
       const { data: [{ id }], error } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const n1 = await deep.select({ id });
       assert.lengthOf(n1?.data, 1);
@@ -660,7 +660,7 @@ describe('permissions', () => {
         ] },
       });
       const { data: [{ id: id1 }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const d1 = new DeepClient({ deep, ...a1 });
       await d1.delete(id1);
@@ -668,7 +668,7 @@ describe('permissions', () => {
       assert.lengthOf(n1?.data, 0);
 
       const { data: [{ id: id2 }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const d2 = new DeepClient({ deep, ...a2 });
       await d2.delete(id2);
@@ -676,7 +676,7 @@ describe('permissions', () => {
       assert.lengthOf(n2?.data, 0);
 
       const { data: [{ id: id3 }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
       const d3 = new DeepClient({ deep, ...a3 });
       await d3.delete(id3);
@@ -729,7 +729,7 @@ describe('permissions', () => {
               out: { data: [
                 {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                  to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                  to_id: await deep.id('@deep-foundation/core', 'Operation'),
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -796,7 +796,7 @@ describe('permissions', () => {
               out: { data: [
                 {
                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                  to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                  to_id: await deep.id('@deep-foundation/core', 'Operation'),
                   out: { data: {
                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -835,7 +835,7 @@ describe('permissions', () => {
 
       const d1 = new DeepClient({ deep, ...a1, silent: true });
       const { data: da1, error: e1 } = await d1.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc1' } },
       });
       expect(e1).to.be.undefined;
@@ -845,7 +845,7 @@ describe('permissions', () => {
       expect(da1d).to.be.undefined;
       const d2 = new DeepClient({ deep, ...a2, silent: true });
       const { data: da2, error: e2 } = await d2.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc2' } },
       });
       expect(e2).to.be.undefined;
@@ -855,7 +855,7 @@ describe('permissions', () => {
       expect(da2d).to.not.be.undefined;
       const d3 = new DeepClient({ deep, ...a3, silent: true });
       const { data: da3, error: e3 } = await d3.insert({
-        type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'abc3' } },
       });
       expect(e3).to.be.undefined;

@@ -55,9 +55,6 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
           subject_id: { _eq: subjectId },
         },
       },
-      {
-        _exists: await isAdminBoolExp(subjectId),
-      },
     ],
   },
   insert: {
@@ -70,9 +67,6 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
             subject_id: { _eq: subjectId },
           },
         },
-      },
-      {
-        _exists: await isAdminBoolExp(subjectId),
       },
     ]
   },
@@ -92,9 +86,6 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
           },
         },
       },
-      {
-        _exists: await isAdminBoolExp(subjectId),
-      },
     ]
   },
   delete: {
@@ -112,9 +103,6 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
             subject_id: { _eq: subjectId },
           },
         },
-      },
-      {
-        _exists: await isAdminBoolExp(subjectId),
       },
     ]
   },
@@ -371,7 +359,17 @@ export const up = async () => {
         sqlResult BOOL;
         session_variables json;
         user_id bigint;
+        userRole TEXT;
+        foundedBoolExpError RECORD;
+        foundedNotErroredBoolExp BOOL = FALSE;
       BEGIN
+        session_variables := current_setting('hasura.user', 't');
+        IF session_variables IS NULL THEN
+          session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
+        END IF;
+        user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
+        userRole := (session_variables::json->>'x-hasura-role')::text;
+
         IF (NEW."from_id" != NEW."to_id" AND (NEW."from_id" = 0 OR NEW."to_id" = 0)) THEN
           RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %, type: %.', NEW."id", NEW."from_id", NEW."to_id", NEW."type_id";
         END IF;
@@ -379,6 +377,10 @@ export const up = async () => {
         SELECT t.* into typeLink
         FROM "${TABLE_NAME}" as t
         WHERE t."id" = NEW."type_id";
+
+        IF (typeLink IS NULL AND NOT (NEW."type_id" = 0 AND userRole = 'admin')) THEN
+          RAISE EXCEPTION 'Type % not founded.', NEW."type_id";
+        END IF;
 
         SELECT t.* into fromLink
         FROM "${TABLE_NAME}" as t
@@ -390,28 +392,22 @@ export const up = async () => {
 
         IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
           IF (typeLink."from_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."from_id" != fromLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
           END IF;
           IF (typeLink."to_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."to_id" != toLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
           END IF;
         END IF;
 
-        session_variables := current_setting('hasura.user', 't');
-        IF session_variables IS NULL THEN
-          session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
-        END IF;
-        user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
-
-        IF user_id IS NOT NULL THEN
+        IF user_id IS NOT NULL AND userRole = 'link' THEN
           FOR boolExp
           IN (
             SELECT sr.*
@@ -422,7 +418,7 @@ export const up = async () => {
             WHERE
             can."object_id" = NEW."type_id" AND
             can."subject_id" = user_id AND
-            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsert')} AND
+            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsertType')} AND
             ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
             ro."from_id" = can."rule_id" AND
             sr."selector_id" = ro."to_id" AND
@@ -432,18 +428,39 @@ export const up = async () => {
           LOOP
             SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."bool_exp_id", user_id);
             IF (sqlResult = FALSE) THEN
-              RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+              foundedBoolExpError := boolExp;
             END IF;
             IF (sqlResult IS NULL) THEN
               RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
             END IF;
+            IF (sqlResult = TRUE) THEN
+              foundedNotErroredBoolExp := TRUE;
+            END IF;
           END LOOP;
+        END IF;
+
+        IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
+          RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
         END IF;
 
         RETURN NEW;
       END;
     $function$;
     CREATE TRIGGER ${TABLE_NAME}__permissions__insert_links__trigger AFTER INSERT ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__insert_links__function();
+  `);
+  await api.sql(sql`
+    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__update_links__function()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $function$
+      BEGIN
+        IF (OLD."from_id" != NEW."from_id" OR OLD."to_id" != NEW."to_id" OR OLD."type_id" != NEW."type_id") THEN
+          RAISE EXCEPTION 'Links can not be updated in this version.';
+        END IF;
+        RETURN NEW;
+      END;
+    $function$;
+    CREATE TRIGGER ${TABLE_NAME}__permissions__update_links__trigger AFTER UPDATE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__update_links__function();
   `);
   log('delete');
   await api.sql(sql`
@@ -456,6 +473,9 @@ export const up = async () => {
         sqlResult BOOL;
         session_variables json;
         user_id bigint;
+        userRole TEXT;
+        foundedBoolExpError RECORD;
+        foundedNotErroredBoolExp BOOL = FALSE;
       BEGIN
 
       session_variables := current_setting('hasura.user', 't');
@@ -463,8 +483,9 @@ export const up = async () => {
         session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
       END IF;
       user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
+      userRole := (session_variables::json->>'x-hasura-role')::text;
 
-      IF user_id IS NOT NULL THEN
+      IF user_id IS NOT NULL AND userRole = 'link' THEN
         FOR boolExp
         IN (
           SELECT sr.*
@@ -475,7 +496,7 @@ export const up = async () => {
           WHERE
           can."object_id" = OLD."type_id" AND
           can."subject_id" = user_id AND
-          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDelete')} AND
+          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDeleteType')} AND
           ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
           ro."from_id" = can."rule_id" AND
           sr."selector_id" = ro."to_id" AND
@@ -485,15 +506,22 @@ export const up = async () => {
         LOOP
           SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."bool_exp_id", user_id);
           IF (sqlResult = FALSE) THEN
-            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            foundedBoolExpError := boolExp;
           END IF;
           IF (sqlResult IS NULL) THEN
-            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+          END IF;
+          IF (sqlResult = TRUE) THEN
+            foundedNotErroredBoolExp := TRUE;
           END IF;
         END LOOP;
       END IF;
 
-        RETURN OLD;
+      IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
+        RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
+      END IF;
+
+      RETURN OLD;
       END;
     $function$;
     CREATE TRIGGER ${TABLE_NAME}__permissions__delete_links__trigger BEFORE DELETE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__delete_links__function();
