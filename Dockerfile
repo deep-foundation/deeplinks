@@ -14,6 +14,7 @@ COPY index.ts .
 COPY node_modules ./node_modules
 COPY imports ./imports
 COPY snapshots ./snapshots
+RUN  ls snapshots
 
 ENV PORT 3006
 ENV DOCKER 1
