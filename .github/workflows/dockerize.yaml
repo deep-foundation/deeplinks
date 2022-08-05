@@ -38,8 +38,8 @@ jobs:
         run: npm run migrate
       - name: snapshot:create
         run: 'npm run snapshot:create'
-      - name: snapshot:create
-        run: cd snapshots ls
+      - name: snapshots ls
+        run: cd snapshots && ls
       - name: docker init
         run: cd local/actions && docker-compose -p deep down
       - name: Log in to Docker Hub
