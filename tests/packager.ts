@@ -67,6 +67,7 @@ describe('packager', () => {
       const exported = await packager.export({ packageLinkId: packageId });
       assert(!exported.errors?.length, '!!exported.errors.length');
       const imported = await packager.import(exported);
+      console.log(imported?.errors?.[0]?.graphQLErrors?.[0]);
       assert(!imported.errors?.length, '!!imported.errors.length');
       const results = await deep.select({ id: { _in: imported?.ids } });
       const ml = minilinks(results.data);

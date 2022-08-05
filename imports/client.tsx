@@ -2,7 +2,7 @@ import atob from 'atob';
 import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
-import { useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits } from "util";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
 import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
@@ -138,6 +138,7 @@ export interface DeepClientInstance<L = Link<number>> {
   serializeQuery(exp: any, env?: string): any;
 
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number>;
+  idSync(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
 
@@ -461,7 +462,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return where;
   }
 
-  _ids: any = {};
   /**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
    * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
@@ -481,6 +481,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
     }
     return result;
+  };
+
+  idSync(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
+    if (_ids?.[start]?.[path[0]]) {
+      return _ids[start][path[0]];
+    }
+    throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
   };
 
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
@@ -571,7 +578,9 @@ export function useAuthNode() {
   return useLocalStore('use_auth_link_id', 0);
 }
 
-export function useDeep(apolloClientProps?: IApolloClient<any>) {
+export const DeepContext = createContext<DeepClient>(undefined);
+
+export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
   const apolloClientHook = useApolloClient();
   const apolloClient: IApolloClient<any> = apolloClientProps || apolloClientHook;
 
@@ -591,6 +600,23 @@ export function useDeep(apolloClientProps?: IApolloClient<any>) {
     });
   }, [apolloClient]);
   return deep;
+}
+
+export function DeepProvider({
+  apolloClient: apolloClientProps,
+  children,
+}: {
+  apolloClient?: IApolloClient<any>,
+  children: any;
+}) {
+  const deep = useDeepGenerator(apolloClientProps);
+  return <DeepContext.Provider value={deep}>
+    {children}
+  </DeepContext.Provider>;
+}
+
+export function useDeep() {
+  return useContext(DeepContext);
 }
 
 export function useDeepQuery(query: any, options?: any): any {
