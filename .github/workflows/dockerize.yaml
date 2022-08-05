@@ -30,18 +30,20 @@ jobs:
           node-version: '14.15'
       - name: ci
         run: npm ci
-      - name: build
-        run: npm run package:build
-      - name: docker-compose up
+      - name: docker init
         run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
         run: npm run migrate
-      - name: snapshot:create
-        run: 'npm run snapshot:create'
-      - name: snapshots ls
-        run: cd snapshots && ls
-      - name: docker init
-        run: cd local/actions && docker-compose -p deep down
+      - name: backup dir
+        run: mkdir backup
+      - name: backup pg
+        run: pg_dump --clean --if-exists -d postgres://postgres:postgrespassword@127.0.0.1:5432/postgres > backup/migrated_pg.dump
+      - name: backup volume
+        run: docker run --rm --volumes-from deep_postgres_1 -v $(pwd):/temp ubuntu tar -c -v -C /var/lib/postgresql -f /temp/backup/volume.tar ./data
+      - name: backup migrations log
+        run: cp .migrate backup/.migrate
+      - name: build
+        run: npm run package:build
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
