@@ -371,6 +371,8 @@ export const up = async () => {
         sqlResult BOOL;
         session_variables json;
         user_id bigint;
+        foundedBoolExpError RECORD;
+        foundedNotErroredBoolExp BOOL = FALSE;
       BEGIN
         IF (NEW."from_id" != NEW."to_id" AND (NEW."from_id" = 0 OR NEW."to_id" = 0)) THEN
           RAISE EXCEPTION 'Particular links is not allowed id: %, from: %, to: %, type: %.', NEW."id", NEW."from_id", NEW."to_id", NEW."type_id";
@@ -422,7 +424,7 @@ export const up = async () => {
             WHERE
             can."object_id" = NEW."type_id" AND
             can."subject_id" = user_id AND
-            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsert')} AND
+            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsertType')} AND
             ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
             ro."from_id" = can."rule_id" AND
             sr."selector_id" = ro."to_id" AND
@@ -432,12 +434,19 @@ export const up = async () => {
           LOOP
             SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."bool_exp_id", user_id);
             IF (sqlResult = FALSE) THEN
-              RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+              foundedBoolExpError := boolExp;
             END IF;
             IF (sqlResult IS NULL) THEN
               RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
             END IF;
+            IF (sqlResult = TRUE) THEN
+              foundedNotErroredBoolExp := TRUE;
+            END IF;
           END LOOP;
+        END IF;
+
+        IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
+          RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
         END IF;
 
         RETURN NEW;
@@ -456,6 +465,8 @@ export const up = async () => {
         sqlResult BOOL;
         session_variables json;
         user_id bigint;
+        foundedBoolExpError RECORD;
+        foundedNotErroredBoolExp BOOL = FALSE;
       BEGIN
 
       session_variables := current_setting('hasura.user', 't');
@@ -475,7 +486,7 @@ export const up = async () => {
           WHERE
           can."object_id" = OLD."type_id" AND
           can."subject_id" = user_id AND
-          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDelete')} AND
+          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDeleteType')} AND
           ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
           ro."from_id" = can."rule_id" AND
           sr."selector_id" = ro."to_id" AND
@@ -485,15 +496,22 @@ export const up = async () => {
         LOOP
           SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."bool_exp_id", user_id);
           IF (sqlResult = FALSE) THEN
-            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            foundedBoolExpError := boolExp;
           END IF;
           IF (sqlResult IS NULL) THEN
-            RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+          END IF;
+          IF (sqlResult = TRUE) THEN
+            foundedNotErroredBoolExp := TRUE;
           END IF;
         END LOOP;
       END IF;
 
-        RETURN OLD;
+      IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
+        RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
+      END IF;
+
+      RETURN OLD;
       END;
     $function$;
     CREATE TRIGGER ${TABLE_NAME}__permissions__delete_links__trigger BEFORE DELETE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__delete_links__function();

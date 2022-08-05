@@ -461,12 +461,16 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return where;
   }
 
+  _ids: any = {};
   /**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
    * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
    * @returns number
    */
   async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+    if (_ids?.[start]?.[path[0]]) {
+      return _ids[start][path[0]];
+    }
     const q = await this.select(this.pathToWhere(start, ...path));
     if (q.error) {
       throw q.error;
