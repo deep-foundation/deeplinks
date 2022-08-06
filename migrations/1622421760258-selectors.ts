@@ -18,7 +18,7 @@ export const BOOL_EXP_COMPUTED_FIELD = `${TABLE_NAME}__exec_bool_exp__function`;
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
@@ -35,7 +35,7 @@ export const up = async () => {
       mp_include."item_id" as "item_id",
       cache_include."selector_id" as "selector_id",
       cache_include."selector_include_id" as "selector_include_id",
-      cache_include."selector_filter_bool_exp_id" as "bool_exp_id"
+      cache_include."selector_filter_bool_exp_id" as "query_id"
     FROM
       ${MP_TABLE_NAME} as mp_include,
       ${CACHE} as cache_include
@@ -157,7 +157,7 @@ export const up = async () => {
     type: 'create_array_relationship',
     args: {
       table: SELECTORS_TABLE_NAME,
-      name: 'bool_exp',
+      name: 'query',
       using: {
         manual_configuration: {
           remote_table: {
@@ -165,7 +165,7 @@ export const up = async () => {
             name: TABLE_NAME,
           },
           column_mapping: {
-            bool_exp_id: 'id',
+            query_id: 'id',
           },
           insertion_order: 'after_parent',
         },

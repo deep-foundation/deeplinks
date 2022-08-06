@@ -15,7 +15,7 @@ const error = debug.extend('error');
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
@@ -163,15 +163,15 @@ export const up = async () => {
     user_id := hasura_session::json->>'x-hasura-user-id';
     
     FOR SELECTOR IN
-      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
+      SELECT s.selector_id, h.id as handle_operation_id, s.query_id
       FROM selectors s, links h
       WHERE
           s.item_id = link."id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleInsertTypeId}
     LOOP
-      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, link."id");
-      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(link."id", SELECTOR.bool_exp_id, user_id) THEN
+      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, link."id");
+      IF SELECTOR.query_id IS NULL OR bool_exp_execute(link."id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
@@ -210,15 +210,15 @@ export const up = async () => {
     user_id := hasura_session::json->>'x-hasura-user-id';
     
     FOR SELECTOR IN
-      SELECT s.selector_id, h.id as handle_operation_id, s.bool_exp_id
+      SELECT s.selector_id, h.id as handle_operation_id, s.query_id
       FROM selectors s, links h
       WHERE
           s.item_id = OLD."id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleDeleteTypeId}
     LOOP
-      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.bool_exp_id, OLD."id");
-      IF SELECTOR.bool_exp_id IS NULL OR bool_exp_execute(OLD."id", SELECTOR.bool_exp_id, user_id) THEN
+      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, OLD."id");
+      IF SELECTOR.query_id IS NULL OR bool_exp_execute(OLD."id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);

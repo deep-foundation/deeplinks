@@ -29,6 +29,7 @@ export interface LinkRelations<L> {
   outByType: { [id: number]: L[] };
   from: L;
   to: L;
+  value?: any;
   _applies: string[];
 }
 

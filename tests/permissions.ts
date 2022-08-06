@@ -231,6 +231,7 @@ describe('permissions', () => {
       const { data: da1, error: e1 } = await d1.insert({
         type_id: await deep.id('@deep-foundation/core', 'Operation'),
       });
+      if (e1) console.log('error', e1);
       expect(da1).to.not.be.undefined;
       expect(e1).to.be.undefined;
       const d2 = new DeepClient({ deep, ...a2, silent: true });

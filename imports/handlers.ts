@@ -224,7 +224,7 @@ export async function deleteIds(ids: number[], options: {
     // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
     try
     {
-      return await deep.delete(idsFiltered, options);
+      return await deep.delete(idsFiltered, options as any);
     }
     catch (e)
     {

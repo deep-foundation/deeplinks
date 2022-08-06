@@ -85,7 +85,7 @@ export default async (req, res) => {
             // delete bool_exp trash
             await deep.delete({
               link_id: { _eq: oldValueRow.link_id },
-            }, { table: 'bool_exp' });
+            }, { table: 'bool_exp' as any });
         }
         if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','Query')) {
             // generate new bool_exp sql version

@@ -14,7 +14,7 @@ export const MP_TABLE_NAME = 'mp';
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 

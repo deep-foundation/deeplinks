@@ -53,18 +53,18 @@ export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
     sql = explained?.data?.[0]?.sql;
     if (sql) {
       const convertedSql = `SELECT json_array_length("root") as "root" FROM (${sql}) as "root"`
-      const boolExp = await deep.select({ link_id: { _eq: boolExpId } }, { table: 'bool_exp', returning: 'id link_id' });
+      const boolExp = await deep.select({ link_id: { _eq: boolExpId } }, { table: 'bool_exp' as any, returning: 'id link_id' });
       const boolExpLink = boolExp?.data?.[0];
       log('boolExpLink', boolExpLink);
       if (boolExpLink) {
         const mutateResult = await deep.update(boolExpLink.id, {
           value: convertedSql,
-        }, { table: 'bool_exp' });
+        }, { table: 'bool_exp' as any });
       } else {
         const mutateResult = await deep.insert({
           link_id: boolExpId,
           value: convertedSql,
-        }, { table: 'bool_exp' });
+        }, { table: 'bool_exp' as any });
       }
     }
   } catch (e) {

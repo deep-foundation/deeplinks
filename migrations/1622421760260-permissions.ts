@@ -17,7 +17,7 @@ export const REPLACE_PATTERN_ID = '777777777777';
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
@@ -423,15 +423,15 @@ export const up = async () => {
             ro."from_id" = can."rule_id" AND
             sr."selector_id" = ro."to_id" AND
             sr."item_id" = NEW."type_id" AND
-            sr."bool_exp_id" IS NOT NULL
+            sr."query_id" != 0
           )
           LOOP
-            SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."bool_exp_id", user_id);
+            SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."query_id", user_id);
             IF (sqlResult = FALSE) THEN
               foundedBoolExpError := boolExp;
             END IF;
             IF (sqlResult IS NULL) THEN
-              RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+              RAISE EXCEPTION 'insert % rejected because selector_id: % query_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."query_id", user_id;
             END IF;
             IF (sqlResult = TRUE) THEN
               foundedNotErroredBoolExp := TRUE;
@@ -440,7 +440,7 @@ export const up = async () => {
         END IF;
 
         IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
-          RAISE EXCEPTION 'insert % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(NEW), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
+          RAISE EXCEPTION 'insert % rejected because selector_id: % query_id: % user_id: % return false', json_agg(NEW), foundedBoolExpError."selector_id", foundedBoolExpError."query_id", user_id;
         END IF;
 
         RETURN NEW;
@@ -501,15 +501,16 @@ export const up = async () => {
           ro."from_id" = can."rule_id" AND
           sr."selector_id" = ro."to_id" AND
           sr."item_id" = OLD."type_id" AND
-          sr."bool_exp_id" IS NOT NULL
+          sr."query_id" IS NOT NULL AND
+          sr."query_id" != 0
         )
         LOOP
-          SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."bool_exp_id", user_id);
+          SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."query_id", user_id);
           IF (sqlResult = FALSE) THEN
             foundedBoolExpError := boolExp;
           END IF;
           IF (sqlResult IS NULL) THEN
-            RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."bool_exp_id", user_id;
+            RAISE EXCEPTION 'delete % rejected because selector_id: % query_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."query_id", user_id;
           END IF;
           IF (sqlResult = TRUE) THEN
             foundedNotErroredBoolExp := TRUE;
@@ -518,7 +519,7 @@ export const up = async () => {
       END IF;
 
       IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
-        RAISE EXCEPTION 'delete % rejected because selector_id: % bool_exp_id: % user_id: % return false', json_agg(OLD), foundedBoolExpError."selector_id", foundedBoolExpError."bool_exp_id", user_id;
+        RAISE EXCEPTION 'delete % rejected because selector_id: % query_id: % user_id: % return false', json_agg(OLD), foundedBoolExpError."selector_id", foundedBoolExpError."query_id", user_id;
       END IF;
 
       RETURN OLD;

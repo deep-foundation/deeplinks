@@ -153,7 +153,7 @@ export class Packager<L extends Link<any>> {
       const packageTableName = `strings`;
       const q = await this.client.select({
         value: dependedLink?.package?.containValue,
-        link: { from: { [packageTableName]: { value: packageName } } },
+        link: { from: { [packageTableName as any]: { value: packageName } } },
       }, {
         table: `strings`,
         returning: 'id link { id: to_id }'
@@ -202,7 +202,7 @@ export class Packager<L extends Link<any>> {
         else {
           log('insertItem tables');
           const type = typeof(item?.value?.value);
-          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s`, name: 'IMPORT_PACKAGE_VALUE' });
+          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s` as any, name: 'IMPORT_PACKAGE_VALUE' });
           log('insertItem valueInsert', valueInsert);
           if (valueInsert?.errors) {
             log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });

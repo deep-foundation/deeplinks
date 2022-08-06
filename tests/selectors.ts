@@ -255,24 +255,24 @@ describe('selectors', () => {
 
       const n1 = await admin.select({
         item_id: { _eq: id2 }, selector_id: { _eq: s1 },
-      }, { table: 'selectors', returning: `item_id selector_id bool_exp { id exec_bool_exp(args: { link_id: ${id2} }) { id } }` });
+      }, { table: 'selectors', returning: `item_id selector_id query { id exec_bool_exp(args: { link_id: ${id2} }) { id } }` });
       assert.lengthOf(n1?.data, 1);
-      expect(n1?.data?.[0]?.bool_exp?.[0]?.exec_bool_exp).to.be.empty;
+      expect(n1?.data?.[0]?.query?.[0]?.exec_bool_exp).to.be.empty;
       const n2 = await admin.select({
         item_id: { _eq: id3 }, selector_id: { _eq: s1 },
-      }, { table: 'selectors', returning: `item_id selector_id bool_exp { id exec_bool_exp(args: { link_id: ${id3} }) { id } }` });
+      }, { table: 'selectors', returning: `item_id selector_id query { id exec_bool_exp(args: { link_id: ${id3} }) { id } }` });
       assert.lengthOf(n2?.data, 1);
-      expect(n2?.data?.[0]?.bool_exp?.[0]?.exec_bool_exp).to.not.be.empty;
+      expect(n2?.data?.[0]?.query?.[0]?.exec_bool_exp).to.not.be.empty;
       const n3 = await admin.select({
         item_id: { _eq: id4 }, selector_id: { _eq: s1 },
-      }, { table: 'selectors', returning: `item_id selector_id bool_exp { id exec_bool_exp(args: { link_id: ${id4} }) { id } }` });
+      }, { table: 'selectors', returning: `item_id selector_id query { id exec_bool_exp(args: { link_id: ${id4} }) { id } }` });
       assert.lengthOf(n3?.data, 1);
-      expect(n3?.data?.[0]?.bool_exp?.[0]?.exec_bool_exp).to.be.empty;
+      expect(n3?.data?.[0]?.query?.[0]?.exec_bool_exp).to.be.empty;
       const n4 = await admin.select({
         item_id: { _eq: id5 }, selector_id: { _eq: s1 },
-      }, { table: 'selectors', returning: `item_id selector_id bool_exp { id exec_bool_exp(args: { link_id: ${id5} }) { id } }` });
+      }, { table: 'selectors', returning: `item_id selector_id query { id exec_bool_exp(args: { link_id: ${id5} }) { id } }` });
       assert.lengthOf(n4?.data, 1);
-      expect(n4?.data?.[0]?.bool_exp?.[0]?.exec_bool_exp).to.not.be.empty;
+      expect(n4?.data?.[0]?.query?.[0]?.exec_bool_exp).to.not.be.empty;
     });
   });
 });
