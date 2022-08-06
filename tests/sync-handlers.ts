@@ -43,26 +43,26 @@ const nextHandlerResult = () => {
 beforeAll(async () => {
   // manual remigrate plv8
   console.log('manual remigrating...');
-  await api.sql(`${createPrepareFunction}`);
-  await api.sql(`${createDeepClientFunction}`);
+  // await api.sql(`${createPrepareFunction}`);
+  // await api.sql(`${createDeepClientFunction}`);
   
-  await api.sql(dropSyncInsertTrigger);
-  await api.sql(dropSyncInsertTriggerFunction);
+  // await api.sql(dropSyncInsertTrigger);
+  // await api.sql(dropSyncInsertTriggerFunction);
 
-  await api.sql(dropSyncUpdateTrigger);
-  await api.sql(dropSyncUpdateTriggerFunction);
+  // await api.sql(dropSyncUpdateTrigger);
+  // await api.sql(dropSyncUpdateTriggerFunction);
 
-  await api.sql(dropSyncDeleteTrigger);
-  await api.sql(dropSyncDeleteTriggerFunction);
+  // await api.sql(dropSyncDeleteTrigger);
+  // await api.sql(dropSyncDeleteTriggerFunction);
   
-  await api.sql(createSyncInsertTriggerFunction);
-  await api.sql(createSyncInsertTrigger);
+  // await api.sql(createSyncInsertTriggerFunction);
+  // await api.sql(createSyncInsertTrigger);
 
-  await api.sql(createSyncUpdateTriggerFunction);
-  await api.sql(createSyncUpdateTrigger);
+  // await api.sql(createSyncUpdateTriggerFunction);
+  // await api.sql(createSyncUpdateTrigger);
 
-  await api.sql(createSyncDeleteTriggerFunction);
-  await api.sql(createSyncDeleteTrigger);
+  // await api.sql(createSyncDeleteTriggerFunction);
+  // await api.sql(createSyncDeleteTrigger);
 });
 
 describe('sync handlers', () => {
@@ -105,7 +105,7 @@ describe('sync handlers', () => {
         const debug = log.extend('selectByValue');
         const CustomNumber = nextHandlerResult();
         const value = 'testValue';
-        const inserted = await deep.insert({id: CustomNumber, type_id: 1, string: value});
+        const inserted = await deep.insert({id: CustomNumber, type_id: 1});
         debug('inserted', inserted );
         let result;
         try {

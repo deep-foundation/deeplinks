@@ -6,6 +6,7 @@ import Debug from 'debug';
 import fetch from 'node-fetch';
 import { insertHandler, insertSelector, insertSelectorItems, ensureLinkIsCreated, deleteHandler, deleteSelector }  from "../imports/handlers";
 import _ from 'lodash';
+import { _ids } from '../imports/client';
 
 const debug = Debug('deeplinks:tests:handlers');
 const log = debug.extend('log');
@@ -344,7 +345,7 @@ afterAll(async () => {
 });
 
 describe('Async handlers', () => {
-  describe.skip('sync function handle by type with resolve', () => {
+  describe('sync function handle by type with resolve', () => {
     it(`handle insert`, async () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
@@ -467,10 +468,11 @@ describe('Async handlers', () => {
     });
   });
 
-  describe.only('sync function handle by type with reject', () => {
-    it.only(`handle insert`, async () => {
+  describe('sync function handle by type with reject', () => {
+    it(`handle insert`, async () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();
+      log('numberToThrow', numberToThrow);
 
       const typeId = await deep.id('@deep-foundation/core', 'Type');
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -478,6 +480,7 @@ describe('Async handlers', () => {
         deep.insert({id: 4444, type_id: 2});
         return { "error": "return is not possible" }; 
       }`);
+      log('handler', handler);
 
       const linkId = await ensureLinkIsCreated(typeId);
 
@@ -486,6 +489,7 @@ describe('Async handlers', () => {
       const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+      log('promiseResult', promiseResult);
       await deep.delete(linkId);
       await deletePromiseResult(promiseResult, linkId);
       await deleteHandler(handler);
@@ -778,39 +782,39 @@ describe('Async handlers', () => {
       await waitOn({ resources: [url], reverse: true });
       log("route handler is down");
     });
-  });
-  it(`handle route hierarchical insert`, async () => {
-    // const port = await getPort(); // conflicts with container-controller port allocation
-    const port = 4001;
-    const route = '/passport';
+    it(`handle route hierarchical insert`, async () => {
+      // const port = await getPort(); // conflicts with container-controller port allocation
+      const port = 4001;
+      const route = '/passport';
 
-    const insertResult = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Port'),
-      number: { data: { value: port } },
-      in: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
-        from: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Router'),
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
-            string: { data: { value: route } },
-            from: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Route'),
-              out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
-                to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Handler'),
-                  from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
-                  in: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'Contain'),
-                    // from_id: deep.linkId,
-                    from_id: await deep.id('deep', 'admin'),
-                    string: { data: { value: 'passport' } },
-                  } },
+      const insertResult = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Port'),
+        number: { data: { value: port } },
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+          from: { data: {
+            type_id: await deep.id('@deep-foundation/core', 'Router'),
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+              string: { data: { value: route } },
+              from: { data: {
+                type_id: await deep.id('@deep-foundation/core', 'Route'),
+                out: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
-                    string: { data: {
-                      value: /*javascript*/`async (req, res) => { res.send('ok'); }`,
+                    type_id: await deep.id('@deep-foundation/core', 'Handler'),
+                    from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                    in: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                      // from_id: deep.linkId,
+                      from_id: await deep.id('deep', 'admin'),
+                      string: { data: { value: 'passport' } },
+                    } },
+                    to: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                      string: { data: {
+                        value: /*javascript*/`async (req, res) => { res.send('ok'); }`,
+                      } },
                     } },
                   } },
                 } },
@@ -818,35 +822,36 @@ describe('Async handlers', () => {
             } },
           } },
         } },
-      } },
-    }, { 
-      returning: `
-        id
-        number {
+      }, { 
+        returning: `
           id
-        }
-        in {
-          id
-          from {
+          number {
             id
-            in {
+          }
+          in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterListening')}" }}){
+            id
+            from {
               id
-              from {
+              in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterStringUse')}" }}){
                 id
-                out {
+                from {
                   id
-                  to {
+                  out(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'HandleRoute')}" }}){
                     id
-                    in {
-                      id
-                      string {
-                        id
-                      }
-                    }
                     to {
                       id
-                      string {
+                      in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'Contain')}" }}){
                         id
+                        string {
+                          id
+                          value
+                        }
+                      }
+                      to {
+                        id
+                        string {
+                          id
+                        }
                       }
                     }
                   }
@@ -854,50 +859,48 @@ describe('Async handlers', () => {
               }
             }
           }
-        }
-      `, 
-      name: 'INSERT_HANDLE_ROUTE_HIERARCHICAL',
-    }) as any;
+        `, 
+        name: 'INSERT_HANDLE_ROUTE_HIERARCHICAL',
+      }) as any;
 
-    const portId = insertResult?.data?.[0]?.id;
-    const portValueId = insertResult?.data?.[0]?.number?.id;
-    const routerListeningId = insertResult?.data?.[0]?.in?.[0]?.id;
-    const routerId = insertResult?.data?.[0]?.in?.[0]?.from?.id;
-    const routerStringUseId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.id;
-    const routeId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.id;
-    const handleRouteId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.id;
-    const handlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
-    const handlerJSFileId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.id;
-    const handlerJSFileValueId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.string?.id;
-    const ownerContainHandlerId = insertResult?.data?.[0]?.in?.[0]?.from?.in?.[0]?.from?.out?.[0]?.to?.in?.[0]?.id;
+      const portLink = insertResult?.data?.[0];
+      const routerListening = portLink?.in?.[0];
+      const router = routerListening?.from;
+      const routerStringUse = router.in?.[0];
+      const routeLink = routerStringUse?.from;
+      const handleRoute = routeLink?.out?.[0];
+      const handler = handleRoute?.to;
+      const handlerJSFile = handler?.to;
+      const ownerContainHandler = handler?.in[0];
 
-    const url = `http://localhost:${port}${route}`
+      log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler})
 
-    log("waiting for route to be created");
-    await waitOn({ resources: [url] });
-    log("route handler is up");
+      const url = `http://localhost:${port}${route}`
 
-    // ensure response is ok
-    const response = await fetch(url);
-    const text = await response.text();
-    assert.equal(text, 'ok');
+      log("waiting for route to be created");
+      await waitOn({ resources: [url] });
+      log("route handler is up");
 
-    // delete all
-    await deep.delete(handleRouteId);
-    await deep.delete(ownerContainHandlerId);
-    await deep.delete(handlerId);
-    await deep.delete(handlerJSFileValueId, { table: 'strings' });
-    await deep.delete(handlerJSFileId);
-    await deep.delete(routerStringUseId);
-    await deep.delete(routerListeningId);
-    await deep.delete(routerId);
-    await deep.delete(routeId);
-    await deep.delete(portValueId, { table: 'numbers' });
-    await deep.delete(portId);
+      // ensure response is ok
+      const response = await fetch(url);
+      const text = await response.text();
+      assert.equal(text, 'ok');
 
-    log("waiting for route to be deleted");
-    await waitOn({ resources: [url], reverse: true });
-    log("route handler is down");
+      // delete all
+      await deep.delete(handleRoute?.id);
+      await deep.delete(ownerContainHandler?.id);
+      await deep.delete(handler?.id);
+      await deep.delete(handlerJSFile?.id);
+      await deep.delete(routerStringUse?.id);
+      await deep.delete(routerListening?.id);
+      await deep.delete(router?.id);
+      await deep.delete(routeLink?.id);
+      await deep.delete(portLink?.id);
+
+      log("waiting for route to be deleted");
+      await waitOn({ resources: [url], reverse: true });
+      log("route handler is down");
+    });
   });
 
   describe('handle by selector', () => {
