@@ -189,9 +189,9 @@ export async function ensureLinkIsCreated(typeId: number) {
     from_id: freeId,
     type_id: typeId,
     to_id: freeId
-  }, { name: 'INSERT_LINK' })).data[0];
+  }, { name: 'INSERT_LINK' }));
   // log(insertedLink);
-  assert.equal(freeId, insertedLink.id);
+  assert.equal(freeId, insertedLink.data[0].id);
   return freeId;
 }
 

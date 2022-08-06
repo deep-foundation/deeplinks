@@ -117,6 +117,63 @@ const prepareFunction = /*javascript*/`
 const wherePush =  `\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\``;
 const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
 
+const selectLink =  `\`SELECT * FROM links WHERE \${where}\``;
+const selectValueTable = `\`SELECT value FROM \${table} WHERE link_id = \${linkId}\``;
+const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = \${value}\``;
+
+const generateSelectWhere = /*javascript*/`({ string, object, number, value, ...options }) => {
+  const _where = [];
+  const keys = Object.keys(options);
+  for (let i = 0; i < keys.length; i++ ){
+    if (options[keys[i]]) _where.push(keys[i].concat(' = ', options[keys[i]]));
+  }
+  return _where.join(' AND ');
+}`;
+
+const fillValuesByLinks = /*javascript*/`(links) => {
+  let table;
+  let linkId;
+  if (!links.length) return links;
+  for (let i = 0; i < links.length; i++){
+    links[i].value = null;
+    linkId = links[i].id;
+    table = 'strings';
+    const stringValue = plv8.execute(${selectValueTable});
+    table = 'objects';
+    const objectValue = plv8.execute(${selectValueTable});
+    table = 'numbers';
+    const numberValue = plv8.execute(${selectValueTable});
+    if (stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value) {
+      links[i].value = stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value;
+    }
+  }
+}`;
+
+const findLinkByValue = /*javascript*/`({ string, object, number, value }) => {
+  let table;
+  if (string) {
+    table = 'strings';
+    return { id: lv8.execute(${selectLinkByValue}) };
+  }
+  if (object) {
+    table = 'objects';
+    return { id: plv8.execute(${selectLinkByValue}) };
+  }
+  if (number) {
+    table = 'numbers';
+    return { id: plv8.execute(${selectLinkByValue}) };
+  }
+  if (value) {
+    table = 'strings';
+    const idByString = plv8.execute(${selectLinkByValue});
+    table = 'objects';
+    const idByObject = plv8.execute(${selectLinkByValue});
+    table = 'numbers';
+    const idByNumber = plv8.execute(${selectLinkByValue});
+    return { id: stringValue || objectValue || numberValue };
+  }
+}`;
+
 const deepFabric =  /*javascript*/`(ownerId) => {
   return {
     id: (options) => {
@@ -127,7 +184,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
         for (let p = 0; p < path.length; p++) {
           const item = path[p]
           if (typeof(item) !== 'boolean') {
-            const newSelect = plv8.execute(${newSelect})[0];;
+            const newSelect = plv8.execute(${newSelect})[0];
             query_id = p === path.length-1 ? newSelect.to_id : newSelect.id;
             if (!query_id) return undefined;
           }
@@ -136,9 +193,28 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       }
       const result = pathToWhere(start, path);
       if (!result && path[path.length - 1] !== true) {
-        return({error: 'Id not found by'});
+        plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
       }
       return result;
+    },
+    select:  function(options) {
+      const { id, type_id, from_id, to_id, number, string, object, value } = options;
+      const generateSelectWhere = ${generateSelectWhere};
+      const findLinkByValue = ${findLinkByValue};
+      const fillValuesByLinks = ${fillValuesByLinks};
+      let where = generateSelectWhere(options);
+      let links = [];
+      if (where) links = plv8.execute(${selectLink});
+      if (!links.length) {
+        const linkId = findLinkByValue(options);
+        if (linkId) {
+          where = generateSelectWhere({id: linkId});
+          links.push(plv8.execute(${selectLink}));
+        }
+      }
+      const filtered = links.filter((link) => checkSelectLinkPermission(link.id, ownerId));
+      fillValuesByLinks(filtered);
+      return filtered;
     },
     insert: function(options) {
       const { id, type_id, from_id, to_id, number, string, object } = options;
@@ -153,11 +229,10 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       const insertValueString = ${insertValueString};
       const valueId = plv8.execute(insertValueString)[0]?.id;
       ids.value = valueId
-      return ids;
+      return { data: [ linkid ]};
     },
     update: function(options) {
       const { _set, ..._where } = options;
-      const { id, type_id, from_id, to_id } = _where;
       const ids = {};
       const linkCheck = checkUpdateLinkPermission(id, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
@@ -179,7 +254,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       let updateLinkString = ${updateLinkString};
       const linkid = plv8.execute(updateLinkString)[0].id;
       ids.link = linkid;
-      return ids;
+      return { data: [ linkid ]};
     },
     delete: function(options) {
       const { id } = options;
@@ -187,7 +262,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
       const deleteString = ${deleteString};
       const linkid = plv8.execute(deleteString, [ id ])[0].id;
-      return { link: linkid };
+      return { data: [ linkid ]};
     }
   }
 }`;

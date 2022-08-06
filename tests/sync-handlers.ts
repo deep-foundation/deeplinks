@@ -66,12 +66,12 @@ beforeAll(async () => {
 });
 
 describe('sync handlers', () => {
-  describe.skip('Prepare fuction', () => {
+  describe('Prepare fuction', () => {
     it(`handleInsert`, async () => {
       const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const link = JSON.stringify({id: 579, type_id: 566}); // change for yours
+      const link = JSON.stringify({id: 1, type_id: 1}); // change for yours
       const result = await api.sql(sql`select links__sync__handler__prepare__function('${link}'::jsonb, ${handlerId}::bigint)`);
-      debug('prepare result', result?.data?.result?.[1]?.[0]);
+      log('prepare result', result?.data?.result?.[1]?.[0]);
     });
   });
   describe('DeepClient mini', () => {
@@ -81,6 +81,47 @@ describe('sync handlers', () => {
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });
+    describe('select', () => {
+      it(`select by id and type_id`, async () => {
+        const debug = log.extend('selectByIdAndType');
+        const CustomNumber = nextHandlerResult();
+        const inserted = await deep.insert({id: CustomNumber, type_id: 1});
+        debug('inserted', inserted );
+        let result;
+        try {
+          result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": "${CustomNumber}", "type_id":1}'::jsonb)`);
+        } catch (e) {
+          debug('select error: ', e);
+        }
+        const selectedByDeep = (await deep.select(CustomNumber))?.data.map(({__typename, ...filtered})=>filtered);
+        debug('delete inserted', await deep.delete({ id: { _eq: CustomNumber } }));
+        const selectedBySql = JSON.parse(result?.data?.result?.[1]?.[0]).map((link) => { return {id: Number(link.id), value: link.value, to_id: Number(link.to_id), from_id: Number(link.from_id), type_id: Number(link.type_id)}});
+        debug('selectedBySql', selectedBySql);
+        assert.equal(selectedBySql.length, 1);
+        debug('selectedBySql?.[0]', selectedBySql?.[0]);
+        assert.deepEqual(selectedBySql, selectedByDeep);
+      });
+      it.skip(`select by only value`, async () => {
+        const debug = log.extend('selectByValue');
+        const CustomNumber = nextHandlerResult();
+        const value = 'testValue';
+        const inserted = await deep.insert({id: CustomNumber, type_id: 1, string: value});
+        debug('inserted', inserted );
+        let result;
+        try {
+          result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"value":"${value}"}'::jsonb)`);
+        } catch (e) {
+          debug('select error: ', e);
+        }
+        const selectedByDeep = (await deep.select({value: { _eq: value}}))?.data.map(({__typename, ...filtered})=>filtered);
+        debug('delete inserted', await deep.delete({ id: { _eq: CustomNumber } }));
+        const selectedBySql = JSON.parse(result?.data?.result?.[1]?.[0]).map((link) => { return {id: Number(link.id), value: link.value, to_id: Number(link.to_id), from_id: Number(link.from_id), type_id: Number(link.type_id)}});
+        debug('selectedBySql', selectedBySql);
+        assert.equal(selectedBySql.length, 1);
+        debug('selectedBySql?.[0]', selectedBySql?.[0]);
+        assert.deepEqual(selectedBySql, selectedByDeep);
+      });
+    });
     it(`insert`, async () => {
       const CustomNumber = nextHandlerResult();
       const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"id": "${CustomNumber}", "type_id":1}'::jsonb)`);
@@ -89,11 +130,11 @@ describe('sync handlers', () => {
       if (JSON.parse(result?.data?.result?.[1]?.[0])?.link === clientResult?.data?.[0]?.id) deep.delete({id: {_eq: CustomNumber}});
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0]).link, clientResult?.data?.[0]?.id);
     });
-    it.only(`update`, async () => {
+    it.skip(`update`, async () => {
       const CustomNumber = nextHandlerResult();
       const inserted = await deep.insert({id: CustomNumber, type_id: 1});
       log('inserted', inserted );
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '{"id": "${CustomNumber}", "_set": { "type_id":2 } }'::jsonb)`);
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '{"id": "${CustomNumber}", "_set": { "to_id":${CustomNumber}, "from_id": ${CustomNumber} } }'::jsonb)`);
       log('result',  result?.data?.result?.[1]?.[0] );
       const clientResult = await deep.select({id: {_eq: CustomNumber}});
       assert.equal(clientResult?.data[0]?.type_id, 2);
@@ -105,6 +146,9 @@ describe('sync handlers', () => {
       const result = await deep.select({id: {_eq: CustomNumber}});
       log('delete result', result);
       assert.equal(result?.data[0], undefined);
+    });
+    describe.skip('permissions', () => {
+
     });
   });
   describe('Handle operations', () => {
@@ -254,7 +298,7 @@ describe('sync handlers', () => {
         assert.equal(insertedByHandler?.data[0]?.id, CustomNumber);
       });
     });
-    describe('Handle update', () => {
+    describe.skip('Handle update', () => {
       it(`Handle update on type`, async () => {
         const debug = log.extend('HandleUpdate');
         const CustomNumber = nextHandlerResult();
