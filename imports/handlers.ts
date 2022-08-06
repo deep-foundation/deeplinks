@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "./client";
-import gql from "graphql-tag";
+import _ from 'lodash';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -17,7 +17,6 @@ const nextFreeId = () => {
   lastFreeId -= 1;
   return lastFreeId;
 };
-
 
 export const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string, forceOwnerId?: number, supportsId?: number) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
@@ -124,7 +123,7 @@ export async function insertSelector() {
   };
 };
 
-export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
+export async function insertSelectorItems({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
   // const { data: [{ id: id1 }] } = await deep.insert({
   //   type_id: nodeTypeId,
   //   in: { data: {
@@ -169,6 +168,18 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   ]
 };
 
+export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId }) {
+  const { data: [{ id: linkId }] } = await deep.insert({
+    type_id: linkTypeId,
+    from_id: rootId,
+    to: { data: {
+      type_id: nodeTypeId,
+    } }
+  }, { returning: 'id to { id }' }) as any;
+  return { linkId };
+};
+
+
 export async function ensureLinkIsCreated(typeId: number) {
   // const freeId = randomInteger(5000000, 9999999999);
   const freeId = nextFreeId();
@@ -178,27 +189,25 @@ export async function ensureLinkIsCreated(typeId: number) {
     from_id: freeId,
     type_id: typeId,
     to_id: freeId
-  }, { name: 'INSERT_LINK' })).data[0];
+  }, { name: 'INSERT_LINK' }));
   // log(insertedLink);
-  assert.equal(freeId, insertedLink.id);
+  assert.equal(freeId, insertedLink.data[0].id);
   return freeId;
 }
 
 export const deleteHandler = async (handler) => {
-  await deleteId(handler.handlerJSFileValueId, { table: 'strings' });
-  await deleteId(handler.ownerContainHandlerId);
-  await deleteIds([handler.handlerJSFileId, handler.handlerId, handler.handleOperationId]);
+  const { handlerJSFileValueId, ...ids } = handler;
+  const result = { links: [], strings: []};
+  const compact = {id: {_in: _.compact(Object.values(ids))}}
+  result.links.push(await deep.delete(compact));
+  return result;
 };
 
 export const deleteSelector = async (selector: any) => {
-  await deleteId(selector.linkTypeId);
-  await deleteId(selector.nodeTypeId);
-  await deleteId(selector.treeId);
-  await deleteIds(selector.treeIncludesIds);
-  await deleteId(selector.selectorId);
-  await deleteId(selector.selectorIncludeId);
-  await deleteId(selector.selectorTreeId);
-  await deleteId(selector.rootId);
+  const { treeIncludesIds, ...withoutTreeIncluds } = selector;
+  const ids = (_.concat(treeIncludesIds, Object.values(withoutTreeIncluds)));
+  const compact = {id: {_in: _.compact(ids)}};
+  await deep.delete(compact);
 };
 
 export async function deleteId(id: number, options: {
