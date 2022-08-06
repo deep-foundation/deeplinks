@@ -110,7 +110,6 @@ export async function processPromises(promises: any[], handleInsertsIds: any[], 
 export const containerController = new ContainerController({
   gql_docker_domain: +DOCKER ? 'links' : 'graphql-engine',
   gql_port_path: +DOCKER ? '3006/gql' : '8080/v1/graphql',
-  network: 'deep_network',
   handlersHash: {}
 });
 

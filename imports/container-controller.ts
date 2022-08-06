@@ -18,7 +18,7 @@ const DOCKER = process.env.DOCKER || '0';
 export interface ContainerControllerOptions {
   gql_docker_domain: string;
   gql_port_path: string;
-  network: string;
+  network?: string;
   handlersHash?: any;
 }
 
@@ -82,7 +82,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker pull ${handler}; docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gql_docker_domain}${await this.getDelimiter()}1:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net ${network} -d ${handler}`;
+        const command = `docker pull ${handler}; docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gql_docker_domain}${await this.getDelimiter()}1:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep${await this.getDelimiter()}${network} -d ${handler}`;
         log('_runContainer command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('_runContainer dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
