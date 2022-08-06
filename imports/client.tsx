@@ -11,6 +11,7 @@ import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
 import Debug from 'debug';
 import { corePckg } from './core';
+import { BoolExpCan, BoolExpHandler, BoolExpLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types';
 
 const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
@@ -102,29 +103,66 @@ export interface DeepClientInstance<L = Link<number>> {
 
   stringify(any?: any): string;
 
-  select<LL = L>(exp: any, options?: {
-    table?: string;
+  select<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
   }): Promise<DeepClientResult<LL[]>>;
 
-  insert<LL = L>(objects: Partial<LL> | Partial<LL>[], options?: {
-    table?: string;
+  insert<Table extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLink
+  ), options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>>;
 
-  update(exp: any, value: any, options?: {
-    table?: string;
+  update<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], value: (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLinkPlain
+  ), options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
   }):Promise<DeepClientResult<{ id }[]>>;
 
-  delete(exp: any, options?: {
-    table?: string;
+  delete<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
@@ -244,8 +282,17 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return any;
   }
 
-  async select<LL = L>(exp: any, options?: {
-    table?: string;
+  async select<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
@@ -264,6 +311,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           tableName: table,
           returning,
           variables: {
+            limit: where?.limit,
             ...variables,
             where,
           } }),
@@ -275,8 +323,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.q0 };
   };
 
-  async insert<LL = L>(objects: Partial<LL> | Partial<LL>[] = {}, options?: {
-    table?: string;
+  async insert<Table extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLink
+  ), options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
@@ -303,8 +356,22 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async update(exp: any, value: any, options?: {
-    table?: string;
+  async update<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], value: (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLinkPlain
+  ), options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;
@@ -331,8 +398,17 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async delete(exp: any, options?: {
-    table?: string;
+  async delete<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: (
+    Table extends 'numbers' ? BoolExpValue<number> :
+    Table extends 'strings' ? BoolExpValue<string> :
+    Table extends 'objects' ? BoolExpValue<object> :
+    Table extends 'can' ? BoolExpCan :
+    Table extends 'selectors' ? BoolExpSelector :
+    Table extends 'tree' ? BoolExpTree :
+    Table extends 'handlers' ? BoolExpHandler :
+    BoolExpLink
+  ) | number | number[], options?: {
+    table?: Table;
     returning?: string;
     variables?: any;
     name?: string;

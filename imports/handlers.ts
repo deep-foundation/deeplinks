@@ -209,3 +209,37 @@ export const deleteSelector = async (selector: any) => {
   const compact = {id: {_in: _.compact(ids)}};
   await deep.delete(compact);
 };
+
+export async function deleteId(id: number, options: {
+  table?: string;
+  returning?: string;
+  variables?: any;
+  name?: string;
+} = { table: 'links' })
+{
+  await deleteIds([id], options);
+}
+
+export async function deleteIds(ids: number[], options: {
+  table?: string;
+  returning?: string;
+  variables?: any;
+  name?: string;
+} = { table: 'links' }) {
+  // return await deep.delete(ids, options); // should work, but doesn't
+
+  const idsFiltered = ids?.filter(linkId => typeof linkId === 'number');
+  if (idsFiltered?.length > 0) {
+    // log(`${options.table}, deleteIds[0..${idsFiltered.length}]: ${idsFiltered.join(', ')}`);
+    try
+    {
+      return await deep.delete(idsFiltered, options as any);
+    }
+    catch (e)
+    {
+      console.error(`Error deleting ids: ${idsFiltered.join(', ')}`, JSON.stringify(e, null, 2));
+    }
+  } else {
+    return { data: [] };
+  }
+}

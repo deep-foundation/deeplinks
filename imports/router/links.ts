@@ -97,7 +97,7 @@ export async function processPromises(promises: any[], handleInsertsIds: any[], 
         }
         try
         {
-          await deep.insert(promiseResults, { name: 'IMPORT_PROMISES_RESULTS' });
+          await deep.insert(promiseResults as any, { name: 'IMPORT_PROMISES_RESULTS' });
           log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
         }
         catch(e)
@@ -426,7 +426,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     }
     processPromises(promises, handleInsertsIds, promiseId, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleSelectorDebug);
     
-    await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' });
+    await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' as any });
   }
 }
 

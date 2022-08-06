@@ -13,11 +13,12 @@ const error = debug.extend('error');
 
 export const SELECTORS_TABLE_NAME = 'selectors';
 export const TABLE_NAME = 'links';
+export const CACHE = 'selectors_cache';
 export const BOOL_EXP_COMPUTED_FIELD = `${TABLE_NAME}__exec_bool_exp__function`;
 
 const client = generateApolloClient({
   path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
 
@@ -32,36 +33,28 @@ export const up = async () => {
     CREATE VIEW ${SELECTORS_TABLE_NAME} AS
     SELECT 
       mp_include."item_id" as "item_id",
-      include_link."from_id" as "selector_id",
-      include_link."id" as "selector_include_id",
-      (
-        SELECT "to_id" FROM ${TABLE_NAME} WHERE
-        "type_id" = ${await deep.id('@deep-foundation/core', 'SelectorFilter')} AND
-        "from_id" = include_link."from_id"
-      ) as "bool_exp_id"
+      cache_include."selector_id" as "selector_id",
+      cache_include."selector_include_id" as "selector_include_id",
+      cache_include."selector_filter_bool_exp_id" as "query_id"
     FROM
       ${MP_TABLE_NAME} as mp_include,
-      ${TABLE_NAME} as include_link,
-      ${TABLE_NAME} as include_tree_link
+      ${CACHE} as cache_include
     WHERE
-      (include_link."type_id" = ${await deep.id('@deep-foundation/core','SelectorInclude')}) AND
-      (mp_include."path_item_id" = include_link."to_id") AND
-      (mp_include."group_id" = include_tree_link."to_id" AND
-      include_tree_link."from_id" = include_link."id" AND
-      include_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')}) AND
-
+      cache_include."selector_include_id" != 0 AND
+      mp_include."path_item_id" = cache_include."link_id" AND
+      mp_include."group_id" = cache_include."tree_id" AND
       NOT EXISTS (
         SELECT mp_exclude."id"
         FROM
-        ${TABLE_NAME} as exclude_link,
-        ${TABLE_NAME} as exclude_tree_link,
+        ${CACHE} as cache_exclude,
         ${MP_TABLE_NAME} as mp_exclude
-        WHERE
-          (exclude_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorExclude')}) AND
-          (exclude_link."from_id" = include_link."from_id") AND
-          (mp_exclude."item_id" = mp_include."item_id") AND 
-          (mp_exclude."path_item_id" = exclude_link."to_id") AND 
-          (mp_exclude."group_id" = exclude_tree_link."to_id" AND exclude_tree_link."from_id" = exclude_link."id" AND exclude_tree_link."type_id" = ${await deep.id('@deep-foundation/core', 'SelectorTree')})
+        WHERE (
+          cache_exclude."selector_exclude_id" != 0 AND
+          cache_exclude."selector_id" = cache_include."selector_id" AND
+          mp_exclude."path_item_id" = cache_exclude."link_id" AND
+          mp_exclude."item_id" = mp_include."item_id" AND
+          mp_exclude."group_id" = cache_exclude."tree_id"
+        )
       );
   `);
   await api.sql(sql`
@@ -164,7 +157,7 @@ export const up = async () => {
     type: 'create_array_relationship',
     args: {
       table: SELECTORS_TABLE_NAME,
-      name: 'bool_exp',
+      name: 'query',
       using: {
         manual_configuration: {
           remote_table: {
@@ -172,7 +165,7 @@ export const up = async () => {
             name: TABLE_NAME,
           },
           column_mapping: {
-            bool_exp_id: 'id',
+            query_id: 'id',
           },
           insertion_order: 'after_parent',
         },
