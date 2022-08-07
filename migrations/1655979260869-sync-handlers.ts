@@ -20,7 +20,7 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-// plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
+// main debug tool, create error and read in apollo. plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
 const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
 const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
