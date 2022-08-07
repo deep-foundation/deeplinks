@@ -229,7 +229,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       const insertValueString = ${insertValueString};
       const valueId = plv8.execute(insertValueString)[0]?.id;
       ids.value = valueId
-      return { data: [ linkid ]};
+      return { data: [{ id: linkid }]};
     },
     update: function(options) {
       const { _set, ..._where } = options;
@@ -254,7 +254,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       let updateLinkString = ${updateLinkString};
       const linkid = plv8.execute(updateLinkString)[0].id;
       ids.link = linkid;
-      return { data: [ linkid ]};
+      return { data: [{ id: linkid }]};
     },
     delete: function(options) {
       const { id } = options;
@@ -262,7 +262,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
       const deleteString = ${deleteString};
       const linkid = plv8.execute(deleteString, [ id ])[0].id;
-      return { data: [ linkid ]};
+      return { data: [{ id: linkid }]};
     }
   }
 }`;
