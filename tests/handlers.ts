@@ -471,14 +471,13 @@ describe('Async handlers', () => {
   describe('sync function handle by type with reject', () => {
     it(`handle insert`, async () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
-      const numberToThrow = nextHandlerResult();
-      log('numberToThrow', numberToThrow);
+      const errorMessage = 'return is not possible';
 
       const typeId = await deep.id('@deep-foundation/core', 'Type');
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const handler = await insertHandler(handleInsertTypeId, typeId, `(deep, data) => { 
+      const handler = await insertHandler(handleInsertTypeId, typeId, `({deep, data}) => { 
         deep.insert({id: 4444, type_id: 2});
-        return { "error": "return is not possible" }; 
+        throw new Error('${errorMessage}');
       }`);
       log('handler', handler);
 
@@ -488,7 +487,8 @@ describe('Async handlers', () => {
 
       const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
-      const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+      log('promiseResults', JSON.stringify(promiseResults));
+      const promiseResult = promiseResults.find(link => link.object?.value.message === errorMessage);
       log('promiseResult', promiseResult);
       await deep.delete(linkId);
       await deletePromiseResult(promiseResult, linkId);
