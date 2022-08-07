@@ -225,7 +225,7 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       const linkCheck = checkSelectLinkPermission(linkid, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = number || string || object;
-      if (!value) return ids;
+      if (!value) return return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueString};
       const valueId = plv8.execute(insertValueString)[0]?.id;
       ids.value = valueId
