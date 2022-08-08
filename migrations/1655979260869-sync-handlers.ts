@@ -276,7 +276,7 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
         const checkSelectLinkPermission = undefined;
         const deep = deepFabric(prepared[i].id);
         const func = eval(prepared[i].value);
-        func(deep, {oldLink: OLD, newLink: NEW});
+        func({ deep, data: { oldLink: OLD, newLink: NEW } });
     })()
   };
   return NEW;
