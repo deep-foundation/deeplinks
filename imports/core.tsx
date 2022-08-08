@@ -298,9 +298,9 @@ export const corePckg: Package = {
     // HandlingErrorValue
     { id: 'handlingErrorValue', type: 'Value', from: 'HandlingError', to: 'Object' }, // 208
     // HandlingErrorReason
-    { id: 'handlingErrorReason', type: 'Type', from: 'HandlingError', to: 'Any' }, // 209
+    { id: 'HandlingErrorReason', type: 'Type', from: 'HandlingError', to: 'Any' }, // 209
     // HandlingErrorLink
-    { id: 'handlingErrorLink', type: 'Type', from: 'HandlingError', to: 'Any' }, // 210
+    { id: 'HandlingErrorLink', type: 'Type', from: 'HandlingError', to: 'Any' }, // 210
   ],
   errors: [],
   strict: true,
