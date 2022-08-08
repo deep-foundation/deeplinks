@@ -174,24 +174,28 @@ const findLinkByValue = /*javascript*/`({ string, object, number, value }) => {
 const deepFabric =  /*javascript*/`(ownerId) => {
   return {
     id: (start, ...path) => {
-      const pathToWhere = (start, path) => {
-        const pckg = ${pckg};
-        let query_id = plv8.execute(pckg)[0].id;
-        for (let p = 0; p < path.length; p++) {
-          const item = path[p]
-          if (typeof(item) !== 'boolean') {
-            const newSelect = plv8.execute(${newSelect})[0];
-            query_id = p === path.length-1 ? newSelect.to_id : newSelect.id;
-            if (!query_id) return undefined;
+      try {
+        const pathToWhere = (start, path) => {
+          const pckg = ${pckg};
+          let query_id = plv8.execute(pckg)[0].id;
+          for (let p = 0; p < path.length; p++) {
+            const item = path[p]
+            if (typeof(item) !== 'boolean') {
+              const newSelect = plv8.execute(${newSelect})[0];
+              query_id = p === path.length-1 ? newSelect.to_id : newSelect.id;
+              if (!query_id) return undefined;
+            }
           }
+          return query_id;
         }
-        return query_id;
-      }
-      const result = pathToWhere(start, path);
-      if (!result && path[path.length - 1] !== true) {
+        const result = pathToWhere(start, path);
+        if (!result && path[path.length - 1] !== true) {
+          plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
+        }
+        return result;
+      } catch (error) {
         plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
       }
-      return result;
     },
     select:  function(options) {
       const { id, type_id, from_id, to_id, number, string, object, value } = options;
@@ -276,17 +280,17 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
         const deep = deepFabric(prepared[i].id);
         const func = eval(prepared[i].value);
         func({ deep, data:{
-          oldLink: {
+          oldLink: OLD ? {
             id: Number(OLD?.id),
             from_id: Number(OLD?.from_id),
             to_id: Number(OLD?.to_id),
             type_id: Number(OLD?.type_id),
-          }, newLink: {
+          } : undefined, newLink: NEW ? {
             id: Number(NEW?.id),
             from_id: Number(NEW?.from_id),
             to_id: Number(NEW?.to_id),
             type_id: Number(NEW?.type_id),
-          },
+          } : undefined,
         }});
     })()
   };
