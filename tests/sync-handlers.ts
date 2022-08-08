@@ -1020,7 +1020,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           typeId, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
@@ -1056,7 +1056,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           typeId, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
@@ -1066,7 +1066,7 @@ describe('sync handlers', () => {
         const handler2 = await insertHandler(
           handleInsertTypeId,
           typeId,
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); throw new Error('errorTest')}`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); throw new Error('errorTest')}`,
           undefined,
           supportsId
         );
@@ -1104,7 +1104,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           customLinkId2, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
@@ -1147,7 +1147,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           typeId, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); throw new Error('testError');}`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); throw new Error('testError');}`,
           undefined,
           supportsId
         );
@@ -1191,7 +1191,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           selectorId,
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId);
 
@@ -1233,7 +1233,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleUpdateTypeId,
           typeId, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
@@ -1277,7 +1277,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleUpdateTypeId,
           selectorId,
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId);
 
@@ -1320,7 +1320,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleDeleteTypeId,
           typeId, 
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
@@ -1360,7 +1360,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleDeleteTypeId,
           selectorId,
-          `(deep, data) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
           undefined,
           supportsId);
 
