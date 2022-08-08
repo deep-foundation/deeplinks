@@ -35,13 +35,6 @@ const delay = time => new Promise(res => setTimeout(res, time));
 
 let packageWithPermissions;
 
-let lastFreeId = 9999999999;
-
-const nextFreeId = () => {
-  lastFreeId -= 1;
-  return lastFreeId;
-};
-
 let lastHandlerResult = 1;
 
 const nextHandlerResult = () => {
@@ -1083,6 +1076,7 @@ describe('Async handlers', () => {
 
       const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
       const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
+      log('promiseResults1', JSON.stringify(promiseResults1));
       const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
       // console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
 
