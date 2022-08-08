@@ -293,7 +293,7 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
   return NEW;
 `;
 
-const deepClientFunction = /*javascript*/`const checkSelectLinkPermission = ${checkSelectLinkPermission}; const checkUpdateLinkPermission = ${checkUpdateLinkPermission}; const checkDeleteLinkPermission = ${checkDeleteLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](args);  return result;`;
+const deepClientFunction = /*javascript*/`const checkSelectLinkPermission = ${checkSelectLinkPermission}; const checkUpdateLinkPermission = ${checkUpdateLinkPermission}; const checkDeleteLinkPermission = ${checkDeleteLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](...args);  return result;`;
 
 export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handler__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
 export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__deep__client CASCADE;`;
