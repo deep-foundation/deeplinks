@@ -173,8 +173,7 @@ const findLinkByValue = /*javascript*/`({ string, object, number, value }) => {
 
 const deepFabric =  /*javascript*/`(ownerId) => {
   return {
-    id: (options) => {
-      const { start, path } = options;
+    id: (start, ...path) => {
       const pathToWhere = (start, path) => {
         const pckg = ${pckg};
         let query_id = plv8.execute(pckg)[0].id;
@@ -276,7 +275,19 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
         const checkSelectLinkPermission = undefined;
         const deep = deepFabric(prepared[i].id);
         const func = eval(prepared[i].value);
-        func({ deep, data: { oldLink: OLD, newLink: NEW } });
+        func({ deep, data:{
+          oldLink: {
+            id: Number(OLD?.id),
+            from_id: Number(OLD?.from_id),
+            to_id: Number(OLD?.to_id),
+            type_id: Number(OLD?.type_id),
+          }, newLink: {
+            id: Number(NEW?.id),
+            from_id: Number(NEW?.from_id),
+            to_id: Number(NEW?.to_id),
+            type_id: Number(NEW?.type_id),
+          },
+        }});
     })()
   };
   return NEW;
