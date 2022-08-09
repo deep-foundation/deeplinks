@@ -439,6 +439,15 @@ const handleRoutes = async () => {
                     data: {},
                   }));
                 },
+                onProxyRes: (proxyRes, req, res) => {
+                  var body = "";
+                  proxyRes.on('data', function(data) {
+                      data = data.toString('utf-8');
+                      body += data;
+                      console.log('data', data);
+                  });
+                  console.log('body', body);
+                }
               });
               portServer.use(routeString, proxy);
             }
