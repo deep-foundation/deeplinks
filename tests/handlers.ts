@@ -996,7 +996,25 @@ describe('Async handlers', () => {
       // ensure response is ok
       const response = await fetch(url);
       const text = await response.text();
-      assert.equal(text, 'ok');
+      assert.equal(text, '{"rejected":"Error"}');
+
+      // query HandlingError link
+      const queryString = `{
+        links(where: { 
+          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandlingError')} },
+        }) {
+          id
+          object
+          out {
+            id
+          }
+        }
+      }`;
+      const client = deep.apolloClient;
+      const handlingErrorLinks = (await client.query({
+        query: gql`${queryString}`,
+      }))?.data?.links;
+      console.log('handlingErrorLinks', { handlingErrorLinks });
 
       // delete all
       await deep.delete(handleRoute?.id);
