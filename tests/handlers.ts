@@ -999,12 +999,12 @@ describe('Async handlers', () => {
       assert.equal(text, '{"rejected":"Error"}');
 
       // query HandlingError link
+      //          out: {
+      //  to_id: { _in: [${routeLink.id}, ${handleRoute.id}] }
+      // }
       const queryString = `{
         links(where: { 
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandlingError')} },
-          out: {
-            to_id: { _in: [${routeLink.id}, ${handleRoute.id}] }
-          }
         }) {
           id
           object {
@@ -1020,6 +1020,12 @@ describe('Async handlers', () => {
         query: gql`${queryString}`,
       }))?.data?.links;
       console.log('handlingErrorLinks', handlingErrorLinks);
+
+      const handlingErrorLink = handlingErrorLinks[0];
+      const hanldingErrorValue = handlingErrorLink?.object;
+      const handlingErrorReasons = handlingErrorLink?.out;
+
+      
 
       // delete all
       await deep.delete(handleRoute?.id);
