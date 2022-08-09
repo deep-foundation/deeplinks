@@ -455,6 +455,23 @@ const handleRoutes = async () => {
                             // HandlingError type id
                             const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
                             console.log('handlingErrorTypeId', handlingErrorTypeId);
+
+                            const insertResult = await deep.insert({
+                              type_id: handlingErrorTypeId,
+                              object: { data: { value: data.rejected } },
+                              out: { data: [
+                                {
+                                  type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                  to_id: route.id
+                                },
+                                {
+                                  type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                  to_id: handleRoute.id
+                                }
+                              ]},
+                            }, {
+                              name: 'INSERT_HANDLING_ERROR',
+                            }) as any;
                           }
                         } catch (e) {
                         }
