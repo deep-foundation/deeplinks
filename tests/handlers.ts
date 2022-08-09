@@ -1025,7 +1025,14 @@ describe('Async handlers', () => {
       const hanldingErrorValue = handlingErrorLink?.object;
       const handlingErrorReasons = handlingErrorLink?.out;
 
-      
+      // delete handlingErrorReasons
+      for (const reason of handlingErrorReasons) {
+        await deep.delete(reason?.id);
+      }
+      // delete handlingErrorValue
+      await deep.delete(hanldingErrorValue?.id, { table: 'objects' });
+      // delete handlingErrorLink
+      await deep.delete(handlingErrorLink?.id);
 
       // delete all
       await deep.delete(handleRoute?.id);
