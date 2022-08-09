@@ -85,8 +85,8 @@ describe('sync handlers', () => {
   });
   describe('DeepClient mini', () => {
     it(`id`, async () => {
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '{"start": "deep", "path":["admin"]}'::jsonb)`);
-      const clientResult = await deep.id('deep', 'admin');
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb)`);
+      const clientResult = await deep.id('@deep-foundation/core', 'Rule');
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });

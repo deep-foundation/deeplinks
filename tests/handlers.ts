@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import gql from "graphql-tag";
 import Debug from 'debug';
 import fetch from 'node-fetch';
-import { insertHandler, insertSelector, insertSelectorItems, ensureLinkIsCreated, deleteHandler, deleteSelector }  from "../imports/handlers";
+import { insertHandler, insertSelector, insertSelectorItems, deleteHandler, deleteSelector }  from "../imports/handlers";
 import _ from 'lodash';
 import { _ids } from '../imports/client';
 
@@ -347,7 +347,7 @@ describe('Async handlers', () => {
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
       const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
@@ -365,7 +365,7 @@ describe('Async handlers', () => {
       const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       // Trigger link update by inserting a new value
       await deep.insert({ link_id: linkId, value: numberToReturn }, { table: 'numbers' });
@@ -386,7 +386,7 @@ describe('Async handlers', () => {
       const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       await deep.insert({ link_id: linkId, value: numberToReturn }, { table: 'numbers' });
       await deep.await(linkId);
@@ -416,7 +416,7 @@ describe('Async handlers', () => {
       const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       await deep.insert({ link_id: linkId, value: numberToReturn }, { table: 'numbers' });
       await deep.await(linkId);
@@ -446,7 +446,7 @@ describe('Async handlers', () => {
       const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
 
@@ -474,7 +474,7 @@ describe('Async handlers', () => {
       }`);
       log('handler', handler);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       await deep.await(linkId);
 
@@ -496,7 +496,7 @@ describe('Async handlers', () => {
       const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `(arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
 
@@ -518,7 +518,7 @@ describe('Async handlers', () => {
       const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       await deep.await(linkId);
 
@@ -537,7 +537,7 @@ describe('Async handlers', () => {
       const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
       const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
@@ -585,7 +585,7 @@ describe('Async handlers', () => {
         return { queryId, result: ${numberToReturn}}
       }`);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
       const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
@@ -617,7 +617,7 @@ describe('Async handlers', () => {
         return { nodeId, result: ${numberToReturn}}
       }`, packageWithPermissions.packageId);
 
-      const linkId = await ensureLinkIsCreated(typeId);
+      const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
       const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
