@@ -440,13 +440,27 @@ const handleRoutes = async () => {
                   }));
                 },
                 onProxyRes: (proxyRes, req, res) => {
-                  var body = "";
-                  proxyRes.on('data', function(data) {
+                  // var body = "";
+                  proxyRes.on('data', async function(data) {
                       data = data.toString('utf-8');
-                      body += data;
+                      // body += data;
                       console.log('data', data);
+                      // if JSON
+                      if (data.startsWith('{')) {
+                        try {
+                          data = JSON.parse(data);
+                          // log rejected
+                          if (data.hasOwnProperty('rejected')) {
+                            console.log('rejected', data.rejected);
+                            // HandlingError type id
+                            const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+                            console.log('handlingErrorTypeId', handlingErrorTypeId);
+                          }
+                        } catch (e) {
+                        }
+                      }
                   });
-                  console.log('body', body);
+                  // console.log('body', body);
                 }
               });
               portServer.use(routeString, proxy);
