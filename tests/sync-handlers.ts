@@ -1086,7 +1086,7 @@ describe('sync handlers', () => {
         debug('delete handler2', await deleteHandler(handler2));
         assert.equal(insertedByHandler?.data?.[0]?.id, undefined);
       });
-      it.only(`Handle insert 1 trigger and 2 types, check not triggered twice`, async () => {
+      it(`Handle insert 1 trigger and 2 types, check not triggered twice`, async () => {
         const debug = log.extend('HandleInsert1x2');
 
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');

@@ -1002,9 +1002,14 @@ describe('Async handlers', () => {
       const queryString = `{
         links(where: { 
           type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandlingError')} },
+          out: {
+            to_id: { _in: [${routeLink.id}, ${handleRoute.id}] }
+          }
         }) {
           id
-          object
+          object {
+            id
+          }
           out {
             id
           }
@@ -1014,7 +1019,7 @@ describe('Async handlers', () => {
       const handlingErrorLinks = (await client.query({
         query: gql`${queryString}`,
       }))?.data?.links;
-      console.log('handlingErrorLinks', { handlingErrorLinks });
+      console.log('handlingErrorLinks', handlingErrorLinks);
 
       // delete all
       await deep.delete(handleRoute?.id);
