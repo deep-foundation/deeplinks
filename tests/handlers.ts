@@ -998,6 +998,8 @@ describe('Async handlers', () => {
       const text = await response.text();
       assert.equal(text, '{"rejected":"Error"}');
 
+      await delay(5000);
+
       // query HandlingError link
       //          out: {
       //  to_id: { _in: [${routeLink.id}, ${handleRoute.id}] }
