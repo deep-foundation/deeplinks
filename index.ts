@@ -433,14 +433,14 @@ const handleRoutes = async () => {
                   [routeString]: "/http-call",
                 },
                 onProxyReq: (proxyReq, req, res) => {
+                  console.log('deeplinks request')
+                  console.log('req.method', req.method);
+                  console.log('req.body', req.body);
                   proxyReq.setHeader('deep-call-options', JSON.stringify({
                     jwt,
                     code,
                     data: {},
                   }));
-                  console.log('deeplinks request')
-                  console.log('req.method', req.method);
-                  console.log('req.body', req.body);
                 },
                 onProxyRes: (proxyRes, req, res) => {
                   // var body = "";
