@@ -439,44 +439,46 @@ const handleRoutes = async () => {
                     data: {},
                   }));
                   console.log('deeplinks request')
+                  console.log(req.body);
                 },
                 onProxyRes: (proxyRes, req, res) => {
                   // var body = "";
                   proxyRes.on('data', async function(data) {
+                    try {  
                       data = data.toString('utf-8');
                       // body += data;
                       console.log('data', data);
                       // if JSON
                       if (data.startsWith('{')) {
-                        try {
-                          data = JSON.parse(data);
-                          // log rejected
-                          if (data.hasOwnProperty('rejected')) {
-                            console.log('rejected', data.rejected);
-                            // HandlingError type id
-                            const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
-                            console.log('handlingErrorTypeId', handlingErrorTypeId);
+                        data = JSON.parse(data);
+                        // log rejected
+                        if (data.hasOwnProperty('rejected')) {
+                          console.log('rejected', data.rejected);
+                          // HandlingError type id
+                          const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+                          console.log('handlingErrorTypeId', handlingErrorTypeId);
 
-                            const insertResult = await deep.insert({
-                              type_id: handlingErrorTypeId,
-                              object: { data: { value: data.rejected } },
-                              out: { data: [
-                                {
-                                  type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
-                                  to_id: route.id
-                                },
-                                {
-                                  type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
-                                  to_id: handleRoute.id
-                                }
-                              ]},
-                            }, {
-                              name: 'INSERT_HANDLING_ERROR',
-                            }) as any;
-                          }
-                        } catch (e) {
+                          const insertResult = await deep.insert({
+                            type_id: handlingErrorTypeId,
+                            object: { data: { value: data.rejected } },
+                            out: { data: [
+                              {
+                                type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                to_id: route.id
+                              },
+                              {
+                                type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                to_id: handleRoute.id
+                              }
+                            ]},
+                          }, {
+                            name: 'INSERT_HANDLING_ERROR',
+                          }) as any;
                         }
                       }
+                    } catch (e) {
+                      console.log('deeplinks response error', e)
+                    }
                   });
                   // console.log('body', body);
                 }
