@@ -1051,7 +1051,7 @@ describe('Async handlers', () => {
       await waitOn({ resources: [url], reverse: true });
       log("route handler is down");
     });
-    it(`handle route gql handler`, async () => {
+    it.only(`handle route gql handler`, async () => {
       // const port = await getPort(); // conflicts with container-controller port allocation
       const port = 4002;
       const route = '/constant';
@@ -1112,6 +1112,8 @@ describe('Async handlers', () => {
                           await apolloServer.start();
                           apolloServer.applyMiddleware({ app: router, path: '/' });
                         
+                          console.log('js-isolation-provider request')
+
                           router.handle(req, res);
                         }`,
                       } },
