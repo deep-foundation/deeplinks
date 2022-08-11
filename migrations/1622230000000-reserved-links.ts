@@ -61,11 +61,13 @@ export const up = async () => {
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__reserved__instead_of_insert__function() RETURNS TRIGGER AS $trigger$
     BEGIN
       IF NEW.id IS NOT NULL THEN
-        IF EXISTS( SELECT FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id::text::jsonb AND LINKS.type_id = 0 AND LINKS.id = NEW.id) IS NOT NULL THEN
+        IF EXISTS( SELECT FROM ${RL_TABLE_NAME} as RL, ${LINKS_TABLE_NAME} AS LINKS WHERE RL.reserved_ids @> NEW.id::text::jsonb AND LINKS.type_id = 0 AND LINKS.id = NEW.id) THEN
           DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
           RETURN NEW;
         ELSE
-        RAISE EXCEPTION 'Illegal INSERT with id: %', NEW.id USING HINT = 'Use reserve action before inserting link with id';
+          IF (NOT EXISTS (SELECT * FROM "links_id_seq" WHERE last_value = NEW.id)) THEN
+            RAISE EXCEPTION 'Illegal insert link with custom id with { id: %, type_id: %, from_id: %, to_id: % } %.', NEW.id, NEW.type_id, NEW.from_id, NEW.to_id, (SELECT row_to_json(t) FROM "links_id_seq" as t) USING HINT = 'Use reserve action before inserting link with id';
+          END IF;
         END IF;
       END IF;
       RETURN NEW;

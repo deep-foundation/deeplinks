@@ -36,6 +36,12 @@ describe('typing', () => {
     const { data: [{ id }] } = await deep.insert({ type_id: 1 });
     assert.equal(typeof(id), 'number');
   });
+  it(`custom id restricted`, async () => {
+    let throwed = false;
+    try { await deep.insert({ id: 8888888, type_id: 1 }); }
+    catch (error) { throwed = true; }
+    assert.equal(throwed, true);
+  });
   it(`link equal from/to type`, async () => {
     const { data: [{ id: typeFromId }] } = await deep.insert({ type_id: 1 });
     const { data: [{ id: typeToId }] } = await deep.insert({ type_id: 1 });

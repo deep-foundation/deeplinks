@@ -25,7 +25,7 @@ describe('messanger', () => {
     const guest = await unloginedDeep.guest();
     const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
 
-    const { data: [{ id }] } = await guestDeep.insert({
+    const inserted = await guestDeep.insert({
       type_id: await guestDeep.id('@deep-foundation/messaging', 'Message'),
       string: { data: { value: 'test guest message' } },
       out: { data: [
@@ -43,8 +43,12 @@ describe('messanger', () => {
         },
       ] },
     });
+    const { data: [{ id }] } = inserted;
+    console.log(inserted);
 
     const result = await guestDeep.select({ id });
+
+    console.log(result);
 
     assert.lengthOf(result?.data, 1);
     assert.equal(result?.data?.[0]?.value?.value, 'test guest message');
