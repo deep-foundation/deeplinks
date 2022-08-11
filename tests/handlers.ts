@@ -1113,7 +1113,8 @@ describe('Async handlers', () => {
                           apolloServer.applyMiddleware({ app: router, path: '/' });
                         
                           console.log('js-isolation-provider request')
-                          console.log(req.body);
+                          console.log('req.method', req.method);
+                          console.log('req.body', req.body);
 
                           router.handle(req, res);
                         }`,

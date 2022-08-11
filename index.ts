@@ -439,7 +439,8 @@ const handleRoutes = async () => {
                     data: {},
                   }));
                   console.log('deeplinks request')
-                  console.log(req.body);
+                  console.log('req.method', req.method);
+                  console.log('req.body', req.body);
                 },
                 onProxyRes: (proxyRes, req, res) => {
                   // var body = "";
