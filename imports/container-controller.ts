@@ -224,10 +224,8 @@ export class ContainerController {
       const callResult = await axios.post(callRunner, { params: options });
       log('callHandler callResult status', { status: callResult.status });
       if (callResult?.data?.error) return { error: callResult?.data?.error };
-      if (callResult?.data?.resolved) {
-        return callResult.data.resolved;
-      }
-      return Promise.reject(callResult?.data?.rejected);
+      if (callResult?.data?.rejected) return Promise.reject(callResult?.data?.rejected);
+      return callResult?.data?.resolved;
     } catch (e) {
       error('call error', e);
       const checkResult = await this._chekAndRestart(container);
