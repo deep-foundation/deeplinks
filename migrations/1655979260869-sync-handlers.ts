@@ -128,7 +128,7 @@ const prepareFunction = /*javascript*/`
 `;
 
 const selectLink =  `\`SELECT * FROM links WHERE \${where}\``;
-const selectValueTable = `\`SELECT value FROM \${table} WHERE link_id = \${linkId}\``;
+const selectValueTable = `\`SELECT * FROM \${table} WHERE link_id = \${linkId}\``;
 const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = '\${value}'::\${table==='strings' ? 'text' : table==='objects' ? 'jsonb' : 'bigint'}\``;
 
 const generateSelectWhere = /*javascript*/`({ string, object, number, value, ...options }) => {
@@ -140,12 +140,12 @@ const generateSelectWhere = /*javascript*/`({ string, object, number, value, ...
   return _where.join(' AND ');
 }`;
 
-const fillValuesByLinks = /*javascript*/`(links) => {
+const fillValueByLinksCode = /*javascript*/`(links) => {
   let table;
   let linkId;
   if (!links.length) return links;
   for (let i = 0; i < links.length; i++){
-    links[i].value = null;
+    links[i].value = undefined;
     linkId = links[i].id;
     table = 'strings';
     const stringValue = plv8.execute(${selectValueTable});
@@ -153,9 +153,7 @@ const fillValuesByLinks = /*javascript*/`(links) => {
     const objectValue = plv8.execute(${selectValueTable});
     table = 'numbers';
     const numberValue = plv8.execute(${selectValueTable});
-    if (stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value) {
-      links[i].value = stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value;
-    }
+    links[i].value = stringValue?.[0] || objectValue?.[0] || numberValue?.[0];
   }
 }`;
 
@@ -230,7 +228,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const { id, type_id, from_id, to_id, number, string, object, value } = options;
       const generateSelectWhere = ${generateSelectWhere};
       const findLinkIdByValue = ${findLinkIdByValue};
-      const fillValuesByLinks = ${fillValuesByLinks};
+      const fillValueByLinks = ${fillValueByLinksCode};
       let where = generateSelectWhere(options);
       let links = [];
       if (where) links = plv8.execute(${selectLink});
@@ -242,7 +240,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         }
       }
       const filtered = links.filter((link) => checkSelectPermission(link.id, ownerId));
-      fillValuesByLinks(filtered);
+      fillValueByLinks(filtered);
       return { data: filtered };
     },
     insert: function(options) {
@@ -275,32 +273,40 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
   const checkSelectPermission = ${checkSelectPermissionCode};
   const checkInsertPermission = ${checkInsertPermissionCode};
   const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
+  const fillValueByLinks = ${fillValueByLinksCode};
   const deepFabric = ${deepFabric};
 
   const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
   const default_role = hasura_session['x-hasura-role'];
   const default_user_id = hasura_session['x-hasura-user-id'];
+  const data = {
+    oldLink: OLD ? {
+      id: Number(OLD?.id),
+      from_id: Number(OLD?.from_id),
+      to_id: Number(OLD?.to_id),
+      type_id: Number(OLD?.type_id),
+      value: fillValueByLinks([OLD])
+    } : undefined, newLink: NEW ? {
+      id: Number(NEW?.id),
+      from_id: Number(NEW?.from_id),
+      to_id: Number(NEW?.to_id),
+      type_id: Number(NEW?.type_id),
+      value: fillValueByLinks([NEW])
+    } : undefined,
+  };
 
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
         const deep = deepFabric(prepared[i].owner, hasura_session);
+        const prepare = undefined;
+        const fillValueByLinks = undefined;
         const checkSelectPermission = undefined;
+        const checkInsertPermission = undefined;
+        const checkDeleteLinkPermission = undefined;
         const default_role = undefined;
         const default_user_id =  undefined;
         const func = eval(prepared[i].value);
-        func({ deep, data:{
-          oldLink: OLD ? {
-            id: Number(OLD?.id),
-            from_id: Number(OLD?.from_id),
-            to_id: Number(OLD?.to_id),
-            type_id: Number(OLD?.type_id),
-          } : undefined, newLink: NEW ? {
-            id: Number(NEW?.id),
-            from_id: Number(NEW?.from_id),
-            to_id: Number(NEW?.to_id),
-            type_id: Number(NEW?.type_id),
-          } : undefined,
-        }});
+        func({ deep, data });
     })()
   };
 

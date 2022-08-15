@@ -85,6 +85,23 @@ describe('sync handlers', () => {
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });
+    it.only(`select should return value`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        string: { data: { value: 'HelloBugFixers'}},
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Contain'),
+          from_id: await deep.id('deep', 'admin')
+        } }
+      });
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb)`);
+      log('id result', result?.data?.result?.[1]?.[0]);
+      const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal(value?.value, 'HelloBugFixers');
+      assert.equal(value?.id, selected?.data?.[0]?.value?.id);
+    });
     describe('permissions', () => {
       describe('select', () => {
         it(`user contain range`, async () => {
