@@ -234,33 +234,35 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     // log('handlerTypeId', handlerTypeId);
     // log('handleOperationTypeId', handleOperationTypeId);
 
-    const queryString = `query SELECT_CODE($typeId: bigint) { links(where: {
-            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-            in: {
-              from_id: { _eq: ${dockerSupportsJsType} },
-              type_id: { _eq: ${handlerTypeId} },
-              in: {
-                from_id: { _eq: $typeId },
-                type_id: { _eq: ${handleOperationTypeId} },
-              }
-            }
-          }) {
+    const queryString = `query SELECT_CODE($typeId: bigint) {
+      links(where: {
+        type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
+        in: {
+          from_id: { _eq: ${dockerSupportsJsType} },
+          type_id: { _eq: ${handlerTypeId} },
+          in: {
+            from_id: { _eq: $typeId },
+            type_id: { _eq: ${handleOperationTypeId} },
+          }
+        }
+      }) {
+        id
+        value
+        in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+          id
+          in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
             id
-            value
-            in(where: { type_id: { _eq: ${handlerTypeId} } }) {
+          }
+          support: from {
+            id
+            isolation: from {
               id
-              in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-                id
-              }
-              support: from {
-                id
-                isolation: from {
-                  id
-                  value
-                }
-              }
+              value
             }
-          } }`;
+          }
+        }
+      }
+    }`;
 
           // #{
           //   #  from: {
@@ -573,7 +575,7 @@ export default async (req, res) => {
         // log("new queryResult: ", queryResult);
         newRow.value = queryResult.data?.[0]?.value;
       }
-      
+
       const current = operation === 'DELETE' ? oldRow : newRow;
       log(`Processing ${current.id} link.`)
       // log('event', JSON.stringify(event, null, 2));

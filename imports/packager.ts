@@ -287,14 +287,56 @@ export class Packager<L extends Link<any>> {
     return { global: resultGlobal, difference };
   }
 
+  validate(pckg: Package, errors: any[]) {
+    if (pckg.strict) return;
+    if (!pckg?.package?.name) errors.push(`!pckg?.package?.name`);
+    if (!pckg?.package?.version) errors.push(`!pckg?.package?.version`);
+    if (pckg.hasOwnProperty('dependencies')) {
+      if (typeof(pckg?.dependencies) === 'object') {
+        const keys = Object.keys(pckg?.dependencies);
+        for (let i = 0; i < keys.length; i++) {
+          const dep = pckg?.dependencies[keys[i]];
+          if (typeof(dep) === 'object') {
+            if (typeof(dep.name) !== 'string') errors.push(`!dep[${i}].name`);
+            // if (typeof(dep.version) !== 'string') errors.push(`!dep[${i}].version`);
+            // if (typeof(dep.uri) !== 'string') errors.push(`!dep[${i}].uri`);
+            // if (typeof(dep.type) !== 'string') errors.push(`!dep[${i}].type`);
+          } else errors.push(`!pckg.dependencies[keys[${i}]]`);
+        }
+      } else errors.push('!pckg?.dependencies');
+    }
+    if (Object.prototype.toString.call(pckg?.data) === '[object Array]') {
+      for (let i = 0; i < pckg?.data.length; i++) {
+        const item = pckg?.data[i];
+        if (typeof(item) === 'object') {
+          if (typeof(item?.id) !== 'string' && typeof(item?.id) !== 'number') errors.push(`!item[${i}].id`);
+          if (typeof(item?.package) === 'object') {
+            if (typeof(item?.package?.dependencyId) !== 'number') errors.push(`!item[${i}].package?.dependencyId`);
+            if (typeof(item?.package?.containValue) !== 'string') errors.push(`!item[${i}].package?.containValue`);
+          } else {
+            if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}].type`);
+            if (item.hasOwnProperty('from')) if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}].from`);
+            if (item.hasOwnProperty('to')) if (typeof(item?.to) !== 'string' && typeof(item?.to) !== 'number') errors.push(`!item[${i}].to`);
+            if (item.hasOwnProperty('value')) {
+              if (typeof(item?.value) !== 'object') errors.push(`!item[${i}].value`);
+              else {
+                if (typeof(item?.value?.value) !== 'number' && typeof(item?.value?.value) !== 'string' && typeof(item?.value?.value) !== 'object') errors.push(`!item[${i}].value.value`);
+              }
+            }
+          }
+        } else errors.push(`!pckg.dependencies[keys[${i}]]`);
+      }
+    } else errors.push('!pckg?.dependencies');
+  }
+
   /**
    * Import into system pckg.
    */
   async import(pckg: Package): Promise<PackagerImportResult> {
     const errors = [];
     try {
-      if (!pckg?.package?.name) throw new Error(`!pckg?.package?.name`);
-      if (!pckg?.package?.version) throw new Error(`!pckg?.package?.version`);
+      this.validate(pckg, errors);
+      if (errors.length) return { errors };
       const { data, counter, dependedLinks, packageId, namespaceId } = await this.deserialize(pckg, errors);
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors, {
@@ -639,27 +681,27 @@ export class Packager<L extends Link<any>> {
         if (localLink) {
           if (globalLink.type_id) {
             if (globalLink.type) {
-              localLink.type_id = localLinks[lbyg[globalLink.type_id]];
+              localLink.type_id = localLinks[lbyg[globalLink.type_id]]?.id;
             } else {
               localLink.type_id = getDependencedId(globalLink._type);
             }
           }
           if (globalLink.from_id) {
             if (globalLink.from) {
-              localLink.from_id = localLinks[lbyg[globalLink.from_id]];
+              localLink.from_id = localLinks[lbyg[globalLink.from_id]]?.id;
             } else {
               localLink.from_id = getDependencedId(globalLink._from);
             }
           }
           if (globalLink.to_id) {
             if (globalLink.to) {
-              localLink.to_id = localLinks[lbyg[globalLink.to_id]];
+              localLink.to_id = localLinks[lbyg[globalLink.to_id]]?.id;
             } else {
               localLink.to_id = getDependencedId(globalLink._to);
             }
           }
           if (globalLink.value) {
-            localLink.value = globalLink?.value?.value;
+            localLink.value = { value: globalLink?.value?.value };
           }
         }
       }

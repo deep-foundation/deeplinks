@@ -81,11 +81,20 @@ export const up = async () => {
         from_id: await root.id('deep'),
         type_id: await root.id('@deep-foundation/core', 'Contain'),
         string: { data: { value: 'admin' } },
+      },{
+        from_id: await root.id('@deep-foundation/core'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'admin' } },
+      },{
+        from_id: await root.id('deep'),
+        type_id: await root.id('@deep-foundation/core', 'Join'),
+      },{
+        from_id: await root.id('@deep-foundation/core'),
+        type_id: await root.id('@deep-foundation/core', 'Join'),
       }] },
       out: { data: [{
         to_id: await root.id('deep', 'users'),
         type_id: await root.id('@deep-foundation/core', 'Join'),
-        string: { data: { value: 'admin' } },
       }] },
     });
     console.log('admin', adminId);

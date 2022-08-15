@@ -114,6 +114,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
 };
 
 export const packagerPublishCore = async (errors = [], address: string, id: number) => {
+  console.log('packagerPublishCore');
   if (!id) return { errors: ['!id'] };
   const packageResults = await deep.select(id);
   if (!packageResults.data?.length) return { errors: ['!package'] }
@@ -123,10 +124,12 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
   // gist.github.com/ivansglazunov/4cf14e3e58f4e96f7e7914b963ecdd29
   const isGist = uri.hostname === 'gist.github.com';
   const isNpm = uri.hostname === 'npmjs.com' || uri.hostname === 'www.npmjs.com';
-
+  console.log('packagerPublishCore', { isGist, isNpm });
+  
   if (isGist) {
     const username = uri.username;
     const gistId = uri.pathname.split('/')[2];
+    console.log('packagerPublishCore', { username, gistId });
     if (!username) {
       errors.push('gist requires token');
     }
@@ -134,6 +137,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
     if (gistId) {
       // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
       const deepPckgContent = await packager.export({ packageLinkId: id });
+      console.log('packagerPublishCore deepPckgContent', deepPckgContent);
       if (deepPckgContent?.errors?.length) {
         errors.push(...deepPckgContent.errors);
       }
@@ -146,6 +150,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
       if (errors.length) return { errors };
       const gists = new Gists({ token: username });
       const result = await gists.edit(gistId, { files: { 'deep.json': { content: JSON.stringify(deepPckgContent) } } });
+      console.log('packagerPublishCore result', result);
       if (result?.body?.id) return { errors, address: `https://${username}@gist.github.com${uri.pathname}` };
     } else {
       // const gist = new Gists({ token: user + ':' + pass }); copilot Oo
@@ -206,6 +211,11 @@ const resolvers = {
           await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
           +context?.headers?.['x-hasura-user-id'],
           await deep.id('@deep-foundation/core', 'AllowPackagerInstall')
+        ) &&
+        !await deep.can(
+          null,
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowAdmin')
         )
       ) {
         errors.push('cant');
@@ -218,12 +228,31 @@ const resolvers = {
     },
     packager_publish: async (source, args, context, info) => {
       const errors = [];
+      console.log({
+        userId: +context?.headers?.['x-hasura-user-id'],
+        roleAdmin: context?.headers?.['x-hasura-role'] === 'admin',
+        AllowPackagerPublish: await deep.can(
+          await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
+        ),
+        AllowAdmin: await deep.can(
+          null,
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowAdmin')
+        ),
+      });
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
           await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
           +context?.headers?.['x-hasura-user-id'],
           await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
+        ) &&
+        !await deep.can(
+          null,
+          +context?.headers?.['x-hasura-user-id'],
+          await deep.id('@deep-foundation/core', 'AllowAdmin')
         )
       ) {
         errors.push('cant');
