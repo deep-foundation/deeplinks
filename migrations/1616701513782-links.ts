@@ -18,7 +18,12 @@ export const TABLE_NAME = 'links';
 export const up = async () => {
   log('up');
   await api.sql(sql`
-    CREATE TABLE ${SCHEMA}."${TABLE_NAME}" (id bigint PRIMARY KEY, from_id bigint DEFAULT 0, to_id bigint DEFAULT 0, type_id bigint NOT NULL);
+    CREATE TABLE ${SCHEMA}."${TABLE_NAME}" (
+      id bigint PRIMARY KEY,
+      from_id bigint DEFAULT 0,
+      to_id bigint DEFAULT 0,
+      type_id bigint NOT NULL
+    );
     CREATE SEQUENCE ${TABLE_NAME}_id_seq
     AS bigint START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
     ALTER SEQUENCE ${TABLE_NAME}_id_seq OWNED BY ${SCHEMA}."${TABLE_NAME}".id;

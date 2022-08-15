@@ -11,13 +11,6 @@ const apolloClient = generateApolloClient({
 
 const deep = new DeepClient({ apolloClient });
 
-let lastFreeId = 9999999999;
-
-const nextFreeId = () => {
-  lastFreeId -= 1;
-  return lastFreeId;
-};
-
 export const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string, forceOwnerId?: number, supportsId?: number) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({
@@ -178,22 +171,6 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
   }, { returning: 'id to { id }' }) as any;
   return { linkId };
 };
-
-
-export async function ensureLinkIsCreated(typeId: number) {
-  // const freeId = randomInteger(5000000, 9999999999);
-  const freeId = nextFreeId();
-  // log(freeId);
-  const insertedLink = (await deep.insert({
-    id: freeId,
-    from_id: freeId,
-    type_id: typeId,
-    to_id: freeId
-  }, { name: 'INSERT_LINK' }));
-  // log(insertedLink);
-  assert.equal(freeId, insertedLink.data[0].id);
-  return freeId;
-}
 
 export const deleteHandler = async (handler) => {
   const { handlerJSFileValueId, ...ids } = handler;

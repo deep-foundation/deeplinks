@@ -1,7 +1,7 @@
 import _remove from 'lodash/remove';
 import _isEqual from 'lodash/isEqual';
 import EventEmitter from 'events';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
 import { inherits } from 'util';
 
@@ -477,3 +477,18 @@ export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, 
     };
   }, []);
 };
+
+export function useMinilinksApply<L extends Link<number>>(ml, name: string, data?: L[]): L[] {
+  const [strictName] = useState(name);
+  useEffect(() => {
+    ml.apply(data, strictName);
+    return () => {
+      ml.apply([], strictName);
+    };
+  }, [data]);
+  return useMinilinksFilter(
+    ml,
+    (link) => link._applies.includes(strictName),
+    (link, ml) => ml.links.filter(l => l._applies.includes(strictName)),
+  )
+}

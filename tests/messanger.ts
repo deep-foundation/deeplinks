@@ -25,7 +25,7 @@ describe('messanger', () => {
     const guest = await unloginedDeep.guest();
     const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
 
-    await guestDeep.insert({
+    const inserted = await guestDeep.insert({
       type_id: await guestDeep.id('@deep-foundation/messaging', 'Message'),
       string: { data: { value: 'test guest message' } },
       out: { data: [
@@ -43,10 +43,12 @@ describe('messanger', () => {
         },
       ] },
     });
+    const { data: [{ id }] } = inserted;
+    console.log(inserted);
 
-    await delay(10000);
+    const result = await guestDeep.select({ id });
 
-    const result = await guestDeep.select({ type_id: await guestDeep.id('@deep-foundation/messaging', 'Message') });
+    console.log(result);
 
     assert.lengthOf(result?.data, 1);
     assert.equal(result?.data?.[0]?.value?.value, 'test guest message');
@@ -83,9 +85,7 @@ describe('messanger', () => {
       ] },
     });
 
-    await delay(10000);
-
-    await guestBDeep.insert({
+    const { data: [{ id: messageBId }] } = await guestBDeep.insert({
       type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
       string: { data: { value: 'test guest B message' } },
       out: { data: [
@@ -100,8 +100,8 @@ describe('messanger', () => {
       ] },
     });
 
-    const resultA = await guestADeep.select({ type_id: await guestADeep.id('@deep-foundation/messaging', 'Message') });
-    const resultB = await guestBDeep.select({ type_id: await guestBDeep.id('@deep-foundation/messaging', 'Message') });
+    const resultA = await guestADeep.select({ id: messageAId });
+    const resultB = await guestBDeep.select({ id: messageBId });
 
     assert.lengthOf(resultA?.data, 2);
     assert.equal(resultA?.data?.[1]?.value?.value, 'test guest A message');
@@ -146,9 +146,7 @@ describe('messanger', () => {
       ] },
     });
 
-    await delay(10000);
-
-    await guestBDeep.insert({
+    const { data: [{ id: messageBId }] } = await guestBDeep.insert({
       type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
       string: { data: { value: 'test guest B message' } },
       out: { data: [
@@ -172,10 +170,8 @@ describe('messanger', () => {
       },
     });
 
-    await delay(10000);
-
-    const resultA = await guestADeep.select({ type_id: await guestADeep.id('@deep-foundation/messaging', 'Message') });
-    const resultB = await guestBDeep.select({ type_id: await guestBDeep.id('@deep-foundation/messaging', 'Message') });
+    const resultA = await guestADeep.select({ id: messageAId });
+    const resultB = await guestBDeep.select({ id: messageBId });
 
     assert.lengthOf(resultA?.data, 2);
     assert.equal(resultA?.data?.[1]?.value?.value, 'test guest A message');

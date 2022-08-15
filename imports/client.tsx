@@ -1,5 +1,5 @@
 import atob from 'atob';
-import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery } from "@apollo/client";
+import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery, useSubscription } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -619,12 +619,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { linkId: 0, token: '' };
   };
 
-  async can(objectIds: number | number[], subjectIds: number | number[], actionIds: number | number[], userIds: number | number[] = this.linkId) {
+  async can(objectIds: null | number | number[], subjectIds: null | number | number[], actionIds: null | number | number[], userIds: number | number[] = this.linkId) {
     const where: any = {
-      object_id: typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds },
-      subject_id: typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds },
-      action_id: typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds },
     };
+    if (objectIds) where.object_id = typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds };
+    if (subjectIds) where.subject_id = typeof(subjectIds) === 'number' ? { _eq: +subjectIds } : { _in: subjectIds };
+    if (actionIds) where.action_id = typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds };
     const result = await this.select(where, { table: 'can', returning: 'rule_id' });
     return !!result?.data?.length;
   }
@@ -716,6 +716,33 @@ export function useDeepQuery(query: any, options?: any): any {
     });
   }, [query, options]);
   const result = useQuery(wq.query, { variables: wq?.variables });
+  return {
+    ...result,
+    data: result?.data?.q0,
+  };
+}
+
+export function useDeepSubscription(query: any, options?: any): any {
+  const deep = useDeep();
+  const wq = useMemo(() => {
+    const sq = deep.serializeQuery(query);
+    return generateQuery({
+      operation: 'subscription',
+      queries: [generateQueryData({
+        tableName: 'links',
+        returning: `
+          id type_id from_id to_id value
+          string { id value }
+          number { id value }
+          object { id value }
+        `,
+        ...options,
+        variables: { ...sq, ...options?.variables }
+      })],
+      name: options?.name || 'USE_DEEP_SUBSCRIPTION',
+    });
+  }, [query, options]);
+  const result = useSubscription(wq.query, { variables: wq?.variables });
   return {
     ...result,
     data: result?.data?.q0,

@@ -48,7 +48,6 @@ const resolvers = {
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !(await deep.select({
-          object_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
           subject_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
           action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
         }, { table: 'can', returning: 'rule_id' }))?.data?.[0] &&
