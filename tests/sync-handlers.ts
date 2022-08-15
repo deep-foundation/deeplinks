@@ -6,7 +6,7 @@ import { HasuraApi } from'@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
-// import { _ids } from '../imports/client';
+import { _ids } from '../imports/client';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
 const log = debug.extend('log');
@@ -92,11 +92,8 @@ describe('sync handlers', () => {
           log('a1', a1);
           const a2 = await deep.guest({});
           log('a2', a2);
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const { data: [{ id }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             in: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Contain'),
               from_id: a1.linkId,
@@ -119,24 +116,20 @@ describe('sync handlers', () => {
           log(`${await deep.id('deep', 'admin')} n3`, n3);
           assert.lengthOf(JSON.parse(n3?.[0]).data, 1, `item_id ${id} must be selectable by admin`);
 
-          await deep.delete(customTypeId);
         });
         it(`rule select include 1 depth but exclude 2 depth`, async () => {
           const a1 = await deep.guest({});
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const { data: [{ id: id1 }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             in: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Contain'),
               from_id: a1.linkId,
             } }
           });
           const { data: [{ id: id2 }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             in: { data: {
               type_id: await deep.id('@deep-foundation/core', 'Contain'),
               from_id: id1,
@@ -228,16 +221,11 @@ describe('sync handlers', () => {
           const result8 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb)`);
           const n8 = result8?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n8?.[0]).data, 1);
-
-          await deep.delete(customTypeId);
         });
       });
-      describe.only('insert', () => {
-        it.only(`root can insert`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":1}'::jsonb)`);
-          const result2 = await deep.insert({type_id: 1});
-          log('result2', result2)
-          log('AllowInsertTypeId', await deep.id('@deep-foundation/core', 'AllowInsertType'))
+      describe('insert', () => {
+        it(`root can insert`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
@@ -247,21 +235,13 @@ describe('sync handlers', () => {
         });
         it(`guest cant insert by default`, async () => {
           const a1 = await deep.guest({});
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
-          const error = (await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`))?.error;
-          assert.isNotEmpty(error);
-
-          await deep.delete(customTypeId);
+          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          assert.isNotEmpty(result?.error);
         });
         it(`insert permission can be gived to guest`, async () => {
           const a1 = await deep.guest({});
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const ruleResult = await deep.insert({
             type_id: await deep.id('@deep-foundation/core', 'Rule'),
             out: { data: [
@@ -327,7 +307,8 @@ describe('sync handlers', () => {
               },
             ] },
           });
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e1 = r1?.error;
           log('r1', r1?.data?.result?.[1]?.[0]);
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
@@ -337,27 +318,22 @@ describe('sync handlers', () => {
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
           
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e2 = r2?.error;
           const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da2).to.not.be.undefined;
           assert.equal(!!e2, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e3 = r3?.error;
           const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
           log('da3', da3);
           expect(e3).to.not.be.undefined;
-
-          await deep.delete(customTypeId);
         });
         it(`insert permission with SelectorFilter`, async () => {
           const a1 = await deep.guest({});
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const { data: [{ id: TempType }] } = await deep.insert({
             type_id: await deep.id('@deep-foundation/core', 'Type'),
             from_id: await deep.id('@deep-foundation/core', 'Any'),
@@ -509,7 +485,7 @@ describe('sync handlers', () => {
     
           await delay(5000);
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e1 = r1?.error;
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data;
 
@@ -522,7 +498,7 @@ describe('sync handlers', () => {
           expect(da1t).to.not.be.undefined;
           assert.equal(!!e1t, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e2 = r3?.error;
           const da2 = JSON.parse(r3?.data?.result?.[1]?.[0])?.data;
 
@@ -540,7 +516,7 @@ describe('sync handlers', () => {
           expect(da2t).to.be.undefined;
           expect(e2t).to.not.be.undefined;
 
-          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${customTypeId}}'::jsonb)`);
+          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
           const e3 = r5?.error;
           const da3 = JSON.parse(r5?.data?.result?.[1]?.[0])?.data;
           expect(da3).to.not.be.undefined;
@@ -551,17 +527,12 @@ describe('sync handlers', () => {
           const da4 = JSON.parse(r6?.data?.result?.[1]?.[0])?.data;
           expect(da4).to.not.be.undefined;
           assert.equal(!!e4, false);
-
-          await deep.delete(customTypeId);
         });
       });
       describe('delete', () => {
         it(`root can delete`, async () => {
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const { data: [{ id }], error } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
@@ -573,15 +544,10 @@ describe('sync handlers', () => {
           log('clientResult', clientResult);
           if (clientResult?.data?.[0]?.id) deep.delete({id: {_eq: customLinkId}});
           assert.lengthOf(clientResult?.data, 0);
-
-          await deep.delete(customTypeId);
         });
         it(`guest cant delete by default`, async () => {
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const { data: [{ id }], error } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
@@ -591,13 +557,8 @@ describe('sync handlers', () => {
           if (result?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(result?.data?.result?.[1]?.[0])?.data, 0);
           const n2 = await deep.select({ id });
           assert.lengthOf(n2?.data, 1);
-
-          await deep.delete(customTypeId);
         });
         it(`delete permission can be gived to guest`, async () => {
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           const a1 = await deep.guest({});
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
@@ -667,13 +628,13 @@ describe('sync handlers', () => {
             ] },
           });
           const { data: [{ id: id1 }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
           const { data: [{ id: id2 }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
           const { data: [{ id: id3 }] } = await deep.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
 
           const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb)`);
@@ -698,16 +659,11 @@ describe('sync handlers', () => {
           await deep.delete(id1);
           await deep.delete(id2);
           await deep.delete(id3);
-
-          await deep.delete(customTypeId);
         });
         it(`delete permission with SelectorFilter`, async () => {
           const a1 = await deep.guest({});
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
-          const { data: [{ id: customTypeId }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type')
-          });
           await deep.insert({
             type_id: await deep.id('@deep-foundation/core', 'Rule'),
             out: { data: [
@@ -750,7 +706,7 @@ describe('sync handlers', () => {
                   out: { data: [
                     {
                       type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: customTypeId,
+                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
                       out: { data: {
                         type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
                         to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -817,7 +773,7 @@ describe('sync handlers', () => {
                   out: { data: [
                     {
                       type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: customTypeId,
+                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
                       out: { data: {
                         type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
                         to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -856,7 +812,7 @@ describe('sync handlers', () => {
 
           const d1 = new DeepClient({ deep, ...a1, silent: true });
           const { data: da1, error: e1 } = await d1.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc1' } },
           });
           assert.equal(!!e1, false);
@@ -870,7 +826,7 @@ describe('sync handlers', () => {
 
           const d2 = new DeepClient({ deep, ...a2, silent: true });
           const { data: da2, error: e2 } = await d2.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc2' } },
           });
           assert.equal(!!e2, false);
@@ -884,7 +840,7 @@ describe('sync handlers', () => {
 
           const d3 = new DeepClient({ deep, ...a3, silent: true });
           const { data: da3, error: e3 } = await d3.insert({
-            type_id: customTypeId,
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc3' } },
           });
           assert.equal(!!e3, false);
@@ -895,8 +851,6 @@ describe('sync handlers', () => {
           if (r3?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r3?.data?.result?.[1]?.[0])?.data, 0);
           const n3 = await deep.select(da3?.[0]?.id);
           assert.lengthOf(n3?.data, 1);
-
-          await deep.delete(customTypeId);
         });
       });
     });
@@ -906,13 +860,14 @@ describe('sync handlers', () => {
       it(`Handle insert on type`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
+        debug('customLinkId', customLinkId);
 
         const handler = await insertHandler(
           handleInsertTypeId,
@@ -922,7 +877,6 @@ describe('sync handlers', () => {
           supportsId
         );
         debug('handler', handler);
-        debug('customLinkId', customLinkId);
         
         try {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
@@ -942,11 +896,11 @@ describe('sync handlers', () => {
       it(`Handle insert 2 triggers and broke transaction in second`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -989,7 +943,7 @@ describe('sync handlers', () => {
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         debug('customLinkId', customLinkId);
@@ -1033,11 +987,11 @@ describe('sync handlers', () => {
       it(`Handle insert on type throw error`, async () => {
         const debug = log.extend('HandleInsertError');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1081,7 +1035,7 @@ describe('sync handlers', () => {
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1118,11 +1072,11 @@ describe('sync handlers', () => {
       it(`Handle delete on type`, async () => {
         const debug = log.extend('HandleDelete');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1162,7 +1116,7 @@ describe('sync handlers', () => {
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 

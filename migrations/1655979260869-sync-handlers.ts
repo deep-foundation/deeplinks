@@ -23,7 +23,7 @@ const deep = new DeepClient({
 // main debug tool, create error and read in apollo. plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
 const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
+const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
 const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
 const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
@@ -36,7 +36,7 @@ const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.i
 const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // await deep.id('@deep-foundation/core', 'AllowInsertType')
 const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
-const adminId = 418// await deep.id('deep', 'admin')
+const adminId = 438// await deep.id('deep', 'admin')
 
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
@@ -70,11 +70,13 @@ const checkSelectPermissionCode =  /*javascript*/`(linkid, userId) => {
 
 const checkInsertPermissionCode =  /*javascript*/`(linkid, userId) => {
   if (!Number(plv8.execute(${checkInserted})?.[0]?.id))plv8.elog(ERROR, 'Inserted by sql not found'); 
+  if (Number(userId) === ${adminId}) return true;
   const result = plv8.execute(${checkInsert}, [ linkid, userId ]); 
   return !!result[0]?.exists;
 }`
 
 const checkDeleteLinkPermissionCode = /*javascript*/`(linkid, userId) => {
+  if (Number(userId) === ${adminId}) return true;
   const result = plv8.execute(${checkDelete}, [ linkid, userId ]);
   return !!result[0]?.exists;
 }`;
@@ -196,11 +198,9 @@ const findLinkIdByValue = /*javascript*/`({ string, object, number, value }) => 
 }`;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
-  if (Number(ownerId) !== ${adminId}) {
-    hasura_session['x-hasura-role'] = 'link';
-    hasura_session['x-hasura-user-id'] = Number(ownerId);
-    plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
-  }
+  hasura_session['x-hasura-role'] = 'link';
+  hasura_session['x-hasura-user-id'] = Number(ownerId);
+  plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
   return {
     id: (start, ...path) => {
       try {
@@ -283,7 +283,7 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
 
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
-        const deep = deepFabric(prepared[i].id, hasura_session);
+        const deep = deepFabric(prepared[i].owner, hasura_session);
         const checkSelectPermission = undefined;
         const default_role = undefined;
         const default_user_id =  undefined;
