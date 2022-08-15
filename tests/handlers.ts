@@ -1179,11 +1179,11 @@ describe('Async handlers', () => {
 
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler})
 
-      const url = `http://localhost:${port}${route}`
+      // const url = `http://localhost:${port}${route}`
 
-      log("waiting for route to be created");
-      await waitOn({ resources: [url] });
-      log("route handler is up");
+      // log("waiting for route to be created");
+      // await waitOn({ resources: [url] });
+      // log("route handler is up");
 
       // ensure response is ok
       // const response = await fetch(url);
