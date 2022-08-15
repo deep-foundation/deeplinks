@@ -23,7 +23,6 @@ const deep = new DeepClient({
 // main debug tool, create error and read in apollo. plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
 const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
 const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
 const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
@@ -34,10 +33,13 @@ const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.i
 const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
 const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
 const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
+const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // await deep.id('@deep-foundation/core', 'AllowInsertType')
+const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
+const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
+const adminId = 418// await deep.id('deep', 'admin')
 
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
-const updateLinkStringCode = `\`UPDATE links SET \${set} WHERE \${where} RETURNING id;\``;
 
 const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``
 
@@ -49,21 +51,33 @@ const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root"
 
 const pckgCode = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=${packageTypeId} AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const checkInsertLinkCode = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."id" AS "id" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."links"."type_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) AND ('true') ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($2 :: bigint) ) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ('true') ) AND ('true') ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("public"."links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) AND ('true') ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($2 :: bigint) ) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) OR ('true') ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $2 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $2 :: bigint ) ) ) AND "public"."links"."id"= $1 ) AS "_3_root.base" ) AS "_5_root"\``;
+const checkSelect = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."id" AS "id" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."links"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($2 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("public"."links"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($2 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $2 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $2 :: bigint ) ) ) AND "public"."links"."id" = $1 ) AS "_3_root.base" ) AS "_5_root"\``;
 
 const mpUpCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id" ,"_4_root.or.path_item"."path_item" AS "path_item" ,"_1_root.base"."path_item_depth" AS "path_item_depth" ,"_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."mp"."path_item_id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) AND ('true') ) AND ('true') ) AND ('true') ) ) ) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id" ,"_2_root.or.path_item.base"."type_id" AS "type_id" ,"public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"\``;
 
 const mpMeCode = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"\``;
 
-const checkSelectLinkPermission =  /*javascript*/`(linkid, userId ) => {
-  const result = !!plv8.execute(${checkInsertLinkCode}, [ linkid, userId ])[0]?.root;
+const checkInsert = `\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
+const checkDelete = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
+const checkInserted = `\`SELECT id from links where id = \${linkid}\``
+
+const checkSelectPermissionCode =  /*javascript*/`(linkid, userId) => {
+  const result = !!plv8.execute(${checkSelect}, [ linkid, userId ])[0]?.root?.length;
   return !!result;
 }`
 
-// const checkSelectLinkPermission = `() => {return true}`;
-const checkUpdateLinkPermission = `() => {return true}`;
-const checkDeleteLinkPermission = `() => {return true}`;
+const checkInsertPermissionCode =  /*javascript*/`(linkid, userId) => {
+  if (!Number(plv8.execute(${checkInserted})?.[0]?.id))plv8.elog(ERROR, 'Inserted by sql not found'); 
+  const result = plv8.execute(${checkInsert}, [ linkid, userId ]); 
+  return !!result[0]?.exists;
+}`
 
+const checkDeleteLinkPermissionCode = /*javascript*/`(linkid, userId) => {
+  const result = plv8.execute(${checkDelete}, [ linkid, userId ]);
+  return !!result[0]?.exists;
+}`;
 
 const prepareFunction = /*javascript*/`
 
@@ -111,12 +125,9 @@ const prepareFunction = /*javascript*/`
   return handlers.sort(sortById);
 `;
 
-const wherePush =  `\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\``;
-const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
-
 const selectLink =  `\`SELECT * FROM links WHERE \${where}\``;
 const selectValueTable = `\`SELECT value FROM \${table} WHERE link_id = \${linkId}\``;
-const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = \${value}\``;
+const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = '\${value}'::\${table==='strings' ? 'text' : table==='objects' ? 'jsonb' : 'bigint'}\``;
 
 const generateSelectWhere = /*javascript*/`({ string, object, number, value, ...options }) => {
   const _where = [];
@@ -146,32 +157,50 @@ const fillValuesByLinks = /*javascript*/`(links) => {
   }
 }`;
 
-const findLinkByValue = /*javascript*/`({ string, object, number, value }) => {
+const findLinkIdByValue = /*javascript*/`({ string, object, number, value }) => {
   let table;
   if (string) {
     table = 'strings';
-    return { id: lv8.execute(${selectLinkByValue}) };
-  }
-  if (object) {
-    table = 'objects';
     return { id: plv8.execute(${selectLinkByValue}) };
   }
   if (number) {
+    if (isNaN(number)) plv8.elog(ERROR, 'number is NaN '.concat(number));
     table = 'numbers';
+    return { id: plv8.execute(${selectLinkByValue}) };
+  }
+  if (object) {
+    table = 'objects';
+    try {
+      JSON.parse(object);
+      const idByObject = plv8.execute(${selectLinkByValue});
+    } catch(e) {
+      plv8.elog(ERROR, 'Error by parsing json object '.concat(object));
+    }
     return { id: plv8.execute(${selectLinkByValue}) };
   }
   if (value) {
     table = 'strings';
-    const idByString = plv8.execute(${selectLinkByValue});
-    table = 'objects';
-    const idByObject = plv8.execute(${selectLinkByValue});
+    const idByString = plv8.execute(${selectLinkByValue})?.[0]?.id;
     table = 'numbers';
-    const idByNumber = plv8.execute(${selectLinkByValue});
-    return { id: stringValue || objectValue || numberValue };
+    let idByNumber;
+    if (!isNaN(number)) idByNumber = plv8.execute(${selectLinkByValue})?.[0]?.id;
+    table = 'objects';
+    let idByObject;
+    try {
+      JSON.parse(value);
+      const idByObject = plv8.execute(${selectLinkByValue})?.[0]?.id;
+    } catch(e) {
+    }
+    return idByString || idByNumber || idByObject;
   }
 }`;
 
-const deepFabric =  /*javascript*/`(ownerId) => {
+const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
+  if (Number(ownerId) !== ${adminId}) {
+    hasura_session['x-hasura-role'] = 'link';
+    hasura_session['x-hasura-user-id'] = Number(ownerId);
+    plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
+  }
   return {
     id: (start, ...path) => {
       try {
@@ -200,60 +229,33 @@ const deepFabric =  /*javascript*/`(ownerId) => {
     select:  function(options) {
       const { id, type_id, from_id, to_id, number, string, object, value } = options;
       const generateSelectWhere = ${generateSelectWhere};
-      const findLinkByValue = ${findLinkByValue};
+      const findLinkIdByValue = ${findLinkIdByValue};
       const fillValuesByLinks = ${fillValuesByLinks};
       let where = generateSelectWhere(options);
       let links = [];
       if (where) links = plv8.execute(${selectLink});
       if (!links.length) {
-        const linkId = findLinkByValue(options);
+        const linkId = findLinkIdByValue(options);
         if (linkId) {
           where = generateSelectWhere({id: linkId});
-          links.push(plv8.execute(${selectLink}));
+          links.push(plv8.execute(${selectLink})[0]);
         }
       }
-      const filtered = links.filter((link) => checkSelectLinkPermission(link.id, ownerId));
+      const filtered = links.filter((link) => checkSelectPermission(link.id, ownerId));
       fillValuesByLinks(filtered);
-      return filtered;
+      return { data: filtered };
     },
     insert: function(options) {
       const { id, type_id, from_id, to_id, number, string, object } = options;
       const ids = {};
       let insertLinkString = ${insertLinkStringCode};
       const linkid = plv8.execute(insertLinkString)[0]?.id;
-      ids.link = linkid;
-      const linkCheck = checkSelectLinkPermission(linkid, ownerId);
+      const linkCheck = checkInsertPermission(linkid, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = number || string || object;
       if (!value) return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueStringCode};
       const valueId = plv8.execute(insertValueString)[0]?.id;
-      ids.value = valueId
-      return { data: [{ id: linkid }]};
-    },
-    update: function(options) {
-      const { _set, ..._where } = options;
-      const ids = {};
-      const linkCheck = checkUpdateLinkPermission(id, ownerId);
-      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
-      if ( !(!_set?.to_id && !_set?.from_id) && !(_set?.to_id && _set?.from_id)) {
-        throw new Error('Partial update not permited');
-      }
-      const whereArr = [];
-      const setArr = [];
-      const whereFileds = Object.keys(_where).filter(key=>_where[key]);
-      for (let i = 0; i < whereFileds.length; i++ ){
-        whereArr.push(${wherePush});
-      }
-      const setFileds = Object.keys(_set).filter(key=>_set[key]);
-      for (let i = 0; i < setFileds.length; i++ ){
-        setArr.push(${setPush});
-      }
-      const where = whereArr.join(', ');
-      const set = setArr.join(', ');
-      let updateLinkString = ${updateLinkStringCode};
-      const linkid = plv8.execute(updateLinkString)[0].id;
-      ids.link = linkid;
       return { data: [{ id: linkid }]};
     },
     delete: function(options) {
@@ -270,14 +272,21 @@ const deepFabric =  /*javascript*/`(ownerId) => {
 const handlerFuncion = handleOperationTypeId => /*javascript*/`
   const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
   const prepared = prepare(${handleOperationTypeId === handleInsertTypeId ? 'NEW' : 'OLD'}, ${handleOperationTypeId});
-  const checkSelectLinkPermission = ${checkSelectLinkPermission};
-  const checkUpdateLinkPermission = ${checkUpdateLinkPermission};
-  const checkDeleteLinkPermission = ${checkDeleteLinkPermission};
+  const checkSelectPermission = ${checkSelectPermissionCode};
+  const checkInsertPermission = ${checkInsertPermissionCode};
+  const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
   const deepFabric = ${deepFabric};
+
+  const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+  const default_role = hasura_session['x-hasura-role'];
+  const default_user_id = hasura_session['x-hasura-user-id'];
+
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
-        const checkSelectLinkPermission = undefined;
-        const deep = deepFabric(prepared[i].id);
+        const deep = deepFabric(prepared[i].id, hasura_session);
+        const checkSelectPermission = undefined;
+        const default_role = undefined;
+        const default_user_id =  undefined;
         const func = eval(prepared[i].value);
         func({ deep, data:{
           oldLink: OLD ? {
@@ -294,10 +303,30 @@ const handlerFuncion = handleOperationTypeId => /*javascript*/`
         }});
     })()
   };
+
+  if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
+    if (default_role) hasura_session['x-hasura-role'] = default_role; 
+    if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
+    plv8.execute('SELECT set_config($1, $2, $3)', ['hasura.user', JSON.stringify(hasura_session), true]);
+  }
   return NEW;
 `;
 
-const deepClientFunction = /*javascript*/`const checkSelectLinkPermission = ${checkSelectLinkPermission}; const checkUpdateLinkPermission = ${checkUpdateLinkPermission}; const checkDeleteLinkPermission = ${checkDeleteLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](...args);  return result;`;
+const deepClientFunction = /*javascript*/`
+const checkSelectPermission = ${checkSelectPermissionCode};
+const checkInsertPermission = ${checkInsertPermissionCode};
+const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode}; 
+const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+const default_role = hasura_session['x-hasura-role'];
+const default_user_id = hasura_session['x-hasura-user-id'];
+const deep = (${deepFabric})(clientlinkid, hasura_session);
+const result = operation === 'id' ? deep[operation](...args) : deep[operation](args);
+if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
+  if (default_role) hasura_session['x-hasura-role'] = default_role; 
+  if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
+  plv8.execute('SELECT set_config($1, $2, $3)', ['hasura.user', JSON.stringify(hasura_session), true]);
+}
+return result;`;
 
 export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handler__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
 export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__deep__client CASCADE;`;
@@ -309,11 +338,6 @@ export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${
 export const createSyncInsertTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__handler__function();`;
 export const dropSyncInsertTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__handler__function CASCADE;`;
-
-export const createSyncUpdateTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleUpdateTypeId)} $$ LANGUAGE plv8;`;
-export const createSyncUpdateTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__handler__function();`;
-export const dropSyncUpdateTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger ON "${LINKS_TABLE_NAME}";`;
-export const dropSyncUpdateTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__handler__function CASCADE;`;
 
 export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleDeleteTypeId)} $$ LANGUAGE plv8;`;
 export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__handler__function();`;
@@ -333,9 +357,6 @@ export const up = async () => {
   await api.sql(createSyncInsertTriggerFunction);
   await api.sql(createSyncInsertTrigger);
 
-  await api.sql(createSyncUpdateTriggerFunction);
-  await api.sql(createSyncUpdateTrigger);
-
   await api.sql(createSyncDeleteTriggerFunction);
   await api.sql(createSyncDeleteTrigger);
 
@@ -350,9 +371,6 @@ export const down = async () => {
 
   await api.sql(dropSyncInsertTrigger);
   await api.sql(dropSyncInsertTriggerFunction);
-
-  await api.sql(dropSyncUpdateTrigger);
-  await api.sql(dropSyncUpdateTriggerFunction);
 
   await api.sql(dropSyncDeleteTrigger);
   await api.sql(dropSyncDeleteTriggerFunction);
