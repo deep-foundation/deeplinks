@@ -213,11 +213,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         }
         const result = pathToWhere(start, path);
         if (!result && path[path.length - 1] !== true) {
-          plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
+          plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
         }
         return result;
       } catch (error) {
-        plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
+        plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
     },
     select: function(_where, options) {
