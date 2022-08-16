@@ -22,9 +22,9 @@ const deep = new DeepClient({
 
 // main debug tool, create error and read in apollo. plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
-const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
-const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
+const handleInsertId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
+const handleUpdateId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
+const handleDeleteId = _ids?.['@deep-foundation/core']?.HandleDelete; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
 const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
 const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
@@ -34,14 +34,20 @@ const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.i
 const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
 const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
 const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
+const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // await deep.id('@deep-foundation/core', 'AllowInsertType')
+const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // await deep.id('@deep-foundation/core', 'AllowUpdateType')
+const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
+const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
+const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
 
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
-const updateLinkStringCode = `\`UPDATE links SET \${set} WHERE \${where} RETURNING id;\``;
 
-const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``
+const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``;
+const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RETURNING id;\``;
 
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
+const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
 
 const typeHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" as "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandleTypeLink" WHERE ( ( ( ("HandleTypeLink"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("HandleTypeLink"."id") = ($1 :: bigint)) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) AND ('true') ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
 
@@ -49,21 +55,45 @@ const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root"
 
 const pckgCode = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=${packageTypeId} AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const checkInsertLinkCode = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_4_e" FROM ( SELECT "_3_root.base"."id" AS "id" ) AS "_4_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."links"."type_id") ) AND ('true') ) AND ( ('true') AND ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) AND ('true') ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($2 :: bigint) ) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) AND ('true') ) AND ('true') ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("public"."links"."id") ) AND ('true') ) AND ( ('true') AND ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) AND ('true') ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($2 :: bigint) ) AND ('true') ) AND ('true') ) ) AND ('true') ) ) ) ) ) OR ('true') ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $2 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $2 :: bigint ) ) ) AND "public"."links"."id"= $1 ) AS "_3_root.base" ) AS "_5_root"\``;
+const selectWithPermissions = `\`SELECT "main".* FROM "public"."links" as "main" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
+
+const selectTreeWithPermissions = `\`SELECT "main".* FROM tree AS "main" WHERE \${where} AND exists( SELECT 1 FROM "public"."links" AS "main_1" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main_1"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main_1"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_1" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_1".id = "main".parent_id) AND exists( SELECT 1 FROM "public"."links" AS "main_2" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."id") = ("main_2"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_3__be_3_can" WHERE ( ( ( ("_3__be_3_can"."object_id") = ("_1__be_1_links"."id") ) ) AND ( ( ( ( (("_3__be_3_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_3__be_3_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_4__be_4_can" WHERE ( ( ( ("_4__be_4_can"."object_id") = ("main_2"."id") ) ) AND ( ( ( ( (("_4__be_4_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_4__be_4_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_2" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_2".id = "main".link_id)\``;
+
+const selectCan = `\`SELECT * FROM can AS "main" WHERE \${where} \``;
+const selectSelectors = `\`SELECT * FROM selectors AS "main" WHERE \${where} \``;
 
 const mpUpCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id" ,"_4_root.or.path_item"."path_item" AS "path_item" ,"_1_root.base"."path_item_depth" AS "path_item_depth" ,"_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."mp"."path_item_id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) AND ('true') ) AND ('true') ) AND ('true') ) ) ) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id" ,"_2_root.or.path_item.base"."type_id" AS "type_id" ,"public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"\``;
 
 const mpMeCode = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"\``;
 
-const checkSelectLinkPermission =  /*javascript*/`(linkid, userId ) => {
-  const result = !!plv8.execute(${checkInsertLinkCode}, [ linkid, userId ])[0]?.root;
-  return !!result;
+const checkAdmin = `\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_id" = ${AllowAdminId}::bigint AND "subject_id" = $1::bigint )\``;
+
+const checkInsert = `\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
+const checkUpdate = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateTypeId} :: bigint) OR ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
+const checkDelete = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
+const checkInserted = `\`SELECT id from links where id = \${linkid}\``
+
+const checkInsertPermissionCode =  /*javascript*/`(linkid, userId) => {
+  if (!Number(plv8.execute(${checkInserted})?.[0]?.id))plv8.elog(ERROR, 'Inserted by sql not found'); 
+  if (plv8.execute(${checkAdmin}, [ userId ])?.[0]?.exists) return true;
+  const result = plv8.execute(${checkInsert}, [ linkid, userId ]); 
+  return !!result[0]?.exists;
 }`
 
-// const checkSelectLinkPermission = `() => {return true}`;
-const checkUpdateLinkPermission = `() => {return true}`;
-const checkDeleteLinkPermission = `() => {return true}`;
+const checkUpdatePermissionCode =  /*javascript*/`(linkid, userId) => {
+  if (plv8.execute(${checkAdmin}, [ userId ])?.[0]?.exists) return true;
+  const result = plv8.execute(${checkUpdate}, [ linkid, userId ]); 
+  return !!result[0]?.exists;
+}`
 
+const checkDeleteLinkPermissionCode = /*javascript*/`(linkid, userId) => {
+  if (plv8.execute(${checkAdmin}, [ userId ])?.[0]?.exists) return true;
+  const result = plv8.execute(${checkDelete}, [ linkid, userId ]);
+  return !!result[0]?.exists;
+}`;
 
 const prepareFunction = /*javascript*/`
 
@@ -111,28 +141,23 @@ const prepareFunction = /*javascript*/`
   return handlers.sort(sortById);
 `;
 
-const wherePush =  `\`\${whereFileds[i]} = \${_where[whereFileds[i]]}\``;
-const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
+const selectValueTable = `\`SELECT * FROM \${table} WHERE link_id = \${linkId}\``;
+const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = '\${value}'::\${table==='strings' ? 'text' : table==='objects' ? 'jsonb' : 'bigint'}\``;
 
-const selectLink =  `\`SELECT * FROM links WHERE \${where}\``;
-const selectValueTable = `\`SELECT value FROM \${table} WHERE link_id = \${linkId}\``;
-const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = \${value}\``;
-
-const generateSelectWhere = /*javascript*/`({ string, object, number, value, ...options }) => {
-  const _where = [];
-  const keys = Object.keys(options);
+const generateSelectWhereCode = /*javascript*/`({ string, object, number, value, ..._where }) => {
+  const where = [];
+  const keys = Object.keys(_where);
   for (let i = 0; i < keys.length; i++ ){
-    if (options[keys[i]]) _where.push(keys[i].concat(' = ', options[keys[i]]));
+    if (_where[keys[i]]) where.push('"main".'.concat(keys[i], ' = ', _where[keys[i]]));
   }
-  return _where.join(' AND ');
+  return where.join(' AND ');
 }`;
 
-const fillValuesByLinks = /*javascript*/`(links) => {
+const fillValueByLinksCode = /*javascript*/`(links) => {
   let table;
   let linkId;
   if (!links.length) return links;
   for (let i = 0; i < links.length; i++){
-    links[i].value = null;
     linkId = links[i].id;
     table = 'strings';
     const stringValue = plv8.execute(${selectValueTable});
@@ -140,38 +165,55 @@ const fillValuesByLinks = /*javascript*/`(links) => {
     const objectValue = plv8.execute(${selectValueTable});
     table = 'numbers';
     const numberValue = plv8.execute(${selectValueTable});
-    if (stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value) {
-      links[i].value = stringValue?.[0]?.value || objectValue?.[0]?.value || numberValue?.[0]?.value;
-    }
+    links[i].value = stringValue?.[0] || objectValue?.[0] || numberValue?.[0];
   }
 }`;
 
-const findLinkByValue = /*javascript*/`({ string, object, number, value }) => {
+const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value }) => {
   let table;
   if (string) {
     table = 'strings';
-    return { id: lv8.execute(${selectLinkByValue}) };
-  }
-  if (object) {
-    table = 'objects';
     return { id: plv8.execute(${selectLinkByValue}) };
   }
   if (number) {
+    if (isNaN(number)) plv8.elog(ERROR, 'number is NaN '.concat(number));
     table = 'numbers';
+    return { id: plv8.execute(${selectLinkByValue}) };
+  }
+  if (object) {
+    table = 'objects';
+    try {
+      JSON.parse(object);
+      const idByObject = plv8.execute(${selectLinkByValue});
+    } catch(e) {
+      plv8.elog(ERROR, 'Error by parsing json object '.concat(object));
+    }
     return { id: plv8.execute(${selectLinkByValue}) };
   }
   if (value) {
     table = 'strings';
-    const idByString = plv8.execute(${selectLinkByValue});
-    table = 'objects';
-    const idByObject = plv8.execute(${selectLinkByValue});
+    const idByString = plv8.execute(${selectLinkByValue})?.[0]?.id;
     table = 'numbers';
-    const idByNumber = plv8.execute(${selectLinkByValue});
-    return { id: stringValue || objectValue || numberValue };
+    let idByNumber;
+    if (!isNaN(number)) idByNumber = plv8.execute(${selectLinkByValue})?.[0]?.id;
+    table = 'objects';
+    let idByObject;
+    try {
+      JSON.parse(value);
+      const idByObject = plv8.execute(${selectLinkByValue})?.[0]?.id;
+    } catch(e) {
+    }
+    return idByString || idByNumber || idByObject;
   }
 }`;
 
-const deepFabric =  /*javascript*/`(ownerId) => {
+const wherePush =  `\`\${whereFileds[i]} = '\${exp[whereFileds[i]]}'::\${(typeof exp[whereFileds[i]]) == 'string' ? 'text' : 'bigint'}\``;
+const setPush =  `\`\${setFileds[i]} = '\${_set[setFileds[i]]}'::\${table === 'strings' ? 'text' : 'bigint'}\``;
+
+const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
+  hasura_session['x-hasura-role'] = 'link';
+  hasura_session['x-hasura-user-id'] = Number(ownerId);
+  plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
   return {
     id: (start, ...path) => {
       try {
@@ -190,58 +232,76 @@ const deepFabric =  /*javascript*/`(ownerId) => {
         }
         const result = pathToWhere(start, path);
         if (!result && path[path.length - 1] !== true) {
-          plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
+          plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
         }
         return result;
       } catch (error) {
-        plv8.elog(ERROR, 'Id not found by'.concat(start, ', ', path.join(', ')));
+        plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
     },
-    select:  function(options) {
-      const { id, type_id, from_id, to_id, number, string, object, value } = options;
-      const generateSelectWhere = ${generateSelectWhere};
-      const findLinkByValue = ${findLinkByValue};
-      const fillValuesByLinks = ${fillValuesByLinks};
-      let where = generateSelectWhere(options);
-      let links = [];
-      if (where) links = plv8.execute(${selectLink});
-      if (!links.length) {
-        const linkId = findLinkByValue(options);
-        if (linkId) {
-          where = generateSelectWhere({id: linkId});
-          links.push(plv8.execute(${selectLink}));
-        }
+    select: function(_where, options) {
+      if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
+      if (_where?.object) plv8.elog(ERROR, 'link.object relation is not supported in deep.client mini');
+      if (!options?.table || options?.table === 'links'){
+        const { id, type_id, from_id, to_id, number, string, object, value } = _where;
+        const generateSelectWhere = ${generateSelectWhereCode};
+        const findLinkIdByValue = ${findLinkIdByValueCode};
+        const fillValueByLinks = ${fillValueByLinksCode};
+        let where = generateSelectWhere(_where);
+        let links = [];
+        if (where) links = plv8.execute(${selectWithPermissions}, [ ownerId ]);
+        fillValueByLinks(links);
+        return { data: links };
       }
-      const filtered = links.filter((link) => checkSelectLinkPermission(link.id, ownerId));
-      fillValuesByLinks(filtered);
-      return filtered;
+      if (options?.table === 'tree'){
+        const { id, link_id, parent_id, depth, root_id, position_id, tree_id } = _where;
+        const generateSelectWhere = ${generateSelectWhereCode};
+        let where = generateSelectWhere(_where);
+        let links = [];
+        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ ownerId ]);
+        return { data: links };
+      }
+      if (options?.table === 'can'){
+        const { rule_id, subject_id, object_id, action_id } = _where;
+        const generateSelectWhere = ${generateSelectWhereCode};
+        let where = generateSelectWhere(_where);
+        let links = [];
+        if (where) links = plv8.execute(${selectCan});
+        return { data: links };
+      }
+      if (options?.table === 'selectors'){
+        const { item_id, selector_id, selector_include_id, query_id } = _where;
+        const generateSelectWhere = ${generateSelectWhereCode};
+        let where = generateSelectWhere(_where);
+        let links = [];
+        if (where) links = plv8.execute(${selectSelectors});
+        return { data: links };
+      }
     },
-    insert: function(options) {
-      const { id, type_id, from_id, to_id, number, string, object } = options;
+    insert: function(exp, options) {
+      const { id, type_id, from_id, to_id, number, string, object } = exp;
+      if (options?.table && !['links', 'strings', 'numbers', 'objects'].includes(options?.table)) plv8.elog(ERROR, 'insert to '.concat(options?.table, ' not permitted'));
       const ids = {};
       let insertLinkString = ${insertLinkStringCode};
       const linkid = plv8.execute(insertLinkString)[0]?.id;
-      ids.link = linkid;
-      const linkCheck = checkSelectLinkPermission(linkid, ownerId);
+      const linkCheck = checkInsertPermission(linkid, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = number || string || object;
       if (!value) return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueStringCode};
       const valueId = plv8.execute(insertValueString)[0]?.id;
-      ids.value = valueId
       return { data: [{ id: linkid }]};
     },
-    update: function(options) {
-      const { _set, ..._where } = options;
-      const ids = {};
-      const linkCheck = checkUpdateLinkPermission(id, ownerId);
+    update: function(exp, _set, options) {
+      const { id, link_id, value } = exp;
+      if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
+      const { table } = options;
+      const linkCheck = checkUpdatePermission(link_id, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
-      if ( !(!_set?.to_id && !_set?.from_id) && !(_set?.to_id && _set?.from_id)) {
-        throw new Error('Partial update not permited');
-      }
+      
       const whereArr = [];
       const setArr = [];
-      const whereFileds = Object.keys(_where).filter(key=>_where[key]);
+      const whereFileds = Object.keys(exp).filter(key=>exp[key]);
       for (let i = 0; i < whereFileds.length; i++ ){
         whereArr.push(${wherePush});
       }
@@ -251,74 +311,183 @@ const deepFabric =  /*javascript*/`(ownerId) => {
       }
       const where = whereArr.join(', ');
       const set = setArr.join(', ');
-      let updateLinkString = ${updateLinkStringCode};
-      const linkid = plv8.execute(updateLinkString)[0].id;
-      ids.link = linkid;
-      return { data: [{ id: linkid }]};
+      const updateValueString = ${updateValueStringCode};
+      const links = plv8.execute(updateValueString);
+
+      return { data: links};
     },
-    delete: function(options) {
-      const { id } = options;
-      const linkCheck = checkDeleteLinkPermission(id, ownerId);
+    delete: function(_where, options) {
+      const { id } = _where;
+      const { table } = options;
+      if (table && !['links', 'strings', 'numbers', 'objects'].includes(table)) plv8.elog(ERROR, 'delete from '.concat(table, ' not permitted'));
+      const linkCheck = checkDeleteLinkPermission(id, ownerId, table);
       if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
       const deleteString = ${deleteStringCode};
-      const linkid = plv8.execute(deleteString, [ id ])[0].id;
+      let linkid;
+      if (table) {
+        const deleteStringTable = ${deleteStringTableCode};
+        linkid = plv8.execute(deleteStringTable, [ id ])[0].id;
+      } else {
+        linkid = plv8.execute(deleteString, [ id ])[0].id;
+      }
       return { data: [{ id: linkid }]};
     }
   }
 }`;
 
-const handlerFuncion = handleOperationTypeId => /*javascript*/`
-  const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
-  const prepared = prepare(${handleOperationTypeId === handleInsertTypeId ? 'NEW' : 'OLD'}, ${handleOperationTypeId});
-  const checkSelectLinkPermission = ${checkSelectLinkPermission};
-  const checkUpdateLinkPermission = ${checkUpdateLinkPermission};
-  const checkDeleteLinkPermission = ${checkDeleteLinkPermission};
+const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascript*/`
+  const checkInsertPermission = ${checkInsertPermissionCode};
+  const checkUpdatePermission = ${checkUpdatePermissionCode};
+  const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
+  const fillValueByLinks = ${fillValueByLinksCode};
   const deepFabric = ${deepFabric};
+  const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
+  let data;
+  let prepared;
+  
+  if (${valueTrigger}){
+    const linkId = NEW?.link_id || OLD?.link_id;
+    const link = plv8.execute("select * from links where id = $1", [ linkId ])[0];
+    prepared = link ? prepare(link, ${handleOperationTypeId}) : [];
+    data = {
+      oldLink: { ...link, value: OLD ? OLD : undefined},
+      newLink: { ...link, value: NEW ? NEW : undefined}
+    };
+  } else {
+    prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
+    data = {
+      oldLink: OLD ? {
+        id: Number(OLD?.id),
+        from_id: Number(OLD?.from_id),
+        to_id: Number(OLD?.to_id),
+        type_id: Number(OLD?.type_id),
+        value: fillValueByLinks([OLD])
+      } : undefined, newLink: NEW ? {
+        id: Number(NEW?.id),
+        from_id: Number(NEW?.from_id),
+        to_id: Number(NEW?.to_id),
+        type_id: Number(NEW?.type_id),
+        value: fillValueByLinks([NEW])
+      } : undefined,
+    };
+  }
+
+  const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+  const default_role = hasura_session['x-hasura-role'];
+  const default_user_id = hasura_session['x-hasura-user-id'];
+
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
-        const checkSelectLinkPermission = undefined;
-        const deep = deepFabric(prepared[i].id);
+        const deep = deepFabric(prepared[i].owner, hasura_session);
+        const prepare = undefined;
+        const fillValueByLinks = undefined;
+        const checkSelectPermission = undefined;
+        const checkInsertPermission = undefined;
+        const checkUpdatePermission = undefined;
+        const checkDeleteLinkPermission = undefined;
+        const default_role = undefined;
+        const default_user_id =  undefined;
         const func = eval(prepared[i].value);
-        func({ deep, data:{
-          oldLink: OLD ? {
-            id: Number(OLD?.id),
-            from_id: Number(OLD?.from_id),
-            to_id: Number(OLD?.to_id),
-            type_id: Number(OLD?.type_id),
-          } : undefined, newLink: NEW ? {
-            id: Number(NEW?.id),
-            from_id: Number(NEW?.from_id),
-            to_id: Number(NEW?.to_id),
-            type_id: Number(NEW?.type_id),
-          } : undefined,
-        }});
+        func({ deep, data });
     })()
   };
+
+  if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
+    if (default_role) hasura_session['x-hasura-role'] = default_role; 
+    if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
+    plv8.execute('SELECT set_config($1, $2, $3)', ['hasura.user', JSON.stringify(hasura_session), true]);
+  }
   return NEW;
 `;
 
-const deepClientFunction = /*javascript*/`const checkSelectLinkPermission = ${checkSelectLinkPermission}; const checkUpdateLinkPermission = ${checkUpdateLinkPermission}; const checkDeleteLinkPermission = ${checkDeleteLinkPermission}; const deep = (${deepFabric})(clientlinkid); const result = deep[operation](...args);  return result;`;
+const deepClientFunction = /*javascript*/`
+const checkInsertPermission = ${checkInsertPermissionCode};
+const checkUpdatePermission = ${checkUpdatePermissionCode};
+const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode}; 
+const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+const default_role = hasura_session['x-hasura-role'];
+const default_user_id = hasura_session['x-hasura-user-id'];
+const deep = (${deepFabric})(clientlinkid, hasura_session);
+const result = operation === 'id' || operation === 'update' ? deep[operation](...args) : deep[operation](args, options);
+if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
+  if (default_role) hasura_session['x-hasura-role'] = default_role; 
+  if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
+  plv8.execute('SELECT set_config($1, $2, $3)', ['hasura.user', JSON.stringify(hasura_session), true]);
+}
+return result;`;
+
+// service functions
 
 export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handler__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
 export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__deep__client CASCADE;`;
 
-export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(clientLinkId bigint, operation text, args jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
+export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(clientLinkId bigint, operation text, args jsonb, options jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
 export const dropDeepClientFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handler__prepare__function CASCADE;`;
 
-export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleInsertTypeId)} $$ LANGUAGE plv8;`;
+// insert link trigger
+
+export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleInsertId, false)} $$ LANGUAGE plv8;`;
 export const createSyncInsertTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__handler__function();`;
 export const dropSyncInsertTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__handler__function CASCADE;`;
 
-export const createSyncUpdateTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleUpdateTypeId)} $$ LANGUAGE plv8;`;
-export const createSyncUpdateTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__handler__function();`;
-export const dropSyncUpdateTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__handler__trigger ON "${LINKS_TABLE_NAME}";`;
-export const dropSyncUpdateTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__handler__function CASCADE;`;
+// delete link trigger
 
-export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__handler__function() RETURNS TRIGGER AS $$ ${handlerFuncion(handleDeleteTypeId)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleDeleteId, false)} $$ LANGUAGE plv8;`;
 export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__handler__function();`;
 export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__handler__function CASCADE;`;
+
+// strings triggers
+
+export const createSyncInsertStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__strings__handler__trigger AFTER INSERT ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function();`;
+export const dropSyncInsertStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__strings__handler__trigger ON "strings";`;
+export const dropSyncInsertStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function CASCADE;`;
+
+export const createSyncUpdateStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__strings__handler__trigger AFTER UPDATE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__strings__handler__function();`;
+export const dropSyncUpdateStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__strings__handler__trigger ON "strings";`;
+export const dropSyncUpdateStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__strings__handler__function CASCADE;`;
+
+export const createSyncDeleteStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteStringsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__strings__handler__trigger AFTER DELETE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function();`;
+export const dropSyncDeleteStringsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__strings__handler__trigger ON "strings";`;
+export const dropSyncDeleteStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function CASCADE;`;
+
+// numbers triggers
+
+export const createSyncInsertNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__numbers__handler__trigger AFTER INSERT ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function();`;
+export const dropSyncInsertNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__numbers__handler__trigger ON "numbers";`;
+export const dropSyncInsertNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function CASCADE;`;
+
+export const createSyncUpdateNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__numbers__handler__trigger AFTER UPDATE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function();`;
+export const dropSyncUpdateNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__numbers__handler__trigger ON "numbers";`;
+export const dropSyncUpdateNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function CASCADE;`;
+
+export const createSyncDeleteNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteNumbersTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__numbers__handler__trigger AFTER DELETE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function();`;
+export const dropSyncDeleteNumbersTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__numbers__handler__trigger ON "numbers";`;
+export const dropSyncDeleteNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function CASCADE;`;
+
+// numbers triggers
+
+export const createSyncInsertObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__objects__handler__trigger AFTER INSERT ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function();`;
+export const dropSyncInsertObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__objects__handler__trigger ON "objects";`;
+export const dropSyncInsertObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function CASCADE;`;
+
+export const createSyncUpdateObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__objects__handler__trigger AFTER UPDATE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__objects__handler__function();`;
+export const dropSyncUpdateObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__objects__handler__trigger ON "objects";`;
+export const dropSyncUpdateObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__objects__handler__function CASCADE;`;
+
+export const createSyncDeleteObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteObjectsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__objects__handler__trigger AFTER DELETE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function();`;
+export const dropSyncDeleteObjectsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__objects__handler__trigger ON "objects";`;
+export const dropSyncDeleteObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function CASCADE;`;
 
 
 export const up = async () => {
@@ -333,11 +502,36 @@ export const up = async () => {
   await api.sql(createSyncInsertTriggerFunction);
   await api.sql(createSyncInsertTrigger);
 
-  await api.sql(createSyncUpdateTriggerFunction);
-  await api.sql(createSyncUpdateTrigger);
-
   await api.sql(createSyncDeleteTriggerFunction);
   await api.sql(createSyncDeleteTrigger);
+
+  await api.sql(createSyncInsertStringsTriggerFunction);
+  await api.sql(createSyncInsertStringsTrigger);
+
+  await api.sql(createSyncUpdateStringsTriggerFunction);
+  await api.sql(createSyncUpdateStringsTrigger);
+
+  await api.sql(createSyncDeleteStringsTriggerFunction);
+  await api.sql(createSyncDeleteStringsTrigger);
+
+  await api.sql(createSyncInsertNumbersTriggerFunction);
+  await api.sql(createSyncInsertNumbersTrigger);
+
+  await api.sql(createSyncUpdateNumbersTriggerFunction);
+  await api.sql(createSyncUpdateNumbersTrigger);
+
+  await api.sql(createSyncDeleteNumbersTriggerFunction);
+  await api.sql(createSyncDeleteNumbersTrigger);
+
+  await api.sql(createSyncInsertObjectsTriggerFunction);
+  await api.sql(createSyncInsertObjectsTrigger);
+
+  await api.sql(createSyncUpdateObjectsTriggerFunction);
+  await api.sql(createSyncUpdateObjectsTrigger);
+
+  await api.sql(createSyncDeleteObjectsTriggerFunction);
+  await api.sql(createSyncDeleteObjectsTrigger);
+  
 
 };
 
@@ -351,11 +545,35 @@ export const down = async () => {
   await api.sql(dropSyncInsertTrigger);
   await api.sql(dropSyncInsertTriggerFunction);
 
-  await api.sql(dropSyncUpdateTrigger);
-  await api.sql(dropSyncUpdateTriggerFunction);
-
   await api.sql(dropSyncDeleteTrigger);
   await api.sql(dropSyncDeleteTriggerFunction);
+
+  await api.sql(dropSyncInsertStringsTrigger);
+  await api.sql(dropSyncInsertStringsTriggerFunction);
+
+  await api.sql(dropSyncUpdateStringsTrigger);
+  await api.sql(dropSyncUpdateStringsTriggerFunction);
+
+  await api.sql(dropSyncDeleteStringsTrigger);
+  await api.sql(dropSyncDeleteStringsTriggerFunction);
+
+  await api.sql(dropSyncInsertNumbersTrigger);
+  await api.sql(dropSyncInsertNumbersTriggerFunction);
+
+  await api.sql(dropSyncUpdateNumbersTrigger);
+  await api.sql(dropSyncUpdateNumbersTriggerFunction);
+
+  await api.sql(dropSyncDeleteNumbersTrigger);
+  await api.sql(dropSyncDeleteNumbersTriggerFunction);
+
+  await api.sql(dropSyncInsertObjectsTrigger);
+  await api.sql(dropSyncInsertObjectsTriggerFunction);
+
+  await api.sql(dropSyncUpdateObjectsTrigger);
+  await api.sql(dropSyncUpdateObjectsTriggerFunction);
+
+  await api.sql(dropSyncDeleteObjectsTrigger);
+  await api.sql(dropSyncDeleteObjectsTriggerFunction);
 
   await api.sql(sql`DROP EXTENSION IF EXISTS plv8 CASCADE;`);
 };

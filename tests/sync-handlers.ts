@@ -1,11 +1,12 @@
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { insertHandler, insertSelector, insertSelectorItem, deleteHandler, deleteSelector }  from "../imports/handlers";
 import { HasuraApi } from'@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
-import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncUpdateTriggerFunction, createSyncUpdateTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncUpdateTriggerFunction, dropSyncUpdateTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger } from "../migrations/1655979260869-sync-handlers";
+import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
+// import { _ids } from '../imports/client';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
 const log = debug.extend('log');
@@ -43,20 +44,68 @@ beforeAll(async () => {
   await api.sql(dropSyncInsertTrigger);
   await api.sql(dropSyncInsertTriggerFunction);
 
-  await api.sql(dropSyncUpdateTrigger);
-  await api.sql(dropSyncUpdateTriggerFunction);
-
   await api.sql(dropSyncDeleteTrigger);
   await api.sql(dropSyncDeleteTriggerFunction);
+
+  await api.sql(dropSyncInsertStringsTrigger);
+  await api.sql(dropSyncInsertStringsTriggerFunction);
+
+  await api.sql(dropSyncUpdateStringsTrigger);
+  await api.sql(dropSyncUpdateStringsTriggerFunction);
+
+  await api.sql(dropSyncDeleteStringsTrigger);
+  await api.sql(dropSyncDeleteStringsTriggerFunction);
+
+  await api.sql(dropSyncInsertNumbersTrigger);
+  await api.sql(dropSyncInsertNumbersTriggerFunction);
+
+  await api.sql(dropSyncUpdateNumbersTrigger);
+  await api.sql(dropSyncUpdateNumbersTriggerFunction);
+
+  await api.sql(dropSyncDeleteNumbersTrigger);
+  await api.sql(dropSyncDeleteNumbersTriggerFunction);
+
+  await api.sql(dropSyncInsertObjectsTrigger);
+  await api.sql(dropSyncInsertObjectsTriggerFunction);
+
+  await api.sql(dropSyncUpdateObjectsTrigger);
+  await api.sql(dropSyncUpdateObjectsTriggerFunction);
+
+  await api.sql(dropSyncDeleteObjectsTrigger);
+  await api.sql(dropSyncDeleteObjectsTriggerFunction);
+
+  await api.sql(createSyncInsertObjectsTriggerFunction);
+  await api.sql(createSyncInsertObjectsTrigger);
+
+  await api.sql(createSyncUpdateObjectsTriggerFunction);
+  await api.sql(createSyncUpdateObjectsTrigger);
+
+  await api.sql(createSyncDeleteObjectsTriggerFunction);
+  await api.sql(createSyncDeleteObjectsTrigger);
+
+  await api.sql(createSyncInsertNumbersTriggerFunction);
+  await api.sql(createSyncInsertNumbersTrigger);
+
+  await api.sql(createSyncUpdateNumbersTriggerFunction);
+  await api.sql(createSyncUpdateNumbersTrigger);
+
+  await api.sql(createSyncDeleteNumbersTriggerFunction);
+  await api.sql(createSyncDeleteNumbersTrigger);
   
   await api.sql(createSyncInsertTriggerFunction);
   await api.sql(createSyncInsertTrigger);
 
-  await api.sql(createSyncUpdateTriggerFunction);
-  await api.sql(createSyncUpdateTrigger);
-
   await api.sql(createSyncDeleteTriggerFunction);
   await api.sql(createSyncDeleteTrigger);
+
+  await api.sql(createSyncInsertStringsTriggerFunction);
+  await api.sql(createSyncInsertStringsTrigger);
+
+  await api.sql(createSyncUpdateStringsTriggerFunction);
+  await api.sql(createSyncUpdateStringsTrigger);
+
+  await api.sql(createSyncDeleteStringsTriggerFunction);
+  await api.sql(createSyncDeleteStringsTrigger);
 });
 
 // const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -85,937 +134,874 @@ describe('sync handlers', () => {
   });
   describe('DeepClient mini', () => {
     it(`id`, async () => {
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb)`);
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb, '{}'::jsonb)`);
       const clientResult = await deep.id('@deep-foundation/core', 'Rule');
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });
-    describe('select', () => {
-      it(`select by id and type_id`, async () => {
-        const debug = log.extend('selectByIdAndType');
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
-        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
-        const customLinkId = inserted?.data?.[0]?.id;
-        debug('inserted', inserted );
-        let result;
-        try {
-          result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": "${customLinkId}", "type_id":1}'::jsonb)`);
-        } catch (e) {
-          debug('select error: ', e);
-        }
-        const selectedByDeep = (await deep.select(customLinkId))?.data.map(({__typename, ...filtered})=>filtered);
-        debug('delete inserted', await deep.delete({ id: { _eq: customLinkId } }));
-        const selectedBySql = JSON.parse(result?.data?.result?.[1]?.[0]).map((link) => { return {id: Number(link.id), value: link.value, to_id: Number(link.to_id), from_id: Number(link.from_id), type_id: Number(link.type_id)}});
-        debug('selectedBySql', selectedBySql);
-        assert.equal(selectedBySql.length, 1);
-        debug('selectedBySql?.[0]', selectedBySql?.[0]);
-        assert.deepEqual(selectedBySql, selectedByDeep);
+    it(`select should return value`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        string: { data: { value: 'HelloBugFixers'}},
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Contain'),
+          from_id: await deep.id('deep', 'admin')
+        } }
       });
-      it.skip(`select by only value`, async () => {
-        const debug = log.extend('selectByValue');
-        const value = 'testValue';
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
-        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
-        const customLinkId = inserted?.data?.[0]?.id;
-        debug('inserted', inserted );
-        let result;
-        try {
-          result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"value":"${value}"}'::jsonb)`);
-        } catch (e) {
-          debug('select error: ', e);
-        }
-        const selectedByDeep = (await deep.select({value: { _eq: value}}))?.data.map(({__typename, ...filtered})=>filtered);
-        debug('delete inserted', await deep.delete({ id: { _eq: customLinkId } }));
-        const selectedBySql = JSON.parse(result?.data?.result?.[1]?.[0]).map((link) => { return {id: Number(link.id), value: link.value, to_id: Number(link.to_id), from_id: Number(link.from_id), type_id: Number(link.type_id)}});
-        debug('selectedBySql', selectedBySql);
-        assert.equal(selectedBySql.length, 1);
-        debug('selectedBySql?.[0]', selectedBySql?.[0]);
-        assert.deepEqual(selectedBySql, selectedByDeep);
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+      log('select result', result?.data?.result?.[1]?.[0]);
+      const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal(value?.value, 'HelloBugFixers');
+      assert.equal(value?.id, selected?.data?.[0]?.value?.id);
+    });
+    describe('permissions', () => {
+      describe('select', () => {
+        it(`root can select from tree`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"link_id":1}'::jsonb, '{"table":"tree"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
+        });
+        it(`root can select from can`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":438}'::jsonb, '{"table":"can"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
+        });
+        it(`root can select from selectors`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"item_id":213}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
+        });
+        it(`nobody can select from not permitted tables`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
+          assert.equal(result.error, 'Bad Request');
+        });
+        it(`user contain range`, async () => {
+          const a1 = await deep.guest({});
+          log('a1', a1);
+          const a2 = await deep.guest({});
+          log('a2', a2);
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: a1.linkId,
+            } }
+          });
+          log('id', id);
+
+          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const n1 = result1?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n1?.[0]).data, 1, `item_id ${id} must be selectable by ${a1.linkId}`);
+          log(`${a1.linkId} n1`, n1);
+
+          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const n2 = result2?.data?.result?.[1];
+          log(`${a2.linkId} n2`, n2);
+          assert.lengthOf(JSON.parse(n2?.[0]).data, 0, `item_id ${id} must not be selectable by ${a2.linkId}`);
+          
+          const result3 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const n3 = result3?.data?.result?.[1];
+          log(`${await deep.id('deep', 'admin')} n3`, n3);
+          assert.lengthOf(JSON.parse(n3?.[0]).data, 1, `item_id ${id} must be selectable by admin`);
+
+        });
+        it(`rule select include 1 depth but exclude 2 depth`, async () => {
+          const a1 = await deep.guest({});
+          const a2 = await deep.guest({});
+          const a3 = await deep.guest({});
+          const { data: [{ id: id1 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: a1.linkId,
+            } }
+          });
+          const { data: [{ id: id2 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: id1,
+            } }
+          });
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: a2.linkId,
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: id1,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      to_id: id2,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+    
+          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const n1 = result1?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n1?.[0]).data, 1);
+
+          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const n2 = result2?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n2?.[0]).data, 1);
+          const result3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const n3 = result3?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n3?.[0]).data, 0);
+    
+          const result4 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const n4 = result4?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n4?.[0]).data, 1);
+
+          const result5 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const n5 = result5?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n5?.[0]).data, 1);
+          const result6 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const n6 = result6?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n6?.[0]).data, 0);
+          const result7 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const n7 = result7?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n7?.[0]).data, 0);
+    
+          const result8 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const n8 = result8?.data?.result?.[1];
+          assert.lengthOf(JSON.parse(n8?.[0]).data, 1);
+        });
+      });
+      describe('insert', () => {
+        it(`root can insert`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
+          log('customLinkId', customLinkId);
+          const clientResult = await deep.select({id: {_eq: customLinkId}});
+          log('clientResult', clientResult);
+          if (customLinkId === clientResult?.data?.[0]?.id) await deep.delete({id: {_eq: customLinkId}});
+          assert.equal(customLinkId, clientResult?.data?.[0]?.id);
+        });
+        it(`guest cant insert by default`, async () => {
+          const a1 = await deep.guest({});
+          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          assert.isNotEmpty(result?.error);
+        });
+        it(`insert permission can be gived to guest`, async () => {
+          const a1 = await deep.guest({});
+          const a2 = await deep.guest({});
+          const a3 = await deep.guest({});
+          const ruleResult = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+          
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e1 = r1?.error;
+          log('r1', r1?.data?.result?.[1]?.[0]);
+          const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
+          log('a1.linkId', a1.linkId);
+          log('da1', da1);
+          if (e1) log('error', e1);
+          expect(da1).to.not.be.undefined;
+          assert.equal(!!e1, false);
+          
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e2 = r2?.error;
+          const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
+          expect(da2).to.not.be.undefined;
+          assert.equal(!!e2, false);
+
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e3 = r3?.error;
+          const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
+          log('da3', da3);
+          expect(e3).to.not.be.undefined;
+        });
+        it(`insert permission with SelectorFilter`, async () => {
+          const a1 = await deep.guest({});
+          const a2 = await deep.guest({});
+          const a3 = await deep.guest({});
+          const { data: [{ id: TempType }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Type'),
+            from_id: await deep.id('@deep-foundation/core', 'Any'),
+            to_id: await deep.id('@deep-foundation/core', 'Any'),
+          });
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await deep.id('@deep-foundation/core'),
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: TempType,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                      to: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'Query'),
+                        object: { data: { value: {
+                          to_id: { _eq: 'X-Deep-User-Id' } ,// <== HERE
+                        }, }, },
+                      }, },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+    
+          await delay(5000);
+
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e1 = r1?.error;
+          const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data;
+
+          expect(da1).to.not.be.undefined;
+          assert.equal(!!e1, false);
+
+          const r2 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da1?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
+          const e1t = r2?.error;
+          const da1t = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
+          expect(da1t).to.not.be.undefined;
+          assert.equal(!!e1t, false);
+
+          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e2 = r3?.error;
+          const da2 = JSON.parse(r3?.data?.result?.[1]?.[0])?.data;
+
+          expect(da2).to.not.be.undefined;
+          assert.equal(!!e1t, false);
+
+          let r4;
+          try {
+            r4 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
+          } catch (e) {
+            log(e);
+          }
+          const da2t = r4?.data?.result?.[1]?.[0] ? JSON.parse(r4?.data?.result?.[1]?.[0])?.data : undefined;
+          const e2t = r4?.error;
+          expect(da2t).to.be.undefined;
+          expect(e2t).to.not.be.undefined;
+
+          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const e3 = r5?.error;
+          const da3 = JSON.parse(r5?.data?.result?.[1]?.[0])?.data;
+          expect(da3).to.not.be.undefined;
+          assert.equal(!!e3, false);
+
+          const r6 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a3.linkId}}'::jsonb, '{}'::jsonb)`);
+          const e4 = r6?.error;
+          const da4 = JSON.parse(r6?.data?.result?.[1]?.[0])?.data;
+          expect(da4).to.not.be.undefined;
+          assert.equal(!!e4, false);
+        });
+      });
+      describe('update', () => {
+        describe('values', () => {
+          it(`root can update value`, async () => {
+            const { data: [{ id }], error } = await deep.insert({
+              type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            });
+            const n1 = await deep.select({ id });
+            assert.lengthOf(n1?.data, 1);
+
+            // no error, no update (nothing to update)
+            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            const clientResult = await deep.select({id: {_eq: id}});
+            log('clientResult', clientResult);
+            assert.equal(undefined, clientResult?.data?.[0]?.value?.value);
+
+            const n2 = await deep.insert({link_id: id, value: 'test1'}, {table: 'strings'});
+            log('n2', n2);
+            const inserted = await deep.select({id: {_eq: id}});
+            log('inserted', inserted);
+            assert.equal('test1', inserted?.data?.[0]?.value?.value);
+
+            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            const clientResult2 = await deep.select({id: {_eq: id}});
+            log('clientResult2', clientResult2);
+            assert.equal('test2', clientResult2?.data?.[0]?.value?.value);
+            
+            await deep.delete({id: {_eq: id}});
+          });
+        });
+      });
+      describe('delete', () => {
+        it(`root can delete`, async () => {
+          const { data: [{ id }], error } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const n1 = await deep.select({ id });
+          assert.lengthOf(n1?.data, 1);
+
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
+          const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
+          log('customLinkId', customLinkId);
+          const clientResult = await deep.select({id: {_eq: customLinkId}});
+          log('clientResult', clientResult);
+          if (clientResult?.data?.[0]?.id) deep.delete({id: {_eq: customLinkId}});
+          assert.lengthOf(clientResult?.data, 0);
+        });
+        it(`nobody can delete from not permitted tables`, async () => {
+          const { data: [{ id }], error } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const n1 = await deep.select({ id });
+          assert.lengthOf(n1?.data, 1);
+
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          log('result.error', JSON.stringify(result.error));
+          assert.equal(result.error, 'Bad Request');
+        });
+        it(`guest cant delete by default`, async () => {
+          const { data: [{ id }], error } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const n1 = await deep.select({ id });
+          assert.lengthOf(n1?.data, 1);
+
+          const a1 = await deep.guest({});
+          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
+          if (result?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(result?.data?.result?.[1]?.[0])?.data, 0);
+          const n2 = await deep.select({ id });
+          assert.lengthOf(n2?.data, 1);
+        });
+        it(`delete permission can be gived to guest`, async () => {
+          const a1 = await deep.guest({});
+          const a2 = await deep.guest({});
+          const a3 = await deep.guest({});
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] },
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+          const { data: [{ id: id1 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const { data: [{ id: id2 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const { data: [{ id: id3 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${id2}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${id3}}'::jsonb, '{}'::jsonb)`);
+          
+          const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
+          expect(da1).to.not.be.undefined;
+          const n1 = await deep.select({ id: id1 });
+          assert.lengthOf(n1?.data, 0);
+
+          const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data; 
+          expect(da2).to.not.be.undefined;
+          const n2 = await deep.select({ id: id2 });
+          assert.lengthOf(n2?.data, 0);
+
+          const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
+          expect(da3).to.be.undefined;
+          const n3 = await deep.select({ id: id3 });
+          assert.lengthOf(n3?.data, 1);
+          
+          await deep.delete(id1);
+          await deep.delete(id2);
+          await deep.delete(id3);
+        });
+        it(`delete permission with SelectorFilter`, async () => {
+          const a1 = await deep.guest({});
+          const a2 = await deep.guest({});
+          const a3 = await deep.guest({});
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+          await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            out: { data: [
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a1.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a2.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: a3.linkId,
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: [
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
+                      out: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      } },
+                    },
+                    {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                      to: { data: {
+                        type_id: await deep.id('@deep-foundation/core', 'Query'),
+                        object: { data: { value: {
+                          string: { value: { _eq: 'abc2' } },// <== HERE
+                        }, }, },
+                      }, },
+                    },
+                  ] }
+                } }
+              },
+              {
+                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                to: { data: {
+                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  out: { data: {
+                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
+                    out: { data: {
+                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                    } },
+                  } }
+                } }
+              },
+            ] },
+          });
+    
+          await delay(5000);
+
+          const d1 = new DeepClient({ deep, ...a1, silent: true });
+          const { data: da1, error: e1 } = await d1.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'abc1' } },
+          });
+          assert.equal(!!e1, false);
+
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${da1?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const e1d = r1.error;
+          expect(e1d).to.not.be.undefined;
+          if (r1?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r1?.data?.result?.[1]?.[0])?.data, 0);
+          const n1 = await deep.select(da1?.[0]?.id);
+          assert.lengthOf(n1?.data, 1);
+
+          const d2 = new DeepClient({ deep, ...a2, silent: true });
+          const { data: da2, error: e2 } = await d2.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'abc2' } },
+          });
+          assert.equal(!!e2, false);
+
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${da2?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const e2d = r2.error;
+          assert.equal(!!e2d, false);
+          if (r2?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r2?.data?.result?.[1]?.[0])?.data, 1);
+          const n2 = await deep.select(da2?.[0]?.id);
+          assert.lengthOf(n2?.data, 0);
+
+          const d3 = new DeepClient({ deep, ...a3, silent: true });
+          const { data: da3, error: e3 } = await d3.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'abc3' } },
+          });
+          assert.equal(!!e3, false);
+
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${da3?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const e3d = r3.error;
+          expect(e3d).to.not.be.undefined;
+          if (r3?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r3?.data?.result?.[1]?.[0])?.data, 0);
+          const n3 = await deep.select(da3?.[0]?.id);
+          assert.lengthOf(n3?.data, 1);
+        });
       });
     });
-    it(`insert`, async () => {
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":1}'::jsonb)`);
-      const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
-      log('customLinkId', customLinkId);
-      const clientResult = await deep.select({id: {_eq: customLinkId}});
-      log('clientResult', clientResult);
-      if (customLinkId === clientResult?.data?.[0]?.id) deep.delete({id: {_eq: customLinkId}});
-      assert.equal(customLinkId, clientResult?.data?.[0]?.id);
-    });
-    it.skip(`update`, async () => {
-      const inserted = await deep.insert({ type_id: 1 });
-      const customLinkId = inserted?.data?.[0]?.id;
-      log('inserted', inserted );
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '{"id": "${customLinkId}", "_set": { "to_id":${customLinkId}, "from_id": ${customLinkId} } }'::jsonb)`);
-      log('result',  result?.data?.result?.[1]?.[0] );
-      const clientResult = await deep.select({id: {_eq: customLinkId}});
-      assert.equal(clientResult?.data[0]?.type_id, 2);
-    });
-    it(`delete`, async () => {
-      const inserted = await deep.insert({ type_id: 2 });
-      const customLinkId = inserted?.data?.[0]?.id;
-      await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id": "${customLinkId}"}'::jsonb)`);
-      const result = await deep.select({id: {_eq: customLinkId}});
-      log('delete result', result);
-      assert.equal(result?.data[0], undefined);
-    });
-    // describe.skip('permissions', () => {
-    //   describe('select', () => {
-    //     it(`user contain range`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const { data: [{ id }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         in: { data: {
-    //           type_id: await deep.id('@deep-foundation/core', 'Contain'),
-    //           from_id: a1.linkId,
-    //         } }
-    //       });
-    //       const n1 = await d1.select({ id });
-    //       assert.lengthOf(n1?.data, 1, `item_id ${id} must be selectable by ${a1.linkId}`);
-    //       const n2 = await d2.select({ id });
-    //       assert.lengthOf(n2?.data, 0, `item_id ${id} must not be selectable by ${a2.linkId}`);
-    //       const n3 = await admin.select({ id });
-    //       assert.lengthOf(n3?.data, 1, `item_id ${id} must be selectable by ${admin.linkId}`);
-    //     });
-    //     it(`rule select include 1 depth but exclude 2 depth`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       const d1 = new DeepClient({ deep, ...a1 });
-    //       const d2 = new DeepClient({ deep, ...a2 });
-    //       const d3 = new DeepClient({ deep, ...a3 });
-    //       const { data: [{ id: id1 }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         in: { data: {
-    //           type_id: await deep.id('@deep-foundation/core', 'Contain'),
-    //           from_id: a1.linkId,
-    //         } }
-    //       });
-    //       const { data: [{ id: id2 }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         in: { data: {
-    //           type_id: await deep.id('@deep-foundation/core', 'Contain'),
-    //           from_id: id1,
-    //         } }
-    //       });
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: a2.linkId,
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: id1,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
-    //                   to_id: id2,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    
-    //       const n1 = await d1.select({ id: id1 });
-    //       assert.lengthOf(n1?.data, 1);
-    //       const n2 = await d2.select({ id: id1 });
-    //       assert.lengthOf(n2?.data, 1);
-    //       const n3 = await d3.select({ id: id1 });
-    //       assert.lengthOf(n3?.data, 0);
-    
-    //       const n4 = await admin.select({ id: id1 });
-    //       assert.lengthOf(n4?.data, 1);
-    
-    //       const n5 = await d1.select({ id: id2 });
-    //       assert.lengthOf(n5?.data, 1);
-    //       const n6 = await d2.select({ id: id2 });
-    //       assert.lengthOf(n6?.data, 0);
-    //       const n7 = await d3.select({ id: id2 });
-    //       assert.lengthOf(n7?.data, 0);
-    
-    //       const n8 = await admin.select({ id: id2 });
-    //       assert.lengthOf(n8?.data, 1);
-    //     });
-    //   });
-    //   describe('insert', () => {
-    //     it(`root can insert`, async () => {
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const n1 = await deep.select({ id });
-    //       assert.lengthOf(n1?.data, 1);
-    //     });
-    //     it(`guest cant insert by default`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const d1 = new DeepClient({ deep, ...a1, silent: true });
-    //       const { data, error } = await d1.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       assert.isNotEmpty(error);
-    //     });
-    //     it(`insert permission can be gived to guest`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    //       const d1 = new DeepClient({ deep, ...a1, silent: true });
-    //       const { data: da1, error: e1 } = await d1.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       if (e1) console.log('error', e1);
-    //       expect(da1).to.not.be.undefined;
-    //       expect(e1).to.be.undefined;
-    //       const d2 = new DeepClient({ deep, ...a2, silent: true });
-    //       const { data: da2, error: e2 } = await d2.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       expect(da2).to.not.be.undefined;
-    //       expect(e2).to.be.undefined;
-    //       const d3 = new DeepClient({ deep, ...a3, silent: true });
-    //       const { data: da3, error: e3 } = await d3.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       expect(da3).to.be.undefined;
-    //       expect(e3).to.not.be.undefined;
-    //     });
-    //     it(`insert permission with SelectorFilter`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       const { data: [{ id: TempType }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Type'),
-    //         from_id: await deep.id('@deep-foundation/core', 'Any'),
-    //         to_id: await deep.id('@deep-foundation/core', 'Any'),
-    //       });
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: await deep.id('@deep-foundation/core'),
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: TempType,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
-    //                   to: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'Query'),
-    //                     object: { data: { value: {
-    //                       to_id: { _eq: 'X-Deep-User-Id' } ,// <== HERE
-    //                     }, }, },
-    //                   }, },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    
-    //       await delay(5000);
-    
-    //       const d1 = new DeepClient({ deep, ...a1, silent: true });
-    //       const { data: da1, error: e1 } = await d1.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       expect(da1).to.not.be.undefined;
-    //       expect(e1).to.be.undefined;
-    //       const { data: da1t, error: e1t } = await d1.insert({
-    //         type_id: TempType,
-    //         from_id: da1?.[0]?.id,
-    //         to_id: a1.linkId,
-    //       });
-    //       expect(da1t).to.not.be.undefined;
-    //       expect(e1t).to.be.undefined;
-    //       const d2 = new DeepClient({ deep, ...a2, silent: true });
-    //       const { data: da2, error: e2 } = await d2.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       expect(da2).to.not.be.undefined;
-    //       expect(e2).to.be.undefined;
-    //       const { data: da2t, error: e2t } = await d2.insert({
-    //         type_id: TempType,
-    //         from_id: da2?.[0]?.id,
-    //         to_id: a1.linkId, // <== HERE
-    //       });
-    //       expect(da2t).to.be.undefined; // <== HERE
-    //       expect(e2t).to.not.be.undefined;
-    //       const d3 = new DeepClient({ deep, ...a3, silent: true });
-    //       const { data: da3, error: e3 } = await d3.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       expect(da3).to.not.be.undefined;
-    //       expect(e3).to.be.undefined;
-    //       const { data: da3t, error: e3t } = await d3.insert({
-    //         type_id: TempType,
-    //         from_id: da2?.[0]?.id,
-    //         to_id: a3.linkId,
-    //       });
-    //       expect(da3t).to.not.be.undefined;
-    //       expect(e3t).to.be.undefined;
-    //     });
-    //   });
-    //   describe('update', () => {
-    //     it(`root can update string value`, async () => {
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc' } },
-    //       });
-    //       await deep.update({ link_id: id }, {
-    //         value: 'def',
-    //       }, { table: 'strings' });
-    //       const n1 = await deep.select({ id });
-    //       assert.lengthOf(n1?.data, 1);
-    //       assert.equal(n1?.data?.[0]?.value?.value, 'def');
-    //     });
-    //     it(`guest cant update string value`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc' } },
-    //       });
-    //       const d1 = new DeepClient({ deep, ...a1 });
-    //       const { data: updated } = await d1.update({ link_id: id }, {
-    //         value: 'def',
-    //       }, { table: 'strings' });
-    //       assert.lengthOf(updated, 0);
-    //       const n1 = await deep.select({ id });
-    //       assert.lengthOf(n1?.data, 1);
-    //       assert.equal(n1?.data?.[0]?.value?.value, 'abc');
-    //     });
-    //     it(`update permission can be gived to guest`, async () => {
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc' } },
-    //       });
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowUpdateType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    //       const d1 = new DeepClient({ deep, ...a1 });
-    //       const { data: u1 } = await d1.update({ link_id: id }, {
-    //         value: 'def',
-    //       }, { table: 'strings' });
-    //       assert.lengthOf(u1, 1);
-    //       const n1 = await deep.select({ id });
-    //       assert.equal(n1?.data?.[0]?.value?.value, 'def');
-    //       const d2 = new DeepClient({ deep, ...a2 });
-    //       const { data: u2 } = await d2.update({ link_id: id }, {
-    //         value: 'efg',
-    //       }, { table: 'strings' });
-    //       assert.lengthOf(u2, 1);
-    //       const n2 = await deep.select({ id });
-    //       assert.equal(n2?.data?.[0]?.value?.value, 'efg');
-    //       const d3 = new DeepClient({ deep, ...a3 });
-    //       const { data: u3 } = await d3.update({ link_id: id }, {
-    //         value: 'fgj',
-    //       }, { table: 'strings' });
-    //       assert.lengthOf(u3, 0);
-    //       const n3 = await deep.select({ id });
-    //       assert.equal(n3?.data?.[0]?.value?.value, 'efg');
-    //     });
-    //   });
-    //   describe('delete', () => {
-    //     it(`root can delete`, async () => {
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const n1 = await deep.select({ id });
-    //       assert.lengthOf(n1?.data, 1);
-    //       const { data: deleted } = await deep.delete(id);
-    //       assert.lengthOf(deleted, 1);
-    //       const n2 = await deep.select({ id });
-    //       assert.lengthOf(n2?.data, 0);
-    //     });
-    //     it(`guest cant delete by default`, async () => {
-    //       const { data: [{ id }], error } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const n1 = await deep.select({ id });
-    //       assert.lengthOf(n1?.data, 1);
-    //       const a1 = await deep.guest({});
-    //       const d1 = new DeepClient({ deep, ...a1 });
-    //       const { data: deleted } = await d1.delete(id);
-    //       assert.lengthOf(deleted, 0);
-    //       const n2 = await deep.select({ id });
-    //     });
-    //     it(`delete permission can be gived to guest`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] },
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    //       const { data: [{ id: id1 }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const d1 = new DeepClient({ deep, ...a1 });
-    //       await d1.delete(id1);
-    //       const n1 = await deep.select({ id: id1 });
-    //       assert.lengthOf(n1?.data, 0);
-    
-    //       const { data: [{ id: id2 }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const d2 = new DeepClient({ deep, ...a2 });
-    //       await d2.delete(id2);
-    //       const n2 = await deep.select({ id: id2 });
-    //       assert.lengthOf(n2?.data, 0);
-    
-    //       const { data: [{ id: id3 }] } = await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //       });
-    //       const d3 = new DeepClient({ deep, ...a3 });
-    //       await d3.delete(id3);
-    //       const n3 = await deep.select({ id: id3 });
-    //       assert.lengthOf(n3?.data, 1);
-    //     });
-    //     it(`delete permission with SelectorFilter`, async () => {
-    //       const a1 = await deep.guest({});
-    //       const a2 = await deep.guest({});
-    //       const a3 = await deep.guest({});
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    //       await deep.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Rule'),
-    //         out: { data: [
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a1.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a2.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: a3.linkId,
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: [
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //                   out: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                     to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                   } },
-    //                 },
-    //                 {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
-    //                   to: { data: {
-    //                     type_id: await deep.id('@deep-foundation/core', 'Query'),
-    //                     object: { data: { value: {
-    //                       string: { value: { _eq: 'abc2' } },// <== HERE
-    //                     }, }, },
-    //                   }, },
-    //                 },
-    //               ] }
-    //             } }
-    //           },
-    //           {
-    //             type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
-    //             to: { data: {
-    //               type_id: await deep.id('@deep-foundation/core', 'Selector'),
-    //               out: { data: {
-    //                 type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-    //                 to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
-    //                 out: { data: {
-    //                   type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-    //                   to_id: await deep.id('@deep-foundation/core', 'containTree'),
-    //                 } },
-    //               } }
-    //             } }
-    //           },
-    //         ] },
-    //       });
-    
-    //       await delay(5000);
-    
-    //       const d1 = new DeepClient({ deep, ...a1, silent: true });
-    //       const { data: da1, error: e1 } = await d1.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc1' } },
-    //       });
-    //       expect(e1).to.be.undefined;
-    //       expect(da1).to.not.be.undefined;
-    //       const { data: da1d, error: e1d } = await d1.delete(da1?.[0]?.id);
-    //       expect(e1d).to.not.be.undefined;
-    //       expect(da1d).to.be.undefined;
-    //       const d2 = new DeepClient({ deep, ...a2, silent: true });
-    //       const { data: da2, error: e2 } = await d2.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc2' } },
-    //       });
-    //       expect(e2).to.be.undefined;
-    //       expect(da2).to.not.be.undefined;
-    //       const { data: da2d, error: e2d } = await d2.delete(da2?.[0]?.id);
-    //       expect(e2d).to.be.undefined;
-    //       expect(da2d).to.not.be.undefined;
-    //       const d3 = new DeepClient({ deep, ...a3, silent: true });
-    //       const { data: da3, error: e3 } = await d3.insert({
-    //         type_id: await deep.id('@deep-foundation/core', 'Operation'),
-    //         string: { data: { value: 'abc3' } },
-    //       });
-    //       expect(e3).to.be.undefined;
-    //       expect(da3).to.not.be.undefined;
-    //       const { data: da3d, error: e3d } = await d3.delete(da3?.[0]?.id);
-    //       expect(e3d).to.not.be.undefined;
-    //       expect(da3d).to.be.undefined;
-    //     });
-    //   });
-    // });
   });
   describe('Handle operations', () => {
     describe('Handle insert', () => {
       it(`Handle insert on type`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
+        debug('customLinkId', customLinkId);
 
         const handler = await insertHandler(
           handleInsertTypeId,
@@ -1025,7 +1011,6 @@ describe('sync handlers', () => {
           supportsId
         );
         debug('handler', handler);
-        debug('customLinkId', customLinkId);
         
         try {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
@@ -1045,11 +1030,11 @@ describe('sync handlers', () => {
       it(`Handle insert 2 triggers and broke transaction in second`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1092,7 +1077,7 @@ describe('sync handlers', () => {
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         debug('customLinkId', customLinkId);
@@ -1136,11 +1121,11 @@ describe('sync handlers', () => {
       it(`Handle insert on type throw error`, async () => {
         const debug = log.extend('HandleInsertError');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1157,7 +1142,7 @@ describe('sync handlers', () => {
         try {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
           debug('ensureLinkIsCreated', linkId);
-          throw new Error('Not errored hadnler!')
+          throw new Error('Not errored handler!')
         } catch (e) {
           debug('error', e?.message);
           error = e?.message;
@@ -1184,7 +1169,7 @@ describe('sync handlers', () => {
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1217,103 +1202,15 @@ describe('sync handlers', () => {
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
     });
-    describe.skip('Handle update', () => {
-      it(`Handle update on type`, async () => {
-        const debug = log.extend('HandleUpdate');
-
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
-        const HandlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
-        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
-        const customLinkId = inserted?.data?.[0]?.id;
-
-        const handler = await insertHandler(
-          handleUpdateTypeId,
-          typeId, 
-          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
-          undefined,
-          supportsId
-        );
-        debug('handler', handler);
-        debug('customLinkId', customLinkId);
-
-        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
-        
-        try {
-          const updated = await deep.update(linkId, {type_id: HandlerTypeId});
-          debug('updated', updated);
-        } catch (e){
-          debug('insert error: ', e);
-        }
-        
-        const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
-        debug('insertedByHandler', insertedByHandler);
-        
-        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-
-        if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
-        await deep.delete(customLinkId);
-        debug('insertedByHandler', insertedByHandler?.data[0]);
-        debug('delete handler', await deleteHandler(handler));
-        assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
-      });
-      it(`Handle update on selector`, async () => {
-        const debug = log.extend('HandleUpdateSelect');
-
-        const HandlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-        const selector = await insertSelector();
-        debug('selector', selector);
-        const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
-
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
-        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
-        const customLinkId = inserted?.data?.[0]?.id;
-
-        const handler = await insertHandler(
-          handleUpdateTypeId,
-          selectorId,
-          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
-          undefined,
-          supportsId);
-
-        const selectorItem = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
-        
-        debug('handler', handler);
-        try {
-          const updated = await deep.update(selectorItem.linkId, {type_id: HandlerTypeId});
-          debug('updated', updated);
-        } catch (e){
-          error(e);
-        }
-
-        const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
-        debug('insertedByHandler', insertedByHandler);
-
-        if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
-        await deep.delete(customLinkId);
-        debug('selectorItem');
-        if (selectorItem?.linkId) await deep.delete(selectorItem.linkId);
-        debug('deleteSelector');
-        await deleteSelector(selector);
-        debug('deleteHandler');
-        await deleteHandler(handler);
-        assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
-      });
-    });
     describe('Handle delete', () => {
       it(`Handle delete on type`, async () => {
         const debug = log.extend('HandleDelete');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
         const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
         const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1353,7 +1250,7 @@ describe('sync handlers', () => {
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1384,6 +1281,401 @@ describe('sync handlers', () => {
         debug('deleteHandler');
         await deleteHandler(handler);
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+      });
+    });
+    describe('Handle value', () => {
+      describe('Handle strings', () => {
+        it('Handle insert string', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, string: { data: { value: 'helloBugFixers' } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle update string', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, string: { data: { value: 'helloBugFixers' } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const updated = await deep.update({ link_id: linkId }, { value: 'helloBugFixers!' }, { table: 'strings' });
+            const updatedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('updated', updated?.data);
+            debug('updatedLink', updatedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle delete string', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, string: { data: { value: 'helloBugFixers' } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const deleted = await deep.delete({ link_id: linkId }, { table: 'strings' });
+            const deletedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('deleted', deleted?.data);
+            debug('deletedLink', deletedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+      });
+      describe('Handle numbers', () => {
+        it('Handle insert number', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, number: { data: { value: 1 } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle update number', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, number: { data: { value: 1 } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const updated = await deep.update({ link_id: linkId }, { value: 2 }, { table: 'numbers' });
+            const updatedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('updated', updated?.data);
+            debug('updatedLink', updatedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle delete number', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, number: { data: { value: 1 } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const deleted = await deep.delete({ link_id: linkId }, { table: 'numbers' });
+            const deletedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('deleted', deleted?.data);
+            debug('deletedLink', deletedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+      });
+      describe('Handle objects', () => {
+        it('Handle insert object', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, object: { data: { value: { a: 'helloBugFixers' } } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle update object', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, object: { data: { value: { a: 'helloBugFixers' } } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const updated = await deep.update({ link_id: linkId }, { value: { b: 'helloBugFixers' } }, { table: 'objects' });
+            const updatedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('updated', updated?.data);
+            debug('updatedLink', updatedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
+        it('Handle delete object', async () => {
+          const debug = log.extend('HandleInsertString');
+  
+          const typeId = await deep.id('@deep-foundation/core', 'Operation');
+          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          
+          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+          const customLinkId = inserted?.data?.[0]?.id;
+          debug('customLinkId', customLinkId);
+  
+          const handler = await insertHandler(
+            handleUpdateId,
+            typeId, 
+            `({deep, data}) => { if (data?.oldLink?.value) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+            undefined,
+            supportsId
+          );
+          debug('handler', handler);
+          
+          try {
+            const linkId = (await deep.insert({ type_id: typeId, object: { data: { value: { a: 'helloBugFixers' } } } } ))?.data?.[0].id;
+            const insertedLink = await deep.select(linkId);
+            const notInsertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+            const deleted = await deep.delete({ link_id: linkId }, { table: 'objects' });
+            const deletedLink = await deep.select(linkId);
+            debug('linkId', linkId);
+            debug('insertedLink', insertedLink?.data);
+            debug('notInsertedByHandler', notInsertedByHandler?.data);
+            debug('deleted', deleted?.data);
+            debug('deletedLink', deletedLink?.data);
+            debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+          } catch (e){
+            debug('insert error: ', e);
+          }
+  
+          const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+          debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+          if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+          await deep.delete(customLinkId);
+          debug('delete handler', await deleteHandler(handler));
+          assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+
+        });
       });
     });
   });
