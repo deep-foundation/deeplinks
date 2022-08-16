@@ -158,6 +158,12 @@ describe('sync handlers', () => {
     });
     describe('permissions', () => {
       describe('select', () => {
+        it(`root can select from tree`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"link_id":1}'::jsonb, '{"table":"tree"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.lengthOf(JSON.parse(n1?.[0]).data, 1);
+        });
         it(`nobody can select from not permitted tables`, async () => {
           const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
           assert.equal(result.error, 'Bad Request');
@@ -605,31 +611,33 @@ describe('sync handlers', () => {
         });
       });
       describe('update', () => {
-        it(`root can update`, async () => {
-          const { data: [{ id }], error } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        describe('values', () => {
+          it(`root can update value`, async () => {
+            const { data: [{ id }], error } = await deep.insert({
+              type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            });
+            const n1 = await deep.select({ id });
+            assert.lengthOf(n1?.data, 1);
+
+            // no error, no update (nothing to update)
+            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            const clientResult = await deep.select({id: {_eq: id}});
+            log('clientResult', clientResult);
+            assert.equal(undefined, clientResult?.data?.[0]?.value?.value);
+
+            const n2 = await deep.insert({link_id: id, value: 'test1'}, {table: 'strings'});
+            log('n2', n2);
+            const inserted = await deep.select({id: {_eq: id}});
+            log('inserted', inserted);
+            assert.equal('test1', inserted?.data?.[0]?.value?.value);
+
+            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            const clientResult2 = await deep.select({id: {_eq: id}});
+            log('clientResult2', clientResult2);
+            assert.equal('test2', clientResult2?.data?.[0]?.value?.value);
+            
+            await deep.delete({id: {_eq: id}});
           });
-          const n1 = await deep.select({ id });
-          assert.lengthOf(n1?.data, 1);
-
-          // no error, no update (nothing to update)
-          await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
-          const clientResult = await deep.select({id: {_eq: id}});
-          log('clientResult', clientResult);
-          assert.equal(undefined, clientResult?.data?.[0]?.value?.value);
-
-          const n2 = await deep.insert({link_id: id, value: 'test1'}, {table: 'strings'});
-          log('n2', n2);
-          const inserted = await deep.select({id: {_eq: id}});
-          log('inserted', inserted);
-          assert.equal('test1', inserted?.data?.[0]?.value?.value);
-
-          await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
-          const clientResult2 = await deep.select({id: {_eq: id}});
-          log('clientResult2', clientResult2);
-          assert.equal('test2', clientResult2?.data?.[0]?.value?.value);
-          
-          await deep.delete({id: {_eq: id}});
         });
       });
       describe('delete', () => {
