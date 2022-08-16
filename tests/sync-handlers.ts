@@ -80,12 +80,12 @@ describe('sync handlers', () => {
   });
   describe('DeepClient mini', () => {
     it(`id`, async () => {
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb)`);
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb, '{}'::jsonb)`);
       const clientResult = await deep.id('@deep-foundation/core', 'Rule');
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });
-    it.only(`select should return value`, async () => {
+    it(`select should return value`, async () => {
       const { data: [{ id }] } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'Operation'),
         string: { data: { value: 'HelloBugFixers'}},
@@ -94,8 +94,8 @@ describe('sync handlers', () => {
           from_id: await deep.id('deep', 'admin')
         } }
       });
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb)`);
-      log('id result', result?.data?.result?.[1]?.[0]);
+      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+      log('select result', result?.data?.result?.[1]?.[0]);
       const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
       const selected = await deep.select(id);
       log('selected', selected?.data?.[0]);
@@ -104,6 +104,10 @@ describe('sync handlers', () => {
     });
     describe('permissions', () => {
       describe('select', () => {
+        it(`only links table is selectable`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
+          assert.equal(result.error, 'Bad Request');
+        });
         it(`user contain range`, async () => {
           const a1 = await deep.guest({});
           log('a1', a1);
@@ -118,17 +122,17 @@ describe('sync handlers', () => {
           });
           log('id', id);
 
-          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb)`);
+          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n1 = result1?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n1?.[0]).data, 1, `item_id ${id} must be selectable by ${a1.linkId}`);
           log(`${a1.linkId} n1`, n1);
 
-          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb)`);
+          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n2 = result2?.data?.result?.[1];
           log(`${a2.linkId} n2`, n2);
           assert.lengthOf(JSON.parse(n2?.[0]).data, 0, `item_id ${id} must not be selectable by ${a2.linkId}`);
           
-          const result3 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb)`);
+          const result3 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n3 = result3?.data?.result?.[1];
           log(`${await deep.id('deep', 'admin')} n3`, n3);
           assert.lengthOf(JSON.parse(n3?.[0]).data, 1, `item_id ${id} must be selectable by admin`);
@@ -210,39 +214,39 @@ describe('sync handlers', () => {
             ] },
           });
     
-          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb)`);
+          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n1 = result1?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n1?.[0]).data, 1);
 
-          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb)`);
+          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n2 = result2?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n2?.[0]).data, 1);
-          const result3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb)`);
+          const result3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n3 = result3?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n3?.[0]).data, 0);
     
-          const result4 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id1}}'::jsonb)`);
+          const result4 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n4 = result4?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n4?.[0]).data, 1);
 
-          const result5 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb)`);
+          const result5 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n5 = result5?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n5?.[0]).data, 1);
-          const result6 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb)`);
+          const result6 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n6 = result6?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n6?.[0]).data, 0);
-          const result7 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb)`);
+          const result7 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n7 = result7?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n7?.[0]).data, 0);
     
-          const result8 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb)`);
+          const result8 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n8 = result8?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n8?.[0]).data, 1);
         });
       });
       describe('insert', () => {
         it(`root can insert`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
@@ -252,7 +256,7 @@ describe('sync handlers', () => {
         });
         it(`guest cant insert by default`, async () => {
           const a1 = await deep.guest({});
-          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           assert.isNotEmpty(result?.error);
         });
         it(`insert permission can be gived to guest`, async () => {
@@ -325,7 +329,7 @@ describe('sync handlers', () => {
             ] },
           });
           
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           log('r1', r1?.data?.result?.[1]?.[0]);
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
@@ -335,13 +339,13 @@ describe('sync handlers', () => {
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
           
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r2?.error;
           const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da2).to.not.be.undefined;
           assert.equal(!!e2, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r3?.error;
           const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
           log('da3', da3);
@@ -502,20 +506,20 @@ describe('sync handlers', () => {
     
           await delay(5000);
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data;
 
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
 
-          const r2 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da1?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da1?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
           const e1t = r2?.error;
           const da1t = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da1t).to.not.be.undefined;
           assert.equal(!!e1t, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r3?.error;
           const da2 = JSON.parse(r3?.data?.result?.[1]?.[0])?.data;
 
@@ -524,7 +528,7 @@ describe('sync handlers', () => {
 
           let r4;
           try {
-            r4 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb)`);
+            r4 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
           } catch (e) {
             log(e);
           }
@@ -533,13 +537,13 @@ describe('sync handlers', () => {
           expect(da2t).to.be.undefined;
           expect(e2t).to.not.be.undefined;
 
-          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb)`);
+          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r5?.error;
           const da3 = JSON.parse(r5?.data?.result?.[1]?.[0])?.data;
           expect(da3).to.not.be.undefined;
           assert.equal(!!e3, false);
 
-          const r6 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a3.linkId}}'::jsonb)`);
+          const r6 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a3.linkId}}'::jsonb, '{}'::jsonb)`);
           const e4 = r6?.error;
           const da4 = JSON.parse(r6?.data?.result?.[1]?.[0])?.data;
           expect(da4).to.not.be.undefined;
@@ -554,13 +558,24 @@ describe('sync handlers', () => {
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
 
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb)`);
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
           log('clientResult', clientResult);
           if (clientResult?.data?.[0]?.id) deep.delete({id: {_eq: customLinkId}});
           assert.lengthOf(clientResult?.data, 0);
+        });
+        it(`nobody can delete from not permitted tables`, async () => {
+          const { data: [{ id }], error } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const n1 = await deep.select({ id });
+          assert.lengthOf(n1?.data, 1);
+
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          log('result.error', JSON.stringify(result.error));
+          assert.equal(result.error, 'Bad Request');
         });
         it(`guest cant delete by default`, async () => {
           const { data: [{ id }], error } = await deep.insert({
@@ -570,7 +585,7 @@ describe('sync handlers', () => {
           assert.lengthOf(n1?.data, 1);
 
           const a1 = await deep.guest({});
-          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id}}'::jsonb)`);
+          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
           if (result?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(result?.data?.result?.[1]?.[0])?.data, 0);
           const n2 = await deep.select({ id });
           assert.lengthOf(n2?.data, 1);
@@ -654,9 +669,9 @@ describe('sync handlers', () => {
             type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb)`);
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${id2}}'::jsonb)`);
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${id3}}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${id2}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${id3}}'::jsonb, '{}'::jsonb)`);
           
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
           expect(da1).to.not.be.undefined;
@@ -834,7 +849,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e1, false);
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${da1?.[0]?.id}}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${da1?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e1d = r1.error;
           expect(e1d).to.not.be.undefined;
           if (r1?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r1?.data?.result?.[1]?.[0])?.data, 0);
@@ -848,7 +863,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e2, false);
 
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${da2?.[0]?.id}}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${da2?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e2d = r2.error;
           assert.equal(!!e2d, false);
           if (r2?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r2?.data?.result?.[1]?.[0])?.data, 1);
@@ -862,7 +877,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e3, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${da3?.[0]?.id}}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${da3?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e3d = r3.error;
           expect(e3d).to.not.be.undefined;
           if (r3?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r3?.data?.result?.[1]?.[0])?.data, 0);
