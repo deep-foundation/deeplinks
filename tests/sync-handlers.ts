@@ -305,7 +305,7 @@ describe('sync handlers', () => {
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
           log('clientResult', clientResult);
-          if (customLinkId === clientResult?.data?.[0]?.id) deep.delete({id: {_eq: customLinkId}});
+          if (customLinkId === clientResult?.data?.[0]?.id) await deep.delete({id: {_eq: customLinkId}});
           assert.equal(customLinkId, clientResult?.data?.[0]?.id);
         });
         it(`guest cant insert by default`, async () => {
@@ -602,6 +602,34 @@ describe('sync handlers', () => {
           const da4 = JSON.parse(r6?.data?.result?.[1]?.[0])?.data;
           expect(da4).to.not.be.undefined;
           assert.equal(!!e4, false);
+        });
+      });
+      describe('update', () => {
+        it(`root can update`, async () => {
+          const { data: [{ id }], error } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          });
+          const n1 = await deep.select({ id });
+          assert.lengthOf(n1?.data, 1);
+
+          // no error, no update (nothing to update)
+          await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+          const clientResult = await deep.select({id: {_eq: id}});
+          log('clientResult', clientResult);
+          assert.equal(undefined, clientResult?.data?.[0]?.value?.value);
+
+          const n2 = await deep.insert({link_id: id, value: 'test1'}, {table: 'strings'});
+          log('n2', n2);
+          const inserted = await deep.select({id: {_eq: id}});
+          log('inserted', inserted);
+          assert.equal('test1', inserted?.data?.[0]?.value?.value);
+
+          await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+          const clientResult2 = await deep.select({id: {_eq: id}});
+          log('clientResult2', clientResult2);
+          assert.equal('test2', clientResult2?.data?.[0]?.value?.value);
+          
+          await deep.delete({id: {_eq: id}});
         });
       });
       describe('delete', () => {

@@ -202,8 +202,8 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const wherePush =  `\`\${whereFileds[i]} = \${exp[whereFileds[i]]}\``;
-const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
+const wherePush =  `\`\${whereFileds[i]} = '\${exp[whereFileds[i]]}'::\${(typeof exp[whereFileds[i]]) == 'string' ? 'text' : 'bigint'}\``;
+const setPush =  `\`\${setFileds[i]} = '\${_set[setFileds[i]]}'::\${table === 'strings' ? 'text' : 'bigint'}\``;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
@@ -249,30 +249,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         return { data: links };
       }
     },
-    update: function(exp, _set, options) {
-      const { id, link_id, value } = exp;
-      if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
-      const linkCheck = checkUpdatePermission(link_id, ownerId);
-      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
-      const updateValueString = ${updateValueStringCode};
-      
-      const whereArr = [];
-      const setArr = [];
-      const whereFileds = Object.keys(exp).filter(key=>exp[key]);
-      for (let i = 0; i < whereFileds.length; i++ ){
-        whereArr.push(${wherePush});
-      }
-      const setFileds = Object.keys(_set).filter(key=>_set[key]);
-      for (let i = 0; i < setFileds.length; i++ ){
-        setArr.push(${setPush});
-      }
-      const where = whereArr.join(', ');
-      const set = setArr.join(', ');
-      const { table } = options;
-      const linkid = plv8.execute(updateValueString)[0].id;
-
-      return { data: [{ id: linkid }]};
-    },
     insert: function(exp, options) {
       const { id, type_id, from_id, to_id, number, string, object } = exp;
       if (options?.table && !['links', 'strings', 'numbers', 'objects'].includes(options?.table)) plv8.elog(ERROR, 'insert to '.concat(options?.table, ' not permitted'));
@@ -286,6 +262,30 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const insertValueString = ${insertValueStringCode};
       const valueId = plv8.execute(insertValueString)[0]?.id;
       return { data: [{ id: linkid }]};
+    },
+    update: function(exp, _set, options) {
+      const { id, link_id, value } = exp;
+      if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
+      const { table } = options;
+      const linkCheck = checkUpdatePermission(link_id, ownerId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
+      
+      const whereArr = [];
+      const setArr = [];
+      const whereFileds = Object.keys(exp).filter(key=>exp[key]);
+      for (let i = 0; i < whereFileds.length; i++ ){
+        whereArr.push(${wherePush});
+      }
+      const setFileds = Object.keys(_set).filter(key=>_set[key]);
+      for (let i = 0; i < setFileds.length; i++ ){
+        setArr.push(${setPush});
+      }
+      const where = whereArr.join(', ');
+      const set = setArr.join(', ');
+      const updateValueString = ${updateValueStringCode};
+      const links = plv8.execute(updateValueString);
+
+      return { data: links};
     },
     delete: function(_where, options) {
       const { id } = _where;
@@ -379,7 +379,7 @@ const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.u
 const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
 const deep = (${deepFabric})(clientlinkid, hasura_session);
-const result = operation === 'id' ? deep[operation](...args) : deep[operation](args, options);
+const result = operation === 'id' || operation === 'update' ? deep[operation](...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
   if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
