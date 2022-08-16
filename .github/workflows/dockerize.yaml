@@ -32,6 +32,12 @@ jobs:
         run: npm ci
       - name: build
         run: npm run package:build
+      - name: docker init
+        run: cd local/actions && docker-compose -p deep up -d
+      - name: migrate
+        run: npm run migrate
+      - name: snapshot:create
+        run: 'npm run snapshot:create'
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
