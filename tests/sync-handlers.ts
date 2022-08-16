@@ -162,7 +162,19 @@ describe('sync handlers', () => {
           const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"link_id":1}'::jsonb, '{"table":"tree"}'::jsonb)`);
           const n1 = result?.data?.result?.[1];
           log('n1', JSON.parse(n1?.[0]).data);
-          assert.lengthOf(JSON.parse(n1?.[0]).data, 1);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
+        });
+        it(`root can select from can`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":438}'::jsonb, '{"table":"can"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
+        });
+        it(`root can select from selectors`, async () => {
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"item_id":213}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          const n1 = result?.data?.result?.[1];
+          log('n1', JSON.parse(n1?.[0]).data);
+          assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
         });
         it(`nobody can select from not permitted tables`, async () => {
           const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
