@@ -35,13 +35,16 @@ const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // aw
 const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
 const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
 const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // await deep.id('@deep-foundation/core', 'AllowInsertType')
+const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // await deep.id('@deep-foundation/core', 'AllowUpdateType')
 const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
+const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
 
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
 
-const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``
+const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``;
+const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RETURNING id;\``;
 
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
@@ -62,6 +65,8 @@ const checkAdmin = `\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_i
 
 const checkInsert = `\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
+const checkUpdate = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateTypeId} :: bigint) OR ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+
 const checkDelete = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
 const checkInserted = `\`SELECT id from links where id = \${linkid}\``
@@ -70,6 +75,12 @@ const checkInsertPermissionCode =  /*javascript*/`(linkid, userId) => {
   if (!Number(plv8.execute(${checkInserted})?.[0]?.id))plv8.elog(ERROR, 'Inserted by sql not found'); 
   if (plv8.execute(${checkAdmin}, [ userId ])?.[0]?.exists) return true;
   const result = plv8.execute(${checkInsert}, [ linkid, userId ]); 
+  return !!result[0]?.exists;
+}`
+
+const checkUpdatePermissionCode =  /*javascript*/`(linkid, userId) => {
+  if (plv8.execute(${checkAdmin}, [ userId ])?.[0]?.exists) return true;
+  const result = plv8.execute(${checkUpdate}, [ linkid, userId ]); 
   return !!result[0]?.exists;
 }`
 
@@ -191,6 +202,9 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
+const wherePush =  `\`\${whereFileds[i]} = \${exp[whereFileds[i]]}\``;
+const setPush =  `\`\${setFileds[i]} = \${_set[setFileds[i]]}\``;
+
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
   hasura_session['x-hasura-user-id'] = Number(ownerId);
@@ -221,17 +235,43 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       }
     },
     select: function(_where, options) {
-      if (options?.table && options?.table !== 'links') plv8.elog(ERROR, 'select not from "links" not permitted');
+      if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
       if (_where?.object) plv8.elog(ERROR, 'link.object relation is not supported in deep.client mini');
-      const { id, type_id, from_id, to_id, number, string, object, value } = _where;
-      const generateSelectWhere = ${generateSelectWhereCode};
-      const findLinkIdByValue = ${findLinkIdByValueCode};
-      const fillValueByLinks = ${fillValueByLinksCode};
-      let where = generateSelectWhere(_where);
-      let links = [];
-      if (where) links = plv8.execute(${selectWithPermissions}, [ ownerId ]);
-      fillValueByLinks(links);
-      return { data: links };
+      if (!options?.table || options?.table === 'links'){
+        const { id, type_id, from_id, to_id, number, string, object, value } = _where;
+        const generateSelectWhere = ${generateSelectWhereCode};
+        const findLinkIdByValue = ${findLinkIdByValueCode};
+        const fillValueByLinks = ${fillValueByLinksCode};
+        let where = generateSelectWhere(_where);
+        let links = [];
+        if (where) links = plv8.execute(${selectWithPermissions}, [ ownerId ]);
+        fillValueByLinks(links);
+        return { data: links };
+      }
+    },
+    update: function(exp, _set, options) {
+      const { id, link_id, value } = exp;
+      if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
+      const linkCheck = checkUpdatePermission(link_id, ownerId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
+      const updateValueString = ${updateValueStringCode};
+      
+      const whereArr = [];
+      const setArr = [];
+      const whereFileds = Object.keys(exp).filter(key=>exp[key]);
+      for (let i = 0; i < whereFileds.length; i++ ){
+        whereArr.push(${wherePush});
+      }
+      const setFileds = Object.keys(_set).filter(key=>_set[key]);
+      for (let i = 0; i < setFileds.length; i++ ){
+        setArr.push(${setPush});
+      }
+      const where = whereArr.join(', ');
+      const set = setArr.join(', ');
+      const { table } = options;
+      const linkid = plv8.execute(updateValueString)[0].id;
+
+      return { data: [{ id: linkid }]};
     },
     insert: function(exp, options) {
       const { id, type_id, from_id, to_id, number, string, object } = exp;
@@ -268,6 +308,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
 
 const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascript*/`
   const checkInsertPermission = ${checkInsertPermissionCode};
+  const checkUpdatePermission = ${checkUpdatePermissionCode};
   const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
   const fillValueByLinks = ${fillValueByLinksCode};
   const deepFabric = ${deepFabric};
@@ -313,6 +354,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         const fillValueByLinks = undefined;
         const checkSelectPermission = undefined;
         const checkInsertPermission = undefined;
+        const checkUpdatePermission = undefined;
         const checkDeleteLinkPermission = undefined;
         const default_role = undefined;
         const default_user_id =  undefined;
@@ -331,6 +373,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
 
 const deepClientFunction = /*javascript*/`
 const checkInsertPermission = ${checkInsertPermissionCode};
+const checkUpdatePermission = ${checkUpdatePermissionCode};
 const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode}; 
 const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
 const default_role = hasura_session['x-hasura-role'];

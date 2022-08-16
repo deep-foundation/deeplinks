@@ -158,7 +158,7 @@ describe('sync handlers', () => {
     });
     describe('permissions', () => {
       describe('select', () => {
-        it(`only links table is selectable`, async () => {
+        it(`nobody can select from not permitted tables`, async () => {
           const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
           assert.equal(result.error, 'Bad Request');
         });
