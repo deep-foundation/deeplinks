@@ -1179,17 +1179,18 @@ describe('Async handlers', () => {
 
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler})
 
-      const url = `http://localhost:${port}${route}?query=%7Bconstant%7D`;
+      
       const waitOnUrl = `http-get://localhost:${port}${route}?query=%7Bconstant%7D`;
 
       log("waiting for route to be created");
       await waitOn({ resources: [waitOnUrl] });
       log("route handler is up");
 
-      // ensure response is ok
-      const response = await fetch(url);
-      const text = await response.text();
-      assert.equal(JSON.parse(text)?.data?.constant, 42);
+      // check { constant } gql query
+      const url = `http://localhost:${port}${route}`;
+      const apolloClient = generateApolloClient({ path: url, ssl: false });
+      const { data } = await apolloClient.query({ query: gql`{ constant }` });
+      assert.equal(data?.constant, 42);
 
       // delete all
       await deep.delete(handleRoute?.id);
