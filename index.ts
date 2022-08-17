@@ -436,11 +436,11 @@ const handleRoutes = async () => {
                   console.log('deeplinks request')
                   console.log('req.method', req.method);
                   console.log('req.body', req.body);
-                  proxyReq.setHeader('deep-call-options', JSON.stringify({
+                  proxyReq.setHeader('deep-call-options', encodeURI(JSON.stringify({
                     jwt,
                     code,
                     data: {},
-                  }));
+                  })));
                 },
                 onProxyRes: (proxyRes, req, res) => {
                   // var body = "";
