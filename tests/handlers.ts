@@ -1179,8 +1179,8 @@ describe('Async handlers', () => {
 
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler})
 
-      const url = `http://localhost:4002/constant?query=%7Bconstant%7D`;
-      const waitOnUrl = `http-get://localhost:4002/constant?query=%7Bconstant%7D`;
+      const url = `http://localhost:${port}${route}?query=%7Bconstant%7D`;
+      const waitOnUrl = `http-get://localhost:${port}${route}?query=%7Bconstant%7D`;
 
       log("waiting for route to be created");
       await waitOn({ resources: [waitOnUrl] });
