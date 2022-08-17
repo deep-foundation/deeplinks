@@ -392,7 +392,8 @@ const handleRoutes = async () => {
         routesDebugLog(`listening on port ${portValue}`);
         // start express server
         const portServer = express();
-        currentServers[portValue] = portServer.listen(portValue);
+
+        currentServers[portValue] = http.createServer({ maxHeaderSize: 10*1024*1024*1024 }, portServer).listen(portValue);
 
         // for each router
         for (const routerListening of port.routerListening) {
