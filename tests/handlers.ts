@@ -1179,31 +1179,32 @@ describe('Async handlers', () => {
 
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler})
 
-      // const url = `http://localhost:${port}${route}`
+      const url = `http://localhost:4002/constant?query=%7Bconstant%7D`;
+      const waitOnUrl = `http-get://localhost:4002/constant?query=%7Bconstant%7D`;
 
-      // log("waiting for route to be created");
-      // await waitOn({ resources: [url] });
-      // log("route handler is up");
+      log("waiting for route to be created");
+      await waitOn({ resources: [waitOnUrl] });
+      log("route handler is up");
 
       // ensure response is ok
-      // const response = await fetch(url);
-      // const text = await response.text();
-      // assert.equal(text, 'ok');
+      const response = await fetch(url);
+      const text = await response.text();
+      assert.equal(JSON.parse(text)?.data?.constant, 42);
 
-      // // delete all
-      // await deep.delete(handleRoute?.id);
-      // await deep.delete(ownerContainHandler?.id);
-      // await deep.delete(handler?.id);
-      // await deep.delete(handlerJSFile?.id);
-      // await deep.delete(routerStringUse?.id);
-      // await deep.delete(routerListening?.id);
-      // await deep.delete(router?.id);
-      // await deep.delete(routeLink?.id);
-      // await deep.delete(portLink?.id);
+      // delete all
+      await deep.delete(handleRoute?.id);
+      await deep.delete(ownerContainHandler?.id);
+      await deep.delete(handler?.id);
+      await deep.delete(handlerJSFile?.id);
+      await deep.delete(routerStringUse?.id);
+      await deep.delete(routerListening?.id);
+      await deep.delete(router?.id);
+      await deep.delete(routeLink?.id);
+      await deep.delete(portLink?.id);
 
-      // log("waiting for route to be deleted");
-      // await waitOn({ resources: [url], reverse: true });
-      // log("route handler is down");
+      log("waiting for route to be deleted");
+      await waitOn({ resources: [waitOnUrl], reverse: true });
+      log("route handler is down");
     });
   });
 
