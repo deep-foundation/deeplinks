@@ -1187,7 +1187,7 @@ describe('Async handlers', () => {
       log("route handler is up");
 
       // check { constant } gql query
-      const url = `http://localhost:${port}${route}`;
+      const url = `localhost:${port}${route}`;
       const apolloClient = generateApolloClient({ path: url, ssl: false });
       const { data } = await apolloClient.query({ query: gql`{ constant }` });
       assert.equal(data?.constant, 42);
