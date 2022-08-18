@@ -543,6 +543,22 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
     const portsResult = routesResult.data.ports;
     handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
 
+    const baseUrl = 'http://host.docker.internal'
+
+    const urls = {};
+
+    for (const port of portsResult) {
+      const portValue = port?.port?.value;
+      for (const routerListening of port?.routerListening) {
+        for (const routerStringUse of routerListening?.router?.routerStringUse) {
+          const url = `${baseUrl}:${portValue}${routerStringUse?.routeString?.value}`;
+          urls[url] = true;
+        }
+      }
+    }
+
+    handleGqlHandlerDebug('urls', JSON.stringify(urls, null, 2));
+
   } else if (operation == 'DELETE') {
     // delete gql handler
   }
