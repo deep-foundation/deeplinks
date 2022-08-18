@@ -1180,14 +1180,14 @@ describe('Async handlers', () => {
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler});
 
       // insert gql handler link
-      const gqlHandlerLink = await deep.insert({
+      const gqlHandlerLink = (await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'GqlHandler'),
         from_id: routeLink.id,
         to_id: routeLink.id,
       }, {
         returning: `id`,
         name: 'INSERT_GQL_HANDLER_LINK',
-      }) as any;
+      }))?.data?.[0];
       
       const waitOnUrl = `http-get://localhost:${port}${route}?query=%7Bconstant%7D`;
 
@@ -1202,6 +1202,7 @@ describe('Async handlers', () => {
       assert.equal(data?.constant, 42);
 
       // delete all
+      await deep.delete(gqlHandlerLink?.id);
       await deep.delete(handleRoute?.id);
       await deep.delete(ownerContainHandler?.id);
       await deep.delete(handler?.id);

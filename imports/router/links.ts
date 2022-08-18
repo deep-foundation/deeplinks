@@ -543,6 +543,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
     const portsResult = routesResult.data.ports;
     handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
 
+    // TODO: Use better way to get base url
     const baseUrl = 'http://host.docker.internal'
 
     const urls = {};
@@ -559,8 +560,30 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
 
     handleGqlHandlerDebug('urls', JSON.stringify(urls, null, 2));
 
+    for (const url of Object.keys(urls)) {
+      // add_remote_schema
+      await api.query({
+        type: 'add_remote_schema',
+        args: {
+          // TODO: It is now possible to create only single schema per all urls
+          name: `handle_gql_handler_${handleGqlHandlerLink?.id}`,
+          definition: {
+            url,
+            headers: [{ name: 'x-hasura-client', value: 'deeplinks-gql-handler' }],
+            forward_client_headers: true,
+            timeout_seconds: 60
+          }
+        }
+      });
+    }
   } else if (operation == 'DELETE') {
     // delete gql handler
+    await api.query({
+      type: 'remove_remote_schema',
+      args: {
+        name: `handle_gql_handler_${handleGqlHandlerLink?.id}`,
+      },  
+    });
   }
 }
 
