@@ -496,24 +496,22 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
 
     const routesResult = await client.query({
       query: gql`
-        query (where: {
-          type_id: { _eq: ${portTypeId} }
-          in: {
-            type_id: { _eq: ${routerListeningTypeId} }
-            from: {
-              in: {
-                type_id: { _eq: ${routerStringUseTypeId} }
-                from: {
-                  in: {
-                    id: { _eq: ${handleGqlHandlerLink?.id} }
+        query {
+          ports: links(where: {
+            type_id: { _eq: "${portTypeId}" },
+            in: {
+              type_id: { _eq: ${routerListeningTypeId} }
+              from: {
+                in: {
+                  type_id: { _eq: ${routerStringUseTypeId} }
+                  from: {
+                    in: {
+                      id: { _eq: ${handleGqlHandlerLink?.id} }
+                    }
                   }
                 }
               }
             }
-          }
-        }) {
-          ports: links(where: {
-            type_id: { _eq: "${portTypeId}" }
           }) {
             id
             port: value
