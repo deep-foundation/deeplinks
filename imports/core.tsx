@@ -357,6 +357,10 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'HandlingErrorReason', type: 'Type', from: 'HandlingError', to: 'Any' },
     // HandlingErrorLink
     { id: 'HandlingErrorLink', type: 'Type', from: 'HandlingError', to: 'Any' },
+
+    // GqlHandler
+    { id: 'GqlHandler', type: 'Type', from: 'Route', to: 'Route' },
+
   ],
   errors: [],
   strict: true,
