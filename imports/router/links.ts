@@ -9,6 +9,9 @@ import { DeepClient } from '../client';
 import { ContainerController } from '../container-controller';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { findPromiseLink, reject, resolve } from '../promise';
+import { promisify } from 'util';
+import {exec} from 'child_process';
+const execAsync = promisify(exec);
 
 const SCHEMA = 'public';
 
@@ -544,15 +547,17 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
     handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
 
     // TODO: Use better way to get base url
-    const baseUrl = 'http://host.docker.internal'
+    // const baseUrl = 'http://host.docker.internal'
+    // execute bash script to get base url
 
     const urls = {};
 
     for (const port of portsResult) {
       const portValue = port?.port?.value;
+      const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
-          const url = `${baseUrl}:${portValue}${routerStringUse?.routeString?.value}`;
+          const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
           urls[url] = true;
         }
       }
