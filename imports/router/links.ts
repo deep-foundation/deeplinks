@@ -484,6 +484,72 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   }
 }
 
+export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'INSERT' | 'DELETE') {
+  const handleGqlHandlerDebug = Debug('deeplinks:eh:links:handleGqlHandler');
+  handleGqlHandlerDebug('handleGqlHandlerLink', handleGqlHandlerLink);
+  handleGqlHandlerDebug('operation', operation);
+  if (operation == 'INSERT') {
+    // insert gql handler
+    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+
+    const routesResult = await client.query({
+      query: gql`
+        query (where: {
+          type_id: { _eq: ${portTypeId} }
+          in: {
+            type_id: { _eq: ${routerListeningTypeId} }
+            from: {
+              in: {
+                type_id: { _eq: ${routerStringUseTypeId} }
+                from: {
+                  in: {
+                    id: { _eq: ${handleGqlHandlerLink?.id} }
+                  }
+                }
+              }
+            }
+          }
+        }) {
+          ports: links(where: {
+            type_id: { _eq: "${portTypeId}" }
+          }) {
+            id
+            port: value
+            routerListening: in(where: {
+              type_id: { _eq: "${routerListeningTypeId}" }
+            }) {
+              id
+              router: from {
+                id
+                routerStringUse: in(where: {
+                  type_id: { _eq: "${routerStringUseTypeId}" }
+                }) {
+                  id
+                  routeString: value
+                  route: from {
+                    id
+                    gqlHandler: in(where: {
+                      id: { _eq: "${handleGqlHandlerLink?.id}" }
+                    }) {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `, variables: {} });
+    const portsResult = routesResult.data.ports;
+    handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
+
+  } else if (operation == 'DELETE') {
+    // delete gql handler
+  }
+}
+
 export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DELETE') {
   const handlePortDebug = Debug('deeplinks:eh:links:handlePort');
   handlePortDebug('handlePortLink', handlePortLink);
@@ -597,6 +663,10 @@ export default async (req, res) => {
         const handleScheduleId = await deep.id('@deep-foundation/core', 'HandleSchedule');
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleSchedule(current, operation);
+        }
+        const gqlHandlerTypeId = await deep.id('@deep-foundation/core', 'GqlHandler');
+        if (typeId === gqlHandlerTypeId && (operation === 'INSERT' || operation === 'DELETE')) {
+          await handleGqlHandler(current, operation);
         }
         
         if (typeId === handlePortId && (operation === 'INSERT' || operation === 'DELETE')) {
