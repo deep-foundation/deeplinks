@@ -11,6 +11,7 @@ import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
 import { findPromiseLink, reject, resolve } from '../promise';
 import { promisify } from 'util';
 import {exec} from 'child_process';
+import waitOn from 'wait-on';
 const execAsync = promisify(exec);
 
 const SCHEMA = 'public';
@@ -582,7 +583,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
         }
       };
       handleGqlHandlerDebug('options', JSON.stringify(options, null, 2));
-      await delay(10000);
+      await waitOn({ resources: [`${url.replace('http://','http-get://')}?query=%7B__typename%7D`] });
       await api.query(options);
     }
   } else if (operation == 'DELETE') {
