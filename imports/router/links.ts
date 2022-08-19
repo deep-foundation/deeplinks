@@ -546,15 +546,13 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
     const portsResult = routesResult.data.ports;
     handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
 
-    // TODO: Use better way to get base url
-    // const baseUrl = 'http://host.docker.internal'
-    // execute bash script to get base url
-
     const urls = {};
 
     for (const port of portsResult) {
       const portValue = port?.port?.value;
-      const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
+      // TODO: Use better way to get base url
+      // const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
+      const baseUrl = `http://host.docker.internal:${portValue}`;
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
