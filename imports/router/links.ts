@@ -25,6 +25,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
+const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
 export const DOCKER = process.env.DOCKER || '0';
 
 export const api = new HasuraApi({
@@ -552,7 +553,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
       const portValue = port?.port?.value;
       // TODO: Use better way to get base url
       // const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
-      const baseUrl = `http://host.docker.internal:${portValue}`;
+      const baseUrl = `http://${DEEPLINKS_ROUTE_HANDLERS_HOST}:${portValue}`;
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
