@@ -567,7 +567,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
 
     for (const url of Object.keys(urls)) {
       // add_remote_schema
-      await api.query({
+      const options = {
         type: 'add_remote_schema',
         args: {
           // TODO: It is now possible to create only single schema per all urls
@@ -579,7 +579,9 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
             timeout_seconds: 60
           }
         }
-      });
+      };
+      handleGqlHandlerDebug('options', JSON.stringify(options, null, 2));
+      await api.query(options);
     }
   } else if (operation == 'DELETE') {
     // delete gql handler
