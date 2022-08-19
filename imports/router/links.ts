@@ -28,6 +28,8 @@ const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.do
 const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
 export const DOCKER = process.env.DOCKER || '0';
 
+const delay = time => new Promise(res => setTimeout(res, time));
+
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
@@ -580,6 +582,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
         }
       };
       handleGqlHandlerDebug('options', JSON.stringify(options, null, 2));
+      await delay(10000);
       await api.query(options);
     }
   } else if (operation == 'DELETE') {
