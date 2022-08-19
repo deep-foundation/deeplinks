@@ -1202,20 +1202,20 @@ describe('Async handlers', () => {
       assert.equal(data?.constant, 42);
 
       // delete all
-      await deep.delete(gqlHandlerLink?.id);
-      await deep.delete(handleRoute?.id);
-      await deep.delete(ownerContainHandler?.id);
-      await deep.delete(handler?.id);
-      await deep.delete(handlerJSFile?.id);
-      await deep.delete(routerStringUse?.id);
-      await deep.delete(routerListening?.id);
-      await deep.delete(router?.id);
-      await deep.delete(routeLink?.id);
-      await deep.delete(portLink?.id);
+      // await deep.delete(gqlHandlerLink?.id);
+      // await deep.delete(handleRoute?.id);
+      // await deep.delete(ownerContainHandler?.id);
+      // await deep.delete(handler?.id);
+      // await deep.delete(handlerJSFile?.id);
+      // await deep.delete(routerStringUse?.id);
+      // await deep.delete(routerListening?.id);
+      // await deep.delete(router?.id);
+      // await deep.delete(routeLink?.id);
+      // await deep.delete(portLink?.id);
 
-      log("waiting for route to be deleted");
-      await waitOn({ resources: [waitOnUrl], reverse: true });
-      log("route handler is down");
+      // log("waiting for route to be deleted");
+      // await waitOn({ resources: [waitOnUrl], reverse: true });
+      // log("route handler is down");
     });
   });
 
