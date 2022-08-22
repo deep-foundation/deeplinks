@@ -143,4 +143,15 @@ describe('client', () => {
   it(`{ to_id: { _type_of: 25 } }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ to_id: { _type_of: 25 } }), { to: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
   });
+  it(`{ id: { _id: ['@deep-foundation/core', 'Package'] } }`, async () => {
+    assert.deepEqual((await deepClient.select({ id: { _id: ['@deep-foundation/core', 'Package'] } }))?.data?.[0]?.id, 2);
+  });
+  it(`{ type_id: { _id: ['@deep-foundation/core', 'Package'] } }`, async () => {
+    const packageId = await deepClient.id('@deep-foundation/core');
+    assert.isTrue(!!(await deepClient.select({ type_id: { _id: ['@deep-foundation/core', 'Package'] } }))?.data?.find(p => p.id === packageId));
+  });
+  it(`{ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }`, async () => {
+    const packageId = await deepClient.id('@deep-foundation/core');
+    assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
+  });
 });

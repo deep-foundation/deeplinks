@@ -175,7 +175,7 @@ export interface DeepClientInstance<L = Link<number>> {
   serializeWhere(exp: any, env?: string): any;
   serializeQuery(exp: any, env?: string): any;
 
-  id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number>;
+  id(start: DeepClientStartItem | BoolExpLink, ...path: DeepClientPathItem[]): Promise<number>;
   idSync(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
@@ -300,7 +300,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!exp) {
       return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     }
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -377,7 +377,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     name?: string;
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
@@ -415,7 +415,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'link' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
@@ -452,23 +452,61 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   };
 
   _serialize = {
-    link: {
+    links: {
       value: 'value',
       relations: {
+        from: 'links',
+        to: 'links',
+        type: 'links',
+        in: 'links',
+        out: 'links',
+        typed: 'links',
+        selected: 'selector',
+        selectors: 'selector',
         string: 'value',
         number: 'value',
         object: 'value',
-        to: 'link',
-        from: 'link',
-        in: 'link',
-        out: 'link',
-        type: 'link',
-        typed: 'link',
+        can_rule: 'can',
+        can_action: 'can',
+        can_object: 'can',
+        can_subject: 'can',
+        down: 'tree',
+        up: 'tree',
+        tree: 'tree',
+        root: 'tree',
       },
+    },
+    selector: {
+      relations: {
+        item: 'links',
+        selector: 'links',
+        query: 'links',
+      }
+    },
+    can: {
+      relations: {
+        rule: 'links',
+        action: 'links',
+        object: 'links',
+        subject: 'links',
+      }
+    },
+    tree: {
+      relations: {
+        link: 'links',
+        tree: 'links',
+        root: 'links',
+        parent: 'links',
+        by_link: 'tree',
+        by_tree: 'tree',
+        by_root: 'tree',
+        by_parent: 'tree',
+        by_position: 'tree',
+      }
     },
     value: {
       relations: {
-        link: 'link',
+        link: 'links',
       },
     },
   };
@@ -484,34 +522,91 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
    * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
    */
-  serializeWhere(exp: any, env: string = 'link'): any {
+  serializeWhere(exp: any, env: string = 'links'): any {
+    // if exp is array - map
     if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => this.serializeWhere(e, env));
     else if (typeof(exp) === 'object') {
+      // if object
       const keys = Object.keys(exp);
-      const result = {};
+      const result: any = {};
+      // map keys
       for (let k = 0; k < keys.length; k++) {
         const key = keys[k];
         const type = typeof(exp[key]);
         let setted: any = false;
-        if (env === 'link') {
+        const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
+        // if this is link
+        if (env === 'links') {
+          // if field contain primitive type - string/number
           if (type === 'string' || type === 'number') {
             if (key === 'value' || key === type) {
+              // if field id link.value
               setted = result[type] = { value: { _eq: exp[key] } };
             } else {
+              // else just equal
               setted = result[key] = { _eq: exp[key] };
             }
           } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+            // if field is not boolExp (_and _or _not) but contain array
             // @ts-ignore
             setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
-          } else if (type === 'object' && exp[key].hasOwnProperty('_type_of') && !!~['type_id', 'from_id', 'to_id'].indexOf(key)) {
-            setted = result[key.slice(0, -3)] = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } }
           }
         } else if (env === 'value') {
+          // if this is value
           if (type === 'string' || type === 'number') {
             setted = result[key] = { _eq: exp[key] };
           }
         }
-        if (!setted) result[key] = this._boolExpFields[key] ? this.serializeWhere(exp[key], env) : this._serialize?.[env]?.relations?.[key] ? this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key]) : exp[key];
+        if (type === 'object' && exp[key].hasOwnProperty('_type_of') && (
+          (env === 'links' && (is_id_field || key === 'id')) ||
+          (env === 'selector' && key === 'item_id') ||
+          (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
+          (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
+          (env === 'value' && key === 'link_id')
+        )) {
+          // if field is object, and contain _type_od
+          const _temp = setted = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } };
+          if (key === 'id') {
+            result._and = result._and ? [...result._and, _temp] : [_temp];
+          } else {
+            result[key.slice(0, -3)] = _temp;
+          }
+        } else if (type === 'object' && exp[key].hasOwnProperty('_id') && (
+          (env === 'links' && (is_id_field || key === 'id')) ||
+          (env === 'selector' && key === 'item_id') ||
+          (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
+          (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
+          (env === 'value' && key === 'link_id')
+        ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
+          // if field is object, and contain _type_od
+          const _temp = setted = this.serializeWhere(this.pathToWhere(exp[key]._id[0], ...exp[key]._id.slice(1)), 'links');
+          if (key === 'id') {
+            result._and = result._and ? [...result._and, _temp] : [_temp];
+          } else {
+            result[key.slice(0, -3)] = _temp;
+          }
+        }
+        // if not expected
+        if (!setted) {
+          const _temp = (
+            // if _and _or _not
+            this._boolExpFields[key]
+          ) ? (
+            // just parse each item in array
+            this.serializeWhere(exp[key], env)
+           ) : (
+            // if we know context
+            this._serialize?.[env]?.relations?.[key]
+          ) ? (
+            // go to this context then
+            this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key])
+          ) : (
+            // else just stop
+            exp[key]
+          );
+          if (key === '_and') result._and ? result._and.push(..._temp) : result._and = _temp;
+          else result[key] = _temp;
+        }
       }
       return result;
     } else {
@@ -520,12 +615,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
   };
 
-  serializeQuery(exp: any, env: string = 'link'): any {
+  serializeQuery(exp: any, env: string = 'links'): any {
     const { limit, order_by, offset, distinct_on, ...where } = exp;
     return { limit, order_by, offset, distinct_on, where: this.serializeWhere(where, env) };
   }
 
-  pathToWhere(start: DeepClientStartItem, ...path: DeepClientPathItem[]): any {
+  pathToWhere(start: (DeepClientStartItem), ...path: DeepClientPathItem[]): any {
     const pckg = typeof(start) === 'string' ? { type_id: _ids?.['@deep-foundation/core']?.Package, value: start } : { id: start };
     let where: any = pckg;
     for (let p = 0; p < path.length; p++) {
@@ -543,7 +638,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
    * @returns number
    */
-  async id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Promise<number> {
+  async id(start: DeepClientStartItem | BoolExpLink, ...path: DeepClientPathItem[]): Promise<number> {
+    if (typeof(start) === 'object') {
+      return ((await this.select(start)) as any)?.data?.[0]?.id;
+    }
     if (_ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }

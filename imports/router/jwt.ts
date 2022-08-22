@@ -37,33 +37,37 @@ const resolvers = {
   Query: {
     jwt: async (source, args, context, info) => {
       const { linkId } = args.input;
-      if (!linkId) {
-        return {
-          linkId: +context?.headers?.['x-hasura-user-id']
-        };
+      try {
+        if (!linkId) {
+          return {
+            linkId: +context?.headers?.['x-hasura-user-id']
+          };
+        }
+        if (!+context?.headers?.['x-hasura-user-id'] && context?.headers?.['x-hasura-role'] !== 'admin') {
+          return { error: '!currentUser' };
+        }
+        if (
+          context?.headers?.['x-hasura-role'] !== 'admin' &&
+          !(await deep.select({
+            subject_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
+            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+          }, { table: 'can', returning: 'rule_id' }))?.data?.[0] &&
+          +context?.headers?.['x-hasura-user-id'] !== linkId &&
+          !await deep.can(
+            linkId, +context?.headers?.['x-hasura-user-id'], await deep.id('@deep-foundation/core', 'AllowLogin')
+          )
+        ) {
+          return { error: 'cant' };
+        }
+        const token = jwt({
+          secret: jwt_secret.key,
+          linkId,
+          role: await deep.can(linkId, linkId, await deep.id('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
+        });
+        return { token, linkId };
+      } catch(error) {
+        return { error: 'unexpected' };
       }
-      if (!+context?.headers?.['x-hasura-user-id'] && context?.headers?.['x-hasura-role'] !== 'admin') {
-        return { error: '!currentUser' };
-      }
-      if (
-        context?.headers?.['x-hasura-role'] !== 'admin' &&
-        !(await deep.select({
-          subject_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
-          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
-        }, { table: 'can', returning: 'rule_id' }))?.data?.[0] &&
-        +context?.headers?.['x-hasura-user-id'] !== linkId &&
-        !await deep.can(
-          linkId, +context?.headers?.['x-hasura-user-id'], await deep.id('@deep-foundation/core', 'AllowLogin')
-        )
-      ) {
-        return { error: 'cant' };
-      }
-      const token = jwt({
-        secret: jwt_secret.key,
-        linkId,
-        role: await deep.can(linkId, linkId, await deep.id('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
-      });
-      return { token, linkId };
     },
   }
 };

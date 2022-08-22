@@ -178,7 +178,12 @@ export const up = async () => {
               WHERE cache."id" IN (insertedIncludeId, insertedExcludeId)
             )
             LOOP
+            IF (caches."selector_include_id" != 0) THEN
+              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleSubject."from_id", ruleSubject."id");
+            END IF;
+            IF (caches."selector_include_id" != 0) THEN
               INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleSubject."from_id", ruleSubject."id");
+            END IF;
             END LOOP;
           END IF;
         END IF;

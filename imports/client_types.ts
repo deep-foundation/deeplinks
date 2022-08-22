@@ -151,6 +151,8 @@ export interface ComparasionExp<T> {
   _lte?: T;
   _neq?: T;
   _nin?: T[];
+  _type_of?: T;
+  _id?: [any, ...any[]];
 }
 export interface MutationInput {}
 export interface MutationInputLinkPlain {
