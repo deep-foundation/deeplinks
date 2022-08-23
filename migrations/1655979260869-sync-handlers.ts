@@ -292,10 +292,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const valueId = plv8.execute(insertValueString)[0]?.id;
       return { data: [{ id: linkid }]};
     },
-    update: function(exp, _set, options) {
-      const { id, link_id, value } = exp;
+    update: function(criteria, _set, options) {
+      const exp = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
+      const { id, link_id, value } = criteria || {};
       if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
-      const { table } = options;
+      const { table } = options || {};
       const linkCheck = checkUpdatePermission(link_id, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
       
@@ -316,9 +317,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
 
       return { data: links};
     },
-    delete: function(_where, options) {
-      const { id } = _where;
-      const { table } = options;
+    delete: function(criteria, options) {
+      const _where = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
+      const { id } = _where || {};
+      if (!id) throw new Error('No valid id to delete');
+      const { table } = options || {};
       if (table && !['links', 'strings', 'numbers', 'objects'].includes(table)) plv8.elog(ERROR, 'delete from '.concat(table, ' not permitted'));
       const linkCheck = checkDeleteLinkPermission(id, ownerId, table);
       if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
