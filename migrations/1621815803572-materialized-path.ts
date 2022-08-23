@@ -303,6 +303,26 @@ export const upTreeSchema = async ({
   });
 
   await api.query({
+    type: 'create_object_relationship',
+    args: {
+      table: MP_TABLE,
+      name: 'tree',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: SCHEMA,
+            name: GRAPH_TABLE,
+          },
+          column_mapping: {
+            tree_id: ID_FIELD,
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
+
+  await api.query({
     type: 'create_array_relationship',
     args: {
       table: MP_TABLE,

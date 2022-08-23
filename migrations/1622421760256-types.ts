@@ -100,6 +100,11 @@ export const up = async () => {
     console.log('admin', adminId);
     const adminPermission = await root.insert({
       type_id: await root.id('@deep-foundation/core', 'Rule'),
+      in: { data: [{
+        from_id: await root.id('deep', 'admin'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'allowAdminRule' } },
+      }] },
       out: {
         data: [
           {
@@ -173,6 +178,11 @@ export const up = async () => {
     });
     const promisePermission = await root.insert({
       type_id: await root.id('@deep-foundation/core', 'Rule'),
+      in: { data: [{
+        from_id: await root.id('deep', 'admin'),
+        type_id: await root.id('@deep-foundation/core', 'Contain'),
+        string: { data: { value: 'allowSelectBasicTypesRule' } },
+      }] },
       out: {
         data: [
           {
@@ -204,6 +214,16 @@ export const up = async () => {
                 type_id: await root.id('@deep-foundation/core', 'Selector'),
                 out: {
                   data: [
+                    {
+                      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: await root.id('@deep-foundation/core', 'User'),
+                      out: {
+                        data: {
+                          type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                        },
+                      },
+                    },
                     {
                       type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
                       to_id: await root.id('@deep-foundation/core', 'Then'),

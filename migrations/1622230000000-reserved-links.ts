@@ -65,7 +65,7 @@ export const up = async () => {
           DELETE FROM ${LINKS_TABLE_NAME} WHERE id = NEW.id;
           RETURN NEW;
         ELSE
-          IF (NOT EXISTS (SELECT * FROM "links_id_seq" WHERE last_value = NEW.id)) THEN
+          IF (NOT EXISTS (SELECT * FROM "links_id_seq" WHERE last_value >= NEW.id)) THEN
             RAISE EXCEPTION 'Illegal insert link with custom id with { id: %, type_id: %, from_id: %, to_id: % } %.', NEW.id, NEW.type_id, NEW.from_id, NEW.to_id, (SELECT row_to_json(t) FROM "links_id_seq" as t) USING HINT = 'Use reserve action before inserting link with id';
           END IF;
         END IF;

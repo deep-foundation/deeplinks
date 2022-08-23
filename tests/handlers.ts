@@ -1051,10 +1051,11 @@ describe('Async handlers', () => {
       await waitOn({ resources: [url], reverse: true });
       log("route handler is down");
     });
-    it.only(`handle route gql handler`, async () => {
+    it(`handle route gql handler`, async () => {
       // const port = await getPort(); // conflicts with container-controller port allocation
       const port = 4002;
-      const route = '/constant';
+      const field = 'constant'
+      const route = `/${field}`;
 
       const insertResult = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'Port'),
@@ -1088,10 +1089,10 @@ describe('Async handlers', () => {
                           const ApolloServer = require('apollo-server-express').ApolloServer;
                           const { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
-                          const typeDefs = 'type Query { constant: Int }';
+                          const typeDefs = 'type Query { ${field}: Int }';
 
                           const resolvers = {
-                            Query: { constant: () => (42) },
+                            Query: { ${field}: () => (42) },
                           };
                           
                           const context = ({ req }) => { return { headers: req.headers }; };
@@ -1189,33 +1190,32 @@ describe('Async handlers', () => {
         name: 'INSERT_GQL_HANDLER_LINK',
       }))?.data?.[0];
       
-      const waitOnUrl = `http-get://localhost:${port}${route}?query=%7Bconstant%7D`;
+      const waitOnUrl = `http-get://localhost:${port}${route}?query=%7B${field}%7D`;
 
       log("waiting for route to be created");
       await waitOn({ resources: [waitOnUrl] });
       log("route handler is up");
 
       // check { constant } gql query
-      const url = `localhost:${port}${route}`;
-      const apolloClient = generateApolloClient({ path: url, ssl: false });
-      const { data } = await apolloClient.query({ query: gql`{ constant }` });
+      await delay(5000);
+      const { data } = await apolloClient.query({ query: gql`{ ${field} }` });
       assert.equal(data?.constant, 42);
 
       // delete all
-      // await deep.delete(gqlHandlerLink?.id);
-      // await deep.delete(handleRoute?.id);
-      // await deep.delete(ownerContainHandler?.id);
-      // await deep.delete(handler?.id);
-      // await deep.delete(handlerJSFile?.id);
-      // await deep.delete(routerStringUse?.id);
-      // await deep.delete(routerListening?.id);
-      // await deep.delete(router?.id);
-      // await deep.delete(routeLink?.id);
-      // await deep.delete(portLink?.id);
+      await deep.delete(gqlHandlerLink?.id);
+      await deep.delete(handleRoute?.id);
+      await deep.delete(ownerContainHandler?.id);
+      await deep.delete(handler?.id);
+      await deep.delete(handlerJSFile?.id);
+      await deep.delete(routerStringUse?.id);
+      await deep.delete(routerListening?.id);
+      await deep.delete(router?.id);
+      await deep.delete(routeLink?.id);
+      await deep.delete(portLink?.id);
 
-      // log("waiting for route to be deleted");
-      // await waitOn({ resources: [waitOnUrl], reverse: true });
-      // log("route handler is down");
+      log("waiting for route to be deleted");
+      await waitOn({ resources: [waitOnUrl], reverse: true });
+      log("route handler is down");
     });
   });
 
