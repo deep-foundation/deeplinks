@@ -165,7 +165,7 @@ describe('sync handlers', () => {
           assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
         });
         it(`root can select from can`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":438}'::jsonb, '{"table":"can"}'::jsonb)`);
+          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":${await deep.id('deep', 'admin')}}'::jsonb, '{"table":"can"}'::jsonb)`);
           const n1 = result?.data?.result?.[1];
           log('n1', JSON.parse(n1?.[0]).data);
           assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
