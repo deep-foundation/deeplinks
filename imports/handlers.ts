@@ -175,7 +175,8 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
 export const deleteHandler = async (handler) => {
   const { handlerJSFileValueId, ...ids } = handler;
   const result = { links: [], strings: []};
-  const compact = {id: {_in: _.compact(Object.values(ids))}}
+  const _ids = []
+  const compact = {id: {_in: _ids.concat(_.compact(Object.values(ids)))}}
   result.links.push(await deep.delete(compact));
   return result;
 };
@@ -183,7 +184,8 @@ export const deleteHandler = async (handler) => {
 export const deleteSelector = async (selector: any) => {
   const { treeIncludesIds, ...withoutTreeIncluds } = selector;
   const ids = (_.concat(treeIncludesIds, Object.values(withoutTreeIncluds)));
-  const compact = {id: {_in: _.compact(ids)}};
+  const _ids = []
+  const compact = {id: {_in: _ids.concat(_.compact(ids))}};
   await deep.delete(compact);
 };
 

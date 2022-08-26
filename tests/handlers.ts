@@ -213,7 +213,7 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
 
 const deletePackageWithPermissions = async (deepPackage: any) => {
   await deep.delete(_.compact(_.concat([deepPackage.typeId, deepPackage.containId, deepPackage.packageId], deepPackage.ruleIds)));
-  await deep.delete(_.compact([deepPackage.containValueId, deepPackage.packageValueId], { table: 'strings' }));
+  await deep.delete(_.compact([deepPackage.containValueId, deepPackage.packageValueId]), { table: 'strings' });
 };
 
 const insertOperationHandlerForSchedule = async (schedule: string, code: string, forceOwnerId?: number) => {

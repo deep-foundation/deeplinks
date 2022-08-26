@@ -338,7 +338,12 @@ export interface DeepClientInstance<L = Link<number>> {
     Table extends 'strings' ? MutationInputValue<string> :
     Table extends 'objects' ? MutationInputValue<any> :
     MutationInputLink
-  ), options?: {
+  ) | (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLink
+  )[] , options?: {
     table?: Table;
     returning?: string;
     variables?: any;
@@ -546,7 +551,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     Table extends 'strings' ? MutationInputValue<string> :
     Table extends 'objects' ? MutationInputValue<any> :
     MutationInputLink
-  ), options?: {
+  ) | (
+    Table extends 'numbers' ? MutationInputValue<number> :
+    Table extends 'strings' ? MutationInputValue<string> :
+    Table extends 'objects' ? MutationInputValue<any> :
+    MutationInputLink
+  )[], options?: {
     table?: Table;
     returning?: string;
     variables?: any;
@@ -561,7 +571,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let q: any = {};
     try {
       q = await this.apolloClient.mutate(generateSerial({
-        actions: [insertMutation(table, { ...variables, objects: objects }, { tableName: table, operation: 'insert', returning })],
+        actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
         name: name,
       }));
     } catch(e) {
