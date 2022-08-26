@@ -26,18 +26,18 @@ describe('messanger', () => {
     const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
 
     const inserted = await guestDeep.insert({
-      type_id: await guestDeep.id('@deep-foundation/messaging', 'Message'),
+      type_id: await guestDeep.id('@deep-foundation/messenger', 'Message'),
       string: { data: { value: 'test guest message' } },
       out: { data: [
         {
-          type_id: await guestDeep.id('@deep-foundation/messaging', 'Author'),
+          type_id: await guestDeep.id('@deep-foundation/messenger', 'Author'),
           to_id: guestDeep.linkId,
         },
         {
-          type_id: await guestDeep.id('@deep-foundation/messaging', 'Reply'),
+          type_id: await guestDeep.id('@deep-foundation/messenger', 'Reply'),
           to_id: guestDeep.linkId,
           out: { data: {
-            type_id: await guestDeep.id('@deep-foundation/messaging', 'Join'),
+            type_id: await guestDeep.id('@deep-foundation/messenger', 'Join'),
             to_id: guestDeep.linkId,
           } },
         },
@@ -61,23 +61,23 @@ describe('messanger', () => {
     const guestBDeep = new DeepClient({ deep: unloginedDeep, ...guestB });
 
     const { data: [{ id: messageAId }] } = await guestADeep.insert({
-      type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
+      type_id: await guestADeep.id('@deep-foundation/messenger', 'Message'),
       string: { data: { value: 'test guest A message' } },
       out: { data: [
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Author'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Author'),
           to_id: guestADeep.linkId,
         },
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Reply'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Reply'),
           to_id: guestADeep.linkId,
           out: { data: [
             {
-              type_id: await guestADeep.id('@deep-foundation/messaging', 'Join'),
+              type_id: await guestADeep.id('@deep-foundation/messenger', 'Join'),
               to_id: guestADeep.linkId,
             },
             {
-              type_id: await guestADeep.id('@deep-foundation/messaging', 'Join'),
+              type_id: await guestADeep.id('@deep-foundation/messenger', 'Join'),
               to_id: guestBDeep.linkId,
             },
           ] },
@@ -86,15 +86,15 @@ describe('messanger', () => {
     });
 
     const { data: [{ id: messageBId }] } = await guestBDeep.insert({
-      type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
+      type_id: await guestADeep.id('@deep-foundation/messenger', 'Message'),
       string: { data: { value: 'test guest B message' } },
       out: { data: [
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Author'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Author'),
           to_id: guestADeep.linkId,
         },
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Reply'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Reply'),
           to_id: messageAId,
         },
       ] },
@@ -122,23 +122,23 @@ describe('messanger', () => {
     const deep = new DeepClient({ deep: unloginedDeep, ...admin });
 
     const { data: [{ id: messageAId }] } = await guestADeep.insert({
-      type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
+      type_id: await guestADeep.id('@deep-foundation/messenger', 'Message'),
       string: { data: { value: 'test guest A message' } },
       out: { data: [
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Author'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Author'),
           to_id: guestADeep.linkId,
         },
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Reply'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Reply'),
           to_id: guestADeep.linkId,
           out: { data: [
             {
-              type_id: await guestADeep.id('@deep-foundation/messaging', 'Join'),
+              type_id: await guestADeep.id('@deep-foundation/messenger', 'Join'),
               to_id: guestADeep.linkId,
             },
             {
-              type_id: await guestADeep.id('@deep-foundation/messaging', 'Join'),
+              type_id: await guestADeep.id('@deep-foundation/messenger', 'Join'),
               to_id: guestBDeep.linkId,
             },
           ] },
@@ -147,25 +147,25 @@ describe('messanger', () => {
     });
 
     const { data: [{ id: messageBId }] } = await guestBDeep.insert({
-      type_id: await guestADeep.id('@deep-foundation/messaging', 'Message'),
+      type_id: await guestADeep.id('@deep-foundation/messenger', 'Message'),
       string: { data: { value: 'test guest B message' } },
       out: { data: [
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Author'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Author'),
           to_id: guestADeep.linkId,
         },
         {
-          type_id: await guestADeep.id('@deep-foundation/messaging', 'Reply'),
+          type_id: await guestADeep.id('@deep-foundation/messenger', 'Reply'),
           to_id: messageAId,
         },
       ] },
     });
 
     await deep.delete({
-      type_id: await guestADeep.id('@deep-foundation/messaging', 'Join'),
+      type_id: await guestADeep.id('@deep-foundation/messenger', 'Join'),
       to_id: guestBDeep.linkId,
       from: {
-        type_id: await guestADeep.id('@deep-foundation/messaging', 'Reply'),
+        type_id: await guestADeep.id('@deep-foundation/messenger', 'Reply'),
         to_id: guestADeep.linkId,
       },
     });
