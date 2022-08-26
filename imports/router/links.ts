@@ -115,7 +115,7 @@ export async function processPromises(promises: any[], handleInsertsIds: any[], 
 }
 
 export const containerController = new ContainerController({
-  gql_docker_domain: +DOCKER ? 'links' : 'graphql-engine',
+  gql_docker_domain: +DOCKER ? 'links' : 'hasura',
   gql_port_path: +DOCKER ? '3006/gql' : '8080/v1/graphql',
   handlersHash: {}
 });
@@ -631,7 +631,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     handlePortDebug('INSERT dockerImage', dockerImage);
 
     // start container
-    const containerName = `deep${await containerController.getDelimiter()}handle_port_${portValue}`;
+    const containerName = `deep-handle-port-${portValue}`;
     handlePortDebug('INSERT containerName', containerName);
 
     const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
@@ -643,7 +643,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
   } else if (operation == 'DELETE') {
 
     // docker stop ${containerName} && docker rm ${containerName}
-    const containerName = `deep${await containerController.getDelimiter()}handle_port_${portValue}`;
+    const containerName = `deep-handle-port-${portValue}`;
     handlePortDebug('DELETE containerName', containerName);
 
     const container = await containerController.findContainer(containerName);

@@ -1,9 +1,8 @@
 curl https://raw.githubusercontent.com/deep-foundation/deeplinks/main/docker-prod/deep/docker-compose.yml > ./docker-compose.yml
 echo 'Clean and starting containers'
-COMPOSE="$(docker-compose version --short)" MAJOR=${COMPOSE:0:1}; if [ "$MAJOR" = "2" ];  then export COMPATIBILITY='--compatibility'; fi;
-docker-compose -p deep $COMPATIBILITY down -v --remove-orphans
+docker-compose -p deep down -v --remove-orphans
 docker-compose pull
-docker-compose -p deep $COMPATIBILITY up -d
+docker-compose -p deep up -d
 sleep 5
 echo 'Migrating data'
 sleep 5

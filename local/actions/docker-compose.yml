@@ -1,6 +1,7 @@
 version: '3.6'
 services:
   postgres:
+    container_name: deep-postgres
     image: deepf/pg12-plv8:deeplinks-70-menzorg
     networks:
       - network
@@ -9,14 +10,15 @@ services:
     restart: always
     command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
     volumes:
-    - db_data:/var/lib/postgresql/data
+    - db-data:/var/lib/postgresql/data
     environment:
       - 'POSTGRES_USER=postgres'
       - 'POSTGRES_PASSWORD=postgrespassword'
       - 'PGGSSENCMODE=disable'
       - 'PGSSLMODE=disable'
       - 'PGREQUIRESSL=0'
-  graphql-engine:
+  hasura:
+    container_name: deep-hasura
     image: hasura/graphql-engine:v2.3.1
     networks:
       - network
@@ -39,10 +41,10 @@ services:
       - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true'
       - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=undefined'
   storage:
-    container_name: hasura-storage
+    container_name: deep-hasura-storage
     image: nhost/hasura-storage:0.2.3
     depends_on:
-      - graphql-engine
+      - hasura
     restart: unless-stopped
     ports:
       - '8000:8000'
@@ -60,11 +62,12 @@ services:
       - 'POSTGRES_MIGRATIONS_SOURCE=postgres://postgres:postgrespassword@host.docker.internal:5432/postgres?sslmode=disable'
     command: serve
   minio:
+    container_name: deep-minio
     image: minio/minio
     restart: always
     volumes:
-      - 'minio_data:/export'
-      - 'minio_config:/root/.minio'
+      - 'minio-data:/export'
+      - 'minio-config:/root/.minio'
     ports:
       - '9000:9000'
       - '32765:32765'
@@ -74,6 +77,7 @@ services:
     entrypoint: sh
     command: '-c ''mkdir -p /export/default && /opt/bin/minio server --address 0.0.0.0:9000 --console-address 0.0.0.0:32765 /export'''
   case:
+    container_name: deep-case
     image: deepf/deepcase:main
     networks:
       - network
@@ -85,6 +89,7 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
   links:
+    container_name: deep-links
     image: deepf/deeplinks:main
     networks:
       - network
@@ -101,10 +106,13 @@ services:
       - 'DEEPLINKS_HASURA_SECRET=myadminsecretkey'
       - 'JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 volumes:
-  db_data:
-  storage_rules:
-  minio_data:
-  minio_config:
+  db-data:
+    name: deep-db-data
+  minio-data:
+    name: deep-minio-data
+  minio-config:
+    name: deep-minio-config
 networks:
   network:
+    name: deep-network
     driver: bridge

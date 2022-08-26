@@ -82,7 +82,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker pull ${handler}; docker run -e PORT=${dockerPort} -e GQL_URN=deep${await this.getDelimiter()}${gql_docker_domain}${await this.getDelimiter()}1:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep${await this.getDelimiter()}${network} -d ${handler}`;
+        const command = `docker pull ${handler}; docker run -e PORT=${dockerPort} -e GQL_URN=deep-${gql_docker_domain}:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep-${network} -d ${handler}`;
         log('_runContainer command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('_runContainer dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
@@ -116,20 +116,11 @@ export class ContainerController {
       }
     }
   }
-  async getDelimiter() {
-    if (this.delimiter) return this.delimiter;
-    const versionResult = await execAsync(`docker-compose version --short`);
-    log('getDelimiter versionResult', { versionResult });
-    const majorVersion = versionResult?.stdout?.match(/\d+/)[0];
-    log('getDelimiter majorVersion', { majorVersion });
-    this.delimiter = majorVersion === '1' ? '_' : '-';
-    return this.delimiter;
-  }
 
   async newContainer( options: NewContainerOptions ): Promise<Container> {
     const { handler, forcePort, forceName } = options;
     const { network, handlersHash, runContainerHash } = this;
-    const containerName = forceName || `deep${await this.getDelimiter()}${crypto.createHash('md5').update(handler).digest("hex")}`;
+    const containerName = forceName || `deep-${crypto.createHash('md5').update(handler).digest("hex")}`;
     log('newContainer options, network, handlersHash, containerName, forceName', { options, network, handlersHash, containerName, forceName });
     let container = await this.findContainer(containerName);
     log('newContainer container', { container });

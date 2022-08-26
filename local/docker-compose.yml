@@ -1,6 +1,7 @@
 version: '3.6'
 services:
   links:
+    container_name: deep-links
     image: deepf/deeplinks:main
     networks:
       - network
@@ -18,4 +19,5 @@ services:
       JWT_SECRET: '${JWT_SECRET}'
 networks:
   network:
+    name: deep-network
     driver: bridge
