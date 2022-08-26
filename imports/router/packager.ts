@@ -208,9 +208,9 @@ const resolvers = {
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
+          await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackagerInstall')
+          await deep.id('@deep-foundation/core', 'AllowPackageInstall')
         ) &&
         !await deep.can(
           null,
@@ -231,10 +231,10 @@ const resolvers = {
       console.log({
         userId: +context?.headers?.['x-hasura-user-id'],
         roleAdmin: context?.headers?.['x-hasura-role'] === 'admin',
-        AllowPackagerPublish: await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+        AllowPackagePublish: await deep.can(
+          await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
+          await deep.id('@deep-foundation/core', 'AllowPackagePublish')
         ),
         AllowAdmin: await deep.can(
           null,
@@ -245,9 +245,9 @@ const resolvers = {
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+          await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackagerPublish')
+          await deep.id('@deep-foundation/core', 'AllowPackagePublish')
         ) &&
         !await deep.can(
           null,

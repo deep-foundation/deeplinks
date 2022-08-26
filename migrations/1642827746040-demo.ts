@@ -85,7 +85,7 @@ export const up = async () => {
     object: [
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -93,7 +93,7 @@ export const up = async () => {
       },
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -103,7 +103,7 @@ export const up = async () => {
     action: [
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerInstall'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),
@@ -111,7 +111,7 @@ export const up = async () => {
       },
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagerPublish'),
+        to_id: await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
         out: { data: {
           type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
           to_id: await deep.id('@deep-foundation/core', 'containTree'),

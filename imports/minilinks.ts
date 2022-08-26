@@ -4,6 +4,8 @@ import EventEmitter from 'events';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
 import { inherits } from 'util';
+import { minilinksQuery, minilinksQueryIs } from './minilinks-query';
+import { QueryLink } from './client_types';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -20,7 +22,7 @@ export interface LinkPlain<Ref extends number> {
   value?: any;
 }
 
-export interface LinkRelations<L> {
+export interface LinkRelations<L extends Link<number>> {
   typed: L[];
   type: L;
   in: L[];
@@ -31,6 +33,7 @@ export interface LinkRelations<L> {
   to: L;
   value?: any;
   _applies: string[];
+  ml?: MinilinkCollection<MinilinksGeneratorOptions, L>;
 }
 
 export interface LinkHashFields {
@@ -76,6 +79,9 @@ export class MinilinksLink<Ref extends number> {
       to_id: this.to_id,
       value: this.value,
     };
+  }
+  is(query: QueryLink): boolean {
+    return minilinksQueryIs(query, this);
   }
 }
 export interface MinilinksGeneratorOptions {
@@ -139,6 +145,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
   links: L[] = [];
   options: MGO;
   emitter: EventEmitter;
+  query(query: QueryLink | number): L[] {
+    return minilinksQuery<L>(query, this);
+  }
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -154,6 +163,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
         const link = new this.options.Link({
+          ml: this,
           _applies: [],
           ...linksArray[l],
           [options.typed]: [],

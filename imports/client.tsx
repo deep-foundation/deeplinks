@@ -29,6 +29,220 @@ export const _ids = {
   '@deep-foundation/core': corePckgIds,
 };
 
+export const _serialize = {
+  links: {
+    value: 'value',
+    fields: {
+      id: 'number',
+      from_id: 'number',
+      to_id: 'number',
+      type_id: 'number',
+    },
+    relations: {
+      from: 'links',
+      to: 'links',
+      type: 'links',
+      in: 'links',
+      out: 'links',
+      typed: 'links',
+      selected: 'selector',
+      selectors: 'selector',
+      string: 'value',
+      number: 'value',
+      object: 'value',
+      can_rule: 'can',
+      can_action: 'can',
+      can_object: 'can',
+      can_subject: 'can',
+      down: 'tree',
+      up: 'tree',
+      tree: 'tree',
+      root: 'tree',
+    },
+  },
+  selector: {
+    fields: {
+      item_id: 'number',
+      selector_id: 'number',
+      query_id: 'number',
+      selector_include_id: 'number',
+    },
+    relations: {
+      item: 'links',
+      selector: 'links',
+      query: 'links',
+    }
+  },
+  can: {
+    fields: {
+      rule_id: 'number',
+      action_id: 'number',
+      object_id: 'number',
+      subject_id: 'number',
+    },
+    relations: {
+      rule: 'links',
+      action: 'links',
+      object: 'links',
+      subject: 'links',
+    }
+  },
+  tree: {
+    fields: {
+      id: 'number',
+      link_id: 'number',
+      tree_id: 'number',
+      root_id: 'number',
+      parent_id: 'number',
+      depth: 'number',
+      position_id: 'string',
+    },
+    relations: {
+      link: 'links',
+      tree: 'links',
+      root: 'links',
+      parent: 'links',
+      by_link: 'tree',
+      by_tree: 'tree',
+      by_root: 'tree',
+      by_parent: 'tree',
+      by_position: 'tree',
+    }
+  },
+  value: {
+    fields: {
+      id: 'number',
+      link_id: 'number',
+      value: 'value',
+    },
+    relations: {
+      link: 'links',
+    },
+  },
+};
+
+export const _boolExpFields = {
+  _and: true,
+  _not: true,
+  _or: true,
+};
+
+export const pathToWhere = (start: (DeepClientStartItem), ...path: DeepClientPathItem[]): any => {
+  const pckg = typeof(start) === 'string' ? { type_id: _ids?.['@deep-foundation/core']?.Package, value: start } : { id: start };
+  let where: any = pckg;
+  for (let p = 0; p < path.length; p++) {
+    const item = path[p];
+    if (typeof(item) !== 'boolean') {
+      const nextWhere = { in: { type_id: _ids?.['@deep-foundation/core']?.Contain, value: item, from: where } };
+      where = nextWhere;
+    }
+  }
+  return where;
+}
+
+export const serializeWhere = (exp: any, env: string = 'links'): any => {
+  // if exp is array - map
+  if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => serializeWhere(e, env));
+  else if (typeof(exp) === 'object') {
+    // if object
+    const keys = Object.keys(exp);
+    const result: any = {};
+    // map keys
+    for (let k = 0; k < keys.length; k++) {
+      const key = keys[k];
+      const type = typeof(exp[key]);
+      let setted: any = false;
+      const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
+      // if this is link
+      if (env === 'links') {
+        // if field contain primitive type - string/number
+        if (type === 'string' || type === 'number') {
+          if (key === 'value' || key === type) {
+            // if field id link.value
+            setted = result[type] = { value: { _eq: exp[key] } };
+          } else {
+            // else just equal
+            setted = result[key] = { _eq: exp[key] };
+          }
+        } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+          // if field is not boolExp (_and _or _not) but contain array
+          // @ts-ignore
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]));
+        }
+      } else if (env === 'value') {
+        // if this is value
+        if (type === 'string' || type === 'number') {
+          setted = result[key] = { _eq: exp[key] };
+        }
+      }
+      if (type === 'object' && exp[key].hasOwnProperty('_type_of') && (
+        (env === 'links' && (is_id_field || key === 'id')) ||
+        (env === 'selector' && key === 'item_id') ||
+        (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
+        (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
+        (env === 'value' && key === 'link_id')
+      )) {
+        // if field is object, and contain _type_od
+        const _temp = setted = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } };
+        if (key === 'id') {
+          result._and = result._and ? [...result._and, _temp] : [_temp];
+        } else {
+          result[key.slice(0, -3)] = _temp;
+        }
+      } else if (type === 'object' && exp[key].hasOwnProperty('_id') && (
+        (env === 'links' && (is_id_field || key === 'id')) ||
+        (env === 'selector' && key === 'item_id') ||
+        (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
+        (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
+        (env === 'value' && key === 'link_id')
+      ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
+        // if field is object, and contain _type_od
+        const _temp = setted = serializeWhere(pathToWhere(exp[key]._id[0], ...exp[key]._id.slice(1)), 'links');
+        if (key === 'id') {
+          result._and = result._and ? [...result._and, _temp] : [_temp];
+        } else {
+          result[key.slice(0, -3)] = _temp;
+        }
+      }
+      // if not expected
+      if (!setted) {
+        const _temp = (
+          // if _and _or _not
+          _boolExpFields[key]
+        ) ? (
+          // just parse each item in array
+          serializeWhere(exp[key], env)
+         ) : (
+          // if we know context
+          _serialize?.[env]?.relations?.[key]
+        ) ? (
+          // go to this context then
+          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key])
+        ) : (
+          // else just stop
+          exp[key]
+        );
+        if (key === '_and') result._and ? result._and.push(..._temp) : result._and = _temp;
+        else result[key] = _temp;
+      }
+    }
+    return result;
+  } else {
+    if (typeof(exp) === 'undefined') throw new Error('undefined in query');
+    return exp;
+  }
+};
+
+export const serializeQuery = (exp: any, env: string = 'links'): any => {
+  const { limit, order_by, offset, distinct_on, ...where } = exp;
+  const result: any = { where: serializeWhere(where, env) };
+  if (limit) result.limit = limit;
+  if (order_by) result.order_by = order_by;
+  if (offset) result.offset = offset;
+  if (distinct_on) result.distinct_on = distinct_on;
+  return result;
+}
+
 // https://stackoverflow.com/a/38552302/4448999
 export function parseJwt (token): { userId: number; role: string; roles: string[], [key: string]: any; } {
   var base64Url = token.split('.')[1];
@@ -172,6 +386,7 @@ export interface DeepClientInstance<L = Link<number>> {
 
   await(id: number): Promise<boolean>;
 
+
   serializeWhere(exp: any, env?: string): any;
   serializeQuery(exp: any, env?: string): any;
 
@@ -282,6 +497,9 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return any;
   }
 
+  serializeQuery = serializeQuery;
+  serializeWhere = serializeWhere;
+
   async select<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: (
     Table extends 'numbers' ? BoolExpValue<number> :
     Table extends 'strings' ? BoolExpValue<string> :
@@ -300,7 +518,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!exp) {
       return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     }
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.selectReturning;
     const variables = options?.variables;
@@ -377,7 +595,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     name?: string;
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
@@ -415,7 +633,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : this.serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
+    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
@@ -451,188 +669,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     });
   };
 
-  _serialize = {
-    links: {
-      value: 'value',
-      relations: {
-        from: 'links',
-        to: 'links',
-        type: 'links',
-        in: 'links',
-        out: 'links',
-        typed: 'links',
-        selected: 'selector',
-        selectors: 'selector',
-        string: 'value',
-        number: 'value',
-        object: 'value',
-        can_rule: 'can',
-        can_action: 'can',
-        can_object: 'can',
-        can_subject: 'can',
-        down: 'tree',
-        up: 'tree',
-        tree: 'tree',
-        root: 'tree',
-      },
-    },
-    selector: {
-      relations: {
-        item: 'links',
-        selector: 'links',
-        query: 'links',
-      }
-    },
-    can: {
-      relations: {
-        rule: 'links',
-        action: 'links',
-        object: 'links',
-        subject: 'links',
-      }
-    },
-    tree: {
-      relations: {
-        link: 'links',
-        tree: 'links',
-        root: 'links',
-        parent: 'links',
-        by_link: 'tree',
-        by_tree: 'tree',
-        by_root: 'tree',
-        by_parent: 'tree',
-        by_position: 'tree',
-      }
-    },
-    value: {
-      relations: {
-        link: 'links',
-      },
-    },
-  };
-
-  _boolExpFields = {
-    _and: true,
-    _not: true,
-    _or: true,
-  };
-
-  /**
-   * Watch relations to links and values.
-   * If not-relation field values contains primitive type - string/number, it wrap into `{ _eq: value }`.
-   * If not-relation field `value` in links query level contains promitive type - stirng/number, value wrap into `{ value: { _eq: value } }`.
-   */
-  serializeWhere(exp: any, env: string = 'links'): any {
-    // if exp is array - map
-    if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => this.serializeWhere(e, env));
-    else if (typeof(exp) === 'object') {
-      // if object
-      const keys = Object.keys(exp);
-      const result: any = {};
-      // map keys
-      for (let k = 0; k < keys.length; k++) {
-        const key = keys[k];
-        const type = typeof(exp[key]);
-        let setted: any = false;
-        const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
-        // if this is link
-        if (env === 'links') {
-          // if field contain primitive type - string/number
-          if (type === 'string' || type === 'number') {
-            if (key === 'value' || key === type) {
-              // if field id link.value
-              setted = result[type] = { value: { _eq: exp[key] } };
-            } else {
-              // else just equal
-              setted = result[key] = { _eq: exp[key] };
-            }
-          } else if (!this._boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
-            // if field is not boolExp (_and _or _not) but contain array
-            // @ts-ignore
-            setted = result[key] = this.serializeWhere(this.pathToWhere(...exp[key]));
-          }
-        } else if (env === 'value') {
-          // if this is value
-          if (type === 'string' || type === 'number') {
-            setted = result[key] = { _eq: exp[key] };
-          }
-        }
-        if (type === 'object' && exp[key].hasOwnProperty('_type_of') && (
-          (env === 'links' && (is_id_field || key === 'id')) ||
-          (env === 'selector' && key === 'item_id') ||
-          (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
-          (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
-          (env === 'value' && key === 'link_id')
-        )) {
-          // if field is object, and contain _type_od
-          const _temp = setted = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } };
-          if (key === 'id') {
-            result._and = result._and ? [...result._and, _temp] : [_temp];
-          } else {
-            result[key.slice(0, -3)] = _temp;
-          }
-        } else if (type === 'object' && exp[key].hasOwnProperty('_id') && (
-          (env === 'links' && (is_id_field || key === 'id')) ||
-          (env === 'selector' && key === 'item_id') ||
-          (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
-          (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
-          (env === 'value' && key === 'link_id')
-        ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
-          // if field is object, and contain _type_od
-          const _temp = setted = this.serializeWhere(this.pathToWhere(exp[key]._id[0], ...exp[key]._id.slice(1)), 'links');
-          if (key === 'id') {
-            result._and = result._and ? [...result._and, _temp] : [_temp];
-          } else {
-            result[key.slice(0, -3)] = _temp;
-          }
-        }
-        // if not expected
-        if (!setted) {
-          const _temp = (
-            // if _and _or _not
-            this._boolExpFields[key]
-          ) ? (
-            // just parse each item in array
-            this.serializeWhere(exp[key], env)
-           ) : (
-            // if we know context
-            this._serialize?.[env]?.relations?.[key]
-          ) ? (
-            // go to this context then
-            this.serializeWhere(exp[key], this._serialize?.[env]?.relations?.[key])
-          ) : (
-            // else just stop
-            exp[key]
-          );
-          if (key === '_and') result._and ? result._and.push(..._temp) : result._and = _temp;
-          else result[key] = _temp;
-        }
-      }
-      return result;
-    } else {
-      if (typeof(exp) === 'undefined') throw new Error('undefined in query');
-      return exp;
-    }
-  };
-
-  serializeQuery(exp: any, env: string = 'links'): any {
-    const { limit, order_by, offset, distinct_on, ...where } = exp;
-    return { limit, order_by, offset, distinct_on, where: this.serializeWhere(where, env) };
-  }
-
-  pathToWhere(start: (DeepClientStartItem), ...path: DeepClientPathItem[]): any {
-    const pckg = typeof(start) === 'string' ? { type_id: _ids?.['@deep-foundation/core']?.Package, value: start } : { id: start };
-    let where: any = pckg;
-    for (let p = 0; p < path.length; p++) {
-      const item = path[p];
-      if (typeof(item) !== 'boolean') {
-        const nextWhere = { in: { type_id: _ids?.['@deep-foundation/core']?.Contain, value: item, from: where } };
-        where = nextWhere;
-      }
-    }
-    return where;
-  }
-
   /**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
    * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
@@ -645,7 +681,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (_ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }
-    const q = await this.select(this.pathToWhere(start, ...path));
+    const q = await this.select(pathToWhere(start, ...path));
     if (q.error) {
       throw q.error;
     }
@@ -796,7 +832,7 @@ export function useDeep() {
 export function useDeepQuery(query: any, options?: any): any {
   const deep = useDeep();
   const wq = useMemo(() => {
-    const sq = deep.serializeQuery(query);
+    const sq = serializeQuery(query);
     return generateQuery({
       operation: 'query',
       queries: [generateQueryData({
@@ -823,7 +859,7 @@ export function useDeepQuery(query: any, options?: any): any {
 export function useDeepSubscription(query: any, options?: any): any {
   const deep = useDeep();
   const wq = useMemo(() => {
-    const sq = deep.serializeQuery(query);
+    const sq = serializeQuery(query);
     return generateQuery({
       operation: 'subscription',
       queries: [generateQueryData({

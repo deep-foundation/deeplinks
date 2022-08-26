@@ -83,12 +83,12 @@ describe('packager', () => {
 
         // insert query
         const { data: [{ id: packageQueryId1 }] } = await admin.insert({
-          type_id: await admin.id('@deep-foundation/core', 'PackagerQuery'),
+          type_id: await admin.id('@deep-foundation/core', 'PackageQuery'),
           string: { data: { value: GIST_URL } },
         });
         // initiate installation
         const { data: [{ id: packageInstallId1 }] } = await admin.insert({
-          type_id: await admin.id('@deep-foundation/core', 'PackagerInstall'),
+          type_id: await admin.id('@deep-foundation/core', 'PackageInstall'),
           from_id: admin.linkId, // actual user only can be here
           to_id: packageQueryId1,
         });
@@ -110,12 +110,12 @@ describe('packager', () => {
 
         // insert query
         const { data: [{ id: packageQueryId2 }] } = await admin.insert({
-          type_id: await admin.id('@deep-foundation/core', 'PackagerQuery'),
+          type_id: await admin.id('@deep-foundation/core', 'PackageQuery'),
           string: { data: { value: GIST_URL } },
         });
         // initiate installation
         const { data: [{ id: packagePublishId }] } = await admin.insert({
-          type_id: await admin.id('@deep-foundation/core', 'PackagerPublish'),
+          type_id: await admin.id('@deep-foundation/core', 'PackagePublish'),
           from_id: packageId,
           to_id: packageQueryId2,
         });

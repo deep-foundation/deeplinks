@@ -182,31 +182,31 @@ export class Packager<L extends Link<any>> {
           log('insertItem linkInsert error', insert);
           errors.push(linkInsert?.errors);
         }
-      }
-      log('insertItem promise', item.id);
-      await this.client.await(+item.id);
-      log('insertItem promise awaited', item.id);
-      if (item.value && !item.package) {
-        log('insertItem value', item);
-        let valueLink
-        if (!item.type) {
-          valueLink = items.find(i => i.id === item.id && !!i.type);
-          log('insertItem .value', item, valueLink);  
-        } else {
-          valueLink = item;
-        }
-        if (!valueLink) {
-          log('insertItem insertValue error');
-          errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
-        }
-        else {
-          log('insertItem tables');
-          const type = typeof(item?.value?.value);
-          const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s` as any, name: 'IMPORT_PACKAGE_VALUE' });
-          log('insertItem valueInsert', valueInsert);
-          if (valueInsert?.errors) {
-            log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });
-            errors.push(valueInsert?.errors);
+        log('insertItem promise', item.id);
+        await this.client.await(+item.id);
+        log('insertItem promise awaited', item.id);
+        if (item.value && !item.package) {
+          log('insertItem value', item);
+          let valueLink
+          if (!item.type) {
+            valueLink = items.find(i => i.id === item.id && !!i.type);
+            log('insertItem .value', item, valueLink);  
+          } else {
+            valueLink = item;
+          }
+          if (!valueLink) {
+            log('insertItem insertValue error');
+            errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
+          }
+          else {
+            log('insertItem tables');
+            const type = typeof(item?.value?.value);
+            const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s` as any, name: 'IMPORT_PACKAGE_VALUE' });
+            log('insertItem valueInsert', valueInsert);
+            if (valueInsert?.errors) {
+              log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });
+              errors.push(valueInsert?.errors);
+            }
           }
         }
       }
@@ -439,8 +439,8 @@ export class Packager<L extends Link<any>> {
     const dependedLinks = [];
     let packageId;
     const data: PackageItem[] = [];
+    packageId = 'package';
     if (pckg.package.name !== corePackage) {
-      packageId = 'package';
       containsHash[packageId] = ++counter;
       // package
       data.push({

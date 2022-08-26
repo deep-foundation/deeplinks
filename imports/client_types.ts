@@ -1,3 +1,12 @@
+export type Query = BoolExpLink | number;
+
+export interface QueryLink extends BoolExpLink {
+  limit?: number;
+  order_by?: { [key: string]: 'asc'|'desc' };
+  offset?: number;
+  distinct_on?: [string];
+}
+
 export interface BoolExp<T> {
   _and?: T[];
   _or?: T[];
@@ -143,13 +152,13 @@ export interface BoolExpHandler extends BoolExp<BoolExpCan> {
 export type ComparasionType<T> = ComparasionExp<T> | T;
 export interface ComparasionExp<T> {
   _eq?: T;
+  _neq?: T;
   _gt?: T;
   _gte?: T;
-  _in?: T[];
-  _is_null?: boolean;
   _lt?: T;
   _lte?: T;
-  _neq?: T;
+  _is_null?: boolean;
+  _in?: T[];
   _nin?: T[];
   _type_of?: T;
   _id?: [any, ...any[]];

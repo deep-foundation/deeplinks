@@ -147,10 +147,10 @@ export const corePckg: Package = {
     { id: 'Supports', type: 'Type', from: 'Any', to: 'Any' },
     { id: 'dockerSupportsJs', type: 'Supports', from: 'JSDockerIsolationProvider', to: 'JSExecutionProvider' },
 
-    { id: 'PackagerInstall', type: 'Type', from: 'Any', to: 'PackagerQuery' },
-    { id: 'PackagerPublish', type: 'Type', from: 'Package', to: 'PackagerQuery' },
+    { id: 'PackageInstall', type: 'Type', from: 'Any', to: 'PackageQuery' },
+    { id: 'PackagePublish', type: 'Type', from: 'Package', to: 'PackageQuery' },
 
-    { id: 'packagerInstallCode', type: 'SyncTextFile', value: { value: /*javascript*/`
+    { id: 'packageInstallCode', type: 'SyncTextFile', value: { value: /*javascript*/`
 async ({ deep, require, gql, data: { newLink } }) => {
   const { data: [pq] } = await deep.select({ id: newLink.to_id });
   const { data: { packager_install: imported }, error } = await deep.apolloClient.query({
@@ -175,10 +175,10 @@ async ({ deep, require, gql, data: { newLink } }) => {
   return imported;
 }
     ` } },
-    { id: 'packagerInstallCodeHandler', type: 'Handler', from: 'dockerSupportsJs', to: 'packagerInstallCode' },
-    { id: 'packagerInstallCodeHandleInsert', type: 'HandleInsert', from: 'PackagerInstall', to: 'packagerInstallCodeHandler' },
+    { id: 'packageInstallCodeHandler', type: 'Handler', from: 'dockerSupportsJs', to: 'packageInstallCode' },
+    { id: 'packageInstallCodeHandleInsert', type: 'HandleInsert', from: 'PackageInstall', to: 'packageInstallCodeHandler' },
 
-    { id: 'packagerPublishCode', type: 'SyncTextFile', value: { value: /*javascript*/`
+    { id: 'packagePublishCode', type: 'SyncTextFile', value: { value: /*javascript*/`
 async ({ deep, require, gql, data: { newLink } }) => {
   const { data: [pq] } = await deep.select({ id: newLink.to_id });
   const { data: { packager_publish: exported }, error } = await deep.apolloClient.query({
@@ -198,26 +198,26 @@ async ({ deep, require, gql, data: { newLink } }) => {
   return exported;
 }
     ` } },
-    { id: 'packagerPublishCodeHandler', type: 'Handler', from: 'dockerSupportsJs', to: 'packagerPublishCode' },
-    { id: 'packagerPublishCodeHandleInsert', type: 'HandleInsert', from: 'PackagerPublish', to: 'packagerPublishCodeHandler' },
+    { id: 'packagePublishCodeHandler', type: 'Handler', from: 'dockerSupportsJs', to: 'packagePublishCode' },
+    { id: 'packagePublishCodeHandleInsert', type: 'HandleInsert', from: 'PackagePublish', to: 'packagePublishCodeHandler' },
 
     { id: 'Active', type: 'Type', from: 'Any', to: 'Any' },
 
-    { id: 'AllowPackagerInstall', type: 'Operation' },
-    { id: 'AllowPackagerPublish', type: 'Operation' },
+    { id: 'AllowPackageInstall', type: 'Operation' },
+    { id: 'AllowPackagePublish', type: 'Operation' },
 
     { id: 'PromiseOut', type: 'Type', from: 'Promise', to: 'Any' },
     { id: 'promiseOutValue', type: 'Value', from: 'PromiseOut', to: 'String' },
 
-    { id: 'PackagerQuery', type: 'Type' },
-    { id: 'packagerQueryValue', type: 'Value', from: 'PackagerQuery', to: 'String' },
+    { id: 'PackageQuery', type: 'Type' },
+    { id: 'packageQueryValue', type: 'Value', from: 'PackageQuery', to: 'String' },
 
     { id: 'Port', type: 'Type', value: { value: 'Port' } },
     { id: 'portValue', type: 'Value', from: 'Port', to: 'Number' },
     { id: 'HandlePort', type: 'HandleOperation', from: 'Port', to: 'Any' },
 
-    { id: 'PackagerInstalled', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // #TODO
-    { id: 'PackagerPublished', type: 'Type', from: 'Package', to: 'PackagerQuery' }, // #TODO
+    { id: 'PackageInstalled', type: 'Type', from: 'Package', to: 'PackageQuery' }, // #TODO
+    { id: 'PackagePublished', type: 'Type', from: 'Package', to: 'PackageQuery' }, // #TODO
 
     // Route
     { id: 'Route', type: 'Type' },
@@ -296,69 +296,11 @@ async ({ deep, require, gql, data: { newLink } }) => {
 
     { id: 'HandleClient', type: 'HandleOperation', from: 'Any', to: 'Handler' },
 
-    { id: 'TypeSymbol', type: 'Symbol', from: 'Type', to: 'Type', value: { value: '⭐️' } },
-    { id: 'PackageSymbol', type: 'Symbol', from: 'Package', to: 'Package', value: { value: '📦' } },
-    { id: 'ContainSymbol', type: 'Symbol', from: 'Contain', to: 'Contain', value: { value: '🗂' } },
-    { id: 'ValueSymbol', type: 'Symbol', from: 'Value', to: 'Value', value: { value: '📎' } },
-    { id: 'PromiseSymbol', type: 'Symbol', from: 'Promise', to: 'Promise', value: { value: '⏳' } },
-    { id: 'ThenSymbol', type: 'Symbol', from: 'Then', to: 'Then', value: { value: '🔗' } },
-    { id: 'ResolvedSymbol', type: 'Symbol', from: 'Resolved', to: 'Resolved', value: { value: '🟢' } },
-    { id: 'RejectedSymbol', type: 'Symbol', from: 'Rejected', to: 'Rejected', value: { value: '🔴' } },
-    { id: 'SelectorSymbol', type: 'Symbol', from: 'Selector', to: 'Selector', value: { value: '🪢' } },
-    { id: 'SelectorIncludeSymbol', type: 'Symbol', from: 'SelectorInclude', to: 'SelectorInclude', value: { value: '🪡' } },
-    { id: 'SelectorExcludeSymbol', type: 'Symbol', from: 'SelectorExclude', to: 'SelectorExclude', value: { value: '🪡' } },
-    { id: 'RuleSymbol', type: 'Symbol', from: 'Rule', to: 'Rule', value: { value: '📜' } },
-    { id: 'RuleSubjectSymbol', type: 'Symbol', from: 'RuleSubject', to: 'RuleSubject', value: { value: '👤' } },
-    { id: 'RuleObjectSymbol', type: 'Symbol', from: 'RuleObject', to: 'RuleObject', value: { value: '🍏' } },
-    { id: 'RuleActionSymbol', type: 'Symbol', from: 'Rule', to: 'Rule', value: { value: '🔥' } },
-    { id: 'UserSymbol', type: 'Symbol', from: 'User', to: 'User', value: { value: '👤' } },
-    { id: 'OperationSymbol', type: 'Symbol', from: 'Operation', to: 'Operation', value: { value: '🔥' } },
-    { id: 'FileSymbol', type: 'Symbol', from: 'File', to: 'File', value: { value: '💾' } },
-    { id: 'SyncTextFileSymbol', type: 'Symbol', from: 'SyncTextFile', to: 'SyncTextFile', value: { value: '📄' } },
-    { id: 'ExecutionProviderSymbol', type: 'Symbol', from: 'ExecutionProvider', to: 'ExecutionProvider', value: { value: '🔌' } },
-    { id: 'IsolationProviderSymbol', type: 'Symbol', from: 'IsolationProvider', to: 'IsolationProvider', value: { value: '📡' } },
-    { id: 'AsyncFileSymbol', type: 'Symbol', from: 'AsyncFile', to: 'AsyncFile', value: { value: '💽' } },
-    { id: 'HandlerSymbol', type: 'Symbol', from: 'Handler', to: 'Handler', value: { value: '💡' } },
-    { id: 'TreeSymbol', type: 'Symbol', from: 'Tree', to: 'Tree', value: { value: '🌲' } },
-    { id: 'TreeIncludeSymbol', type: 'Symbol', from: 'TreeInclude', to: 'TreeInclude', value: { value: '🌿' } },
-    { id: 'PackageNamespaceSymbol', type: 'Symbol', from: 'PackageNamespace', to: 'PackageNamespace', value: { value: '🎁' } },
-    { id: 'PackageActiveSymbol', type: 'Symbol', from: 'PackageActive', to: 'PackageActive', value: { value: '📯' } },
-    { id: 'PackageVersionSymbol', type: 'Symbol', from: 'PackageVersion', to: 'PackageVersion', value: { value: '🏷' } },
-    { id: 'HandleOperationSymbol', type: 'Symbol', from: 'HandleOperation', to: 'HandleOperation', value: { value: '🛠' } },
-    { id: 'PromiseResultSymbol', type: 'Symbol', from: 'PromiseResult', to: 'PromiseResult', value: { value: '🔖' } },
-    { id: 'PromiseReasonSymbol', type: 'Symbol', from: 'PromiseReason', to: 'PromiseReason', value: { value: '🧲' } },
-    { id: 'FocusSymbol', type: 'Symbol', from: 'Focus', to: 'Focus', value: { value: '📌' } },
-    { id: 'QuerySymbol', type: 'Symbol', from: 'Query', to: 'Query', value: { value: '🔎' } },
-    { id: 'SpaceSymbol', type: 'Symbol', from: 'Space', to: 'Space', value: { value: '🔮' } },
-    { id: 'JoinSymbol', type: 'Symbol', from: 'Join', to: 'Join', value: { value: '🤝' } },
-    { id: 'SelectorTreeSymbol', type: 'Symbol', from: 'SelectorTree', to: 'SelectorTree', value: { value: '🌲' } },
-    { id: 'SelectorFilterSymbol', type: 'Symbol', from: 'SelectorFilter', to: 'SelectorFilter', value: { value: '🔎' } },
-    { id: 'ScheduleSymbol', type: 'Symbol', from: 'Schedule', to: 'Schedule', value: { value: '⏲' } },
-    { id: 'RouterSymbol', type: 'Symbol', from: 'Router', to: 'Router', value: { value: '🚦' } },
-    { id: 'SupportsSymbol', type: 'Symbol', from: 'Supports', to: 'Supports', value: { value: '🔋' } },
-    { id: 'PackagerInstallSymbol', type: 'Symbol', from: 'PackagerInstall', to: 'PackagerInstall', value: { value: '📥' } },
-    { id: 'PackagerPublishSymbol', type: 'Symbol', from: 'PackagerPublish', to: 'PackagerPublish', value: { value: '📤' } },
-    { id: 'ActiveSymbol', type: 'Symbol', from: 'Active', to: 'Active', value: { value: '💡' } },
-    { id: 'PromiseOutSymbol', type: 'Symbol', from: 'PromiseOut', to: 'PromiseOut', value: { value: '🧷' } },
-    { id: 'PackagerQuerySymbol', type: 'Symbol', from: 'PackagerQuery', to: 'PackagerQuery', value: { value: '🏷' } },
-    { id: 'PortSymbol', type: 'Symbol', from: 'Port', to: 'Port', value: { value: '🗜' } },
-    { id: 'RouteSymbol', type: 'Symbol', from: 'Route', to: 'Route', value: { value: '🚏' } },
-    { id: 'RouterListeningSymbol', type: 'Symbol', from: 'RouterListening', to: 'RouterListening', value: { value: '🔗' } },
-    { id: 'RouterStringUseSymbol', type: 'Symbol', from: 'RouterStringUse', to: 'RouterStringUse', value: { value: '🔗' } },
-    { id: 'AuthorizationSymbol', type: 'Symbol', from: 'Authorization', to: 'Authorization', value: { value: '🔑' } },
-    { id: 'GeneratedFromSymbol', type: 'Symbol', from: 'GeneratedFrom', to: 'GeneratedFrom', value: { value: '🏗' } },
-    { id: 'SymbolSymbol', type: 'Symbol', from: 'Symbol', to: 'Symbol', value: { value: '🙂' } },
-
-    // HandlingError
     { id: 'HandlingError', type: 'Type' },
-    // HandlingErrorValue
     { id: 'handlingErrorValue', type: 'Value', from: 'HandlingError', to: 'Object' },
-    // HandlingErrorReason
     { id: 'HandlingErrorReason', type: 'Type', from: 'HandlingError', to: 'Any' },
-    // HandlingErrorLink
     { id: 'HandlingErrorLink', type: 'Type', from: 'HandlingError', to: 'Any' },
 
-    // GqlHandler
     { id: 'GqlHandler', type: 'Type', from: 'Route', to: 'Route' },
 
   ],
