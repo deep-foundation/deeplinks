@@ -583,8 +583,11 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
         }
       };
       handleGqlHandlerDebug('options', JSON.stringify(options, null, 2));
-      await waitOn({ resources: [`${url.replace('http://','http-get://')}?query=%7B__typename%7D`] });
+      const waitOnUrl = `${url.replace(DEEPLINKS_ROUTE_HANDLERS_HOST, "localhost").replace('http://','http-get://')}?query=%7B__typename%7D`
+      handleGqlHandlerDebug('waitOnUrl', waitOnUrl);
+      await waitOn({ resources: [waitOnUrl] });
       await api.query(options);
+      handleGqlHandlerDebug('remote schema is added');
     }
   } else if (operation == 'DELETE') {
     // delete gql handler
