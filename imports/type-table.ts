@@ -168,7 +168,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
       -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, NEW."link_id");
-      IF SELECTOR.query_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
@@ -207,7 +207,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
       -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, NEW."link_id");
-      IF SELECTOR.query_id IS NULL OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, NEW."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
@@ -246,7 +246,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
       -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, OLD."link_id");
-      IF SELECTOR.query_id IS NULL OR bool_exp_execute(OLD."link_id", SELECTOR.query_id, user_id) THEN
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."link_id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);

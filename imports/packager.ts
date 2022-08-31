@@ -317,7 +317,7 @@ export class Packager<L extends Link<any>> {
             if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}].type`);
             if (item.hasOwnProperty('from')) if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}].from`);
             if (item.hasOwnProperty('to')) if (typeof(item?.to) !== 'string' && typeof(item?.to) !== 'number') errors.push(`!item[${i}].to`);
-            if (item.hasOwnProperty('value')) {
+            if (item.value) {
               if (typeof(item?.value) !== 'object') errors.push(`!item[${i}].value`);
               else {
                 if (typeof(item?.value?.value) !== 'number' && typeof(item?.value?.value) !== 'string' && typeof(item?.value?.value) !== 'object') errors.push(`!item[${i}].value.value`);
