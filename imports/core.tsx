@@ -301,7 +301,10 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'HandlingErrorReason', type: 'Type', from: 'HandlingError', to: 'Any' },
     { id: 'HandlingErrorLink', type: 'Type', from: 'HandlingError', to: 'Any' },
 
-    { id: 'GqlHandler', type: 'Type', from: 'Route', to: 'Route' },
+    { id: 'GqlEndpoint', type: 'Type' },
+    { id: 'MainGqlEndpoint', type: 'GqlEndpoint' },
+
+    { id: 'GqlHandler', type: 'Type', from: 'Route', to: 'GqlEndpoint' },
 
   ],
   errors: [],
