@@ -1184,7 +1184,7 @@ describe('Async handlers', () => {
       const gqlHandlerLink = (await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'GqlHandler'),
         from_id: routeLink.id,
-        to_id: routeLink.id,
+        to_id: await deep.id('@deep-foundation/core', 'MainGqlEndpoint'),
       }, {
         returning: `id`,
         name: 'INSERT_GQL_HANDLER_LINK',

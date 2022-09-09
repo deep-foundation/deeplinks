@@ -514,7 +514,7 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
                 in: {
                   type_id: { _eq: ${routerStringUseTypeId} }
                   from: {
-                    in: {
+                    out: {
                       id: { _eq: ${gqlHandlerLink?.id} }
                     }
                   }
@@ -537,7 +537,7 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
                   routeString: value
                   route: from {
                     id
-                    gqlHandler: in(where: {
+                    gqlHandler: out(where: {
                       id: { _eq: "${gqlHandlerLink?.id}" }
                     }) {
                       id
