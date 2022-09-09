@@ -31,6 +31,8 @@ export const DOCKER = process.env.DOCKER || '0';
 
 const delay = time => new Promise(res => setTimeout(res, time));
 
+const toJSON = (data) => JSON.stringify(data, Object.getOwnPropertyNames(data), 2);
+
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
@@ -491,9 +493,9 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   }
 }
 
-export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'INSERT' | 'DELETE') {
+export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' | 'DELETE') {
   const handleGqlHandlerDebug = Debug('deeplinks:eh:links:handleGqlHandler');
-  handleGqlHandlerDebug('handleGqlHandlerLink', handleGqlHandlerLink);
+  handleGqlHandlerDebug('gqlHandlerLink', gqlHandlerLink);
   handleGqlHandlerDebug('operation', operation);
   if (operation == 'INSERT') {
     // insert gql handler
@@ -513,7 +515,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
                   type_id: { _eq: ${routerStringUseTypeId} }
                   from: {
                     in: {
-                      id: { _eq: ${handleGqlHandlerLink?.id} }
+                      id: { _eq: ${gqlHandlerLink?.id} }
                     }
                   }
                 }
@@ -536,7 +538,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
                   route: from {
                     id
                     gqlHandler: in(where: {
-                      id: { _eq: "${handleGqlHandlerLink?.id}" }
+                      id: { _eq: "${gqlHandlerLink?.id}" }
                     }) {
                       id
                     }
@@ -573,7 +575,7 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
         type: 'add_remote_schema',
         args: {
           // TODO: It is now possible to create only single schema per all urls
-          name: `handle_gql_handler_${handleGqlHandlerLink?.id}`,
+          name: `handle_gql_handler_${gqlHandlerLink?.id}`,
           definition: {
             url,
             headers: [{ name: 'x-hasura-client', value: 'deeplinks-gql-handler' }],
@@ -586,15 +588,38 @@ export async function handleGqlHandler(handleGqlHandlerLink: any, operation: 'IN
       const waitOnUrl = `${url.replace(DEEPLINKS_ROUTE_HANDLERS_HOST, "localhost").replace('http://','http-get://')}?query=%7B__typename%7D`
       handleGqlHandlerDebug('waitOnUrl', waitOnUrl);
       await waitOn({ resources: [waitOnUrl] });
-      await api.query(options);
-      handleGqlHandlerDebug('remote schema is added');
+      try 
+      {
+        await api.query(options);
+        handleGqlHandlerDebug('remote schema is added');
+      }
+      catch(rejected)
+      {
+        const processedRejection = JSON.parse(toJSON(rejected));
+        console.log('rejected', processedRejection);
+        const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+        console.log('handlingErrorTypeId', handlingErrorTypeId);
+
+        const insertResult = await deep.insert({
+          type_id: handlingErrorTypeId,
+          object: { data: { value: processedRejection } },
+          out: { data: [
+            {
+              type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+              to_id: gqlHandlerLink?.id,
+            },
+          ]},
+        }, {
+          name: 'INSERT_HANDLING_ERROR',
+        }) as any;
+      }
     }
   } else if (operation == 'DELETE') {
     // delete gql handler
     await api.query({
       type: 'remove_remote_schema',
       args: {
-        name: `handle_gql_handler_${handleGqlHandlerLink?.id}`,
+        name: `handle_gql_handler_${gqlHandlerLink?.id}`,
       },  
     });
   }
