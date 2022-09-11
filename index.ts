@@ -1,4 +1,5 @@
 import atob from 'atob';
+import { URL } from 'url';
 import express from 'express';
 import router from './imports/router/index';
 import generateJwtServer from './imports/router/jwt';
@@ -61,6 +62,19 @@ app.use('/gql', createProxyMiddleware({
   },
 }));
 
+app.get(['/file'], createProxyMiddleware({
+  target: DEEPLINKS_HASURA_STORAGE_URL,
+  changeOrigin: true,
+  ws: true,
+  pathRewrite: async (path, req) => {
+    const headers = req.headers;
+    console.log(headers);
+    const newurl = new URL(`${headers['host']}${path}`);
+    const linkId = newurl.searchParams['linkid'];
+    return `/v1/files/${linkId}`;
+  }
+}));
+
 app.post('/file', async (req, res, next) => {
   // canObject
   const headers = req.headers;
@@ -80,35 +94,6 @@ app.post('/file', async (req, res, next) => {
   await createProxyMiddleware({
     target: DEEPLINKS_HASURA_STORAGE_URL,
     selfHandleResponse: true,
-    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
-      //update linkId
-      const response = responseBuffer.toString('utf8'); // convert buffer to string
-      try {
-        const files = JSON.parse(response)?.processedFiles;
-        if (!files) return response;
-        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
-          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId}){
-            returning {
-              id
-              link_id
-            }
-          }
-        }`;
-        console.log('files[0].id', files[0].id);
-        const updated = await client.mutate({
-          mutation: UPDATE_FILE_LINKID,
-          variables: { 
-            fileid: files[0].id,
-            linkId: linkId,
-          },
-        });
-        console.log('linkid',linkId)
-        console.log('data',updated?.data?.updateFiles?.returning);
-      } catch (e){
-        console.log('error: ', e);
-      }
-      return response;
-    }),
     changeOrigin: true,
     ws: true,
     pathRewrite: {
