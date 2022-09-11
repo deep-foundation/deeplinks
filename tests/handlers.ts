@@ -1051,7 +1051,7 @@ describe('Async handlers', () => {
       await waitOn({ resources: [url], reverse: true });
       log("route handler is down");
     });
-    it(`handle route gql handler`, async () => {
+    it.only(`handle route gql handler`, async () => {
       // const port = await getPort(); // conflicts with container-controller port allocation
       const port = 4002;
       const field = 'constant'
@@ -1181,10 +1181,10 @@ describe('Async handlers', () => {
       log({ portLink, routerListening, router, routerStringUse, routeLink, handleRoute, handler, handlerJSFile, ownerContainHandler});
 
       // insert gql handler link
-      const gqlHandlerLink = (await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'GqlHandler'),
-        from_id: routeLink.id,
-        to_id: await deep.id('@deep-foundation/core', 'MainGqlEndpoint'),
+      const handleGqlLink = (await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'HandleGql'),
+        from_id: await deep.id('@deep-foundation/core', 'MainGqlEndpoint'),
+        to_id: handleRoute.id,
       }, {
         returning: `id`,
         name: 'INSERT_GQL_HANDLER_LINK',
@@ -1202,7 +1202,7 @@ describe('Async handlers', () => {
       assert.equal(data?.constant, 42);
 
       // delete all
-      await deep.delete(gqlHandlerLink?.id);
+      await deep.delete(handleGqlLink?.id);
       await deep.delete(handleRoute?.id);
       await deep.delete(ownerContainHandler?.id);
       await deep.delete(handler?.id);

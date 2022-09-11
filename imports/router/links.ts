@@ -493,21 +493,22 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   }
 }
 
-export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' | 'DELETE') {
-  const handleGqlHandlerDebug = Debug('deeplinks:eh:links:handleGqlHandler');
-  handleGqlHandlerDebug('gqlHandlerLink', gqlHandlerLink);
-  handleGqlHandlerDebug('operation', operation);
+export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELETE') {
+  const handleGqlDebug = Debug('deeplinks:eh:links:handleGql');
+  handleGqlDebug('handleGqlLink', handleGqlLink);
+  handleGqlDebug('operation', operation);
   if (operation == 'INSERT') {
     // insert gql handler
     const portTypeId = await deep.id('@deep-foundation/core', 'Port');
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
 
     const routesResult = await client.query({
       query: gql`
         query {
           ports: links(where: {
-            type_id: { _eq: "${portTypeId}" },
+            type_id: { _eq: ${portTypeId} },
             in: {
               type_id: { _eq: ${routerListeningTypeId} }
               from: {
@@ -515,7 +516,10 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
                   type_id: { _eq: ${routerStringUseTypeId} }
                   from: {
                     out: {
-                      id: { _eq: ${gqlHandlerLink?.id} }
+                      type_id: { _eq: ${handleRouteTypeId} },
+                      in: {
+                        id: { _eq: ${handleGqlLink?.id} }
+                      }
                     }
                   }
                 }
@@ -525,22 +529,30 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
             id
             port: value
             routerListening: in(where: {
-              type_id: { _eq: "${routerListeningTypeId}" }
+              type_id: { _eq: ${routerListeningTypeId} }
             }) {
               id
               router: from {
                 id
                 routerStringUse: in(where: {
-                  type_id: { _eq: "${routerStringUseTypeId}" }
+                  type_id: { _eq: ${routerStringUseTypeId} }
                 }) {
                   id
                   routeString: value
                   route: from {
                     id
-                    gqlHandler: out(where: {
-                      id: { _eq: "${gqlHandlerLink?.id}" }
+                    handleRoute: out(where: {
+                      type_id: { _eq: ${handleRouteTypeId} },
+                      in: {
+                        id: { _eq: ${handleGqlLink?.id} }
+                      }
                     }) {
                       id
+                      handleGql: in(where: {
+                        id: { _eq: ${handleGqlLink?.id} }
+                      }) {
+                        id
+                      }
                     }
                   }
                 }
@@ -550,7 +562,7 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
         }
       `, variables: {} });
     const portsResult = routesResult.data.ports;
-    handleGqlHandlerDebug('portsResult', JSON.stringify(portsResult, null, 2));
+    handleGqlDebug('portsResult', JSON.stringify(portsResult, null, 2));
 
     const urls = {};
 
@@ -562,20 +574,21 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
-          urls[url] = true;
+          urls[url] = routerStringUse?.route?.handleRoute?.[0]?.id;
         }
       }
     }
 
-    handleGqlHandlerDebug('urls', JSON.stringify(urls, null, 2));
+    handleGqlDebug('urls', JSON.stringify(urls, null, 2));
 
     for (const url of Object.keys(urls)) {
+      const handleRouteId = urls[url];
       // add_remote_schema
       const options = {
         type: 'add_remote_schema',
         args: {
           // TODO: It is now possible to create only single schema per all urls
-          name: `handle_gql_handler_${gqlHandlerLink?.id}`,
+          name: `handle_gql_handler_${handleGqlLink?.id}`,
           definition: {
             url,
             headers: [{ name: 'x-hasura-client', value: 'deeplinks-gql-handler' }],
@@ -584,14 +597,14 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
           }
         }
       };
-      handleGqlHandlerDebug('options', JSON.stringify(options, null, 2));
+      handleGqlDebug('options', JSON.stringify(options, null, 2));
       const waitOnUrl = `${url.replace(DEEPLINKS_ROUTE_HANDLERS_HOST, "localhost").replace('http://','http-get://')}?query=%7B__typename%7D`
-      handleGqlHandlerDebug('waitOnUrl', waitOnUrl);
+      handleGqlDebug('waitOnUrl', waitOnUrl);
       await waitOn({ resources: [waitOnUrl] });
       try 
       {
         await api.query(options);
-        handleGqlHandlerDebug('remote schema is added');
+        handleGqlDebug('remote schema is added');
       }
       catch(rejected)
       {
@@ -606,7 +619,7 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
           out: { data: [
             {
               type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
-              to_id: gqlHandlerLink?.id,
+              to_id: handleRouteId,
             },
           ]},
         }, {
@@ -619,8 +632,8 @@ export async function handleGqlHandler(gqlHandlerLink: any, operation: 'INSERT' 
     await api.query({
       type: 'remove_remote_schema',
       args: {
-        name: `handle_gql_handler_${gqlHandlerLink?.id}`,
-      },  
+        name: `handle_gql_handler_${handleGqlLink?.id}`,
+      },
     });
   }
 }
@@ -739,9 +752,9 @@ export default async (req, res) => {
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleSchedule(current, operation);
         }
-        const gqlHandlerTypeId = await deep.id('@deep-foundation/core', 'GqlHandler');
-        if (typeId === gqlHandlerTypeId && (operation === 'INSERT' || operation === 'DELETE')) {
-          await handleGqlHandler(current, operation);
+        const handleGqlTypeId = await deep.id('@deep-foundation/core', 'HandleGql');
+        if (typeId === handleGqlTypeId && (operation === 'INSERT' || operation === 'DELETE')) {
+          await handleGql(current, operation);
         }
         
         if (typeId === handlePortId && (operation === 'INSERT' || operation === 'DELETE')) {

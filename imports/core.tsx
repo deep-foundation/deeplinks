@@ -304,7 +304,7 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'GqlEndpoint', type: 'Type' },
     { id: 'MainGqlEndpoint', type: 'GqlEndpoint' },
 
-    { id: 'GqlHandler', type: 'Type', from: 'Route', to: 'GqlEndpoint' },
+    { id: 'HandleGql', type: 'Type', from: 'GqlEndpoint', to: 'HandleRoute' },
 
   ],
   errors: [],
