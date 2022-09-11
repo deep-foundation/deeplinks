@@ -1,3 +1,4 @@
+import atob from 'atob';
 import express from 'express';
 import router from './imports/router/index';
 import generateJwtServer from './imports/router/jwt';
@@ -6,7 +7,7 @@ import generatePackagerServer from './imports/router/packager';
 import generateAuthorizationServer from './imports/router/authorization';
 import axios from 'axios';
 import http from 'http';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 import expressPlayground from 'graphql-playground-middleware-express';
 import moesif from 'moesif-nodejs';
 import Debug from 'debug';
@@ -19,6 +20,7 @@ import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/
 import _ from 'lodash';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
+const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
@@ -58,6 +60,62 @@ app.use('/gql', createProxyMiddleware({
     "/gql": "/v1/graphql",
   },
 }));
+
+app.post('/file', async (req, res, next) => {
+  // canObject
+  const headers = req.headers;
+  const linkId = headers['linkid'] ? +headers['linkid'] : +headers['linkId'];
+  let userId;
+  try {
+    const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
+    userId = JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+  } catch (e){
+    console.log('error: ', e);
+  }
+  if (!userId) res.status(403).send('Update CAN NOT be processes');
+  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType'));
+  if (!canResult) next();
+  console.log('canResult', canResult);
+  //insert file
+  await createProxyMiddleware({
+    target: DEEPLINKS_HASURA_STORAGE_URL,
+    selfHandleResponse: true,
+    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+      //update linkId
+      const response = responseBuffer.toString('utf8'); // convert buffer to string
+      try {
+        const files = JSON.parse(response)?.processedFiles;
+        if (!files) return response;
+        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
+          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId}){
+            returning {
+              id
+              link_id
+            }
+          }
+        }`;
+        console.log('files[0].id', files[0].id);
+        const updated = await client.mutate({
+          mutation: UPDATE_FILE_LINKID,
+          variables: { 
+            fileid: files[0].id,
+            linkId: linkId,
+          },
+        });
+        console.log('linkid',linkId)
+        console.log('data',updated?.data?.updateFiles?.returning);
+      } catch (e){
+        console.log('error: ', e);
+      }
+      return response;
+    }),
+    changeOrigin: true,
+    ws: true,
+    pathRewrite: {
+      "/file": "/v1/files",
+    },
+  })(req,res,next);
+});
 
 //   hasura-admin
 
