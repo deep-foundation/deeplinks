@@ -628,13 +628,56 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       }
     }
   } else if (operation == 'DELETE') {
-    // delete gql handler
-    await api.query({
-      type: 'remove_remote_schema',
-      args: {
-        name: `handle_gql_handler_${handleGqlLink?.id}`,
-      },
-    });
+    const reasonResult = await client.query({
+      query: gql`
+        query {
+          handleGql: links(where: {
+            id: { _eq: ${handleGqlLink?.id} }
+          }) {
+            id
+          }
+          handleRoute: links(where: {
+            id: { _eq: ${handleGqlLink?.to_id} }
+          }) {
+            id
+          }
+        }
+      `, variables: {} });
+    const data = reasonResult.data;
+    const reasonId = data?.handleGql?.[0]?.id ?? data?.handleRoute?.[0]?.id;
+    handleGqlDebug('reasonId', reasonId);
+
+    try 
+    {
+      // delete gql handler
+      await api.query({
+        type: 'remove_remote_schema',
+        args: {
+          name: `handle_gql_handler_${handleGqlLink?.id}`,
+        },
+      });
+      handleGqlDebug('remote schema is removed');
+    }
+    catch(rejected)
+    {
+      const processedRejection = JSON.parse(toJSON(rejected));
+      console.log('rejected', processedRejection);
+      const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+      console.log('handlingErrorTypeId', handlingErrorTypeId);
+
+      const insertResult = await deep.insert({
+        type_id: handlingErrorTypeId,
+        object: { data: { value: processedRejection } },
+        out: { data: [
+          {
+            type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+            to_id: reasonId,
+          },
+        ]},
+      }, {
+        name: 'INSERT_HANDLING_ERROR',
+      }) as any;
+    }
   }
 }
 
