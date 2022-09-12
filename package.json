@@ -51,6 +51,7 @@
     "jsonwebtoken": "^8.5.1",
     "microtime": "^3.0.0",
     "moesif-nodejs": "^3.1.19",
+    "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.15",
     "rimraf": "^3.0.2",
     "supports-color": "^9.2.1",

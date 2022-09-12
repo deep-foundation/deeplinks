@@ -19,6 +19,8 @@ import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
+import multer from 'multer';
+const upload = multer();
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -70,19 +72,22 @@ app.get(['/file'], createProxyMiddleware({
     const headers = req.headers;
     console.log(headers);
     const newurl = new URL(`${headers['host']}${path}`);
-    const linkId = newurl.searchParams['linkid'];
+    const linkId = newurl.searchParams['linkId'];
     return `/v1/files/${linkId}`;
   }
 }));
 
+app.use(upload.single('file[]'),);
 app.post('/file', async (req, res, next) => {
   // canObject
   const headers = req.headers;
-  const linkId = headers['linkid'] ? +headers['linkid'] : +headers['linkId'];
   let userId;
+  let linkId;
   try {
     const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
     userId = JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id'];
+    linkId = JSON.parse(req.body.metadata[0]).id;
+    console.log('linkId',linkId);
   } catch (e){
     console.log('error: ', e);
   }
