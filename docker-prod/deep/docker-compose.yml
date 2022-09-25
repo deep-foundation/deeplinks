@@ -42,7 +42,7 @@ services:
       - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=link'
   case:
     container_name: deep-case
-    image: deepf/deepcase:dev
+    image: deepf/deepcase:main
     networks:
       - network
     ports:
@@ -54,7 +54,7 @@ services:
     extra_hosts: ['host.docker.internal:host-gateway']
   links:
     container_name: deep-links
-    image: deepf/deeplinks:dev
+    image: deepf/deeplinks:main
     networks:
       - network
     ports:
