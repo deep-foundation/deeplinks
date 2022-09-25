@@ -41,7 +41,7 @@ jobs:
       - name: docker-ver backup dir
         run: mkdir backup
       - name: docker-ver backup volume
-        run: docker run --rm --volumes-from deep_postgres_1 -v $(pwd):/temp ubuntu tar -c -v -C /var/lib/postgresql -f /temp/backup/volume.tar ./data
+        run: docker run --rm --volumes-from deep-postgres -v $(pwd):/temp ubuntu tar -c -v -C /var/lib/postgresql -f /temp/backup/volume.tar ./data
       - name: docker-ver backup migrations log
         run: cp .migrate backup/.migrate
       - name: build
@@ -66,3 +66,24 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+  update-demo:
+   steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/host.key
+          chmod 600 ~/.ssh/host.key
+          cat >>~/.ssh/config <<END
+          Host host
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/host.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+
+      - name: Stop the server
+        run: ssh staging 'sudo systemctl stop my-application'
