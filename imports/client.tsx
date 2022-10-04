@@ -5,7 +5,7 @@ import { useLocalStore } from "@deep-foundation/store/local";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits } from "util";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
-import { Link, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
+import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
 import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
@@ -266,7 +266,7 @@ export interface DeepClientOptions<L = Link<number>> {
   deep?: DeepClientInstance<L>;
 
   apolloClient?: IApolloClient<any>;
-  minilinks?: MinilinksResult<L>;
+  minilinks?: MinilinkCollection<any, Link<number>>;
   table?: string;
   returning?: string;
 
@@ -300,8 +300,8 @@ export interface DeepClientInstance<L = Link<number>> {
 
   deep: DeepClientInstance<L>;
 
-  apolloClient?: IApolloClient<any>;
-  minilinks?: MinilinksResult<L>;
+  apolloClient: IApolloClient<any>;
+  minilinks: MinilinksResult<L>;
   table?: string;
   returning?: string;
 
@@ -432,8 +432,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   deep: DeepClientInstance<L>;
 
-  apolloClient?: IApolloClient<any>;
-  minilinks?: MinilinksResult<L>;
+  apolloClient: IApolloClient<any>;
+  minilinks: MinilinksResult<L>;
   table?: string;
   returning?: string;
 
@@ -471,7 +471,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!this.apolloClient) throw new Error('apolloClient is invalid');
 
     // @ts-ignore
-    this.minilinks = options.minilinks || minilinks([]);
+    this.minilinks = options.minilinks || new MinilinkCollection();
     this.table = options.table || 'links';
 
     this.linkId = options.linkId;

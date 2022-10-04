@@ -306,6 +306,19 @@ async ({ deep, require, gql, data: { newLink } }) => {
 
     { id: 'HandleGql', type: 'Type', from: 'GqlEndpoint', to: 'HandleRoute' },
 
+    { id: 'SupportsCompatable', type: 'Type', from: 'Supports', to: 'HandleOperation' },
+
+    { id: 'plv8JSSupportsCompatableHandleInsert', type: 'SupportsCompatable', from: 'plv8SupportsJs', to: 'HandleInsert' },
+    { id: 'plv8JSSupportsCompatableHandleUpdate', type: 'SupportsCompatable', from: 'plv8SupportsJs', to: 'HandleUpdate' },
+    { id: 'plv8JSSupportsCompatableHandleDelete', type: 'SupportsCompatable', from: 'plv8SupportsJs', to: 'HandleDelete' },
+
+    { id: 'dockerJSSupportsCompatableHandleInsert', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleInsert' },
+    { id: 'dockerJSSupportsCompatableHandleUpdate', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleUpdate' },
+    { id: 'dockerJSSupportsCompatableHandleDelete', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleDelete' },
+    { id: 'dockerJSSupportsCompatableHandleSchedule', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleSchedule' },
+    { id: 'dockerJSSupportsCompatableHandlePort', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandlePort' },
+    { id: 'dockerJSSupportsCompatableHandleRoute', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleRoute' },
+
   ],
   errors: [],
   strict: true,

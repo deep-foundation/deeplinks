@@ -149,6 +149,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
       }
       if (errors.length) return { errors };
       const gists = new Gists({ token: username });
+      console.log('packagerPublishCore gists.edit', gistId, { files: { 'deep.json': { content: JSON.stringify(deepPckgContent) } } });
       const result = await gists.edit(gistId, { files: { 'deep.json': { content: JSON.stringify(deepPckgContent) } } });
       console.log('packagerPublishCore result', result);
       if (result?.body?.id) return { errors, address: `https://${username}@gist.github.com${uri.pathname}` };

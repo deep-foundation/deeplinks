@@ -61,9 +61,9 @@ export const minilinksQueryLevel = (
         }
       } else {
         if (_serialize?.[env]?.relations?.[field] === 'links') {
-          if (typeof(link[field]) === 'object') {
-            if (typeof(link[field].length) === 'number') {
-              if (!link[field].length) return false;
+          if (typeof(q[field]) === 'object') {
+            if (typeof(q[field].length) === 'number') {
+              if (!q[field].length) return false;
               const subfields = Object.keys(q[field]);
               // at least one subfield must be true
               let found = false;
@@ -113,7 +113,8 @@ export const minilinksQueryComparison = (
   field: string,
   env: string = 'links',
 ): boolean => {
-  const comp = q[field];
+  const comp = q?.[field];
+  if (typeof(comp) === 'undefined') throw new Error(`${field} === undefined`);
   if (comp.hasOwnProperty('_eq')) {
     if (link[field] !== comp._eq) return false;
   }
