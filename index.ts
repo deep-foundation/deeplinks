@@ -19,8 +19,6 @@ import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
-import multer from 'multer';
-const upload = multer();
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -77,7 +75,6 @@ app.get(['/file'], createProxyMiddleware({
   }
 }));
 
-app.use(upload.single('file[]'),);
 app.post('/file', async (req, res, next) => {
   // canObject
   const headers = req.headers;
@@ -86,19 +83,59 @@ app.post('/file', async (req, res, next) => {
   try {
     const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
     userId = JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-    linkId = JSON.parse(req.body.metadata[0]).id;
+    linkId = headers['linkId'] || headers['linkid'];
     console.log('linkId',linkId);
   } catch (e){
     console.log('error: ', e);
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
-  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType'));
+  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || userId === await deep.id('deep', 'admin');
   if (!canResult) next();
+  console.log('userId', userId);
   console.log('canResult', canResult);
   //insert file
   await createProxyMiddleware({
     target: DEEPLINKS_HASURA_STORAGE_URL,
     selfHandleResponse: true,
+    onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+      //update linkId
+      const response = responseBuffer.toString('utf8'); // convert buffer to string
+      let files;
+      try {
+        files = JSON.parse(response)?.processedFiles;
+        if (!files) return response;
+        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
+          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId}){
+            returning {
+              id
+              link_id
+            }
+          }
+        }`;
+        console.log('files[0].id', files[0].id);
+        const updated = await client.mutate({
+          mutation: UPDATE_FILE_LINKID,
+          variables: { 
+            fileid: files[0].id,
+            linkId: linkId,
+          },
+        });
+        console.log('linkid',linkId)
+        console.log('data',updated?.data?.updateFiles?.returning);
+      } catch (e){
+         if (files[0]?.id){
+          await client.mutate({
+            mutation:  gql`mutation DELETE_FILE($fileid: uuid) { deleteFiles(where: {id: {_eq: $fileid}}){ returning { id } } }`,
+            variables: { 
+              fileid: files[0].id,
+            },
+          });
+          return JSON.stringify({error: 'one link - one file'});
+         }
+        console.log('error: ', e);
+      }
+      return response;
+    }),
     changeOrigin: true,
     ws: true,
     pathRewrite: {

@@ -3,6 +3,7 @@ import { sql } from '@deep-foundation/hasura/sql';
 import Debug from 'debug';
 import { permissions } from '../imports/permission';
 import waitOn from 'wait-on';
+import { linksPermissions } from '../migrations/1622421760260-permissions'
 
 const debug = Debug('deeplinks:migrations:hasura-storage');
 const log = debug.extend('log');
@@ -76,6 +77,7 @@ export const up = async () => {
 
   CREATE TABLE IF NOT EXISTS storage.files (
     id uuid DEFAULT public.gen_random_uuid () NOT NULL PRIMARY KEY,
+    link_id bigint unique,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     bucket_id text NOT NULL DEFAULT 'default',
@@ -98,6 +100,19 @@ export const up = async () => {
     THEN
       ALTER TABLE storage.files
         ADD CONSTRAINT fk_bucket FOREIGN KEY (bucket_id) REFERENCES storage.buckets (id) ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+  END $$;
+
+  DO $$
+  BEGIN
+    IF NOT EXISTS(SELECT table_name
+              FROM information_schema.table_constraints
+              WHERE table_schema = 'storage'
+                AND table_name = 'files'
+                AND constraint_name = 'fk_link')
+    THEN
+      ALTER TABLE storage.files
+        ADD CONSTRAINT fk_link FOREIGN KEY (link_id) REFERENCES public.links (id) ON UPDATE CASCADE ON DELETE CASCADE;
     END IF;
   END $$;
 
@@ -273,7 +288,49 @@ export const up = async () => {
     },
   });
 
-  log('permissions');
+  await api.query({
+    type: 'create_object_relationship',
+    args: {
+      table: { name: 'files', schema: 'storage' },
+      name: 'link',
+      type: 'one_to_one',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: 'public',
+            name: 'links',
+          },
+          column_mapping: {
+            link_id: 'id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
+
+  await api.query({
+    type: 'create_object_relationship',
+    args: {
+      table: { name: 'links', schema: 'public' },
+      name: 'file',
+      type: 'one_to_one',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: 'storage',
+            name: 'files',
+          },
+          column_mapping: {
+            id: 'link_id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
+
+  // log('permissions');
   
   await permissions(api, { name: 'buckets', schema: 'storage' }, {
     role: 'link',
@@ -287,17 +344,26 @@ export const up = async () => {
     computed_fields: [],
   });
 
-  await permissions(api, { name: 'files', schema: 'storage' }, {
-    role: 'link',
-
-    select: {},
-    insert: {},
-    update: {},
-    delete: {},
-
+  const filesPermissions = {
+    ...(await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')),
+    select: {
+      link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).select,
+    },
+    insert: {
+      link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).update,
+    },
+    update: {
+      link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).update,
+    },
+    delete: {
+      link: (await linksPermissions(['$','link_id'], 'X-Hasura-User-Id', 'link')).update,
+    },
+    
     columns: '*',
     computed_fields: [],
-  });
+  };
+
+  await permissions(api, { name: 'files', schema: 'storage' }, filesPermissions);
 
   log('wait untill storage restart');
   // await waitOn({ resources: [`http-get://localhost:8000/healthz`] });
@@ -391,7 +457,8 @@ export const down = async () => {
               FROM information_schema.table_constraints
               WHERE table_schema = 'storage'
                 AND table_name = 'files'
-                AND constraint_name = 'fk_user')
+                AND constraint_name = '
+                ')
     THEN
       ALTER TABLE storage.files
         DROP CONSTRAINT fk_user;
