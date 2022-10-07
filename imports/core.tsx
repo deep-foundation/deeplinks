@@ -319,6 +319,7 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'dockerJSSupportsCompatableHandlePort', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandlePort' },
     { id: 'dockerJSSupportsCompatableHandleRoute', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleRoute' },
 
+    { id: 'clientJSSupportsCompatableHandleClient', type: 'SupportsCompatable', from: 'clientSupportsJs', to: 'HandleClient' },
   ],
   errors: [],
   strict: true,
