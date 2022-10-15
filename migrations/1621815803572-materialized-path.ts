@@ -593,7 +593,7 @@ export const up = async () => {
 export const down = async () => {
   log('down');
   log('tree view');
-  downTreeSchema({ api });
+  await downTreeSchema({ api });
   await api.query({
     type: 'untrack_table',
     args: {
@@ -605,7 +605,7 @@ export const down = async () => {
     },
   });
   await api.sql(sql`
-    DROP TABLE ${SCHEMA}."tree" CASCADE;
+    DROP VIEW IF EXISTS ${SCHEMA}."tree" CASCADE;
   `);
   log('dropInclude');
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__function CASCADE;`);
