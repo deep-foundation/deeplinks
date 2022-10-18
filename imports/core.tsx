@@ -283,7 +283,7 @@ async ({ deep, require, gql, data: { newLink } }) => {
 
     { id: 'Symbol', type: 'Type', from: 'Any', to: 'Any' },
     { id: 'symbolValue', type: 'Value', from: 'Symbol', to: 'String' },
-    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Any' },
+    { id: 'containTreeSymbol', type: 'TreeIncludeToCurrent', from: 'containTree', to: 'Symbol' },
 
     { id: 'containTreeThen', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Then' },
     { id: 'containTreeResolved', type: 'TreeIncludeFromCurrentTo', from: 'containTree', to: 'Resolved' },
