@@ -7,6 +7,7 @@ import { time } from 'console';
 import { Packager, Package } from '../imports/packager';
 import { corePckg } from '../imports/core';
 import { DeepClient } from '../imports/client';
+import prompt from 'prompt';
 
 const debug = Debug('deeplinks:migrations:types');
 const log = debug.extend('log');

@@ -488,7 +488,7 @@ export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, 
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<number>>(ml, name: string, data?: L[]): L[] {
+export function useMinilinksApply<L extends Link<number>>(ml, name: string, data?: L[]): any {
   const [strictName] = useState(name);
   useEffect(() => {
     ml.apply(data, strictName);
@@ -496,9 +496,27 @@ export function useMinilinksApply<L extends Link<number>>(ml, name: string, data
       ml.apply([], strictName);
     };
   }, [data]);
-  return useMinilinksFilter(
-    ml,
-    (link) => link._applies.includes(strictName),
-    (link, ml) => ml.links.filter(l => l._applies.includes(strictName)),
-  )
 }
+
+/**
+ * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
+ * Recalculates when query changes. (Take query into useMemo!).
+ */
+export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink | number) {
+  return useMemo(() => ml.query(query), [ml, query]);
+};
+
+/**
+ * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
+ * Recalculates when data in minilinks changes. (Take query into useMemo!).
+ */
+export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
+  const [need, setNeed] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => {
+      setNeed(need => need + 1);
+    }, 1000);
+    return () => clearInterval(i);
+  }, []);
+  return useMemo(() => ml.query(query), [ml, query, need]);
+};

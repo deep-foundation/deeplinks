@@ -60,7 +60,7 @@ export default async (req, res) => {
       }, {
         returning: `id from_id type_id to_id`,
       }))?.data?.[0];
-      
+
       const oldRow = { ...linkRow, value: oldValueRow };
       const newRow = { ...linkRow, value: newValueRow };
 
