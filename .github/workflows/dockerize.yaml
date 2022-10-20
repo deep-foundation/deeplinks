@@ -32,6 +32,26 @@ jobs:
         run: npm ci
       - name: build
         run: npm run package:build
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: deepf/deeplinks
+      - name: build docker image and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
       - name: docker init
         run: cd local/actions && docker-compose -p deep up -d
       - name: migrate
@@ -44,13 +64,6 @@ jobs:
         run: docker run --rm --volumes-from deep-postgres -v $(pwd):/temp ubuntu tar -c -v -C /var/lib/postgresql -f /temp/backup/volume.tar ./data
       - name: docker-ver backup migrations log
         run: cp .migrate backup/.migrate
-      - name: build
-        run: npm run package:build
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v3
