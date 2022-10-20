@@ -65,17 +65,17 @@ jobs:
       - name: docker-ver backup migrations log
         run: cp .migrate backup/.migrate
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: meta_push
         uses: docker/metadata-action@v3
         with:
           images: deepf/deeplinks
       - name: build docker image and push
-        id: docker_build
+        id: docker_build_push
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_push.outputs.tags }}
+          labels: ${{ steps.meta_push.outputs.labels }}
       - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo ${{ steps.docker_build_push.outputs.digest }}
