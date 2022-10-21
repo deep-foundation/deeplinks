@@ -604,7 +604,10 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       try 
       {
         const response = await api.query(options);
-        handleGqlDebug('remote schema addition response', JSON.stringify(response, null, 2));
+        handleGqlDebug('remote schema addition response', JSON.stringify(JSON.parse(toJSON(response)), null, 2));
+        if (response.data.error) {
+          throw response;
+        }
         handleGqlDebug('remote schema is added');
       }
       catch(rejected)
@@ -658,7 +661,10 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
           name: `handle_gql_handler_${handleGqlLink?.id}`,
         },
       });
-      handleGqlDebug('remote schema removal response', JSON.stringify(response, null, 2));
+      handleGqlDebug('remote schema removal response', JSON.stringify(JSON.parse(toJSON(response)), null, 2));
+      if (response.data.error) {
+        throw response;
+      }
       handleGqlDebug('remote schema is removed');
     }
     catch(rejected)
