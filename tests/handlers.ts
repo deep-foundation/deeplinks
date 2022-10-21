@@ -1,4 +1,5 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { HasuraApi } from "@deep-foundation/hasura/api";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import gql from "graphql-tag";
@@ -21,6 +22,12 @@ import waitOn from 'wait-on';
 import getPort from 'get-port';
 
 jest.setTimeout(120000);
+
+export const api = new HasuraApi({
+  path: process.env.DEEPLINKS_HASURA_PATH,
+  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+  secret: process.env.DEEPLINKS_HASURA_SECRET,
+});
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -1051,7 +1058,7 @@ describe('Async handlers', () => {
       await waitOn({ resources: [url], reverse: true });
       log("route handler is down");
     });
-    it.only(`handle route gql handler`, async () => {
+    it(`handle route gql handler`, async () => {
       // const port = await getPort(); // conflicts with container-controller port allocation
       const port = 4002;
       const field = 'constant'
@@ -1200,6 +1207,14 @@ describe('Async handlers', () => {
       await delay(5000);
       const { data } = await apolloClient.query({ query: gql`{ ${field} }` });
       assert.equal(data?.constant, 42);
+
+      // Uncomment to test that remote schema removal error is saved
+      // await api.query({
+      //   type: 'remove_remote_schema',
+      //   args: {
+      //     name: `handle_gql_handler_${handleGqlLink?.id}`,
+      //   },
+      // });
 
       // delete all
       await deep.delete(handleGqlLink?.id);
