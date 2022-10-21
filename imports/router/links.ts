@@ -603,7 +603,8 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       await waitOn({ resources: [waitOnUrl] });
       try 
       {
-        await api.query(options);
+        const response = await api.query(options);
+        handleGqlDebug('remote schema addition response', JSON.stringify(response, null, 2));
         handleGqlDebug('remote schema is added');
       }
       catch(rejected)
@@ -651,12 +652,13 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
     try 
     {
       // delete gql handler
-      await api.query({
+      const response = await api.query({
         type: 'remove_remote_schema',
         args: {
           name: `handle_gql_handler_${handleGqlLink?.id}`,
         },
       });
+      handleGqlDebug('remote schema removal response', JSON.stringify(response, null, 2));
       handleGqlDebug('remote schema is removed');
     }
     catch(rejected)
