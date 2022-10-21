@@ -609,9 +609,9 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       catch(rejected)
       {
         const processedRejection = JSON.parse(toJSON(rejected));
-        console.log('rejected', processedRejection);
+        handleGqlDebug('rejected', processedRejection);
         const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
-        console.log('handlingErrorTypeId', handlingErrorTypeId);
+        handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
         const insertResult = await deep.insert({
           type_id: handlingErrorTypeId,
@@ -625,6 +625,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
         }, {
           name: 'INSERT_HANDLING_ERROR',
         }) as any;
+        handleGqlDebug('remote schema addition error is inserted');
       }
     }
   } else if (operation == 'DELETE') {
@@ -661,9 +662,9 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
     catch(rejected)
     {
       const processedRejection = JSON.parse(toJSON(rejected));
-      console.log('rejected', processedRejection);
+      handleGqlDebug('rejected', processedRejection);
       const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
-      console.log('handlingErrorTypeId', handlingErrorTypeId);
+      handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
       const insertResult = await deep.insert({
         type_id: handlingErrorTypeId,
@@ -677,6 +678,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       }, {
         name: 'INSERT_HANDLING_ERROR',
       }) as any;
+      handleGqlDebug('remote schema removal error is inserted');
     }
   }
 }
