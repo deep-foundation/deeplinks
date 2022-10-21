@@ -210,6 +210,7 @@ const deep = new DeepClient({
 
 const routesDebug = Debug('deeplinks').extend('eh').extend('routes');
 const routesDebugLog = routesDebug.extend('log');
+const routesDebugError = routesDebug.extend('error');
 
 let currentServers = {};
 let currentPorts = {};
@@ -508,7 +509,7 @@ const handleRoutes = async () => {
               const code = handler?.file?.code?.value;
               routesDebugLog(`code ${code}`);
 
-              console.log('container', container);
+              routesDebugLog('container', container);
 
               // proxy to container using its host and port
               const proxy = createProxyMiddleware({
@@ -519,9 +520,9 @@ const handleRoutes = async () => {
                   [routeString]: "/http-call",
                 },
                 onProxyReq: (proxyReq, req, res) => {
-                  console.log('deeplinks request')
-                  console.log('req.method', req.method);
-                  console.log('req.body', req.body);
+                  routesDebugLog('deeplinks request')
+                  routesDebugLog('req.method', req.method);
+                  routesDebugLog('req.body', req.body);
                   proxyReq.setHeader('deep-call-options', encodeURI(JSON.stringify({
                     jwt,
                     code,
@@ -534,16 +535,16 @@ const handleRoutes = async () => {
                     try {  
                       data = data.toString('utf-8');
                       // body += data;
-                      console.log('data', data);
+                      routesDebugLog('data', data);
                       // if JSON
                       if (data.startsWith('{')) {
                         data = JSON.parse(data);
                         // log rejected
                         if (data.hasOwnProperty('rejected')) {
-                          console.log('rejected', data.rejected);
+                          routesDebugLog('rejected', data.rejected);
                           // HandlingError type id
                           const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
-                          console.log('handlingErrorTypeId', handlingErrorTypeId);
+                          routesDebugLog('handlingErrorTypeId', handlingErrorTypeId);
 
                           const insertResult = await deep.insert({
                             type_id: handlingErrorTypeId,
@@ -564,10 +565,10 @@ const handleRoutes = async () => {
                         }
                       }
                     } catch (e) {
-                      console.log('deeplinks response error', e)
+                      routesDebugError('deeplinks response error', e)
                     }
                   });
-                  // console.log('body', body);
+                  // routesDebugLog('body', body);
                 }
               });
               portServer.use(routeString, proxy);
