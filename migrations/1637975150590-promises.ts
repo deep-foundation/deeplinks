@@ -30,15 +30,14 @@ export const up = async () => {
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
-  const selectionTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
 
   // promise_selectors
   await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (
     id bigserial PRIMARY KEY,
-    promise_id bigint,
-    item_id bigint,
-    selector_id bigint,
-    handle_operation_id bigint
+    promise_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    selector_id bigint NOT NULL,
+    handle_operation_id bigint NOT NULL,
   );`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
   await api.query({
@@ -72,12 +71,16 @@ export const up = async () => {
   // promise_links
   await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_links (
     id bigserial PRIMARY KEY,
-    promise_id bigint,
-    link_id bigint,
-    link_type_id bigint,
-    link_from_id bigint,
-    link_to_id bigint,
-    handle_operation_id bigint
+    promise_id bigint NOT NULL,
+    old_link_id bigint,
+    old_link_type_id bigint,
+    old_link_from_id bigint,
+    old_link_to_id bigint,
+    new_link_id bigint,
+    new_link_type_id bigint,
+    new_link_from_id bigint,
+    new_link_to_id bigint,
+    handle_operation_id bigint NOT NULL
   );`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_links');`);
   await api.query({
@@ -149,7 +152,7 @@ export const up = async () => {
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, link."id", link."type_id", link."from_id", link."to_id", handle_insert."id");
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", handle_insert."id");
     END IF;
 
     IF (
@@ -175,7 +178,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
-        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN TRUE;
@@ -203,7 +206,7 @@ export const up = async () => {
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", handle_delete."id");
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, handle_delete."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -222,7 +225,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
-        INSERT INTO promise_links ("promise_id", "link_id", "link_type_id", "link_from_id", "link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN OLD;
