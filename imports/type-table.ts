@@ -192,7 +192,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     IF FOUND THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", OLD."link_type_id", OLD."link_from_id", OLD."link_to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id");
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id");
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
