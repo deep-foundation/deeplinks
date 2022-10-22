@@ -37,7 +37,7 @@ export const up = async () => {
     promise_id bigint NOT NULL,
     item_id bigint NOT NULL,
     selector_id bigint NOT NULL,
-    handle_operation_id bigint NOT NULL,
+    handle_operation_id bigint NOT NULL
   );`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
   await api.query({
