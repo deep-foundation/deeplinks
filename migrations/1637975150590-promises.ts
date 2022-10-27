@@ -111,26 +111,6 @@ export const up = async () => {
     },
   });
 
-  await api.query({
-    type: 'create_array_relationship',
-    args: {
-      table: 'promise_selectors',
-      name: 'promise_links',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: 'public',
-            name: 'promise_links',
-          },
-          column_mapping: {
-            promise_id: 'promise_id',
-          },
-          insertion_order: 'after_parent',
-        },
-      },
-    },
-  });
-
   // await api.sql(sql`CREATE TABLE IF NOT EXISTS public.debug_output (promises bigint, new_id bigint);`);
   // await api.query({
   //   type: 'track_table',
