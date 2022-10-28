@@ -68,6 +68,9 @@ export const up = async () => {
     },
   });
 
+  // create sql type values_operation_type upper case
+  await api.sql(sql`CREATE TYPE public.values_operation_type AS ENUM ('INSERT', 'UPDATE', 'DELETE');`);
+  
   // promise_links
   await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_links (
     id bigserial PRIMARY KEY,
@@ -80,7 +83,8 @@ export const up = async () => {
     new_link_type_id bigint,
     new_link_from_id bigint,
     new_link_to_id bigint,
-    handle_operation_id bigint NOT NULL
+    handle_operation_id bigint NOT NULL,
+    values_operation public.values_operation_type
   );`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_links');`);
   await api.query({
@@ -339,4 +343,7 @@ export const down = async () => {
     },
   });
   await api.sql(sql`DROP TABLE IF EXISTS "public"."promise_links" CASCADE;`);
+
+  // drop values_operation_type in sql
+  await api.sql(sql`DROP TYPE IF EXISTS values_operation_type CASCADE;`);
 };
