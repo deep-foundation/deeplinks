@@ -1042,7 +1042,7 @@ describe('sync handlers', () => {
         const handler = await insertHandler(
           handleInsertTypeId,
           typeId, 
-          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: "${customLinkId}) RETURNING id; DROP TABLE promise_links; INSERT INTO links (type_id, from_id, to_id) VALUES (${customLinkId}, ${customLinkId}, ${customLinkId}) RETURNING id; -- ", from_id: ${customLinkId}}); }`,
           undefined,
           supportsId
         );
