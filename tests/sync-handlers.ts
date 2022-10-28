@@ -1027,7 +1027,7 @@ describe('sync handlers', () => {
         debug('delete handler', await deleteHandler(handler));
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
-      it.only(`Handle insert on type with sql injection`, async () => {
+      it.skip(`Handle insert on type with sql injection (DAMAGES DATABASE SHOULD BE SKIPPED UNTIL FIXED)`, async () => {
         const debug = log.extend('HandleInsert');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
