@@ -102,7 +102,8 @@ export default async (req, res) => {
             promise_links(where: {
               handle_operation: { type_id: { _eq: ${handleUpdateTypeId} } }
               old_link_id: {_eq: ${linkId}},
-              new_link_id: {_eq: ${linkId}}
+              new_link_id: {_eq: ${linkId}},
+              values_operation: { _eq: "${operation}" }
             }) {
               id
               promise_id
