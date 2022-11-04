@@ -164,7 +164,7 @@ export class ContainerController {
     handlersHash[container.name] = undefined;
     log('dropContainer dockerStopResult', { dockerStopResult });
   }
-  async _chekAndRestart(container: Container ): Promise<{ error?: string; }> {
+  async _checkAndRestart(container: Container ): Promise<{ error?: string; }> {
     const { handlersHash, runContainerHash } = this;
     try {
       const healthz = `http://${container.host}:${container.port}/healthz`
@@ -181,7 +181,7 @@ export class ContainerController {
         resolve(undefined);
       });
       await runContainerHash[container.name];
-      log('_chekAndRestart handlersHash[container.name]', handlersHash[container.name]);
+      log('_checkAndRestart handlersHash[container.name]', handlersHash[container.name]);
       return handlersHash[container.name];
     }
   }
@@ -197,7 +197,7 @@ export class ContainerController {
       log('initHandler initResult status', { status: initResult.status });
     } catch (e) {
       error('init error code', e.code);
-      const checkResult = await this._chekAndRestart(container);
+      const checkResult = await this._checkAndRestart(container);
       if (checkResult?.error) return {...checkResult};
       await this.initHandler(container);
       return ({ error: e });
@@ -219,7 +219,7 @@ export class ContainerController {
       return callResult?.data?.resolved;
     } catch (e) {
       error('call error', e);
-      const checkResult = await this._chekAndRestart(container);
+      const checkResult = await this._checkAndRestart(container);
       if (checkResult?.error) return {...checkResult};
       await this.callHandler(options);
       return ({ error: e });
