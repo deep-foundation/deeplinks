@@ -126,24 +126,27 @@ export class ContainerController {
     log('newContainer container', { container });
     if (container) return container;
     let dockerPort = forcePort || await getPort();
-    runContainerHash[containerName] = new Promise(async (resolve)=> {
-      let done = false;
-      let count = 10;
-      while (!done){
-        log('newContainer while count', { count });
-        count--;
-        container = await this._runContainer(containerName, dockerPort, options);
-        log('newContainer while container', { container });
-        if ( container?.error) {
-          if (!forcePort) dockerPort = await getPort();
-          continue;
+    if (runContainerHash[containerName] === undefined) 
+    {
+      runContainerHash[containerName] = new Promise(async (resolve)=> {
+        let done = false;
+        let count = 10;
+        while (!done){
+          log('newContainer while count', { count });
+          count--;
+          container = await this._runContainer(containerName, dockerPort, options);
+          log('newContainer while container', { container });
+          if ( container?.error) {
+            if (!forcePort) dockerPort = await getPort();
+            continue;
+          }
+          handlersHash[containerName] = container;
+          log('newContainer done true', { containerName, handlersHash, runContainerHash});
+          done=true;
         }
-        handlersHash[containerName] = container;
-        log('newContainer done true', { containerName, handlersHash, runContainerHash});
-        done=true;
-      }
-      resolve(undefined);
-    });
+        resolve(undefined);
+      });
+    }
     await runContainerHash[containerName];
     return handlersHash[containerName];
   }
