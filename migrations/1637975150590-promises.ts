@@ -122,7 +122,7 @@ export const up = async () => {
       using: {
         manual_configuration: {
           remote_table: {
-            schema: SCHEMA,
+            schema: 'public',
             name: 'promise_selectors',
           },
           column_mapping: {
@@ -325,6 +325,14 @@ export const down = async () => {
   // });
   // await api.sql(sql`DROP TABLE IF EXISTS "public"."debug_output" CASCADE;`);
 
+  await api.query({
+    type: 'drop_relationship',
+    args: {
+      table: 'promise_links',
+      relationship: 'promise_selectors',
+    },
+  });
+
   // promise_selectors
   await api.query({
     type: 'drop_relationship',
@@ -346,13 +354,6 @@ export const down = async () => {
   await api.sql(sql`DROP TABLE IF EXISTS "public"."promise_selectors" CASCADE;`);
 
   // promise_links
-  await api.query({
-    type: 'drop_relationship',
-    args: {
-      table: 'promise_links',
-      relationship: 'promise_selectors',
-    },
-  });
   await api.query({
     type: 'drop_relationship',
     args: {
