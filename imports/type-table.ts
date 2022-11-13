@@ -146,15 +146,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handle_update links;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
-    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
-    IF FOUND THEN
+    FOR HANDLE_UPDATE IN
+      SELECT id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
+    LOOP
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id", 'INSERT');
-    END IF;
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", 'INSERT');
+    END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';
@@ -185,15 +185,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handle_update links;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
-    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
-    IF FOUND THEN
+    FOR HANDLE_UPDATE IN
+      SELECT id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
+    LOOP
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id", 'UPDATE');
-    END IF;
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", 'UPDATE');
+    END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';
@@ -224,15 +224,15 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handle_update links;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = OLD."link_id";
-    SELECT * INTO handle_update FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId};
-    IF FOUND THEN
+    FOR HANDLE_UPDATE IN
+      SELECT id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
+    LOOP
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", handle_update."id", 'DELETE');
-    END IF;
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", 'DELETE');
+    END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';
