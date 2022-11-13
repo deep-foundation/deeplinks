@@ -128,6 +128,7 @@ export const up = async () => {
   DECLARE 
     PROMISE bigint;
     SELECTOR record;
+    HANDLE_INSERT record;
     user_id bigint;
     hasura_session json;
   BEGIN
@@ -184,6 +185,7 @@ export const up = async () => {
   DECLARE
     PROMISE bigint;
     SELECTOR record;
+    HANDLE_DELETE record;
     user_id bigint;
     hasura_session json;
   BEGIN

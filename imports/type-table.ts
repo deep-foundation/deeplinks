@@ -143,6 +143,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
   DECLARE
     PROMISE bigint;
     SELECTOR record;
+    HANDLE_UPDATE record;
     user_id bigint;
     hasura_session json;
     updated_link links;
@@ -182,6 +183,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
   DECLARE
     PROMISE bigint;
     SELECTOR record;
+    HANDLE_UPDATE record;
     user_id bigint;
     hasura_session json;
     updated_link links;
@@ -221,6 +223,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
   DECLARE
     PROMISE bigint;
     SELECTOR record;
+    HANDLE_UPDATE record;
     user_id bigint;
     hasura_session json;
     updated_link links;
