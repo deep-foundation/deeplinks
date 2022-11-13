@@ -380,10 +380,53 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   };
 
   const promiseSelectorsResult = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
-  // handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
+  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
 
   const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
   handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
+
+  const promiseSelectorsQueryStringDraft = `query SELECT_PROMISE_SELECTORS($itemId: bigint)
+  { 
+    promise_links(where: { 
+      promise_selectors: {
+        item_id: { _eq: $itemId },
+        handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
+      }
+    }) 
+    {
+      promise_selectors 
+      {
+        id
+        promise_id
+        handle_operation {
+          id
+          handler: to {
+            id
+            supports: from {
+              id
+              isolation: from {
+                id
+                image: value
+              }
+            }
+            file: to {
+              id
+              code: value
+            }
+          }
+        }
+      }
+    }
+  }`;
+
+  const promiseSelectorsQueryDraft = gql`${promiseSelectorsQueryStringDraft}`;
+
+  const promiseSelectorsQueryVariablesDraft = {
+    itemId: currentLinkId
+  };
+
+  const promiseSelectorsResultDraft = await client.query({ query: promiseSelectorsQueryDraft, variables: promiseSelectorsQueryVariablesDraft });
+  handleSelectorDebug('promiseSelectorsResultDraft', JSON.stringify(promiseSelectorsResultDraft, null, 2));
 
   if (!promiseSelectors?.length) {
     return;
