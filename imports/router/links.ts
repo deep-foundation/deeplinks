@@ -385,17 +385,22 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
   handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
 
-  const promiseSelectorsQueryStringDraft = `query SELECT_PROMISE_SELECTORS($itemId: bigint)
-  { 
-    promise_links(where: { 
+  const promiseSelectorsQueryStringDraft = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { 
+    promise_links(where: {
+      # old_link_id: { _eq: ${oldLink?.id } },
+      # new_link_id: { _eq: ${newLink?.id } },
+      values_operation: { _eq: "${operation.replace('Handle', '').toUpperCase()}"},
       promise_selectors: {
         item_id: { _eq: $itemId },
         handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
       }
-    }) 
-    {
-      promise_selectors 
-      {
+    }) {
+      id
+      promise_id
+      promise_selectors (where: {
+        item_id: { _eq: $itemId },
+        handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
+      }) {
         id
         promise_id
         handle_operation {
