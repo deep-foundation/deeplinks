@@ -114,6 +114,25 @@ export const up = async () => {
       },
     },
   });
+  await api.query({
+    type: 'create_array_relationship',
+    args: {
+      table: 'promise_links',
+      name: 'promise_selectors',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: SCHEMA,
+            name: 'promise_selectors',
+          },
+          column_mapping: {
+            promise_id: 'promise_id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
 
   // await api.sql(sql`CREATE TABLE IF NOT EXISTS public.debug_output (promises bigint, new_id bigint);`);
   // await api.query({
@@ -327,6 +346,13 @@ export const down = async () => {
   await api.sql(sql`DROP TABLE IF EXISTS "public"."promise_selectors" CASCADE;`);
 
   // promise_links
+  await api.query({
+    type: 'drop_relationship',
+    args: {
+      table: 'promise_links',
+      relationship: 'promise_selectors',
+    },
+  });
   await api.query({
     type: 'drop_relationship',
     args: {
