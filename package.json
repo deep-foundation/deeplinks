@@ -17,7 +17,8 @@
     "start-deeplinks-docker": "cd local && docker-compose -p deep up -d",
     "stop-deeplinks-docker": "cd local && docker-compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
-    "snapshot:last": "node snapshots/last.js"
+    "snapshot:last": "node snapshots/last.js",
+    "snapshot:dump": "node snapshots/dump.js"
   },
   "dependencies": {
     "@apollo/client": "^3.5.8",

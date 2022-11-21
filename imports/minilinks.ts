@@ -1,5 +1,6 @@
 import _remove from 'lodash/remove';
 import _isEqual from 'lodash/isEqual';
+import _isEqualWith from 'lodash/isEqualWith';
 import EventEmitter from 'events';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
@@ -51,6 +52,20 @@ export interface MinilinksResult<Link> {
   byType: { [id: number]: Link[] };
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
+  query(query: QueryLink | number): Link[];
+  add(linksArray: any[]): {
+    anomalies?: MinilinkError[];
+    errors?: MinilinkError[];
+  };
+  remove(idsArray: any[]): {
+    anomalies?: MinilinkError[];
+    errors?: MinilinkError[];
+  };
+  _updating: boolean;
+  apply(linksArray: any[], applyName?: string): {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+  }
 }
 
 export class MinilinksLink<Ref extends number> {
@@ -67,9 +82,17 @@ export class MinilinksLink<Ref extends number> {
   from: MinilinksLink<Ref>;
   to: MinilinksLink<Ref>;
   value?: any;
+  string?: any;
+  number?: any;
+  object?: any;
   _applies: string[] = [];
   constructor(link: any) {
     Object.assign(this, link);
+    if (link.value) {
+      if (typeof(link.value.value) === 'string' && !this.string) this.string = link.value;
+      if (typeof(link.value.value) === 'number' && !this.number) this.number = link.value;
+      if (typeof(link.value.value) === 'object' && !this.object) this.object = link.value;
+    }
   }
   toPlain(): LinkPlain<Ref> {
     return {
@@ -137,6 +160,12 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 export interface MinilinkError extends Error {}
 
 export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends Link<number>> {
+  useMinilinksQuery = useMinilinksQuery;
+  useMinilinksFilter = useMinilinksFilter;
+  useMinilinksApply = useMinilinksApply;
+  useMinilinksSubscription = useMinilinksSubscription;
+  useMinilinksHandle = useMinilinksHandle;
+
   types: { [id: number]: L[] } = {};
   byId: { [id: number]: L } = {};
   byFrom: { [id: number]: L[] } = {};
@@ -511,12 +540,19 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
 export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
-  const [need, setNeed] = useState(0);
+  const [result, setResult] = useState([]);
+  const qRef = useRef(query);
+  qRef.current = query;
+  const rRef = useRef(result);
+  rRef.current = result;
   useEffect(() => {
     const i = setInterval(() => {
-      setNeed(need => need + 1);
+      const data = ml.query(qRef.current);
+      if (!_isEqualWith(data, rRef.current)) {
+        setResult(data);
+      }
     }, 1000);
     return () => clearInterval(i);
   }, []);
-  return useMemo(() => ml.query(query), [ml, query, need]);
+  return result;
 };

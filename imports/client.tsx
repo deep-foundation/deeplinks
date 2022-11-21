@@ -5,7 +5,7 @@ import { useLocalStore } from "@deep-foundation/store/local";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits } from "util";
 import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
-import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult } from "./minilinks";
+import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from "./minilinks";
 import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
@@ -31,7 +31,6 @@ export const _ids = {
 
 export const _serialize = {
   links: {
-    value: 'value',
     fields: {
       id: 'number',
       from_id: 'number',
@@ -47,6 +46,7 @@ export const _serialize = {
       typed: 'links',
       selected: 'selector',
       selectors: 'selector',
+      value: 'value',
       string: 'value',
       number: 'value',
       object: 'value',
@@ -426,6 +426,14 @@ export interface DeepClientJWTOptions {
 }
 
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
+  useDeepSubscription = useDeepSubscription;
+  useDeepQuery = useDeepQuery;
+  useMinilinksQuery = (query: BoolExpLink) => useMinilinksQuery(this.minilinks, query);
+  useMinilinksSubscription = (query: BoolExpLink) => useMinilinksSubscription(this.minilinks, query)
+  useDeep = useDeep;
+  DeepProvider = DeepProvider;
+  DeepContext = DeepContext;
+
   linkId?: number;
   token?: string;
   handleAuth?: (linkId?: number, token?: string) => any;
@@ -839,7 +847,21 @@ export function useDeep() {
   return useContext(DeepContext);
 }
 
-export function useDeepQuery(query: any, options?: any): any {
+export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
+  query: BoolExpLink,
+  options?: {
+    table?: Table;
+    returning?: string;
+    variables?: any;
+    name?: string;
+    mini?: string;
+  },
+): {
+  data?: LL[];
+  error?: any;
+  loading: boolean;
+} {
+  const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
   const deep = useDeep();
   const wq = useMemo(() => {
     const sq = serializeQuery(query);
@@ -860,13 +882,29 @@ export function useDeepQuery(query: any, options?: any): any {
     });
   }, [query, options]);
   const result = useQuery(wq.query, { variables: wq?.variables });
+  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
+  const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
   return {
     ...result,
-    data: result?.data?.q0,
+    data: mlResult,
   };
 }
 
-export function useDeepSubscription(query: any, options?: any): any {
+export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
+  query: BoolExpLink,
+  options?: {
+    table?: Table;
+    returning?: string;
+    variables?: any;
+    name?: string;
+    mini?: string;
+  },
+): {
+  data?: LL[];
+  error?: any;
+  loading: boolean;
+} {
+  const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
   const deep = useDeep();
   const wq = useMemo(() => {
     const sq = serializeQuery(query);
@@ -887,8 +925,10 @@ export function useDeepSubscription(query: any, options?: any): any {
     });
   }, [query, options]);
   const result = useSubscription(wq.query, { variables: wq?.variables });
+  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
+  const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
   return {
     ...result,
-    data: result?.data?.q0,
+    data: mlResult,
   };
 }

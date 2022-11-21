@@ -19,6 +19,7 @@ import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
+import Cors from 'cors';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -75,34 +76,49 @@ app.get(['/file'], createProxyMiddleware({
   }
 }));
 
+const cors = Cors({ methods: ['POST', 'OPTIONS'] });
+app.use(cors);
+
 app.post('/file', async (req, res, next) => {
+  console.log('DEEPLINKS_HASURA_STORAGE_URL', DEEPLINKS_HASURA_STORAGE_URL);
   // canObject
   const headers = req.headers;
   let userId;
   let linkId;
   try {
     const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
-    userId = JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id'];
-    linkId = headers['linkId'] || headers['linkid'];
+    userId = +(JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id']);
+    linkId = +(headers['linkId'] || headers['linkid']);
     console.log('linkId',linkId);
   } catch (e){
     console.log('error: ', e);
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
   const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || userId === await deep.id('deep', 'admin');
-  if (!canResult) next();
-  console.log('userId', userId);
+  console.log('can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', userId === await deep.id('deep', 'admin'));
+  console.log('userId', userId, typeof(userId));
   console.log('canResult', canResult);
+  if (!canResult) return res.status(403).send(`You cant update link ##${linkId} as user ##${userId}, and user ##${userId} is not admin.`);
   //insert file
   await createProxyMiddleware({
     target: DEEPLINKS_HASURA_STORAGE_URL,
     selfHandleResponse: true,
+    logLevel: 'debug',
+    onError: (err, req, res, target) => {
+      console.log('onError', err);
+      res.writeHead(500, {
+        'Content-Type': 'text/plain',
+      });
+      res.end('Something went wrong. And we are reporting a custom error message.');
+    },
     onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+      console.log('onProxyRes');
       //update linkId
       const response = responseBuffer.toString('utf8'); // convert buffer to string
       let files;
       try {
         files = JSON.parse(response)?.processedFiles;
+        console.log('files', files);
         if (!files) return response;
         const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
           updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId}){
@@ -123,6 +139,7 @@ app.post('/file', async (req, res, next) => {
         console.log('linkid',linkId)
         console.log('data',updated?.data?.updateFiles?.returning);
       } catch (e){
+        console.log('try error: ', e);
          if (files[0]?.id){
           await client.mutate({
             mutation:  gql`mutation DELETE_FILE($fileid: uuid) { deleteFiles(where: {id: {_eq: $fileid}}){ returning { id } } }`,
@@ -132,7 +149,6 @@ app.post('/file', async (req, res, next) => {
           });
           return JSON.stringify({error: 'one link - one file'});
          }
-        console.log('error: ', e);
       }
       return response;
     }),

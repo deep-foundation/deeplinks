@@ -257,8 +257,8 @@ export class Packager<L extends Link<any>> {
       const oldId = item.id;
       let newId;
       if (item.package) {
-        newId = await this.client.id(pckg.dependencies[item.package.dependencyId].name, item.package.containValue, true);
-        if (!newId) pckg.errors.push(`dependency [${pckg.dependencies[item.package.dependencyId].name, item.package.containValue}], not founded`);
+        newId = await this.client.id(pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue, true);
+        if (!newId) pckg.errors.push(`dependency [${pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue}], not founded`);
       } else if (item.type) {
         newId = ids[idsIndex++];
       }
@@ -313,6 +313,7 @@ export class Packager<L extends Link<any>> {
           if (typeof(item?.package) === 'object') {
             if (typeof(item?.package?.dependencyId) !== 'number') errors.push(`!item[${i}].package?.dependencyId`);
             if (typeof(item?.package?.containValue) !== 'string') errors.push(`!item[${i}].package?.containValue`);
+            if (!pckg.dependencies?.[item.package.dependencyId]) errors.push(`!pckg.dependencies?.[pckg.data[${i}].package.dependencyId,(${item.package.dependencyId})]`);
           } else {
             if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}].type`);
             if (item.hasOwnProperty('from')) if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}].from`);
@@ -337,7 +338,7 @@ export class Packager<L extends Link<any>> {
     try {
       this.validate(pckg, errors);
       if (errors.length) return { errors };
-      const { data, counter, dependedLinks, packageId, namespaceId } = await this.deserialize(pckg, errors);
+      const { data, counter, dependedLinks, packageId, namespaceId } = await this.deserialize(pckg, errors); 
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors, {
         id: 'id',
@@ -357,7 +358,7 @@ export class Packager<L extends Link<any>> {
       return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId] };
     } catch(e) {
       log('import error');
-      errors.push(e);
+;     errors.push(e);
     }
     return { ids: [], errors };
   }
@@ -617,7 +618,7 @@ export class Packager<L extends Link<any>> {
       ) {
         const name = globalLink?.contains?.[0]?.value?.value;
         if (!name) pckg.errors.push(`link ${globalLink.id} have invalid name: ${name}`);
-        if (names[name]) pckg.errors.push(`l ink ${globalLink.id} have duplicated in package name ${name}, duplicate link ${names[name]}`);
+        if (names[name]) pckg.errors.push(`link ${globalLink.id} have duplicated in package name ${name}, duplicate link ${names[name]}`);
         names[name] = globalLink.id;
       }
     }
@@ -683,21 +684,21 @@ export class Packager<L extends Link<any>> {
             if (globalLink.type) {
               localLink.type_id = localLinks[lbyg[globalLink.type_id]]?.id;
             } else {
-              localLink.type_id = getDependencedId(globalLink._type);
+              localLink.type_id = getDependencedId(globalLink._type)?.id;
             }
           }
           if (globalLink.from_id) {
             if (globalLink.from) {
               localLink.from_id = localLinks[lbyg[globalLink.from_id]]?.id;
             } else {
-              localLink.from_id = getDependencedId(globalLink._from);
+              localLink.from_id = getDependencedId(globalLink._from)?.id;
             }
           }
           if (globalLink.to_id) {
             if (globalLink.to) {
               localLink.to_id = localLinks[lbyg[globalLink.to_id]]?.id;
             } else {
-              localLink.to_id = getDependencedId(globalLink._to);
+              localLink.to_id = getDependencedId(globalLink._to)?.id;
             }
           }
           if (globalLink.value) {
@@ -749,6 +750,7 @@ export class Packager<L extends Link<any>> {
     // log('pckg1', JSON.stringify(pckg));
     await this.serialize(ml, options, pckg);
     // log('pckg2', JSON.stringify(pckg));
+    this.validate(pckg, pckg.errors);
     return pckg;
   }
 }

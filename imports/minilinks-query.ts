@@ -37,12 +37,13 @@ export const minilinksQueryHandle = <L extends Link<number>>(
 ): L[] => {
   const fields = Object.keys(q);
   return ml.links.filter((link) => {
-    return minilinksQueryLevel(
+    const r = minilinksQueryLevel(
       q,
       link,
       'links',
       fields,
     );
+    return r;
   });
 };
 
@@ -55,7 +56,29 @@ export const minilinksQueryLevel = (
   if (env === 'links') {
     for (const f in fields) {
       const field = fields[f];
-      if (_serialize?.[env]?.fields?.[field]) {
+      if (field === '_and') {
+        for (const a in q[field]) {
+          const subfields = Object.keys(q[field][a]);
+          if (!minilinksQueryLevel(q[field][a], link, env, subfields)) {
+            return false;
+          }
+        }
+      } else if (field === '_or') {
+        let oneOf = false;
+        for (const a in q[field]) {
+          const subfields = Object.keys(q[field][a]);
+          if (minilinksQueryLevel(q[field][a], link, env, subfields)) {
+            oneOf = true;
+            break;
+          }
+        }
+        return oneOf;
+      } else if (field === '_not') {
+        const subfields = Object.keys(q[field]);
+        if (minilinksQueryLevel(q[field], link, env, subfields)) {
+          return false;
+        }
+      } else if (_serialize?.[env]?.fields?.[field]) {
         if (!minilinksQueryComparison(q, link, field, env)) {
           return false;
         }
@@ -82,7 +105,8 @@ export const minilinksQueryLevel = (
             }
           }
         } else if (_serialize?.[env]?.relations?.[field] === 'value') {
-          if (!minilinksQueryLevel(q[field], link[field], 'value', fields)) {
+          const subfields = Object.keys(q[field]);
+          if (!minilinksQueryLevel(q[field], link[field], 'value', subfields)) {
             return false;
           }
         } else {
@@ -116,31 +140,31 @@ export const minilinksQueryComparison = (
   const comp = q?.[field];
   if (typeof(comp) === 'undefined') throw new Error(`${field} === undefined`);
   if (comp.hasOwnProperty('_eq')) {
-    if (link[field] !== comp._eq) return false;
+    if (link?.[field] !== comp._eq) return false;
   }
   if (comp.hasOwnProperty('_neq')) {
-    if (link[field] === comp._neq) return false;
+    if (link?.[field] === comp._neq) return false;
   }
   if (comp.hasOwnProperty('_gt')) {
-    if (!(link[field] > comp._gt)) return false;
+    if (!(link?.[field] > comp._gt)) return false;
   }
   if (comp.hasOwnProperty('_gte')) {
-    if (!(link[field] >= comp._gte)) return false;
+    if (!(link?.[field] >= comp._gte)) return false;
   }
   if (comp.hasOwnProperty('_lt')) {
-    if (!(link[field] < comp._lt)) return false;
+    if (!(link?.[field] < comp._lt)) return false;
   }
   if (comp.hasOwnProperty('_lte')) {
-    if (!(link[field] <= comp._lte)) return false;
+    if (!(link?.[field] <= comp._lte)) return false;
   }
   if (comp.hasOwnProperty('_is_null')) {
-    if ((link[field] === null) === comp._is_null) return false;
+    if ((link?.[field] === null) === comp._is_null) return false;
   }
   if (comp.hasOwnProperty('_in')) {
-    if (!comp._in.contain(link[field])) return false;
+    if (!comp?._in?.includes(link[field])) return false;
   }
   if (comp.hasOwnProperty('_nin')) {
-    if (comp._nin.contain(link[field])) return false;
+    if (comp?._nin?.includes(link[field])) return false;
   }
   return true;
 }

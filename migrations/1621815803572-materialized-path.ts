@@ -243,6 +243,26 @@ export const upTreeSchema = async ({
   });
 
   await api.query({
+    type: 'create_array_relationship',
+    args: {
+      table: TREE_TABLE_NAME,
+      name: 'by_position',
+      using: {
+        manual_configuration: {
+          remote_table: {
+            schema: SCHEMA,
+            name: TREE_TABLE_NAME,
+          },
+          column_mapping: {
+            position_id: 'position_id',
+          },
+          insertion_order: 'after_parent',
+        },
+      },
+    },
+  });
+
+  await api.query({
     type: 'create_object_relationship',
     args: {
       table: MP_TABLE,
@@ -576,7 +596,8 @@ export const up = async () => {
       mp."path_item_depth" as "depth",
       mp."root_id" as "root_id",
       mp."position_id" as "position_id",
-      mp."group_id" as "tree_id"
+      mp."group_id" as "tree_id",
+      (mp."item_id" = mp."path_item_id") as "self"
     FROM
     ${MP_TABLE_NAME} as mp;
   `);

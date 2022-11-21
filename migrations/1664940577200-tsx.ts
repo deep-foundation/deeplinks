@@ -1,10 +1,10 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client';
-import { deepcaseSymbolsPckg } from '../imports/deepcase-package';
+import { tsxPckg } from '../imports/tsx-package';
 import { Packager } from '../imports/packager';
 
-const debug = Debug('deeplinks:migrations:deepcase');
+const debug = Debug('deeplinks:migrations:tsx');
 const log = debug.extend('log');
 const error = debug.extend('error');
 
@@ -21,9 +21,9 @@ const root = new DeepClient({
 export const up = async () => {
   log('up');
   const packager = new Packager(root);
-  const { errors, packageId, namespaceId } = await packager.import(deepcaseSymbolsPckg);
+  const { errors, packageId, namespaceId } = await packager.import(tsxPckg);
   if (errors?.length) {
-    console.log('deepcase-errors',JSON.stringify(errors, null, 2),JSON.stringify(errors[0]?.graphQLErrors?.[0], null, 2));
+    console.log(JSON.stringify(errors, null, 2));
     const error = errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.error;
     throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}${error?.message ? ` ${error?.message} ${error?.request?.method} ${error?.request?.host}:${error?.request?.port}${error?.request?.path}` : ''}`);
   }
@@ -36,8 +36,8 @@ export const up = async () => {
       },
       {
         type_id: await root.id('@deep-foundation/core', 'Join'),
-        from_id: await root.id('deep', 'admin'),
-        to_id: packageId,
+        from_id: packageId,
+        to_id: await root.id('deep', 'admin'),
       },
     ]);
   }

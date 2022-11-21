@@ -2,6 +2,42 @@ import { assert, expect } from 'chai';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from '../imports/minilinks';
 
 describe('minilinks-query', () => {
+  it(`minilinks.query { _or: [{ id: { _eq: 1 } }, { id: { _eq: 2 } }] }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 1 },
+      { id: 2, type_id: 1 },
+      { id: 3, type_id: 1 },
+    ]);
+    expect(mlc.query({ _or: [{ id: { _eq: 1 } }, { id: { _eq: 2 } }] })).to.have.lengthOf(2);
+  });
+  it(`minilinks.query { _and: [{ type_id: { _eq: 1 } }, { id: { _eq: 2 } }] }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 1 },
+      { id: 2, type_id: 1 },
+      { id: 3, type_id: 1 },
+    ]);
+    expect(mlc.query({ _and: [{ type_id: { _eq: 1 } }, { id: { _eq: 2 } }] })).to.have.lengthOf(1);
+  });
+  it(`minilinks.query { _not: { id: { _eq: 1 } } }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 1 },
+      { id: 2, type_id: 1 },
+      { id: 3, type_id: 1 },
+    ]);
+    expect(mlc.query({ _not: { id: { _eq: 3 } } })).to.have.lengthOf(2);
+  });
+  it(`minilinks.query { id: { _in: [2] } }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 1 },
+      { id: 2, type_id: 1 },
+      { id: 3, type_id: 1 },
+    ]);
+    expect(mlc.query({ id: { _in: [2] } })).to.have.lengthOf(1);
+  });
   it(`minilinks.query { id: { _gt: 2 } }`, async () => {
     const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
     mlc.add([
@@ -40,5 +76,15 @@ describe('minilinks-query', () => {
     assert.throws(() => {
       mlc.query({ from_id: undefined });
     }, 'from_id === undefined');
+  });
+  it.only(`minilinks.query { value: { value: { _eq: 'abc' } } }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 2, },
+      { id: 2, type_id: 2, string: { value: 'abc' } },
+    ]);
+    expect(mlc.query({
+      string: { value: { _eq: 'abc' } }
+    })).to.have.lengthOf(1);
   });
 });

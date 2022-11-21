@@ -62,7 +62,7 @@ const resolvers = {
         const token = jwt({
           secret: jwt_secret.key,
           linkId,
-          role: await deep.can(linkId, linkId, await deep.id('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
+          role: await deep.can(null, linkId, await deep.id('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
         });
         return { token, linkId };
       } catch(error) {
