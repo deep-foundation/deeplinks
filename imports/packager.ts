@@ -315,9 +315,9 @@ export class Packager<L extends Link<any>> {
             if (typeof(item?.package?.containValue) !== 'string') errors.push(`!item[${i}].package?.containValue`);
             if (!pckg.dependencies?.[item.package.dependencyId]) errors.push(`!pckg.dependencies?.[pckg.data[${i}].package.dependencyId,(${item.package.dependencyId})]`);
           } else {
-            if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}].type`);
-            if (item.hasOwnProperty('from')) if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}].from`);
-            if (item.hasOwnProperty('to')) if (typeof(item?.to) !== 'string' && typeof(item?.to) !== 'number') errors.push(`!item[${i}].to`);
+            if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}(id:${item?.id})].type`);
+            if (item.hasOwnProperty('from') && typeof(item?.from) !== 'undefined') if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}(id:${item?.id})].from`);
+            if (item.hasOwnProperty('to') && typeof(item?.to) !== 'undefined') if (typeof(item?.to) !== 'string' && typeof(item?.to) !== 'number') errors.push(`!item[${i}(id:${item?.id})].to`);
             if (item.value) {
               if (typeof(item?.value) !== 'object') errors.push(`!item[${i}].value`);
               else {
@@ -378,7 +378,7 @@ export class Packager<L extends Link<any>> {
       name: 'LOAD_PACKAGE_LINKS',
       returning: `
           id type_id from_id to_id value
-          contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
+          contains: in(where: { type_id: { _eq: ${Contain} }, string: { value: { _is_null: false } }, from: { type_id: { _eq: ${Package} } } }) {
             id value
             package: from {
               id value
@@ -386,7 +386,7 @@ export class Packager<L extends Link<any>> {
           }
           _type:type {
             id value
-            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, string: { value: { _is_null: false } }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -395,7 +395,7 @@ export class Packager<L extends Link<any>> {
           }
           _from:from {
             id
-            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, string: { value: { _is_null: false } }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -404,7 +404,7 @@ export class Packager<L extends Link<any>> {
           }
           _to:to {
             id
-            contains: in(where: { type_id: { _eq: ${Contain} }, from: { type_id: { _eq: ${Package} } } }) {
+            contains: in(where: { type_id: { _eq: ${Contain} }, string: { value: { _is_null: false } }, from: { type_id: { _eq: ${Package} } } }) {
               id value
               package: from {
                 id value
@@ -632,7 +632,7 @@ export class Packager<L extends Link<any>> {
       gbyl[localLink.id] = gId;
       lbyg[gId] = localLink.id;
       localLinks[localLink.id] = localLink;
-      return localLink.id;
+      return localLink;
     };
     // convert global id to local id
     for (let g = 0; g < globalLinks.links.length; g++) {
@@ -665,9 +665,10 @@ export class Packager<L extends Link<any>> {
       const dependencyId = getDependencyIndex(link);
       const containValue = link?.contains?.[0]?.value?.value;
       const exists = Object.values(localLinks).find((l:any) => l?.package?.dependencyId === dependencyId && l?.package?.containValue === containValue);
-      return exists || addLocalLink(link.id, {
+      const result = exists || addLocalLink(link.id, {
         package: { dependencyId, containValue }
       });
+      return result;
     };
     for (let g = 0; g < globalLinks.links.length; g++) {
       const globalLink = globalLinks.links[g];

@@ -36,6 +36,8 @@ export interface BoolExpLink extends BoolExp<BoolExpLink> {
   string?: BoolExpValue<string>;
   /** Value type object definition. */
   object?: BoolExpValue<object>;
+  /** Value (number/string/object shortly). */
+  value?: BoolExpValue<any>;
   /** Relation to current rule. */
   can_rule?: BoolExpCan;
   /** Relation to rules where current link used as action. */
@@ -162,6 +164,14 @@ export interface ComparasionExp<T> {
   _nin?: T[];
   _type_of?: T;
   _id?: [any, ...any[]];
+  _like?: string;
+  _ilike?: string;
+  _nlike?: string;
+  _nilike?: string;
+  _regex?: string;
+  _nregex?: string;
+  _iregex?: string;
+  _niregex?: string;
 }
 export interface MutationInput {}
 export interface MutationInputLinkPlain {

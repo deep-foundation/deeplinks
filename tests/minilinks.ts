@@ -56,6 +56,8 @@ describe('minilinks', () => {
   });
   it(`apply`, async () => {
     const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    const events = [];
+    mlc.emitter.on('apply', (o,n) => events.push(o ? o.id : n.id));
     mlc.apply([
       { id: 1, type_id: 3, from_id: 2 },
       { id: 3, type_id: 3, from_id: 1, to_id: 2, value: { value: 123 } },
@@ -72,6 +74,7 @@ describe('minilinks', () => {
     expect(mlc?.byId?.[3]?.to?.id).to.be.equal(2);
     expect(mlc?.byId?.[3]?.value?.value).to.be.equal(234);
     expect(mlc?.byId?.[5]).to.be.undefined;
+    assert.deepEqual(events, [1,3,5,2]);
   });
   it(`apply`, async () => {
     const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);

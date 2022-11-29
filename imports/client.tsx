@@ -396,7 +396,7 @@ export interface DeepClientInstance<L = Link<number>> {
   serializeQuery(exp: any, env?: string): any;
 
   id(start: DeepClientStartItem | BoolExpLink, ...path: DeepClientPathItem[]): Promise<number>;
-  idSync(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
+  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
 
@@ -711,7 +711,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return result;
   };
 
-  idSync(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
+  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     if (_ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }
@@ -779,6 +779,11 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (actionIds) where.action_id = typeof(actionIds) === 'number' ? { _eq: +actionIds } : { _in: actionIds };
     const result = await this.select(where, { table: 'can', returning: 'rule_id' });
     return !!result?.data?.length;
+  }
+
+  nameLocal(input: Link<number> | number): string | undefined {
+    const link: any = typeof(input) === 'number' ? this.minilinks.byId[input] : input;
+    return link?.inByType?.[this.idLocal('@deep-foundation/core', 'Contain')]?.[0]?.value?.value;
   }
 }
 

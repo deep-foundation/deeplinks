@@ -387,12 +387,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       const old = byId[link.id];
       if (!old) {
         link._applies = [applyName];
+        this.emitter.emit('apply', old, link);
         toAdd.push(link);
       }
       else {
         const index = old._applies.indexOf(applyName);
         if (!~index) {
           link._applies = old._applies = [...old._applies, applyName];
+          this.emitter.emit('apply', old, link);
         } else {
           link._applies = old._applies;
         }
@@ -412,6 +414,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
             toRemove.push(link);
           } else {
             link._applies.splice(index, 1);
+            this.emitter.emit('apply', link, link);
           }
         }
       }
@@ -483,10 +486,17 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
       }
     };
     ml.emitter.on('removed', removedListener);
+    const applyListener = (ol, nl) => {
+      if (filter(nl, ol, nl)) {
+        setState(results(nl, ml, ol, nl));
+      }
+    };
+    ml.emitter.on('apply', applyListener);
     return () => {
       ml.emitter.removeListener('added', addedListener);
       ml.emitter.removeListener('updated', updatedListener);
       ml.emitter.removeListener('removed', removedListener);
+      ml.emitter.removeListener('apply', applyListener);
     };
   }, []);
   useEffect(() => {
@@ -509,10 +519,15 @@ export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, 
       handler('removed', ol, nl);
     };
     ml.emitter.on('removed', removedListener);
+    const applyListener = (ol, nl) => {
+      handler('apply', ol, nl);
+    };
+    ml.emitter.on('apply', applyListener);
     return () => {
       ml.emitter.removeListener('added', addedListener);
       ml.emitter.removeListener('updated', updatedListener);
       ml.emitter.removeListener('removed', removedListener);
+      ml.emitter.removeListener('apply', applyListener);
     };
   }, []);
 };

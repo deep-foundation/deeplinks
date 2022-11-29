@@ -77,14 +77,32 @@ describe('minilinks-query', () => {
       mlc.query({ from_id: undefined });
     }, 'from_id === undefined');
   });
-  it.only(`minilinks.query { value: { value: { _eq: 'abc' } } }`, async () => {
+  it(`minilinks.query { value: { value: { _eq: 'abc' } } }`, async () => {
     const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
     mlc.add([
       { id: 1, type_id: 2, },
       { id: 2, type_id: 2, string: { value: 'abc' } },
     ]);
     expect(mlc.query({
-      string: { value: { _eq: 'abc' } }
+      value: { value: { _eq: 'abc' } }
     })).to.have.lengthOf(1);
+  });
+  it(`minilinks.query { value: { value: { _like: 'bc' } } }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 2, },
+      { id: 2, type_id: 2, value: { value: 'abc' } },
+    ]);
+    expect(mlc.query({
+      value: { value: { _like: 'abc' } }
+    })).to.have.lengthOf(1);
+  });
+  it(`minilinks.query { in: { id: 2 } }`, async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.add([
+      { id: 1, type_id: 2, },
+      { id: 2, type_id: 2, to_id: 1, from_id: 1 },
+    ]);
+    expect(mlc.query({ in: { id: 2 } })).to.have.lengthOf(1);
   });
 });

@@ -90,7 +90,7 @@ export const up = async () => {
       insertedIncludeId bigint = 0;
       insertedExcludeId bigint = 0;
     BEGIN
-      IF (NEW."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorTree')}) THEN
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorTree')}) THEN
         selectorTree := NEW;
 
         SELECT t.* into selectorCursor
@@ -104,7 +104,7 @@ export const up = async () => {
           FROM "${LINKS_TABLE_NAME}" as t
           WHERE (
             t."from_id" = selectorCursor."from_id" AND
-            t."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorFilter')}
+            t."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorFilter')}
           );
           IF selectorFilter IS NOT NULL THEN
             boolExpId := selectorFilter."to_id";
@@ -114,27 +114,27 @@ export const up = async () => {
           FROM "${LINKS_TABLE_NAME}" as t
           WHERE (
             t."to_id" = selectorCursor."from_id" AND
-            t."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleAction')}
+            t."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleAction')}
           );
 
           SELECT t.* into ruleObject
           FROM "${LINKS_TABLE_NAME}" as t
           WHERE (
             t."to_id" = selectorCursor."from_id" AND
-            t."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleObject')}
+            t."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')}
           );
 
           SELECT t.* into ruleSubject
           FROM "${LINKS_TABLE_NAME}" as t
           WHERE (
             t."to_id" = selectorCursor."from_id" AND
-            t."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleSubject')}
+            t."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleSubject')}
           );
 
-          IF (selectorCursor."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorInclude')}) THEN
+          IF (selectorCursor."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorInclude')}) THEN
             INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id") VALUES (selectorCursor."to_id", selectorTree."to_id", selectorCursor."id", selectorTree."id", selectorCursor."from_id", boolExpId) RETURNING "id" into insertedIncludeId;
           END IF;
-          IF (selectorCursor."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorExclude')}) THEN
+          IF (selectorCursor."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorExclude')}) THEN
             INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id") VALUES (selectorCursor."to_id", selectorTree."to_id", selectorCursor."id", selectorTree."id", selectorCursor."from_id", boolExpId) RETURNING "id" into insertedExcludeId;
           END IF;
 
@@ -189,11 +189,11 @@ export const up = async () => {
         END IF;
       END IF;
 
-      IF (NEW."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorFilter')}) THEN
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorFilter')}) THEN
         UPDATE "${TABLE_NAME}" SET "selector_filter_bool_exp_id" = NEW."to_id" WHERE "selector_id" = NEW."from_id";
       END IF;
 
-      IF (NEW."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleAction')}) THEN
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleAction')}) THEN
         FOR caches
         IN (
           SELECT cache.*
@@ -209,7 +209,7 @@ export const up = async () => {
           END IF;
         END LOOP;
       END IF;
-      IF (NEW."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleObject')}) THEN
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')}) THEN
         FOR caches
         IN (
           SELECT cache.*
@@ -225,7 +225,7 @@ export const up = async () => {
           END IF;
         END LOOP;
       END IF;
-      IF (NEW."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleSubject')}) THEN
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleSubject')}) THEN
         FOR caches
         IN (
           SELECT cache.*
@@ -247,38 +247,38 @@ export const up = async () => {
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${TABLE_NAME}__delete__function() RETURNS TRIGGER AS $trigger$
     BEGIN
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'Selector')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'Selector')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "selector_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorInclude')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorInclude')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "selector_include_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorExclude')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorExclude')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "selector_exclude_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorTree')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorTree')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "selector_tree_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'Tree')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'Tree')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "tree_id" = OLD."id";
       END IF;
       DELETE FROM ${TABLE_NAME} WHERE "link_id" = OLD."id";
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'SelectorFilter')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorFilter')}) THEN
         UPDATE "${TABLE_NAME}" SET "selector_filter_bool_exp_id" = 0 WHERE "selector_id" = OLD."from_id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'Query')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'Query')}) THEN
         UPDATE "${TABLE_NAME}" SET "selector_filter_bool_exp_id" = 0 WHERE "selector_filter_bool_exp_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'Rule')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'Rule')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "rule_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleAction')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleAction')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "rule_action_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleObject')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "rule_object_id" = OLD."id";
       END IF;
-      IF (OLD."type_id" = ${deep.idSync('@deep-foundation/core', 'RuleSubject')}) THEN
+      IF (OLD."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleSubject')}) THEN
         DELETE FROM ${TABLE_NAME} WHERE "rule_subject_id" = OLD."id";
       END IF;
     RETURN OLD;
