@@ -127,19 +127,19 @@ const trigger = Trigger({
 });
 
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
-const DEFAULT_MP_TABLE = TREE_TABLE_NAME;
+const DEFAULT_TREE_TABLE = TREE_TABLE_NAME;
 const DEFAULT_GRAPH_TABLE = LINKS_TABLE_NAME;
 
 export const upTreeSchema = async ({
-  SCHEMA = DEFAULT_SCHEMA, MP_TABLE = DEFAULT_MP_TABLE, GRAPH_TABLE = DEFAULT_GRAPH_TABLE, ID_FIELD = 'id', api
+  SCHEMA = DEFAULT_SCHEMA, TREE_TABLE = DEFAULT_TREE_TABLE, GRAPH_TABLE = DEFAULT_GRAPH_TABLE, ID_FIELD = 'id', api
 }: {
-  SCHEMA?: string; MP_TABLE?: string; GRAPH_TABLE?: string; ID_FIELD?: string;
+  SCHEMA?: string; TREE_TABLE?: string; GRAPH_TABLE?: string; ID_FIELD?: string;
   api: HasuraApi;
 }) => {
   await api.query({
     type: 'create_select_permission',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       role: 'guest',
       permission: {
         columns: '*',
@@ -152,7 +152,7 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_select_permission',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       role: 'user',
       permission: {
         columns: '*',
@@ -171,7 +171,7 @@ export const upTreeSchema = async ({
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             [ID_FIELD]: 'link_id',
@@ -191,7 +191,7 @@ export const upTreeSchema = async ({
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             [ID_FIELD]: 'parent_id',
@@ -211,7 +211,7 @@ export const upTreeSchema = async ({
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             [ID_FIELD]: 'root_id',
@@ -231,7 +231,7 @@ export const upTreeSchema = async ({
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             [ID_FIELD]: 'tree_id',
@@ -243,29 +243,9 @@ export const upTreeSchema = async ({
   });
 
   await api.query({
-    type: 'create_array_relationship',
-    args: {
-      table: TREE_TABLE_NAME,
-      name: 'by_position',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: SCHEMA,
-            name: TREE_TABLE_NAME,
-          },
-          column_mapping: {
-            position_id: 'position_id',
-          },
-          insertion_order: 'after_parent',
-        },
-      },
-    },
-  });
-
-  await api.query({
     type: 'create_object_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'link',
       using: {
         manual_configuration: {
@@ -285,7 +265,7 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_object_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'parent',
       using: {
         manual_configuration: {
@@ -305,7 +285,7 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_object_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'root',
       using: {
         manual_configuration: {
@@ -325,7 +305,7 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_object_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'tree',
       using: {
         manual_configuration: {
@@ -345,13 +325,13 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_array_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'by_link',
       using: {
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             link_id: 'link_id',
@@ -365,13 +345,13 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_array_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'by_parent',
       using: {
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             parent_id: 'parent_id',
@@ -385,13 +365,13 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_array_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'by_position',
       using: {
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             position_id: 'position_id',
@@ -405,7 +385,7 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_object_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'by_tree',
       using: {
         manual_configuration: {
@@ -425,13 +405,13 @@ export const upTreeSchema = async ({
   await api.query({
     type: 'create_array_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       name: 'by_root',
       using: {
         manual_configuration: {
           remote_table: {
             schema: SCHEMA,
-            name: MP_TABLE,
+            name: TREE_TABLE,
           },
           column_mapping: {
             root_id: 'root_id',
@@ -444,9 +424,9 @@ export const upTreeSchema = async ({
 };
 
 export const downTreeSchema = async ({
-  SCHEMA = DEFAULT_SCHEMA, MP_TABLE = DEFAULT_MP_TABLE, GRAPH_TABLE = DEFAULT_GRAPH_TABLE, api
+  SCHEMA = DEFAULT_SCHEMA, TREE_TABLE = DEFAULT_TREE_TABLE, GRAPH_TABLE = DEFAULT_GRAPH_TABLE, api
 }: {
-  SCHEMA?: string; MP_TABLE?: string; GRAPH_TABLE?: string; ID_FIELD?: string;
+  SCHEMA?: string; TREE_TABLE?: string; GRAPH_TABLE?: string; ID_FIELD?: string;
   api: HasuraApi;
 }) => {
   await api.query({
@@ -484,7 +464,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'link',
       cascade: true,
     },
@@ -492,7 +472,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'parent',
       cascade: true,
     },
@@ -500,7 +480,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'root',
       cascade: true,
     },
@@ -508,7 +488,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'by_link',
       cascade: true,
     },
@@ -516,7 +496,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'by_parent',
       cascade: true,
     },
@@ -524,7 +504,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'by_position',
       cascade: true,
     },
@@ -532,7 +512,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'by_tree',
       cascade: true,
     },
@@ -540,7 +520,7 @@ export const downTreeSchema = async ({
   await api.query({
     type: 'drop_relationship',
     args: {
-      table: MP_TABLE,
+      table: TREE_TABLE,
       relationship: 'by_root',
       cascade: true,
     },
