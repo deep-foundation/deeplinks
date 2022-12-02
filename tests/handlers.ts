@@ -1235,7 +1235,7 @@ describe('Async handlers', () => {
   });
 
   describe('handle by selector', () => {
-    it.only(`handle insert`, async () => {
+    it(`handle insert`, async () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
