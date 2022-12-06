@@ -397,27 +397,21 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     }) {
       id
       promise_id
-      promise_selectors (where: {
-        item_id: { _eq: $itemId },
-        handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
-      }) {
+      selector_id
+      handle_operation {
         id
-        promise_id
-        handle_operation {
+        handler: to {
           id
-          handler: to {
+          supports: from {
             id
-            supports: from {
+            isolation: from {
               id
-              isolation: from {
-                id
-                image: value
-              }
+              image: value
             }
-            file: to {
-              id
-              code: value
-            }
+          }
+          file: to {
+            id
+            code: value
           }
         }
       }
