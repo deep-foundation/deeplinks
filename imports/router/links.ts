@@ -380,7 +380,6 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   };
 
   const promiseSelectorsResult = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
-  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
 
   const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
   handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
@@ -425,6 +424,10 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   };
 
   const promiseSelectorsResultDraft = await client.query({ query: promiseSelectorsQueryDraft, variables: promiseSelectorsQueryVariablesDraft });
+
+  handleSelectorDebug('promiseSelectorsQueryString', promiseSelectorsQueryString);
+  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
+  handleSelectorDebug('promiseSelectorsQueryStringDraft', promiseSelectorsQueryStringDraft);
   handleSelectorDebug('promiseSelectorsResultDraft', JSON.stringify(promiseSelectorsResultDraft, null, 2));
 
   if (!promiseSelectors?.length) {
