@@ -215,6 +215,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-user-id'] = Number(ownerId);
   plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
   return {
+    linkId: ownerId,
     id: (start, ...path) => {
       try {
         const pathToWhere = (start, path) => {
@@ -357,8 +358,14 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
       newLink: { ...link, value: NEW ? NEW : undefined}
     };
   } else {
+
+    const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+    const default_role = hasura_session['x-hasura-role'];
+    const default_user_id = hasura_session['x-hasura-user-id'];
+
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
+      triggeredLink: default_user_id,
       oldLink: OLD ? {
         id: Number(OLD?.id),
         from_id: Number(OLD?.from_id),
@@ -374,10 +381,6 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
       } : undefined,
     };
   }
-
-  const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
-  const default_role = hasura_session['x-hasura-role'];
-  const default_user_id = hasura_session['x-hasura-user-id'];
 
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
