@@ -83,6 +83,7 @@ export const up = async () => {
     new_link_type_id bigint,
     new_link_from_id bigint,
     new_link_to_id bigint,
+    selector_id bigint,
     handle_operation_id bigint NOT NULL,
     values_operation public.values_operation_type
   );`);
@@ -182,7 +183,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN TRUE;
@@ -230,7 +231,7 @@ export const up = async () => {
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
         INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.handle_operation_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.selector_id, SELECTOR.handle_operation_id);
       END IF;
     END LOOP;
     RETURN OLD;
