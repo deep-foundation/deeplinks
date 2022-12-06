@@ -173,7 +173,7 @@ export default async (req, res) => {
         }
       
         await handleOperation('Update', oldRow, newRow);
-        await handleSelectorOperation('Update', oldRow, newRow);
+        await handleSelectorOperation('Update', oldRow, newRow, operation);
         
         return res.status(200).json({});
       } catch(e) {
