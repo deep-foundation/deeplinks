@@ -348,24 +348,24 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
   const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
   let data;
   let prepared;
+
+  const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
+  const default_role = hasura_session['x-hasura-role'];
+  const default_user_id = hasura_session['x-hasura-user-id'];
   
   if (${valueTrigger}){
     const linkId = NEW?.link_id || OLD?.link_id;
     const link = plv8.execute("select * from links where id = $1", [ linkId ])[0];
     prepared = link ? prepare(link, ${handleOperationTypeId}) : [];
     data = {
+      triggeredByLinkId: default_user_id,
       oldLink: { ...link, value: OLD ? OLD : undefined},
       newLink: { ...link, value: NEW ? NEW : undefined}
     };
   } else {
-
-    const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
-    const default_role = hasura_session['x-hasura-role'];
-    const default_user_id = hasura_session['x-hasura-user-id'];
-
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
-      triggeredLink: default_user_id,
+      triggeredByLinkId: default_user_id,
       oldLink: OLD ? {
         id: Number(OLD?.id),
         from_id: Number(OLD?.from_id),
