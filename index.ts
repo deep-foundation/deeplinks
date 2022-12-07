@@ -467,7 +467,7 @@ const handleRoutes = async () => {
     //           routesDebugLog(`supports`, supports);
     //           const isolation = ml.byId[supports?.from_id];
     //           routesDebugLog(`isolation`, isolation);
-    //           const image = isolation?.value?.value;
+    //           const image = isolation?.image?.value;
     //           routesDebugLog(`image`, image);
     //           const container = imageContainers[image];
     //           routesDebugLog(`container`, JSON.stringify(container, null, 2));

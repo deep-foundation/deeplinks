@@ -191,19 +191,19 @@ export async function getJwt(handlerId: number, useRunnerDebug: any) {
 }
 
 export const useRunner = async ({
-  code, handler, handlerId, oldLink, newLink, moment, promiseId,
+  code, isolationProviderImageName, handlerId, data,
 } : {
-  code: string, handlerId: number, handler: string, oldLink?: any, newLink?: any, moment?: any; promiseId?: number;
+  code: string, handlerId: number, isolationProviderImageName: string, data: any;
 }) => {
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
 
   const jwt = await getJwt(handlerId, useRunnerDebug);
-  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler, code, jwt, data: { oldLink, newLink, moment }});
+  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler: isolationProviderImageName, code, jwt, data});
   useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
-  const callResult = await containerController.callHandler({ code, container, jwt, data: { oldLink, newLink, moment, promiseId } });
+  const callResult = await containerController.callHandler({ code, container, jwt, data });
   useRunnerDebug('callResult', callResult);
   return callResult;
 }
@@ -266,7 +266,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
             id
             isolation: from {
               id
-              value
+              image: value
             }
           }
         }
@@ -314,12 +314,12 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       // log(handleStringResult?.data?.links?.[0]?.value);
       for (const handlerWithCode of handlersWithCode) {
         const code = handlerWithCode?.value?.value;
-        const isolationValue = handlerWithCode?.in?.[0]?.support?.isolation?.value?.value;
+        const isolationProviderImageName = handlerWithCode?.in?.[0]?.support?.isolation?.image?.value;
         const handlerId = handlerWithCode?.in?.[0]?.id;
         const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code && isolationValue && handlerId && handleInsertId) {
+        if (code && isolationProviderImageName && handlerId && handleInsertId) {
           try {
-            promises.push(async () => useRunner({ code, handlerId, handler: isolationValue, oldLink, newLink, promiseId: promise.id }));
+            promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId: promise.id } }));
             handleInsertsIds.push(handleInsertId);
           } catch (error) {
             handleOperationDebug('error', error);
@@ -386,7 +386,8 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
       ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" },` : "" }
-      handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
+      handle_operation: { type_id: { _eq: ${handleOperationTypeId} } },
+      selector_id: { _is_null: false }
     }) {
       id
       promise_id
@@ -459,15 +460,16 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
 
     for (const promiseSelector of promiseSelectors) {
       const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
-      const isolationValue = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
+      const isolationProviderImageName = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
       const handlerId = promiseSelector?.handle_operation?.handler?.id;
       const handleInsertId = promiseSelector?.handle_operation?.id;
+      const selectorId = promiseSelector?.selector_id;
       // handleSelectorDebug('code', code);
       // handleSelectorDebug('isolationValue', isolationValue);
       // handleSelectorDebug('handleInsertId', handleInsertId);
-      if (code && isolationValue && handlerId && handleInsertId) {
+      if (code && isolationProviderImageName && handlerId && handleInsertId) {
         try {
-          promises.push(async () => useRunner({ code, handlerId, handler: isolationValue, oldLink, newLink, promiseId }));
+          promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId, selectorId } }));
           handleInsertsIds.push(handleInsertId);
         } catch (error) {
           handleSelectorDebug('error', error);
