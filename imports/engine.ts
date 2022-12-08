@@ -122,7 +122,7 @@ export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusRetu
 
 const _generateEngineStr = ({ operation, isDeeplinksDocker, envs }: IGenerateEngineStrOptions): string => {
   let str;
-  if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset' ].includes(operation)) return ' echo "not valid operation"';
+  if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
   }
@@ -148,6 +148,12 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, envs }: IGenerateEng
     } else {
       str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']} && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
     }
+  }
+  if (operation === 'dock') {
+    str = ` docker version -f json`;
+  }
+  if (operation === 'compose') {
+    str = ` docker-compose version --short`;
   }
   return str;
 }
