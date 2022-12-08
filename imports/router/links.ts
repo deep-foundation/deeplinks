@@ -451,8 +451,8 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   // For each promise_id
   for (const promiseIdString in promiseSelectorsByPromiseId) {
     const promiseSelectors = promiseSelectorsByPromiseId[promiseIdString];
-    const promiseSelectorsIds = promiseSelectors.map(promiseSelector => promiseSelector.id);
-    handleSelectorDebug('promiseSelectorsIds', JSON.stringify(promiseSelectorsIds, null, 2));
+    const promiseLinksIds = promiseSelectors.map(promiseSelector => promiseSelector.id);
+    handleSelectorDebug('promiseSelectorsIds', JSON.stringify(promiseLinksIds, null, 2));
     const promiseId = parseInt(promiseIdString);
 
     const promises: any[] = [];
@@ -481,7 +481,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     }
     processPromises(promises, handleInsertsIds, promiseId, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleSelectorDebug);
     
-    await deep.delete(promiseSelectorsIds, { name: 'DELETE_PROMISES_SELECTORS', table: 'promise_selectors' as any });
+    await deep.delete(promiseLinksIds, { name: 'DELETE_PROMISES_LINKS', table: 'promise_links' as any });
   }
 }
 
