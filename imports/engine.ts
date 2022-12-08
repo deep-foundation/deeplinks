@@ -107,7 +107,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   return envsStr;
 };
 
-const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
+export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
   let status;
   let err;
   try {
