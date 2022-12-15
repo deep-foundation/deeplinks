@@ -348,40 +348,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   handleSelectorDebug('handleOperation', operation);
   // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
-  const promiseSelectorsQueryString = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { promise_selectors(where: {
-    item_id: { _eq: $itemId },
-    handle_operation: { type_id: { _eq: ${handleOperationTypeId} } }
-  }) {
-    id
-    promise_id
-    handle_operation {
-      id
-      handler: to {
-        id
-        supports: from {
-          id
-          isolation: from {
-            id
-            image: value
-          }
-        }
-        file: to {
-          id
-          code: value
-        }
-      }
-    }
-  } }`;
-
-  const promiseSelectorsQuery = gql`${promiseSelectorsQueryString}`;
-
-  const promiseSelectorsQueryVariables = {
-    itemId: currentLinkId
-  };
-
-  const promiseSelectorsResult = await client.query({ query: promiseSelectorsQuery, variables: promiseSelectorsQueryVariables });
-
-  const promiseSelectorsQueryStringDraft = `query SELECT_PROMISE_SELECTORS($itemId: bigint) { 
+  const promiseLinksQueryString = `query SELECT_PROMISE_LINKS($itemId: bigint) { 
     promise_links(where: {
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
@@ -412,24 +379,21 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     }
   }`;
 
-  const promiseSelectorsQueryDraft = gql`${promiseSelectorsQueryStringDraft}`;
+  const promiseLinksQuery = gql`${promiseLinksQueryString}`;
 
-  const promiseSelectorsQueryVariablesDraft = {
+  const promiseLinksQueryVariables = {
     itemId: currentLinkId
   };
 
-  const promiseSelectorsResultDraft = await client.query({ query: promiseSelectorsQueryDraft, variables: promiseSelectorsQueryVariablesDraft });
+  const promiseLinksResult = await client.query({ query: promiseLinksQuery, variables: promiseLinksQueryVariables });
 
-  handleSelectorDebug('promiseSelectorsQueryString', promiseSelectorsQueryString);
-  handleSelectorDebug('promiseSelectorsResult', JSON.stringify(promiseSelectorsResult, null, 2));
-  handleSelectorDebug('promiseSelectorsQueryStringDraft', promiseSelectorsQueryStringDraft);
-  handleSelectorDebug('promiseSelectorsResultDraft', JSON.stringify(promiseSelectorsResultDraft, null, 2));
+  handleSelectorDebug('promiseSelectorsQueryStringDraft', promiseLinksQueryString);
+  handleSelectorDebug('promiseSelectorsResultDraft', JSON.stringify(promiseLinksResult, null, 2));
 
-  const promiseSelectors = promiseSelectorsResultDraft?.data?.promise_links;
-  // const promiseSelectors = promiseSelectorsResult?.data?.promise_selectors;
-  handleSelectorDebug('promiseSelectors.length', promiseSelectors?.length);
+  const promiseLinks = promiseLinksResult?.data?.promise_links;
+  handleSelectorDebug('promiseSelectors.length', promiseLinks?.length);
 
-  if (!promiseSelectors?.length) {
+  if (!promiseLinks?.length) {
     return;
   }
 
@@ -438,7 +402,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-  const promiseSelectorsByPromiseId = promiseSelectors.reduce((accumulator, current) => {
+  const promiseSelectorsByPromiseId = promiseLinks.reduce((accumulator, current) => {
     const promiseId = current.promise_id;
     if (!accumulator[promiseId]) {
       accumulator[promiseId] = [];

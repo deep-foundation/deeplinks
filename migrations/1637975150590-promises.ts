@@ -31,43 +31,6 @@ export const up = async () => {
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
 
-  // promise_selectors
-  await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_selectors (
-    id bigserial PRIMARY KEY,
-    promise_id bigint NOT NULL,
-    item_id bigint NOT NULL,
-    selector_id bigint NOT NULL,
-    handle_operation_id bigint NOT NULL
-  );`);
-  await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_selectors');`);
-  await api.query({
-    type: 'track_table',
-    args: {
-      schema: 'public',
-      name: 'promise_selectors',
-    },
-  });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: 'promise_selectors',
-      name: 'handle_operation',
-      type: 'one_to_one',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: 'public',
-            name: 'links',
-          },
-          column_mapping: {
-            handle_operation_id: 'id',
-          },
-          insertion_order: 'after_parent',
-        },
-      },
-    },
-  });
-
   // create sql type values_operation_type upper case
   await api.sql(sql`CREATE TYPE public.values_operation_type AS ENUM ('INSERT', 'UPDATE', 'DELETE');`);
   
@@ -110,25 +73,6 @@ export const up = async () => {
           },
           column_mapping: {
             handle_operation_id: 'id',
-          },
-          insertion_order: 'after_parent',
-        },
-      },
-    },
-  });
-  await api.query({
-    type: 'create_array_relationship',
-    args: {
-      table: 'promise_links',
-      name: 'promise_selectors',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: 'public',
-            name: 'promise_selectors',
-          },
-          column_mapping: {
-            promise_id: 'promise_id',
           },
           insertion_order: 'after_parent',
         },
@@ -183,7 +127,6 @@ export const up = async () => {
       IF SELECTOR.query_id = 0 OR bool_exp_execute(link."id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, link."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
         INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id);
       END IF;
     END LOOP;
@@ -231,7 +174,6 @@ export const up = async () => {
       IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."id", SELECTOR.query_id, user_id) THEN
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
-        INSERT INTO promise_selectors ("promise_id", "item_id", "selector_id", "handle_operation_id") VALUES (PROMISE, OLD."id", SELECTOR.selector_id, SELECTOR.handle_operation_id);
         INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id);
       END IF;
     END LOOP;
@@ -322,34 +264,6 @@ export const down = async () => {
   //   },
   // });
   // await api.sql(sql`DROP TABLE IF EXISTS "public"."debug_output" CASCADE;`);
-
-  await api.query({
-    type: 'drop_relationship',
-    args: {
-      table: 'promise_links',
-      relationship: 'promise_selectors',
-    },
-  });
-
-  // promise_selectors
-  await api.query({
-    type: 'drop_relationship',
-    args: {
-      table: 'promise_selectors',
-      relationship: 'handle_operation',
-    },
-  });
-  await api.query({
-    type: 'untrack_table',
-    args: {
-      table: {
-        schema: 'public',
-        name: 'promise_selectors',
-      },
-      cascade: true,
-    },
-  });
-  await api.sql(sql`DROP TABLE IF EXISTS "public"."promise_selectors" CASCADE;`);
 
   // promise_links
   await api.query({
