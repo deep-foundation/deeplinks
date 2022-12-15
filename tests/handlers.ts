@@ -344,7 +344,7 @@ afterAll(async () => {
   deletePackageWithPermissions(packageWithPermissions);
 });
 
-describe.only('Async handlers', () => {
+describe('Async handlers', () => {
   describe('sync function handle by type with resolve', () => {
     it(`handle insert`, async () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
