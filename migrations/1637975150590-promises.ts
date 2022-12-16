@@ -49,6 +49,9 @@ export const up = async () => {
     selector_id bigint,
     handle_operation_id bigint NOT NULL,
     handle_operation_type_id bigint NOT NULL,
+    handler_id bigint NOT NULL,
+    isolation_provider_image_name text NOT NULL,
+    code text NOT NULL,
     values_operation public.values_operation_type
   );`);
   await api.sql(sql`select create_btree_indexes_for_all_columns('public', 'promise_links');`);
@@ -116,13 +119,17 @@ export const up = async () => {
     HANDLE_INSERT record;
     user_id bigint;
     hasura_session json;
+    handler_id bigint;
+    isolation_provider_image_name text;
+    code text;
   BEGIN
     FOR HANDLE_INSERT IN
       SELECT id, type_id FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId}
     LOOP
+      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_INSERT."id");
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", HANDLE_INSERT."id", HANDLE_INSERT."type_id");
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", handler_id, isolation_provider_image_name, code);
     END LOOP;
 
     IF (
@@ -145,9 +152,10 @@ export const up = async () => {
     LOOP
       -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, link."id");
       IF SELECTOR.query_id = 0 OR bool_exp_execute(link."id", SELECTOR.query_id, user_id) THEN
+        SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(SELECTOR.handle_operation_id);
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, handler_id, isolation_provider_image_name, code);
       END IF;
     END LOOP;
     RETURN TRUE;
@@ -170,13 +178,17 @@ export const up = async () => {
     HANDLE_DELETE record;
     user_id bigint;
     hasura_session json;
+    handler_id bigint;
+    isolation_provider_image_name text;
+    code text;
   BEGIN
     FOR HANDLE_DELETE IN
       SELECT id, type_id FROM links WHERE "from_id" = OLD."type_id" AND "type_id" = ${handleDeleteTypeId}
     LOOP
+      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_DELETE."id");
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, HANDLE_DELETE."id", HANDLE_DELETE."type_id");
+      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, HANDLE_DELETE."id", HANDLE_DELETE."type_id", handler_id, isolation_provider_image_name, code);
     END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -192,9 +204,10 @@ export const up = async () => {
     LOOP
       -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, OLD."id");
       IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."id", SELECTOR.query_id, user_id) THEN
+        SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(SELECTOR.handle_operation_id);
         INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
         INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."id", PROMISE);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id);
+        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, OLD."id", OLD."type_id", OLD."from_id", OLD."to_id", null, null, null, null, SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, handler_id, isolation_provider_image_name, code);
       END IF;
     END LOOP;
     RETURN OLD;
