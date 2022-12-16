@@ -125,7 +125,7 @@ export async function handleScheduleMomemt(moment: any) {
     const handlersResult = await client.query({ query, variables });
   
     const promises: any[] = [];
-    const handleInsertsIds: any[] = [];
+    const handleOperationsIds: any[] = [];
 
     const handlersWithCode = handlersResult?.data?.links as any[];
     log('handlersWithCode.length', handlersWithCode?.length);
@@ -143,17 +143,17 @@ export async function handleScheduleMomemt(moment: any) {
         const code = handlerWithCode?.value?.value;
         const isolationProviderImageName = handlerWithCode?.in?.[0]?.support?.isolation?.image?.value;
         const handlerId = handlerWithCode?.in?.[0]?.id;
-        const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
-        if (code && isolationProviderImageName && handlerId && handleInsertId) {
+        const handleOperationId = handlerWithCode?.in?.[0]?.in?.[0].id;
+        if (code && isolationProviderImageName && handlerId && handleOperationId) {
           try {
             promises.push(() => useRunner({ code, handlerId, isolationProviderImageName, data: { moment, promiseId: promise.id } }));
-            handleInsertsIds.push(handleInsertId);
+            handleOperationsIds.push(handleOperationId);
           } catch (e) {
             error('error', e);
           }
         } else {
           promises.push(async () => Promise.reject(new Error('Code of a handler is not loaded.')));
-          handleInsertsIds.push(null);
+          handleOperationsIds.push(handleOperationId);
         }
       }
 
@@ -162,7 +162,7 @@ export async function handleScheduleMomemt(moment: any) {
 
       await insertPromise(scheduleId);
 
-      await processPromises(promises, handleInsertsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, log);
+      await processPromises(promises, handleOperationsIds, promise.id, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, log);
     }
   }
 }

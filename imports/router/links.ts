@@ -81,7 +81,7 @@ export function makePromiseResult(promiseId: number, resolvedTypeId: number, pro
   }
 };
 
-export async function processPromises(promises: any[], handleInsertsIds: any[], promiseId: number, promiseResultTypeId: number, promiseReasonTypeId: number, resolvedTypeId: number, rejectedTypeId: number, log: any) {
+export async function processPromises(promises: any[], handleOperationsIds: any[], promiseId: number, promiseResultTypeId: number, promiseReasonTypeId: number, resolvedTypeId: number, rejectedTypeId: number, log: any) {
   log("promises.length: ", promises.length);
   await Promise.allSettled(promises.map((p) => p() as Promise<any>))
       .then(async (values) => {
@@ -89,7 +89,7 @@ export async function processPromises(promises: any[], handleInsertsIds: any[], 
         const promiseResults = [];
         for (let i = 0; i < values.length; i++) {
           const value = values[i];
-          const handleInsertId = handleInsertsIds[i];
+          const handleInsertId = handleOperationsIds[i];
           let resultTypeId = null;
           let result = null;
           if (value.status == 'fulfilled') {
