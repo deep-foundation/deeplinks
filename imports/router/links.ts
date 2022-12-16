@@ -353,7 +353,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
       ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" },` : "" }
-      handle_operation: { type_id: { _eq: ${handleOperationTypeId} } },
+      handle_operation_type_id: { _eq: ${handleOperationTypeId} }
       selector_id: { _is_null: false }
     }) {
       id
@@ -387,11 +387,11 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
 
   const promiseLinksResult = await client.query({ query: promiseLinksQuery, variables: promiseLinksQueryVariables });
 
-  handleSelectorDebug('promiseSelectorsQueryStringDraft', promiseLinksQueryString);
-  handleSelectorDebug('promiseSelectorsResultDraft', JSON.stringify(promiseLinksResult, null, 2));
+  handleSelectorDebug('promiseLinksQueryStringDraft', promiseLinksQueryString);
+  handleSelectorDebug('promiseLinksResultDraft', JSON.stringify(promiseLinksResult, null, 2));
 
   const promiseLinks = promiseLinksResult?.data?.promise_links;
-  handleSelectorDebug('promiseSelectors.length', promiseLinks?.length);
+  handleSelectorDebug('promiseLinks.length', promiseLinks?.length);
 
   if (!promiseLinks?.length) {
     return;
@@ -402,7 +402,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-  const promiseSelectorsByPromiseId = promiseLinks.reduce((accumulator, current) => {
+  const promiseLinksByPromiseId = promiseLinks.reduce((accumulator, current) => {
     const promiseId = current.promise_id;
     if (!accumulator[promiseId]) {
       accumulator[promiseId] = [];
@@ -410,19 +410,19 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     accumulator[promiseId].push(current);
     return accumulator;
   }, {});
-  handleSelectorDebug('promiseSelectorsByPromiseId', JSON.stringify(promiseSelectorsByPromiseId, null, 2));
+  handleSelectorDebug('promiseLinksByPromiseId', JSON.stringify(promiseLinksByPromiseId, null, 2));
 
   // For each promise_id
-  for (const promiseIdString in promiseSelectorsByPromiseId) {
-    const promiseSelectors = promiseSelectorsByPromiseId[promiseIdString];
-    const promiseLinksIds = promiseSelectors.map(promiseSelector => promiseSelector.id);
-    handleSelectorDebug('promiseSelectorsIds', JSON.stringify(promiseLinksIds, null, 2));
+  for (const promiseIdString in promiseLinksByPromiseId) {
+    const promiseLinks = promiseLinksByPromiseId[promiseIdString];
+    const promiseLinksIds = promiseLinks.map(promiseSelector => promiseSelector.id);
+    handleSelectorDebug('promiseLinksIds', JSON.stringify(promiseLinksIds, null, 2));
     const promiseId = parseInt(promiseIdString);
 
     const promises: any[] = [];
     const handleInsertsIds: any[] = [];
 
-    for (const promiseSelector of promiseSelectors) {
+    for (const promiseSelector of promiseLinks) {
       const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
       const isolationProviderImageName = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
       const handlerId = promiseSelector?.handle_operation?.handler?.id;
