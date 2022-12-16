@@ -359,19 +359,16 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       id
       promise_id
       selector_id
+      handle_operation_id
       handle_operation {
-        id
         handler: to {
           id
           supports: from {
-            id
             isolation: from {
-              id
               image: value
             }
           }
           file: to {
-            id
             code: value
           }
         }
@@ -426,7 +423,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       const code = promiseSelector?.handle_operation?.handler?.file?.code?.value;
       const isolationProviderImageName = promiseSelector?.handle_operation?.handler?.supports?.isolation?.image?.value;
       const handlerId = promiseSelector?.handle_operation?.handler?.id;
-      const handleInsertId = promiseSelector?.handle_operation?.id;
+      const handleInsertId = promiseSelector?.handle_operation_id;
       const selectorId = promiseSelector?.selector_id;
       // handleSelectorDebug('code', code);
       // handleSelectorDebug('isolationValue', isolationValue);
