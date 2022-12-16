@@ -173,7 +173,7 @@ export async function insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, t
 };
 
 export const deleteHandler = async (handler) => {
-  const { handlerJSFileValueId, ...ids } = handler;
+  const { handlerJSFileValueId, scheduleValueId, ...ids } = handler;
   const result = { links: [], strings: []};
   const _ids = []
   const compact = {id: {_in: _ids.concat(_.compact(Object.values(ids)))}}
