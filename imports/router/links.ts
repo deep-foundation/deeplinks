@@ -277,8 +277,8 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
       promise_links(where: {
         ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
         ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
-        ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" },` : "" }
-        handle_operation_type_id: { _eq: ${handleOperationTypeId} }
+        ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" }` : "values_operation: { _is_null: true }" },
+        handle_operation_type_id: { _eq: ${handleOperationTypeId} },
         selector_id: { _is_null: true }
       }) {
         id
@@ -375,24 +375,18 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 
 export async function handleSelectorOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
-  const current = newLink ?? oldLink;
-  const currentLinkId = current.id;
-
-  // handleSelectorDebug('currentLinkId', currentLinkId);
-  // handleSelectorDebug('currentTypeId', currentTypeId);
 
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
-
-  // handleSelectorDebug('handlerTypeId', handlerTypeId);
-  handleSelectorDebug('handleOperation', operation);
   // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
+
+  handleSelectorDebug('handleOperation', operation);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
     promise_links(where: {
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
-      ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" },` : "" }
-      handle_operation_type_id: { _eq: ${handleOperationTypeId} }
+      ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" }` : "values_operation: { _is_null: true }" },
+      handle_operation_type_id: { _eq: ${handleOperationTypeId} },
       selector_id: { _is_null: false }
     }) {
       id
