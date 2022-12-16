@@ -92,6 +92,27 @@ export const up = async () => {
     SELECT "value" INTO code FROM "strings" WHERE "link_id" = file_id;
   END; $$ LANGUAGE plpgsql;`);
 
+  await api.sql(sql`CREATE OR REPLACE FUNCTION insert_promise(
+    promise_source_id bigint,
+    handle_operation_id bigint,
+    handle_operation_type_id bigint,
+    old_link links default null,
+    new_link links default null,
+    values_operation public.values_operation_type default null
+  )
+  RETURNS VOID AS $$   
+  DECLARE
+    PROMISE bigint;
+    handler_id bigint;
+    isolation_provider_image_name text;
+    code text;
+  BEGIN
+    SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(handle_operation_id);
+    INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+    INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, promise_source_id, PROMISE);
+    INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, old_link."id", old_link."type_id", old_link."from_id", old_link."to_id", old_link."id", old_link."type_id", old_link."from_id", old_link."to_id", handle_operation_id, handle_operation_type_id, handler_id, isolation_provider_image_name, code, values_operation);
+  END; $$ LANGUAGE plpgsql;`);
+
   await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
   DECLARE 
     PROMISE bigint;
@@ -267,6 +288,8 @@ export const down = async () => {
   await api.sql(sql`DROP FUNCTION IF EXISTS create_promises_for_inserted_link CASCADE;`);
 
   await api.sql(sql`DROP FUNCTION IF EXISTS get_handle_operation_details CASCADE;`);
+
+  await api.sql(sql`DROP FUNCTION IF EXISTS insert_promise CASCADE;`);
 
   // await api.query({
   //   type: 'untrack_table',
