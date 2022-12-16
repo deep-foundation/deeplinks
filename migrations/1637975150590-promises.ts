@@ -62,26 +62,6 @@ export const up = async () => {
       name: 'promise_links',
     },
   });
-  await api.query({
-    type: 'create_object_relationship',
-    args: {
-      table: 'promise_links',
-      name: 'handle_operation',
-      type: 'one_to_one',
-      using: {
-        manual_configuration: {
-          remote_table: {
-            schema: 'public',
-            name: 'links',
-          },
-          column_mapping: {
-            handle_operation_id: 'id',
-          },
-          insertion_order: 'after_parent',
-        },
-      },
-    },
-  });
 
   // await api.sql(sql`CREATE TABLE IF NOT EXISTS public.debug_output (promises bigint, new_id bigint);`);
   // await api.query({
@@ -301,13 +281,6 @@ export const down = async () => {
   // await api.sql(sql`DROP TABLE IF EXISTS "public"."debug_output" CASCADE;`);
 
   // promise_links
-  await api.query({
-    type: 'drop_relationship',
-    args: {
-      table: 'promise_links',
-      relationship: 'handle_operation',
-    },
-  });
   await api.query({
     type: 'untrack_table',
     args: {

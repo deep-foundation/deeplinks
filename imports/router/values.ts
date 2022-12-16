@@ -68,41 +68,7 @@ export default async (req, res) => {
           returning: `id from_id type_id to_id`,
         }))?.data?.[0];
 
-        // get oldLinkRow and newLinkRow from promise_links table
-        // await api.sql(sql`CREATE TABLE IF NOT EXISTS public.promise_links (
-        //   id bigserial PRIMARY KEY,
-        //   promise_id bigint NOT NULL,
-        //   old_link_id bigint,
-        //   old_link_type_id bigint,
-        //   old_link_from_id bigint,
-        //   old_link_to_id bigint,
-        //   new_link_id bigint,
-        //   new_link_type_id bigint,
-        //   new_link_from_id bigint,
-        //   new_link_to_id bigint,
-        //   handle_operation_id bigint NOT NULL
-        // );`);
         const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        /*
-        const queryResult = (await deep.select({
-          handle_operation_id: { _eq: handleUpdateTypeId },
-        }, {
-          returning: `
-            id
-            promise_id
-            old_link_id
-            old_link_type_id
-            old_link_from_id
-            old_link_to_id
-            new_link_id
-            new_link_type_id
-            new_link_from_id
-            new_link_to_id
-            handle_operation_id
-          `,
-        }))?.data?.[0];
-        */
-        // rewrite this query using apollo client
         const queryResult = (await client.query({
           query: gql`
             query {
