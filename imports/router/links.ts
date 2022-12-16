@@ -214,7 +214,7 @@ export const handlerOperations = {
   Delete: 'HandleDelete',
 };
 
-export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any) {
+export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   const current = newLink ?? oldLink;
   const currentLinkId = current.id;
@@ -272,6 +272,37 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
         }
       }
     }`;
+
+    const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
+      promise_links(where: {
+        ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
+        ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
+        ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" },` : "" }
+        handle_operation_type_id: { _eq: ${handleOperationTypeId} }
+        selector_id: { _is_null: true }
+      }) {
+        id
+        promise_id
+        handle_operation_id
+        handler_id
+        isolation_provider_image_name
+        code
+      }
+    }`;
+
+    const promiseLinksQuery = gql`${promiseLinksQueryString}`;
+  
+    const promiseLinksResult = await client.query({ query: promiseLinksQuery });
+  
+    handleOperationDebug('promiseLinksQueryStringDraft', promiseLinksQueryString);
+    handleOperationDebug('promiseLinksResultDraft', JSON.stringify(promiseLinksResult, null, 2));
+  
+    const promiseLinks = promiseLinksResult?.data?.promise_links;
+    handleOperationDebug('promiseLinks.length', promiseLinks?.length);
+  
+    // if (!promiseLinks?.length) {
+    //   return;
+    // }
 
           // #{
           //   #  from: {
@@ -348,7 +379,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   handleSelectorDebug('handleOperation', operation);
   // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
-  const promiseLinksQueryString = `query SELECT_PROMISE_LINKS($itemId: bigint) { 
+  const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
     promise_links(where: {
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
@@ -368,11 +399,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
 
   const promiseLinksQuery = gql`${promiseLinksQueryString}`;
 
-  const promiseLinksQueryVariables = {
-    itemId: currentLinkId
-  };
-
-  const promiseLinksResult = await client.query({ query: promiseLinksQuery, variables: promiseLinksQueryVariables });
+  const promiseLinksResult = await client.query({ query: promiseLinksQuery });
 
   handleSelectorDebug('promiseLinksQueryStringDraft', promiseLinksQueryString);
   handleSelectorDebug('promiseLinksResultDraft', JSON.stringify(promiseLinksResult, null, 2));

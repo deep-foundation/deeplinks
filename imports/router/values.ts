@@ -138,7 +138,7 @@ export default async (req, res) => {
             await boolExpToSQL(newRow.id, newRow?.value?.value);
         }
       
-        await handleOperation('Update', oldRow, newRow);
+        await handleOperation('Update', oldRow, newRow, operation);
         await handleSelectorOperation('Update', oldRow, newRow, operation);
         
         return res.status(200).json({});
