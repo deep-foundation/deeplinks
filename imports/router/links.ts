@@ -216,62 +216,12 @@ export const handlerOperations = {
 
 export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
-  const current = newLink ?? oldLink;
-  const currentLinkId = current.id;
-  const currentTypeId = current.type_id;
+  handleOperationDebug('handleOperation', operation);
+  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
+  // log('handleOperationTypeId', handleOperationTypeId);
 
-  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-
-  // const promise = await findPromiseLink({
-  //   id: currentLinkId, client: deep.apolloClient,
-  //   Then: await deep.id('@deep-foundation/core', 'Then'),
-  //   Promise: await deep.id('@deep-foundation/core', 'Promise'),
-  //   Resolved: resolvedTypeId,
-  //   Rejected: rejectedTypeId,
-  //   Results: false,
-  // });
-
-  // if (promise) {
-    // log('currentLinkId', currentLinkId);
-    // log('currentTypeId', currentTypeId);
-
-    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-    const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
-    const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
-
-    // log('handlerTypeId', handlerTypeId);
-    // log('handleOperationTypeId', handleOperationTypeId);
-
-    const queryString = `query SELECT_CODE($typeId: bigint) {
-      links(where: {
-        type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
-        in: {
-          from_id: { _eq: ${dockerSupportsJsType} },
-          type_id: { _eq: ${handlerTypeId} },
-          in: {
-            from_id: { _eq: $typeId },
-            type_id: { _eq: ${handleOperationTypeId} },
-          }
-        }
-      }) {
-        id
-        value
-        in(where: { type_id: { _eq: ${handlerTypeId} } }) {
-          id
-          in(where: { type_id: { _eq: ${handleOperationTypeId} } }) {
-            id
-          }
-          support: from {
-            id
-            isolation: from {
-              id
-              image: value
-            }
-          }
-        }
-      }
-    }`;
+  // !!! potential PROBLEM, this should be handled in promise trigger 
+  const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
     const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
       promise_links(where: {
@@ -289,72 +239,31 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
         code
       }
     }`;
-
+    handleOperationDebug('promiseLinksQueryString', promiseLinksQueryString);
     const promiseLinksQuery = gql`${promiseLinksQueryString}`;
-  
     const promiseLinksResult = await client.query({ query: promiseLinksQuery });
-  
-    handleOperationDebug('promiseLinksQueryStringDraft', promiseLinksQueryString);
-    handleOperationDebug('promiseLinksResultDraft', JSON.stringify(promiseLinksResult, null, 2));
-  
     const promiseLinks = promiseLinksResult?.data?.promise_links;
-    handleOperationDebug('promiseLinks.length', promiseLinks?.length);
+    handleOperationDebug("promiseLinks", JSON.stringify(promiseLinks, null, 2));
+    handleOperationDebug("promiseLinks?.length", promiseLinks?.length);
   
     if (!promiseLinks?.length) {
       return;
     }
 
-          // #{
-          //   #  from: {
-          //   #    type_id: { _eq: ${await deep.id('@deep-foundation/core', 'Selector')} },
-          //   #    out: {
-          //   #      type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SelectorInclude')} },
-          //   #      to_id: { _eq: $linkId },
-          //   #    }
-          //   #  }
-          //   #}
-    // log('queryString', queryString);
-
-    const query = gql`${queryString}`;
-
-    const variables = {
-      typeId: currentTypeId
-    };
-    // log('variables', JSON.stringify(variables));
-
-    const handlersResult = await client.query({ query, variables });
-
-    // const handlersWithCode = handlersResult?.data?.links as any[];
-    // log('handlersWithCode.length', handlersWithCode?.length);
-
-    const handlersWithCode = promiseLinks;
-
+    const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+    const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
     const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
     const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-    // if (handlersWithCode?.length > 0) {
-      // log(queryString);
-      // log(query);
-      // log(JSON.stringify(query, null, 2));
-      handleOperationDebug("handlersWithCode: ", JSON.stringify(handlersWithCode, null, 2));
-      handleOperationDebug("handlersWithCode?.length: ", handlersWithCode?.length);
-
-      // log(handleStringResult);
-      // log(JSON.stringify(handleStringResult, null, 2));
-      // log(handleStringResult?.data?.links?.[0]?.value);
-      for (const handlerWithCode of handlersWithCode) {
-        const code = handlerWithCode?.code;
-        const isolationProviderImageName = handlerWithCode?.isolation_provider_image_name;
-        const handlerId = handlerWithCode?.handler_id;
-        const handleOperationId = handlerWithCode?.handle_operation_id;
-        const promiseId = handlerWithCode?.promise_id;
+      for (const promiseLink of promiseLinks) {
+        const code = promiseLink?.code;
+        const isolationProviderImageName = promiseLink?.isolation_provider_image_name;
+        const handlerId = promiseLink?.handler_id;
+        const handleOperationId = promiseLink?.handle_operation_id;
+        const promiseId = promiseLink?.promise_id;
 
         const promises: any[] = [];
         const handleOperationsIds: any[] = [];
-        // const code = handlerWithCode?.value?.value;
-        // const isolationProviderImageName = handlerWithCode?.in?.[0]?.support?.isolation?.image?.value;
-        // const handlerId = handlerWithCode?.in?.[0]?.id;
-        // const handleInsertId = handlerWithCode?.in?.[0]?.in?.[0].id;
         if (code && isolationProviderImageName && handlerId && handleOperationId) {
           try {
             promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId: promiseId } }));
@@ -367,19 +276,16 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
           handleOperationsIds.push(handleOperationId);
         }
         await processPromises(promises, handleOperationsIds, promiseId, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleOperationDebug);
+
+        await deep.delete(promiseLink?.id, { name: 'DELETE_PROMISE_LINK', table: 'promise_links' as any });
       }
-      
-    // }
-  // }
 }
 
 export async function handleSelectorOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
-
+  handleSelectorDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
   // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
-
-  handleSelectorDebug('handleOperation', operation);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
     promise_links(where: {
@@ -398,15 +304,11 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       code
     }
   }`;
-
+  handleSelectorDebug('promiseLinksQueryString', promiseLinksQueryString);
   const promiseLinksQuery = gql`${promiseLinksQueryString}`;
-
-  const promiseLinksResult = await client.query({ query: promiseLinksQuery });
-
-  handleSelectorDebug('promiseLinksQueryStringDraft', promiseLinksQueryString);
-  handleSelectorDebug('promiseLinksResultDraft', JSON.stringify(promiseLinksResult, null, 2));
-
+  const promiseLinksResult = await client.query({ query: promiseLinksQuery });  
   const promiseLinks = promiseLinksResult?.data?.promise_links;
+  handleSelectorDebug('promiseLinks', JSON.stringify(promiseLinks, null, 2));
   handleSelectorDebug('promiseLinks.length', promiseLinks?.length);
 
   if (!promiseLinks?.length) {
@@ -418,37 +320,16 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
 
-  // const promiseLinksByPromiseId = promiseLinks.reduce((accumulator, current) => {
-  //   const promiseId = current.promise_id;
-  //   if (!accumulator[promiseId]) {
-  //     accumulator[promiseId] = [];
-  //   }
-  //   accumulator[promiseId].push(current);
-  //   return accumulator;
-  // }, {});
-  // handleSelectorDebug('promiseLinksByPromiseId', JSON.stringify(promiseLinksByPromiseId, null, 2));
-
-  // // For each promise_id
-  // for (const promiseIdString in promiseLinksByPromiseId) {
-  //   const promiseLinks = promiseLinksByPromiseId[promiseIdString];
-  //   const promiseLinksIds = promiseLinks.map(promiseSelector => promiseSelector.id);
-  //   handleSelectorDebug('promiseLinksIds', JSON.stringify(promiseLinksIds, null, 2));
-  //   const promiseId = parseInt(promiseIdString);
-
-    for (const promiseSelector of promiseLinks) {
-      const code = promiseSelector?.code;
-      const isolationProviderImageName = promiseSelector?.isolation_provider_image_name;
-      const handlerId = promiseSelector?.handler_id;
-      const handleOperationId = promiseSelector?.handle_operation_id;
-      const selectorId = promiseSelector?.selector_id;
-      const promiseId = promiseSelector?.promise_id;
-      // handleSelectorDebug('code', code);
-      // handleSelectorDebug('isolationValue', isolationValue);
-      // handleSelectorDebug('handleInsertId', handleInsertId);
+    for (const promiseLink of promiseLinks) {
+      const code = promiseLink?.code;
+      const isolationProviderImageName = promiseLink?.isolation_provider_image_name;
+      const handlerId = promiseLink?.handler_id;
+      const handleOperationId = promiseLink?.handle_operation_id;
+      const selectorId = promiseLink?.selector_id;
+      const promiseId = promiseLink?.promise_id;
 
       const promises: any[] = [];
       const handleOperationsIds: any[] = [];
-
       if (code && isolationProviderImageName && handlerId && handleOperationId) {
         try {
           promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId, selectorId } }));
@@ -462,11 +343,8 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
       }
       await processPromises(promises, handleOperationsIds, promiseId, promiseResultTypeId, promiseReasonTypeId, resolvedTypeId, rejectedTypeId, handleSelectorDebug);
 
-      await deep.delete(promiseId, { name: 'DELETE_PROMISES_LINKS', table: 'promise_links' as any });
+      await deep.delete(promiseLink?.id, { name: 'DELETE_PROMISE_LINK', table: 'promise_links' as any });
     }
-    
-    
-  // }
 }
 
 export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT' | 'DELETE') {
