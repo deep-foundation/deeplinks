@@ -89,6 +89,57 @@ export const up = async () => {
   //   },
   // });
 
+  // await api.sql(sql`CREATE TYPE handler_details AS (
+  //   handler_id bigint,
+  //   user1_name varchar(32),
+  //   user2_id   int,
+  //   user2_name varchar(32)
+  // );
+  
+  // CREATE OR REPLACE FUNCTION get_handler_details(handle_operation_id bigint) RETURNS handler_details AS $function$   
+  // DECLARE 
+  //   PROMISE bigint;
+  //   SELECTOR record;
+  //   HANDLE_INSERT record;
+  //   user_id bigint;
+  //   hasura_session json;
+  // BEGIN
+  //   FOR HANDLE_INSERT IN
+  //     SELECT id, type_id FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId}
+  //   LOOP
+  //     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+  //     INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+  //     INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", HANDLE_INSERT."id", HANDLE_INSERT."type_id");
+  //   END LOOP;
+
+  //   IF (
+  //     link."type_id" = ${handleScheduleTypeId}
+  //   ) THEN
+  //     INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+  //     INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
+  //   END IF;
+
+  //   hasura_session := current_setting('hasura.user', 't');
+  //   user_id := hasura_session::json->>'x-hasura-user-id';
+    
+  //   FOR SELECTOR IN
+  //     SELECT s.selector_id, h.id as handle_operation_id, h.type_id as handle_operation_type_id, s.query_id
+  //     FROM selectors s, links h
+  //     WHERE
+  //         s.item_id = link."id"
+  //     AND s.selector_id = h.from_id
+  //     AND h.type_id = ${handleInsertTypeId}
+  //   LOOP
+  //     -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, link."id");
+  //     IF SELECTOR.query_id = 0 OR bool_exp_execute(link."id", SELECTOR.query_id, user_id) THEN
+  //       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+  //       INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+  //       INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id);
+  //     END IF;
+  //   END LOOP;
+  //   RETURN TRUE;
+  // END; $function$ LANGUAGE plpgsql;`);
+
   await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
   DECLARE 
     PROMISE bigint;
