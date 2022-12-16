@@ -73,7 +73,7 @@ export default async (req, res) => {
           query: gql`
             query {
               promise_links(where: {
-                handle_operation: { type_id: { _eq: ${handleUpdateTypeId} } }
+                handle_operation_type_id: { _eq: ${handleUpdateTypeId} },
                 old_link_id: {_eq: ${linkId}},
                 new_link_id: {_eq: ${linkId}},
                 values_operation: { _eq: "${operation}" }
