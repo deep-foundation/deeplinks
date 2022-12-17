@@ -1,8 +1,6 @@
 import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { sql } from '@deep-foundation/hasura/sql';
 import { DeepClient } from './client';
-import { permissions } from './permission';
 
 export interface ITypeTableStringOptions {
   schemaName: string;
@@ -147,9 +145,6 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handler_id bigint;
-    isolation_provider_image_name text;
-    code text;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
     FOR HANDLE_UPDATE IN
@@ -169,12 +164,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, NEW."link_id");
       IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
-        SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(SELECTOR.handle_operation_id);
-        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, handler_id, isolation_provider_image_name, code, 'INSERT');
+        PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'INSERT');
       END IF;
     END LOOP;
     RETURN NEW;
@@ -188,9 +179,6 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handler_id bigint;
-    isolation_provider_image_name text;
-    code text;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = NEW."link_id";
     FOR HANDLE_UPDATE IN
@@ -210,12 +198,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, NEW."link_id");
       IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
-        SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(SELECTOR.handle_operation_id);
-        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, handler_id, isolation_provider_image_name, code, 'UPDATE');
+        PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'UPDATE');
       END IF;
     END LOOP;
     RETURN NEW;
@@ -229,9 +213,6 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     user_id bigint;
     hasura_session json;
     updated_link links;
-    handler_id bigint;
-    isolation_provider_image_name text;
-    code text;
   BEGIN
     SELECT * INTO updated_link FROM links WHERE "id" = OLD."link_id";
     FOR HANDLE_UPDATE IN
@@ -251,12 +232,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
     LOOP
-      -- INSERT INTO debug_output ("promises", "new_id") VALUES (SELECTOR.query_id, OLD."link_id");
       IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."link_id", SELECTOR.query_id, user_id) THEN
-        SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(SELECTOR.handle_operation_id);
-        INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-        INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
-        INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "selector_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", SELECTOR.selector_id, SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, handler_id, isolation_provider_image_name, code, 'DELETE');
+        PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'DELETE');
       END IF;
     END LOOP;
     RETURN OLD;
