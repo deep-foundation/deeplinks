@@ -155,10 +155,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     FOR HANDLE_UPDATE IN
       SELECT id, type_id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
     LOOP
-      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_UPDATE."id");
-      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", handler_id, isolation_provider_image_name, code, 'INSERT');
+      PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'INSERT');
     END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -199,10 +196,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     FOR HANDLE_UPDATE IN
       SELECT id, type_id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
     LOOP
-      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_UPDATE."id");
-      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", NEW."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", handler_id, isolation_provider_image_name, code, 'UPDATE');
+      PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'UPDATE');
     END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
@@ -243,10 +237,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
     FOR HANDLE_UPDATE IN
       SELECT id, type_id FROM links WHERE "from_id" = updated_link."type_id" AND "type_id" = ${handleUpdateTypeId}
     LOOP
-      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_UPDATE."id");
-      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, OLD."link_id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "values_operation") VALUES (PROMISE, OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", OLD."link_id", updated_link."type_id", updated_link."from_id", updated_link."to_id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", handler_id, isolation_provider_image_name, code, 'DELETE');
+      PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'DELETE');
     END LOOP;
 
     hasura_session := current_setting('hasura.user', 't');
