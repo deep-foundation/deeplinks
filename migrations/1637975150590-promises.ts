@@ -104,8 +104,8 @@ export const up = async () => {
     INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, promise_source_id, PROMISE);
     INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code", "selector_id", "values_operation") VALUES (PROMISE, old_link."id", old_link."type_id", old_link."from_id", old_link."to_id", new_link."id", new_link."type_id", new_link."from_id", new_link."to_id", handle_operation_id, handle_operation_type_id, handler_id, isolation_provider_image_name, code, selector_id, values_operation);
   END; $$ LANGUAGE plpgsql;`);
-
-  await api.sql(sql`CREATE OR REPLACE FUNCTION create_promises_for_inserted_link(link "links") RETURNS boolean AS $function$   
+  
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__insert__function() RETURNS TRIGGER AS $$ 
   DECLARE 
     PROMISE bigint;
     SELECTOR record;
@@ -114,42 +114,35 @@ export const up = async () => {
     hasura_session json;
   BEGIN
     FOR HANDLE_INSERT IN
-      SELECT id, type_id FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId}
+      SELECT id, type_id FROM links WHERE "from_id" = NEW."type_id" AND "type_id" = ${handleInsertTypeId}
     LOOP
-      PERFORM insert_promise(link."id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", null, link);
+      PERFORM insert_promise(NEW."id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", null, NEW);
     END LOOP;
 
     IF (
-      link."type_id" = ${handleScheduleTypeId}
+      NEW."type_id" = ${handleScheduleTypeId}
     ) THEN
       INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link.from_id, PROMISE);
+      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW.from_id, PROMISE);
     END IF;
 
     hasura_session := current_setting('hasura.user', 't');
     user_id := hasura_session::json->>'x-hasura-user-id';
-    
+
     FOR SELECTOR IN
       SELECT s.selector_id, h.id as handle_operation_id, h.type_id as handle_operation_type_id, s.query_id
       FROM selectors s, links h
       WHERE
-          s.item_id = link."id"
+          s.item_id = NEW."id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleInsertTypeId}
     LOOP
-      IF SELECTOR.query_id = 0 OR bool_exp_execute(link."id", SELECTOR.query_id, user_id) THEN
-        PERFORM insert_promise(link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, null, link, SELECTOR.selector_id);
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."id", SELECTOR.query_id, user_id) THEN
+        PERFORM insert_promise(NEW."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, null, NEW, SELECTOR.selector_id);
       END IF;
     END LOOP;
-    RETURN TRUE;
-  END; $function$ LANGUAGE plpgsql;`);
-  
-  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__insert__function() RETURNS TRIGGER AS $trigger$ 
-  DECLARE 
-  BEGIN
-    PERFORM create_promises_for_inserted_link(NEW);
     RETURN NEW;
-  END; $trigger$ LANGUAGE plpgsql;`);
+  END; $$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__insert__function();`);
 
   const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
@@ -265,8 +258,6 @@ export const down = async () => {
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__function CASCADE;`);
-
-  await api.sql(sql`DROP FUNCTION IF EXISTS create_promises_for_inserted_link CASCADE;`);
 
   await api.sql(sql`DROP FUNCTION IF EXISTS get_handle_operation_details CASCADE;`);
 
