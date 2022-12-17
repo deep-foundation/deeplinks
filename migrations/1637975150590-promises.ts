@@ -127,10 +127,12 @@ export const up = async () => {
     FOR HANDLE_INSERT IN
       SELECT id, type_id FROM links WHERE "from_id" = link."type_id" AND "type_id" = ${handleInsertTypeId}
     LOOP
-      SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_INSERT."id");
-      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
-      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
-      INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", handler_id, isolation_provider_image_name, code);
+      -- SELECT * INTO handler_id, isolation_provider_image_name, code FROM get_handle_operation_details(HANDLE_INSERT."id");
+      -- INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      -- INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, link."id", PROMISE);
+      -- INSERT INTO promise_links ("promise_id", "old_link_id", "old_link_type_id", "old_link_from_id", "old_link_to_id", "new_link_id", "new_link_type_id", "new_link_from_id", "new_link_to_id", "handle_operation_id", "handle_operation_type_id", "handler_id", "isolation_provider_image_name", "code") VALUES (PROMISE, null, null, null, null, link."id", link."type_id", link."from_id", link."to_id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", handler_id, isolation_provider_image_name, code);
+
+      PERFORM insert_promise(link."id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", null, link);
     END LOOP;
 
     IF (
