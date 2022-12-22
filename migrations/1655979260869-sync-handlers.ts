@@ -155,6 +155,10 @@ FROM
                                                     (
                                                       ("HandleTypeLink"."id") = ("HandlerOperation"."from_id")
                                                     )
+                                                    OR
+                                                    (
+                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
+                                                    )
                                                   ) 
                                                   AND (
                                                     (
