@@ -1254,7 +1254,6 @@ describe('sync handlers', () => {
           await deep.insert({
             type_id: typeTypeLinkId
           });
-          await delay(1000);
           const {
             data: successLinks
           } = await deep.select({
@@ -1364,7 +1363,6 @@ describe('sync handlers', () => {
             type_id: typeTypeLinkId
           });
           await deep.delete(customLinkTypeId);
-          await delay(1000);
           const {
             data: successLinks
           } = await deep.select({
@@ -1799,7 +1797,6 @@ describe('sync handlers', () => {
 							table: 'strings',
 						}
 					);
-          await delay(1000);
           const {
             data: successLinks
           } = await deep.select({
