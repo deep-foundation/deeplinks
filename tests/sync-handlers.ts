@@ -1243,23 +1243,43 @@ describe('sync handlers', () => {
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
         const {
-          data: [{id: successTypeLinkId}]
-        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+          data: [{id: customLinkTypeId}]
+        } = await deep.insert({
+          type_id: typeTypeLinkId,
+          out: {
+            data: {
+              type_id: await deep.id("@deep-foundation/core", "Value"),
+              to_id: await deep.id("@deep-foundation/core", "String")
+            }
+          }
+        });
+        const {
+          data: [{id: customLinkId}]
+        } = await deep.insert({
+          type_id: customLinkTypeId,
+          string: {
+            data: {
+              value: "initialValue"
+            }
+          }
+        });
         const handler = await insertHandler(
           handleInsertTypeLinkId,
           anyTypeLinkId,
-          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          `({deep, data}) => { deep.update({link_id: ${customLinkId}}, {value: "successValue"}, {table: "strings"}); }`,
           undefined,
           supportsLinkId);
-          await deep.insert({
-            type_id: typeTypeLinkId
-          });
+
           const {
-            data: successLinks
+            data: [{
+              value: {
+                value
+              }
+            }]
           } = await deep.select({
-            type_id: successTypeLinkId
+            id: customLinkId
           });
-          assert.equal(successLinks.length, 1);
+          assert.equal(value, "successValue");
       });
     });
     describe('Handle delete', () => {
