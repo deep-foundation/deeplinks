@@ -1237,6 +1237,31 @@ describe('sync handlers', () => {
         await deleteHandler(handler);
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
+      it(`Handle insert on type any`, async () => {
+        const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const {
+          data: [{id: successTypeLinkId}]
+        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+        const handler = await insertHandler(
+          handleInsertTypeLinkId,
+          anyTypeLinkId,
+          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          undefined,
+          supportsLinkId);
+          await deep.insert({
+            type_id: typeTypeLinkId
+          });
+          await delay(1000);
+          const {
+            data: successLinks
+          } = await deep.select({
+            type_id: successTypeLinkId
+          });
+          assert.equal(successLinks.length, 1);
+      });
     });
     describe('Handle delete', () => {
       it(`Handle delete on type`, async () => {
@@ -1318,6 +1343,35 @@ describe('sync handlers', () => {
         await deleteHandler(handler);
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
+
+      it(`Handle delete on type any`, async () => {
+        const handleDeleteTypeLinkId = await deep.id('@deep-foundation/core', 'HandleDelete');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const {
+          data: [{id: successTypeLinkId}]
+        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+        const handler = await insertHandler(
+          handleDeleteTypeLinkId,
+          anyTypeLinkId,
+          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          undefined,
+          supportsLinkId);
+          const {
+            data: [{id: customLinkTypeId}]
+          } = await deep.insert({
+            type_id: typeTypeLinkId
+          });
+          await deep.delete(customLinkTypeId);
+          await delay(1000);
+          const {
+            data: successLinks
+          } = await deep.select({
+            type_id: successTypeLinkId
+          });
+          assert.equal(successLinks.length, 1);
+      })
     });
     describe('Handle value', () => {
       describe('Handle strings', () => {
@@ -1712,6 +1766,46 @@ describe('sync handlers', () => {
           assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
 
         });
+      });
+      it(`Handle update on type any`, async () => {
+        const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const {
+          data: [{id: successTypeLinkId}]
+        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+        const handler = await insertHandler(
+          handleUpdateTypeLinkId,
+          anyTypeLinkId,
+          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          undefined,
+          supportsLinkId);
+          const {data: [{id: customTypeLinkId}]} = await deep.insert({
+            type_id: typeTypeLinkId,
+          });
+          const {
+            data: [{id: customLinkId}]
+          } = await deep.insert({
+            type_id: customTypeLinkId,
+            string: {data: {value: "stringValue"}}
+          });
+          await deep.update(
+						customLinkId,
+						{
+							value: 'newStringValue',
+						},
+						{
+							table: 'strings',
+						}
+					);
+          await delay(1000);
+          const {
+            data: successLinks
+          } = await deep.select({
+            type_id: successTypeLinkId
+          })
+          assert.equal(successLinks.length, 1);
       });
     });
   });
