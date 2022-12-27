@@ -1,4 +1,4 @@
-{ 
+{
   "name": "@deep-foundation/deeplinks",
   "version": "0.0.98",
   "scripts": {
@@ -58,6 +58,7 @@
     "rimraf": "^3.0.2",
     "supports-color": "^9.2.1",
     "ts-jest": "^26.5.4",
+    "ts-node": "^10.9.1",
     "uniqid": "^5.3.0",
     "wait-on": "^6.0.0"
   },
