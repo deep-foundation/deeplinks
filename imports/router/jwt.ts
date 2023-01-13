@@ -1,7 +1,7 @@
 import { jwt } from '../jwt';
 import { generateRemoteSchema } from '@deep-foundation/hasura/remote-schema';
 import gql from 'graphql-tag';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from '../client';

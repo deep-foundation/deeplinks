@@ -1093,7 +1093,7 @@ describe('Async handlers', () => {
                         value: /*javascript*/`async (req, res, next, { deep, require, gql }) => {
                           const express = require('express');
                           const http = require('http');
-                          const ApolloServer = require('apollo-server-express').ApolloServer;
+                          const ApolloServer = require('@apollo/server').ApolloServer;
                           const { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
                           const typeDefs = 'type Query { ${field}: Int }';
