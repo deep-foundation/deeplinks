@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.3",
+    "@apollo/server": "^4.3.0",
     "@capacitor/core": "^4.6.1",
     "@deep-foundation/hasura": "^0.0.26",
     "@deep-foundation/materialized-path": "^0.0.15",
