@@ -20,6 +20,7 @@ import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
 import Cors from 'cors';
+import { expressMiddleware } from '@apollo/server/express4';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -189,10 +190,22 @@ const start = async () => {
   await guestServer.start();
   await authorizationServer.start();
   await packagerServer.start();
-  jwtServer.applyMiddleware({ path: '/api/jwt', app });
-  guestServer.applyMiddleware({ path: '/api/guest', app });
-  authorizationServer.applyMiddleware({ path: '/api/authorization', app });
-  packagerServer.applyMiddleware({ path: '/api/packager', app });
+  app.use(
+    '/api/jwt',
+    expressMiddleware(jwtServer)
+  );
+  app.use(
+    '/api/guest',
+    expressMiddleware(guestServer)
+  );
+  app.use(
+    '/api/authorization',
+    expressMiddleware(authorizationServer)
+  );
+  app.use(
+    '/api/packager',
+    expressMiddleware(packagerServer)
+  );
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
