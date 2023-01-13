@@ -1,7 +1,7 @@
 import { jwt } from '../jwt';
 import gql from 'graphql-tag';
 import { ApolloServer } from '@apollo/server';
-import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from '../client';
 import Chance from 'chance';
@@ -156,10 +156,9 @@ const generateApolloServer = (httpServer) => {
     introspection: true,
     typeDefs, 
     resolvers,
-    context,
+    ...context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageGraphQLPlayground()
     ]});
   }
 
