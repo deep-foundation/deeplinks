@@ -38,7 +38,7 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "fix-path": "^4.0.0",
-    "get-port": "^6.1.2",
+    "get-port": "^5.1.1",
     "gists": "^2.0.0",
     "graphql": "^16.6.0",
     "graphql-playground-middleware-express": "^1.7.23",
