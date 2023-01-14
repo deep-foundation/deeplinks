@@ -154,7 +154,8 @@ const generateApolloServer = (httpServer) => {
     resolvers,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-    ]});
+    ],
+  });
   }
 
 export default generateApolloServer;

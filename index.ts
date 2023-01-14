@@ -19,8 +19,9 @@ import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
-import Cors from 'cors';
+import cors from 'cors';
 import { expressMiddleware } from '@apollo/server/express4';
+import { json } from 'body-parser';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -77,8 +78,7 @@ app.get(['/file'], createProxyMiddleware({
   }
 }));
 
-const cors = Cors({ methods: ['POST', 'OPTIONS'] });
-app.use(cors);
+app.use(cors<cors.CorsRequest>({ methods: ['POST', 'OPTIONS'] }));
 
 app.post('/file', async (req, res, next) => {
   console.log('DEEPLINKS_HASURA_STORAGE_URL', DEEPLINKS_HASURA_STORAGE_URL);
@@ -193,20 +193,29 @@ const start = async () => {
   const context = async ({ req }) => {
     return { headers: req.headers };
   };
+
   app.use(
     '/api/jwt',
+    cors<cors.CorsRequest>({ methods: ['POST', 'OPTIONS'] }),
+    json(),
     expressMiddleware(jwtServer,{context})
   );
   app.use(
     '/api/guest',
+    cors<cors.CorsRequest>({ methods: ['POST', 'OPTIONS'] }),
+    json(),
     expressMiddleware(guestServer,{context})
   );
   app.use(
     '/api/authorization',
+    cors<cors.CorsRequest>({ methods: ['POST', 'OPTIONS'] }),
+    json(),
     expressMiddleware(authorizationServer,{context})
   );
   app.use(
     '/api/packager',
+    cors<cors.CorsRequest>({ methods: ['POST', 'OPTIONS'] }),
+    json(),
     expressMiddleware(packagerServer,{context})
   );
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
