@@ -267,16 +267,11 @@ const resolvers = {
   }
 };
 
-const context = ({ req }) => {
-  return { headers: req.headers };
-};
-
 const generateApolloServer = (httpServer) => {
   return new ApolloServer({ 
     introspection: true,
     typeDefs, 
     resolvers,
-    ...context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
     ]});

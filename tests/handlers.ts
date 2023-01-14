@@ -1102,7 +1102,7 @@ describe('Async handlers', () => {
                             Query: { ${field}: () => (42) },
                           };
                           
-                          const context = ({ req }) => { return { headers: req.headers }; };
+                          const context = async ({ req }) => { return { headers: req.headers }; };
                           
                           const generateApolloServer = () => {
                             return new ApolloServer({
@@ -1118,8 +1118,10 @@ describe('Async handlers', () => {
                           const router = express.Router();
                           const apolloServer = generateApolloServer();
                           await apolloServer.start();
-                          apolloServer.applyMiddleware({ app: router, path: '/' });
-                        
+                          router.use(
+                            '/',
+                            expressMiddleware(apolloServer,{context})
+                          );
                           console.log('js-isolation-provider request')
                           console.log('req.method', req.method);
                           console.log('req.body', req.body);

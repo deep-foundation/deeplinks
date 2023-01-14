@@ -190,21 +190,24 @@ const start = async () => {
   await guestServer.start();
   await authorizationServer.start();
   await packagerServer.start();
+  const context = async ({ req }) => {
+    return { headers: req.headers };
+  };
   app.use(
     '/api/jwt',
-    expressMiddleware(jwtServer)
+    expressMiddleware(jwtServer,{context})
   );
   app.use(
     '/api/guest',
-    expressMiddleware(guestServer)
+    expressMiddleware(guestServer,{context})
   );
   app.use(
     '/api/authorization',
-    expressMiddleware(authorizationServer)
+    expressMiddleware(authorizationServer,{context})
   );
   app.use(
     '/api/packager',
-    expressMiddleware(packagerServer)
+    expressMiddleware(packagerServer,{context})
   );
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
