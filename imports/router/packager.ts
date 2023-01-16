@@ -1,6 +1,6 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServer } from 'apollo-server-express';
 import Gists from 'gists';
 import gql from 'graphql-tag';
 import { isEmpty } from 'lodash';
@@ -267,13 +267,19 @@ const resolvers = {
   }
 };
 
+const context = ({ req }) => {
+  return { headers: req.headers };
+};
+
 const generateApolloServer = (httpServer) => {
   return new ApolloServer({ 
     introspection: true,
     typeDefs, 
     resolvers,
+    context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground()
     ]});
   }
 

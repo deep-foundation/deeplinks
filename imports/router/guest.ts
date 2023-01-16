@@ -2,9 +2,9 @@ import { jwt } from '../jwt';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql';
-import { ApolloServer } from '@apollo/server';
+import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
@@ -98,13 +98,19 @@ const resolvers = {
   }
 };
 
+const context = ({ req }) => {
+  return { headers: req.headers };
+};
+
 const generateApolloServer = (httpServer) => {
   return new ApolloServer({ 
     introspection: true,
     typeDefs, 
     resolvers,
+    context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground()
     ]});
   }
 

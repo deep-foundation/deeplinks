@@ -1093,8 +1093,8 @@ describe('Async handlers', () => {
                         value: /*javascript*/`async (req, res, next, { deep, require, gql }) => {
                           const express = require('express');
                           const http = require('http');
-                          const ApolloServer = require('@apollo/server').ApolloServer;
-                          const { ApolloServerPluginDrainHttpServer } = require('@apollo/server/plugin/drainHttpServer');
+                          const ApolloServer = require('apollo-server-express').ApolloServer;
+                          const { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
 
                           const typeDefs = 'type Query { ${field}: Int }';
 
@@ -1102,13 +1102,14 @@ describe('Async handlers', () => {
                             Query: { ${field}: () => (42) },
                           };
                           
-                          const context = async ({ req }) => { return { headers: req.headers }; };
+                          const context = ({ req }) => { return { headers: req.headers }; };
                           
                           const generateApolloServer = () => {
                             return new ApolloServer({
                               introspection: true,
                               typeDefs, 
                               resolvers,
+                              context,
                               plugins: [
                                 ApolloServerPluginLandingPageGraphQLPlayground()
                               ]});
@@ -1117,10 +1118,8 @@ describe('Async handlers', () => {
                           const router = express.Router();
                           const apolloServer = generateApolloServer();
                           await apolloServer.start();
-                          router.use(
-                            '/',
-                            expressMiddleware(apolloServer,{context})
-                          );
+                          apolloServer.applyMiddleware({ app: router, path: '/' });
+                        
                           console.log('js-isolation-provider request')
                           console.log('req.method', req.method);
                           console.log('req.body', req.body);
