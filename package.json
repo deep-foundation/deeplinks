@@ -21,7 +21,7 @@
     "snapshot:dump": "node snapshots/dump.js"
   },
   "dependencies": {
-    "@apollo/client": "^3.5.8",
+    "@apollo/client": "^3.7.4",
     "@apollo/server": "^4.3.0",
     "@deep-foundation/hasura": "file:../hasura",
     "@deep-foundation/materialized-path": "file:../materialized-path",
