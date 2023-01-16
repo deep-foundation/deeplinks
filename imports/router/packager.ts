@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import Gists from 'gists';
 import gql from 'graphql-tag';
 import { isEmpty } from 'lodash';

@@ -2,7 +2,7 @@ import { jwt } from '../jwt';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import { DeepClient } from '../client';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 
