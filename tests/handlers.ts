@@ -1096,6 +1096,9 @@ describe('Async handlers', () => {
                           const ApolloServer = require('@apollo/server').ApolloServer;
                           const ApolloServerPluginLandingPageProductionDefault = require('@apollo/server/plugin/landingPage/default');
                           const ApolloServerPluginDrainHttpServer = require('@apollo/server/plugin/drainHttpServer');
+                          import cors from 'cors';
+                          import { json } from 'body-parser';
+                          import { expressMiddleware } from '@apollo/server/express4';
 
                           const typeDefs = 'type Query { ${field}: Int }';
 
@@ -1119,7 +1122,14 @@ describe('Async handlers', () => {
                           const router = express.Router();
                           const apolloServer = generateApolloServer();
                           await apolloServer.start();
-                          apolloServer.applyMiddleware({ app: router, path: '/' });
+                          router.use(
+                            '/',
+                            cors<cors.CorsRequest>(),
+                            json(),
+                            expressMiddleware(apolloServer, {
+                              context,
+                            }),
+                          );
                         
                           console.log('js-isolation-provider request')
                           console.log('req.method', req.method);

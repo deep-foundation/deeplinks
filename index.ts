@@ -19,7 +19,9 @@ import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks';
 import _ from 'lodash';
-import Cors from 'cors';
+import cors from 'cors';
+import { json } from 'body-parser';
+import { expressMiddleware } from '@apollo/server/express4';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
@@ -76,7 +78,6 @@ app.get(['/file'], createProxyMiddleware({
   }
 }));
 
-const cors = Cors({ methods: ['POST', 'OPTIONS'] });
 app.use(cors);
 
 app.post('/file', async (req, res, next) => {
@@ -189,10 +190,41 @@ const start = async () => {
   await guestServer.start();
   await authorizationServer.start();
   await packagerServer.start();
-  jwtServer.applyMiddleware({ path: '/api/jwt', app });
-  guestServer.applyMiddleware({ path: '/api/guest', app });
-  authorizationServer.applyMiddleware({ path: '/api/authorization', app });
-  packagerServer.applyMiddleware({ path: '/api/packager', app });
+  const context = async ({ req }) => {
+    return { headers: req.headers };
+  };
+  app.use(
+    '/api/jwt',
+    cors<cors.CorsRequest>(),
+    json(),
+    expressMiddleware(jwtServer, {
+      context,
+    }),
+  );
+  app.use(
+    '/api/guest',
+    cors<cors.CorsRequest>(),
+    json(),
+    expressMiddleware(guestServer, {
+      context,
+    }),
+  );
+  app.use(
+    '/api/authorization',
+    cors<cors.CorsRequest>(),
+    json(),
+    expressMiddleware(authorizationServer, {
+      context,
+    }),
+  );
+  app.use(
+    '/api/packager',
+    cors<cors.CorsRequest>(),
+    json(),
+    expressMiddleware(packagerServer, {
+      context,
+    }),
+  );
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
   try {
