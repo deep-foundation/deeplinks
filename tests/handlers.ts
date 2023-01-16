@@ -1094,8 +1094,8 @@ describe('Async handlers', () => {
                           const express = require('express');
                           const http = require('http');
                           const ApolloServer = require('@apollo/server').ApolloServer;
-                          const ApolloServerPluginLandingPageProductionDefault = require('@apollo/server/plugin/landingPage/default');
-                          const ApolloServerPluginDrainHttpServer = require('@apollo/server/plugin/drainHttpServer');
+                          const ApolloServerPluginLandingPageProductionDefault = require('@apollo/server/plugin/landingPage/default').ApolloServerPluginLandingPageProductionDefault;
+                          const ApolloServerPluginDrainHttpServer = require('@apollo/server/plugin/drainHttpServer').ApolloServerPluginDrainHttpServer;
                           import cors from 'cors';
                           import { json } from 'body-parser';
                           import { expressMiddleware } from '@apollo/server/express4';
