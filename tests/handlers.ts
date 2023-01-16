@@ -1106,7 +1106,7 @@ describe('Async handlers', () => {
                             Query: { ${field}: () => (42) },
                           };
                           
-                          const context = ({ req }) => { return { headers: req.headers }; };
+                          const context = async ({ req }) => { return { headers: req.headers }; };
                           
                           const generateApolloServer = () => {
                             return new ApolloServer({
