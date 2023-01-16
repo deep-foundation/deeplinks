@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql';
 import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client';
-import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);

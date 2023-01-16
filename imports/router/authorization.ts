@@ -2,7 +2,8 @@ import { jwt } from '../jwt';
 import { generateRemoteSchema } from '@deep-foundation/hasura/remote-schema';
 import gql from 'graphql-tag';
 import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from '../client';
 import Chance from 'chance';
@@ -160,7 +161,7 @@ const generateApolloServer = (httpServer) => {
     context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageGraphQLPlayground()
+      ApolloServerPluginLandingPageProductionDefault()
     ]});
   }
 
