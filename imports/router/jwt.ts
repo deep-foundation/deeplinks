@@ -83,7 +83,7 @@ const generateApolloServer = (httpServer) => {
     resolvers,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageGraphQLPlayground()
+      ApolloServerPluginLandingPageProductionDefault()
     ]});
   }
 

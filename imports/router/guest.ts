@@ -5,6 +5,7 @@ import { generateSerial, insertMutation } from '../gql';
 import { ApolloServer } from '@apollo/server';
 import { DeepClient } from '../client';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const jwt_secret = JSON.parse(JWT_SECRET);
@@ -109,7 +110,7 @@ const generateApolloServer = (httpServer) => {
     resolvers,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageGraphQLPlayground()
+      ApolloServerPluginLandingPageProductionDefault()
     ]});
   }
 

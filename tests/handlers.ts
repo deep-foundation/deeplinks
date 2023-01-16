@@ -1114,7 +1114,7 @@ describe('Async handlers', () => {
                               typeDefs, 
                               resolvers,
                               plugins: [
-                                ApolloServerPluginLandingPageGraphQLPlayground()
+                                ApolloServerPluginLandingPageProductionDefault()
                               ]});
                             };
 
