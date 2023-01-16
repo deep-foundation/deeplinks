@@ -31,7 +31,7 @@ export const typeDefsString = `
   }
 `;
 
-export const typeDefs = gql`${typeDefsString}`;
+export const typeDefs = `${typeDefsString}`;
 
 const resolvers = {
   Query: {

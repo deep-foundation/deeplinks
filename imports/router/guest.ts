@@ -19,7 +19,7 @@ export const typeDefsString = `
     linkId: Int
   }
 `;
-export const typeDefs = gql`${typeDefsString}`;
+export const typeDefs = `${typeDefsString}`;
 
 const client = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,

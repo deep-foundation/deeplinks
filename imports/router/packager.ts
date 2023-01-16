@@ -45,7 +45,7 @@ export const typeDefsString = `
     address: String
   }
 `;
-export const typeDefs = gql`${typeDefsString}`;
+export const typeDefs = `${typeDefsString}`;
 
 export const packagerInstallCore = async (errors = [], address: string) => {
   const uri = new url.URL(address);
