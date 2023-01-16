@@ -24,7 +24,7 @@
     "@apollo/client": "^3.5.8",
     "@apollo/server": "^4.3.0",
     "@deep-foundation/hasura": "file:../hasura",
-    "@deep-foundation/materialized-path": "^0.0.11",
+    "@deep-foundation/materialized-path": "file:../materialized-path",
     "@deep-foundation/react-hasura": "file:../react-hasura",
     "@deep-foundation/store": "file:../store",
     "@types/jest": "^26.0.22",
