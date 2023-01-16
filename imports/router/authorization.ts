@@ -156,7 +156,6 @@ const generateApolloServer = (httpServer) => {
     introspection: true,
     typeDefs, 
     resolvers,
-    context,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageProductionDefault()

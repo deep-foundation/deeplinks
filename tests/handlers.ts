@@ -1113,7 +1113,6 @@ describe('Async handlers', () => {
                               introspection: true,
                               typeDefs, 
                               resolvers,
-                              context,
                               plugins: [
                                 ApolloServerPluginLandingPageGraphQLPlayground()
                               ]});
