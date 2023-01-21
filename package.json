@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.5.8",
-    "@deep-foundation/hasura": "0.0.33",
+    "@deep-foundation/hasura": "0.0.34",
     "@deep-foundation/materialized-path": "0.0.19",
     "@deep-foundation/react-hasura": "0.0.11",
     "@deep-foundation/store": "0.0.13",
