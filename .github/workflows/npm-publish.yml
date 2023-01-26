@@ -1,0 +1,16 @@
+name: NPM Publish
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'package.json'
+
+      
+jobs:
+  main:
+    uses: deep-foundation/workflows/.github/workflows/npm-publish.yml@main
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
