@@ -214,7 +214,7 @@ export const handlerOperations = {
   Delete: 'HandleDelete',
 };
 
-export async function handleOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
+export async function handleOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: number, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   handleOperationDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
@@ -266,7 +266,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     const handleOperationsIds: any[] = [];
     if (code && isolationProviderImageName && handlerId && handleOperationId) {
       try {
-        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId: promiseId } }));
+        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId: promiseId } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
         handleOperationDebug('error', error);
@@ -281,7 +281,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   }
 }
 
-export async function handleSelectorOperation(operation: keyof typeof handlerOperations, oldLink: any, newLink: any, valuesOperation?: string) {
+export async function handleSelectorOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: number, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   handleSelectorDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
@@ -332,7 +332,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     const handleOperationsIds: any[] = [];
     if (code && isolationProviderImageName && handlerId && handleOperationId) {
       try {
-        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { oldLink, newLink, promiseId, selectorId } }));
+        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId, selectorId } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
         handleSelectorDebug('error', error);
@@ -665,6 +665,8 @@ export default async (req, res) => {
       return res.status(500).json({ error: '@deep-foundation/core package is not ready to support links handlers.' });
     }
     const event = req?.body?.event;
+    const triggeredByLinkId = parseInt(event.session_variables["x-hasura-user-id"]);
+    log('triggeredByLinkId', triggeredByLinkId);
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       const oldRow = event?.data?.old;
@@ -699,11 +701,11 @@ export default async (req, res) => {
       log('current', current);
       try {
         if(operation === 'INSERT') {
-          await handleOperation('Insert', oldRow, newRow);
-          await handleSelectorOperation('Insert', oldRow, newRow);
+          await handleOperation('Insert', triggeredByLinkId, oldRow, newRow);
+          await handleSelectorOperation('Insert', triggeredByLinkId, oldRow, newRow);
         } else if(operation === 'DELETE') {
-          await handleOperation('Delete', oldRow, newRow);
-          await handleSelectorOperation('Delete', oldRow, newRow);
+          await handleOperation('Delete', triggeredByLinkId, oldRow, newRow);
+          await handleSelectorOperation('Delete', triggeredByLinkId, oldRow, newRow);
         }
 
         const typeId = current.type_id;
