@@ -382,6 +382,10 @@ export class Packager<L extends Link<any>> {
             id value
             package: from {
               id value
+              versions: in(where: {type_id: {_eq: ${PackageVersion}}, string: { value: { _is_null: false } }}) {
+                id
+                value
+              }
             }
           }
           _type:type {
@@ -390,6 +394,10 @@ export class Packager<L extends Link<any>> {
               id value
               package: from {
                 id value
+                versions: in(where: {type_id: {_eq: ${PackageVersion}}, string: { value: { _is_null: false } }}) {
+                  id
+                  value
+                }
               }
             }
           }
@@ -399,6 +407,10 @@ export class Packager<L extends Link<any>> {
               id value
               package: from {
                 id value
+                versions: in(where: {type_id: {_eq: ${PackageVersion}}, string: { value: { _is_null: false } }}) {
+                  id
+                  value
+                }
               }
             }
           }
@@ -408,6 +420,10 @@ export class Packager<L extends Link<any>> {
               id value
               package: from {
                 id value
+                versions: in(where: {type_id: {_eq: ${PackageVersion}}, string: { value: { _is_null: false } }}) {
+                  id
+                  value
+                }
               }
             }
           }
@@ -657,7 +673,7 @@ export class Packager<L extends Link<any>> {
       if (!!~alreadyIndex) {
         return alreadyIndex;
       } else {
-        dependencies.push({ name: link?.contains?.[0]?.package?.value?.value });
+        dependencies.push({ name: link?.contains?.[0]?.package?.value?.value, version: link?.contains?.[0]?.package?.versions?.[0]?.value?.value });
         return dependencies.length - 1;
       }
     };
