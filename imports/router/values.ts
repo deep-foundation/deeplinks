@@ -49,6 +49,7 @@ const containerHash = {};
 export default async (req, res) => {
   try {
     const event = req?.body?.event;
+    const triggeredByLinkId = parseInt(event.session_variables["x-hasura-user-id"]);
     const operation = event?.op;
     if (operation === 'INSERT' || operation === 'UPDATE' || operation === 'DELETE') {
       let linkId;
@@ -138,8 +139,8 @@ export default async (req, res) => {
             await boolExpToSQL(newRow.id, newRow?.value?.value);
         }
       
-        await handleOperation('Update', oldRow, newRow, operation);
-        await handleSelectorOperation('Update', oldRow, newRow, operation);
+        await handleOperation('Update', triggeredByLinkId, oldRow, newRow, operation);
+        await handleSelectorOperation('Update', triggeredByLinkId, oldRow, newRow, operation);
         
         return res.status(200).json({});
       } catch(e) {
