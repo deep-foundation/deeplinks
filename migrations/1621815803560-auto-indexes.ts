@@ -31,7 +31,11 @@ export const up = async () => {
   AS $$
   BEGIN
       PERFORM create_btree_index(table_schema, table_name, column_name) FROM information_schema.columns
-      WHERE table_schema = schema__name AND table_name = table__name;
+      WHERE 
+          table_schema = schema__name 
+      AND table_name = table__name
+      AND data_type != 'text' -- It is not recommended to index 'text' columns with 'btree' index (this index has a limit of key size - 2712 bytes, and 'text' columns can contain larger text strings)
+      ;
   END;
   $$ LANGUAGE plpgsql;`);
 };
