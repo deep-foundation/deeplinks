@@ -4,7 +4,7 @@ import { DeepClient } from '../imports/client';
 import { deepcaseSymbolsPckg } from '../imports/deepcase-package';
 import { importPackage, sharePermissions } from './1664940577200-tsx';
 
-const debug = Debug('deeplinks:migrations:deepcase');
+const debug = Debug('deeplinks:migrations:npm-packager');
 const log = debug.extend('log');
 const error = debug.extend('error');
 
