@@ -2,7 +2,7 @@
 import Debug from 'debug';
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import { DeepClient } from '../imports/client';;
-import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from '../migrations/1616701513782-links';
 import { sql } from '@deep-foundation/hasura/sql';
 import { _ids } from '../imports/client';
 
@@ -345,7 +345,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
   const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
   const fillValueByLinks = ${fillValueByLinksCode};
   const deepFabric = ${deepFabric};
-  const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handler__prepare__function");
+  const prepare = plv8.find_function("${LINKS_TABLE_NAME}__sync__handlers__prepare__function");
   let data;
   let prepared;
 
@@ -382,6 +382,10 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
     };
   }
 
+  const require = (package) => {
+    const code = plv8.find_function("${LINKS_TABLE_NAME}__".concat(package))();
+    return eval(code)();
+  }
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
         const deep = deepFabric(prepared[i].owner, hasura_session);
@@ -394,7 +398,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         const default_role = undefined;
         const default_user_id =  undefined;
         const func = eval(prepared[i].value);
-        func({ deep, data });
+        func({ deep, require, data });
     })()
   };
 
@@ -424,76 +428,76 @@ return result;`;
 
 // service functions
 
-export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handler__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
-export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__deep__client CASCADE;`;
+export const createPrepareFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__prepare__function(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${prepareFunction} $$ LANGUAGE plv8;`;
+export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__prepare__function CASCADE;`;
 
-export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__deep__client(clientLinkId bigint, operation text, args jsonb, options jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
-export const dropDeepClientFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handler__prepare__function CASCADE;`;
+export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__deep__client(clientLinkId bigint, operation text, args jsonb, options jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
+export const dropDeepClientFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__deep__client CASCADE;`;
 
 // insert link trigger
 
-export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleInsertId, false)} $$ LANGUAGE plv8;`;
-export const createSyncInsertTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__handler__function();`;
-export const dropSyncInsertTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__handler__trigger ON "${LINKS_TABLE_NAME}";`;
-export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__handler__function CASCADE;`;
+export const createSyncInsertTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__insert__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleInsertId, false)} $$ LANGUAGE plv8;`;
+export const createSyncInsertTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__insert__trigger__function();`;
+export const dropSyncInsertTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__trigger ON "${LINKS_TABLE_NAME}";`;
+export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__insert__trigger__function CASCADE;`;
 
 // delete link trigger
 
-export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleDeleteId, false)} $$ LANGUAGE plv8;`;
-export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__handler__function();`;
+export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleDeleteId, false)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function();`;
 export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger ON "${LINKS_TABLE_NAME}";`;
-export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__handler__function CASCADE;`;
+export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function CASCADE;`;
 
 // strings triggers
 
-export const createSyncInsertStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncInsertStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__strings__handler__trigger AFTER INSERT ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function();`;
-export const dropSyncInsertStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__strings__handler__trigger ON "strings";`;
-export const dropSyncInsertStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__strings__handler__function CASCADE;`;
+export const createSyncInsertStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger AFTER INSERT ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger__function();`;
+export const dropSyncInsertStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger ON "strings";`;
+export const dropSyncInsertStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger__function CASCADE;`;
 
-export const createSyncUpdateStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncUpdateStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__strings__handler__trigger AFTER UPDATE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__strings__handler__function();`;
-export const dropSyncUpdateStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__strings__handler__trigger ON "strings";`;
-export const dropSyncUpdateStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__strings__handler__function CASCADE;`;
+export const createSyncUpdateStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__update__strings__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateStringsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__strings__trigger AFTER UPDATE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__update__strings__trigger__function();`;
+export const dropSyncUpdateStringsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__strings__trigger ON "strings";`;
+export const dropSyncUpdateStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__update__strings__trigger__function CASCADE;`;
 
-export const createSyncDeleteStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncDeleteStringsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__strings__handler__trigger AFTER DELETE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function();`;
-export const dropSyncDeleteStringsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__strings__handler__trigger ON "strings";`;
-export const dropSyncDeleteStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__strings__handler__function CASCADE;`;
-
-// numbers triggers
-
-export const createSyncInsertNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncInsertNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__numbers__handler__trigger AFTER INSERT ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function();`;
-export const dropSyncInsertNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__numbers__handler__trigger ON "numbers";`;
-export const dropSyncInsertNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__numbers__handler__function CASCADE;`;
-
-export const createSyncUpdateNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncUpdateNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__numbers__handler__trigger AFTER UPDATE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function();`;
-export const dropSyncUpdateNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__numbers__handler__trigger ON "numbers";`;
-export const dropSyncUpdateNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__numbers__handler__function CASCADE;`;
-
-export const createSyncDeleteNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncDeleteNumbersTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__numbers__handler__trigger AFTER DELETE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function();`;
-export const dropSyncDeleteNumbersTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__numbers__handler__trigger ON "numbers";`;
-export const dropSyncDeleteNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__numbers__handler__function CASCADE;`;
+export const createSyncDeleteStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__delete__strings__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteStringsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__strings__trigger AFTER DELETE ON "strings" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__delete__strings__trigger__function();`;
+export const dropSyncDeleteStringsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__strings__trigger ON "strings";`;
+export const dropSyncDeleteStringsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__strings__trigger__function CASCADE;`;
 
 // numbers triggers
 
-export const createSyncInsertObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncInsertObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__objects__handler__trigger AFTER INSERT ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function();`;
-export const dropSyncInsertObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__insert__objects__handler__trigger ON "objects";`;
-export const dropSyncInsertObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__insert__objects__handler__function CASCADE;`;
+export const createSyncInsertNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__insert__numbers__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__numbers__trigger AFTER INSERT ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__insert__numbers__trigger__function();`;
+export const dropSyncInsertNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__numbers__trigger ON "numbers";`;
+export const dropSyncInsertNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__insert__numbers__trigger__function CASCADE;`;
 
-export const createSyncUpdateObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncUpdateObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__update__objects__handler__trigger AFTER UPDATE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__objects__handler__function();`;
-export const dropSyncUpdateObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__update__objects__handler__trigger ON "objects";`;
-export const dropSyncUpdateObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__objects__handler__function CASCADE;`;
+export const createSyncUpdateNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__update__numbers__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateNumbersTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__numbers__trigger AFTER UPDATE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__update__numbers__trigger__function();`;
+export const dropSyncUpdateNumbersTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__numbers__trigger ON "numbers";`;
+export const dropSyncUpdateNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__update__numbers__trigger__function CASCADE;`;
 
-export const createSyncDeleteObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
-export const createSyncDeleteObjectsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__objects__handler__trigger AFTER DELETE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function();`;
-export const dropSyncDeleteObjectsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__objects__handler__trigger ON "objects";`;
-export const dropSyncDeleteObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__delete__objects__handler__function CASCADE;`;
+export const createSyncDeleteNumbersTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__delete__numbers__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteNumbersTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__numbers__trigger AFTER DELETE ON "numbers" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__delete__numbers__trigger__function();`;
+export const dropSyncDeleteNumbersTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__numbers__trigger ON "numbers";`;
+export const dropSyncDeleteNumbersTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__numbers__trigger__function CASCADE;`;
+
+// objects triggers
+
+export const createSyncInsertObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__insert__objects__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncInsertObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__objects__trigger AFTER INSERT ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__insert__objects__trigger__function();`;
+export const dropSyncInsertObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__insert__objects__trigger ON "objects";`;
+export const dropSyncInsertObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__insert__objects__trigger__function CASCADE;`;
+
+export const createSyncUpdateObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__update__objects__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateObjectsTrigger = sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__objects__trigger AFTER UPDATE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__update__objects__trigger__function();`;
+export const dropSyncUpdateObjectsTrigger = sql`DROP TRIGGER z_${LINKS_TABLE_NAME}__sync__handlers__update__objects__trigger ON "objects";`;
+export const dropSyncUpdateObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__update__objects__trigger__function CASCADE;`;
+
+export const createSyncDeleteObjectsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__delete__objects__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
+export const createSyncDeleteObjectsTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__objects__trigger AFTER DELETE ON "objects" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__delete__objects__trigger__function();`;
+export const dropSyncDeleteObjectsTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__objects__trigger ON "objects";`;
+export const dropSyncDeleteObjectsTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__objects__trigger__function CASCADE;`;
 
 
 export const up = async () => {
