@@ -1,32 +1,18 @@
 import Debug from 'debug';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { DeepClient } from '../imports/client';;
-import { api, TABLE_NAME as LINKS_TABLE_NAME } from '../migrations/1616701513782-links';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
 import { sql } from '@deep-foundation/hasura/sql';
 import { _ids } from '../imports/client';
+import fs from 'fs';
 
-const mathjs = require('../mathjs-bundled/mathjs.js').json;
+const mathjs = require('../mathjs-bundled/mathjs.js').code;
 
 const debug = Debug('deeplinks:migrations:plv8');
 const log = debug.extend('log');
 const error = debug.extend('error');
 
-const client = generateApolloClient({
-  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.MIGRATIONS_HASURA_SSL,
-  secret: process.env.MIGRATIONS_HASURA_SECRET,
-});
-
-const deep = new DeepClient({
-  apolloClient: client,
-})
-
-
-const mathjsFunction = /*javascript*/` return ${mathjs}`;
-
-export const createMathjsFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__mathjs__package(link jsonb, handletypeid bigint) RETURNS jsonb AS $$ ${mathjsFunction} $$ LANGUAGE plv8;`;
-export const dropMathjsFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__mathjs__package CASCADE;`;
-
+const mathjsFunction = `const sync__handlers__package = ${mathjs}; return sync__handlers__package()`;
+export const createMathjsFunction = `CREATE OR REPLACE FUNCTION links__sync__handlers__mathjs__package() RETURNS jsonb AS $code$ ${mathjsFunction} $code$ LANGUAGE plv8;`;
+export const dropMathjsFunction = `DROP FUNCTION IF EXISTS links__sync__handlers__mathjs__package CASCADE;`;
 
 export const up = async () => {
   log('up');

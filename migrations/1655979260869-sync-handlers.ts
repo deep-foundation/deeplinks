@@ -383,8 +383,8 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
   }
 
   const require = (package) => {
-    const code = plv8.find_function("${LINKS_TABLE_NAME}__".concat(package))();
-    return eval(code)();
+    const packageFabric = plv8.find_function("${LINKS_TABLE_NAME}__sync__handlers__".concat(package, '__package'));
+    return packageFabric();
   }
   for (let i = 0; i < prepared.length; i++) {
     (()=>{
@@ -445,7 +445,7 @@ export const dropSyncInsertTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS
 
 export const createSyncDeleteTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleDeleteId, false)} $$ LANGUAGE plv8;`;
 export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__trigger AFTER DELETE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function();`;
-export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__delete__handler__trigger ON "${LINKS_TABLE_NAME}";`;
+export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function CASCADE;`;
 
 // strings triggers

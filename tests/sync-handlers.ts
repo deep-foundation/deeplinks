@@ -4,7 +4,8 @@ import { DeepClient } from "../imports/client";
 import { insertHandler, insertSelector, insertSelectorItem, deleteHandler, deleteSelector }  from "../imports/handlers";
 import { HasuraApi } from'@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
-import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../1/1655979260869-sync-handlers";
+import { _ids } from '../imports/client';
+import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
 // import { _ids } from '../imports/client';
 
@@ -35,106 +36,106 @@ const apolloClient = generateApolloClient({
 
 const deep = new DeepClient({ apolloClient });
 
-// beforeAll(async () => {
-//   // manual remigrate plv8
-//   console.log('manual remigrating...');
-//   await api.sql(`${createPrepareFunction}`);
-//   await api.sql(`${createDeepClientFunction}`);
+beforeAll(async () => {
+  // manual remigrate plv8
+  console.log('manual remigrating...');
+  await api.sql(`${createPrepareFunction}`);
+  await api.sql(`${createDeepClientFunction}`);
   
-//   await api.sql(dropSyncInsertTrigger);
-//   await api.sql(dropSyncInsertTriggerFunction);
+  await api.sql(dropSyncInsertTrigger);
+  await api.sql(dropSyncInsertTriggerFunction);
 
-//   await api.sql(dropSyncDeleteTrigger);
-//   await api.sql(dropSyncDeleteTriggerFunction);
+  await api.sql(dropSyncDeleteTrigger);
+  await api.sql(dropSyncDeleteTriggerFunction);
 
-//   await api.sql(dropSyncInsertStringsTrigger);
-//   await api.sql(dropSyncInsertStringsTriggerFunction);
+  await api.sql(dropSyncInsertStringsTrigger);
+  await api.sql(dropSyncInsertStringsTriggerFunction);
 
-//   await api.sql(dropSyncUpdateStringsTrigger);
-//   await api.sql(dropSyncUpdateStringsTriggerFunction);
+  await api.sql(dropSyncUpdateStringsTrigger);
+  await api.sql(dropSyncUpdateStringsTriggerFunction);
 
-//   await api.sql(dropSyncDeleteStringsTrigger);
-//   await api.sql(dropSyncDeleteStringsTriggerFunction);
+  await api.sql(dropSyncDeleteStringsTrigger);
+  await api.sql(dropSyncDeleteStringsTriggerFunction);
 
-//   await api.sql(dropSyncInsertNumbersTrigger);
-//   await api.sql(dropSyncInsertNumbersTriggerFunction);
+  await api.sql(dropSyncInsertNumbersTrigger);
+  await api.sql(dropSyncInsertNumbersTriggerFunction);
 
-//   await api.sql(dropSyncUpdateNumbersTrigger);
-//   await api.sql(dropSyncUpdateNumbersTriggerFunction);
+  await api.sql(dropSyncUpdateNumbersTrigger);
+  await api.sql(dropSyncUpdateNumbersTriggerFunction);
 
-//   await api.sql(dropSyncDeleteNumbersTrigger);
-//   await api.sql(dropSyncDeleteNumbersTriggerFunction);
+  await api.sql(dropSyncDeleteNumbersTrigger);
+  await api.sql(dropSyncDeleteNumbersTriggerFunction);
 
-//   await api.sql(dropSyncInsertObjectsTrigger);
-//   await api.sql(dropSyncInsertObjectsTriggerFunction);
+  await api.sql(dropSyncInsertObjectsTrigger);
+  await api.sql(dropSyncInsertObjectsTriggerFunction);
 
-//   await api.sql(dropSyncUpdateObjectsTrigger);
-//   await api.sql(dropSyncUpdateObjectsTriggerFunction);
+  await api.sql(dropSyncUpdateObjectsTrigger);
+  await api.sql(dropSyncUpdateObjectsTriggerFunction);
 
-//   await api.sql(dropSyncDeleteObjectsTrigger);
-//   await api.sql(dropSyncDeleteObjectsTriggerFunction);
+  await api.sql(dropSyncDeleteObjectsTrigger);
+  await api.sql(dropSyncDeleteObjectsTriggerFunction);
 
-//   await api.sql(createSyncInsertObjectsTriggerFunction);
-//   await api.sql(createSyncInsertObjectsTrigger);
+  await api.sql(createSyncInsertObjectsTriggerFunction);
+  await api.sql(createSyncInsertObjectsTrigger);
 
-//   await api.sql(createSyncUpdateObjectsTriggerFunction);
-//   await api.sql(createSyncUpdateObjectsTrigger);
+  await api.sql(createSyncUpdateObjectsTriggerFunction);
+  await api.sql(createSyncUpdateObjectsTrigger);
 
-//   await api.sql(createSyncDeleteObjectsTriggerFunction);
-//   await api.sql(createSyncDeleteObjectsTrigger);
+  await api.sql(createSyncDeleteObjectsTriggerFunction);
+  await api.sql(createSyncDeleteObjectsTrigger);
 
-//   await api.sql(createSyncInsertNumbersTriggerFunction);
-//   await api.sql(createSyncInsertNumbersTrigger);
+  await api.sql(createSyncInsertNumbersTriggerFunction);
+  await api.sql(createSyncInsertNumbersTrigger);
 
-//   await api.sql(createSyncUpdateNumbersTriggerFunction);
-//   await api.sql(createSyncUpdateNumbersTrigger);
+  await api.sql(createSyncUpdateNumbersTriggerFunction);
+  await api.sql(createSyncUpdateNumbersTrigger);
 
-//   await api.sql(createSyncDeleteNumbersTriggerFunction);
-//   await api.sql(createSyncDeleteNumbersTrigger);
+  await api.sql(createSyncDeleteNumbersTriggerFunction);
+  await api.sql(createSyncDeleteNumbersTrigger);
   
-//   await api.sql(createSyncInsertTriggerFunction);
-//   await api.sql(createSyncInsertTrigger);
+  await api.sql(createSyncInsertTriggerFunction);
+  await api.sql(createSyncInsertTrigger);
 
-//   await api.sql(createSyncDeleteTriggerFunction);
-//   await api.sql(createSyncDeleteTrigger);
+  await api.sql(createSyncDeleteTriggerFunction);
+  await api.sql(createSyncDeleteTrigger);
 
-//   await api.sql(createSyncInsertStringsTriggerFunction);
-//   await api.sql(createSyncInsertStringsTrigger);
+  await api.sql(createSyncInsertStringsTriggerFunction);
+  await api.sql(createSyncInsertStringsTrigger);
 
-//   await api.sql(createSyncUpdateStringsTriggerFunction);
-//   await api.sql(createSyncUpdateStringsTrigger);
+  await api.sql(createSyncUpdateStringsTriggerFunction);
+  await api.sql(createSyncUpdateStringsTrigger);
 
-//   await api.sql(createSyncDeleteStringsTriggerFunction);
-//   await api.sql(createSyncDeleteStringsTrigger);
-// });
+  await api.sql(createSyncDeleteStringsTriggerFunction);
+  await api.sql(createSyncDeleteStringsTrigger);
+});
 
-// const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-// const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
-// const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
-// const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
-// const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
-// const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
-// const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-// const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // await deep.id('@deep-foundation/core', 'Handler');
-// const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.id('@deep-foundation/core', 'SelectorType');
-// const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
-// const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
-// const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
+const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
+const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
+const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
+const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
+const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
+const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
+const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // await deep.id('@deep-foundation/core', 'Handler');
+const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.id('@deep-foundation/core', 'SelectorType');
+const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
+const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
+const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
 
-// log({handleInsertTypeId, handleUpdateTypeId, handleDeleteTypeId, userTypeId,packageTypeId, containTypeId,plv8SupportsJsTypeId, HandlerTypeId, SelectorTypeId, AllowSelectTypeId, AllowSelectId,  AllowAdminId})
+log({handleInsertTypeId, handleUpdateTypeId, handleDeleteTypeId, userTypeId,packageTypeId, containTypeId,plv8SupportsJsTypeId, HandlerTypeId, SelectorTypeId, AllowSelectTypeId, AllowSelectId,  AllowAdminId});
 
 describe('sync handlers', () => {
   describe('Prepare fuction', () => {
     it(`handleInsert`, async () => {
       const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
       const link = JSON.stringify({id: 1, type_id: 1}); // change for yours
-      const result = await api.sql(sql`select links__sync__handler__prepare__function('${link}'::jsonb, ${handlerId}::bigint)`);
+      const result = await api.sql(sql`select links__sync__handlers__prepare__function('${link}'::jsonb, ${handlerId}::bigint)`);
       log('prepare result', result?.data?.result?.[1]?.[0]);
     });
   });
   describe('DeepClient mini', () => {
     it(`id`, async () => {
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb, '{}'::jsonb)`);
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb, '{}'::jsonb)`);
       const clientResult = await deep.id('@deep-foundation/core', 'Rule');
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
@@ -148,7 +149,7 @@ describe('sync handlers', () => {
           from_id: await deep.id('deep', 'admin')
         } }
       });
-      const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
       log('select result', result?.data?.result?.[1]?.[0]);
       const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
       const selected = await deep.select(id);
@@ -159,25 +160,25 @@ describe('sync handlers', () => {
     describe('permissions', () => {
       describe('select', () => {
         it(`root can select from tree`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"link_id":1}'::jsonb, '{"table":"tree"}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"link_id":1}'::jsonb, '{"table":"tree"}'::jsonb)`);
           const n1 = result?.data?.result?.[1];
           log('n1', JSON.parse(n1?.[0]).data);
           assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
         });
         it(`root can select from can`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":${await deep.id('deep', 'admin')}}'::jsonb, '{"table":"can"}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"subject_id":${await deep.id('deep', 'admin')}}'::jsonb, '{"table":"can"}'::jsonb)`);
           const n1 = result?.data?.result?.[1];
           log('n1', JSON.parse(n1?.[0]).data);
           assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
         });
         it(`root can select from selectors`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"item_id":213}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"item_id":213}'::jsonb, '{"table":"selectors"}'::jsonb)`);
           const n1 = result?.data?.result?.[1];
           log('n1', JSON.parse(n1?.[0]).data);
           assert.equal(!!JSON.parse(n1?.[0]).data.length, true);
         });
         it(`nobody can select from not permitted tables`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id":1}'::jsonb, '{"table":"strings"}'::jsonb)`);
           assert.equal(result.error, 'Bad Request');
         });
         it(`user contain range`, async () => {
@@ -194,17 +195,17 @@ describe('sync handlers', () => {
           });
           log('id', id);
 
-          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const result1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n1 = result1?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n1?.[0]).data, 1, `item_id ${id} must be selectable by ${a1.linkId}`);
           log(`${a1.linkId} n1`, n1);
 
-          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const result2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n2 = result2?.data?.result?.[1];
           log(`${a2.linkId} n2`, n2);
           assert.lengthOf(JSON.parse(n2?.[0]).data, 0, `item_id ${id} must not be selectable by ${a2.linkId}`);
           
-          const result3 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
+          const result3 = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id}}'::jsonb, '{}'::jsonb)`);
           const n3 = result3?.data?.result?.[1];
           log(`${await deep.id('deep', 'admin')} n3`, n3);
           assert.lengthOf(JSON.parse(n3?.[0]).data, 1, `item_id ${id} must be selectable by admin`);
@@ -286,39 +287,39 @@ describe('sync handlers', () => {
             ] },
           });
     
-          const result1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const result1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n1 = result1?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n1?.[0]).data, 1);
 
-          const result2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const result2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n2 = result2?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n2?.[0]).data, 1);
-          const result3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const result3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n3 = result3?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n3?.[0]).data, 0);
     
-          const result4 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
+          const result4 = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id1}}'::jsonb, '{}'::jsonb)`);
           const n4 = result4?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n4?.[0]).data, 1);
 
-          const result5 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const result5 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n5 = result5?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n5?.[0]).data, 1);
-          const result6 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const result6 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n6 = result6?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n6?.[0]).data, 0);
-          const result7 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const result7 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n7 = result7?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n7?.[0]).data, 0);
     
-          const result8 = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
+          const result8 = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select', '{"id": ${id2}}'::jsonb, '{}'::jsonb)`);
           const n8 = result8?.data?.result?.[1];
           assert.lengthOf(JSON.parse(n8?.[0]).data, 1);
         });
       });
       describe('insert', () => {
         it(`root can insert`, async () => {
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
@@ -328,7 +329,7 @@ describe('sync handlers', () => {
         });
         it(`guest cant insert by default`, async () => {
           const a1 = await deep.guest({});
-          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           assert.isNotEmpty(result?.error);
         });
         it(`insert permission can be gived to guest`, async () => {
@@ -401,7 +402,7 @@ describe('sync handlers', () => {
             ] },
           });
           
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           log('r1', r1?.data?.result?.[1]?.[0]);
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
@@ -411,13 +412,13 @@ describe('sync handlers', () => {
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
           
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r2?.error;
           const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da2).to.not.be.undefined;
           assert.equal(!!e2, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r3?.error;
           const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
           log('da3', da3);
@@ -578,20 +579,20 @@ describe('sync handlers', () => {
     
           await delay(5000);
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data;
 
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
 
-          const r2 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da1?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da1?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
           const e1t = r2?.error;
           const da1t = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da1t).to.not.be.undefined;
           assert.equal(!!e1t, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r3?.error;
           const da2 = JSON.parse(r3?.data?.result?.[1]?.[0])?.data;
 
@@ -600,7 +601,7 @@ describe('sync handlers', () => {
 
           let r4;
           try {
-            r4 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
+            r4 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
           } catch (e) {
             log(e);
           }
@@ -609,13 +610,13 @@ describe('sync handlers', () => {
           expect(da2t).to.be.undefined;
           expect(e2t).to.not.be.undefined;
 
-          const r5 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r5 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r5?.error;
           const da3 = JSON.parse(r5?.data?.result?.[1]?.[0])?.data;
           expect(da3).to.not.be.undefined;
           assert.equal(!!e3, false);
 
-          const r6 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a3.linkId}}'::jsonb, '{}'::jsonb)`);
+          const r6 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a3.linkId}}'::jsonb, '{}'::jsonb)`);
           const e4 = r6?.error;
           const da4 = JSON.parse(r6?.data?.result?.[1]?.[0])?.data;
           expect(da4).to.not.be.undefined;
@@ -632,7 +633,7 @@ describe('sync handlers', () => {
             assert.lengthOf(n1?.data, 1);
 
             // no error, no update (nothing to update)
-            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
             const clientResult = await deep.select({id: {_eq: id}});
             log('clientResult', clientResult);
             assert.equal(undefined, clientResult?.data?.[0]?.value?.value);
@@ -643,7 +644,7 @@ describe('sync handlers', () => {
             log('inserted', inserted);
             assert.equal('test1', inserted?.data?.[0]?.value?.value);
 
-            await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
+            await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'update', '[{"link_id":${id}}, { "value": "test2"}, { "table": "strings"}]'::jsonb, '{}'::jsonb)`);
             const clientResult2 = await deep.select({id: {_eq: id}});
             log('clientResult2', clientResult2);
             assert.equal('test2', clientResult2?.data?.[0]?.value?.value);
@@ -660,7 +661,7 @@ describe('sync handlers', () => {
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
 
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
@@ -675,7 +676,7 @@ describe('sync handlers', () => {
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
 
-          const result = await api.sql(sql`select links__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{"table":"selectors"}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'delete', '{"id":${id}}'::jsonb, '{"table":"selectors"}'::jsonb)`);
           log('result.error', JSON.stringify(result.error));
           assert.equal(result.error, 'Bad Request');
         });
@@ -687,7 +688,7 @@ describe('sync handlers', () => {
           assert.lengthOf(n1?.data, 1);
 
           const a1 = await deep.guest({});
-          const result = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id}}'::jsonb, '{}'::jsonb)`);
           if (result?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(result?.data?.result?.[1]?.[0])?.data, 0);
           const n2 = await deep.select({ id });
           assert.lengthOf(n2?.data, 1);
@@ -771,9 +772,9 @@ describe('sync handlers', () => {
             type_id: await deep.id('@deep-foundation/core', 'Operation'),
           });
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb, '{}'::jsonb)`);
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${id2}}'::jsonb, '{}'::jsonb)`);
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${id3}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${id2}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${id3}}'::jsonb, '{}'::jsonb)`);
           
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
           expect(da1).to.not.be.undefined;
@@ -951,7 +952,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e1, false);
 
-          const r1 = await api.sql(sql`select links__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${da1?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${da1?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e1d = r1.error;
           expect(e1d).to.not.be.undefined;
           if (r1?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r1?.data?.result?.[1]?.[0])?.data, 0);
@@ -965,7 +966,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e2, false);
 
-          const r2 = await api.sql(sql`select links__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${da2?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'delete', '{"id":${da2?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e2d = r2.error;
           assert.equal(!!e2d, false);
           if (r2?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r2?.data?.result?.[1]?.[0])?.data, 1);
@@ -979,7 +980,7 @@ describe('sync handlers', () => {
           });
           assert.equal(!!e3, false);
 
-          const r3 = await api.sql(sql`select links__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${da3?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'delete', '{"id":${da3?.[0]?.id}}'::jsonb, '{}'::jsonb)`);
           const e3d = r3.error;
           expect(e3d).to.not.be.undefined;
           if (r3?.data?.result?.[1]?.[0]) assert.lengthOf(JSON.parse(r3?.data?.result?.[1]?.[0])?.data, 0);
@@ -987,6 +988,45 @@ describe('sync handlers', () => {
           assert.lengthOf(n3?.data, 1);
         });
       });
+    });
+  });
+
+  describe('require package', () => {
+    it(`require mathjs`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('customLinkId', customLinkId);
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, require, data}) => { const mathjs = require('mathjs'); if (mathjs.atan2(3, -3) / mathjs.pi == 0.75) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+      debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
     });
   });
   describe('Handle operations', () => {
