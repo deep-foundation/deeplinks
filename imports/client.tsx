@@ -715,6 +715,34 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (_ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }
+    const containTypeLinkId = _ids['@deep-foundation/core'].contain;
+    const result = this.deep.minilinks.query({
+      type_id: containTypeLinkId,
+      from: {
+        ...(typeof start === 'number' && {id: start}),
+        ...(typeof start === 'string' && {
+          in: {
+            type_id: containTypeLinkId,
+            string: {
+              value: {
+                _eq: start
+              }
+            }
+          }
+        }),
+      },
+      ...(typeof path[0] === 'string' && {
+        string: {
+          value: {
+            _eq: path[0]
+          }
+        }
+      }),
+      ...(typeof path[0] === 'boolean' && {}), // TODO What should we do?
+    })
+    if(result.length > 0) {
+      return result[0].to_id;
+    }
     throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
   };
 
