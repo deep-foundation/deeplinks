@@ -154,4 +154,39 @@ describe('client', () => {
     const packageId = await deepClient.id('@deep-foundation/core');
     assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
   });
+  it(`idLocal get from minilinks`, async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
+    const packageTypeLinkId = await deepClient.id("@deep-foundation/core", "Package");
+    const packageName = "Package For IdLocal Test";
+    const {data: [{id: packageLinkId}]} = await deepClient.insert({
+      type_id: packageTypeLinkId,
+      string: {
+        data: {
+          value: packageName
+        }
+      }
+    });
+    const {data: [{id: newTypeTypeLinkId}]} = await deepClient.insert({
+      type_id: typeTypeLinkId,
+    });
+    const {data: [{id: containLinkId}]} = await deepClient.insert({
+      type_id: containTypeLinkId,
+      from_id: packageLinkId,
+      to_id: newTypeTypeLinkId,
+      string: {
+        data: {
+          value: "Type"
+        }
+      }
+    });
+    deepClient.minilinks.apply([newTypeTypeLinkId]);
+    try {
+      const newTypeTypeLinkId = deepClient.idLocal(packageName, "Type");
+      assert.notEqual(newTypeTypeLinkId, undefined);
+    } finally {
+      await deepClient.delete([packageLinkId, newTypeTypeLinkId, containLinkId])
+    }
+    
+  })
 });
