@@ -741,7 +741,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       ...(typeof path[0] === 'boolean' && {}), // TODO What should we do?
     })
     if(result.length > 0) {
-      return result[0].to_id;
+      return ((result[0] as unknown) as Link<number>).to_id;
     }
     throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
   };
