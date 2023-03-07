@@ -158,7 +158,7 @@ describe('client', () => {
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
     const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
     const packageTypeLinkId = await deepClient.id("@deep-foundation/core", "Package");
-    const packageName = "Package For IdLocal Test";
+    const packageName = "idLocal get from minilinks package";
     const {data: [{id: packageLinkId}]} = await deepClient.insert({
       type_id: packageTypeLinkId,
       string: {
@@ -167,25 +167,29 @@ describe('client', () => {
         }
       }
     });
-    const {data: [{id: newTypeTypeLinkId}]} = await deepClient.insert({
+    const {data: [newTypeTypeLink]} = await deepClient.insert({
       type_id: typeTypeLinkId,
-    });
+    }, {returning: `id type_id from_id to_id value`});
     const {data: [{id: containLinkId}]} = await deepClient.insert({
       type_id: containTypeLinkId,
       from_id: packageLinkId,
-      to_id: newTypeTypeLinkId,
+      to_id: newTypeTypeLink.id,
       string: {
         data: {
           value: "Type"
         }
       }
     });
-    deepClient.minilinks.apply([newTypeTypeLinkId]);
+    const {data} = await deepClient.select({"type_id":3,"from":{"string":{"value":{"_eq":"idLocal get from minilinks package"}}},"string":{"value":{"_eq":"Type"}}});
+    console.log({data})
+    deepClient.minilinks.apply([newTypeTypeLink]);
+    const minilinksEmptyQueryResponse = deepClient.minilinks.query({});
+    console.log({minilinksEmptyQueryResponse})
     try {
       const newTypeTypeLinkId = deepClient.idLocal(packageName, "Type");
       assert.notEqual(newTypeTypeLinkId, undefined);
     } finally {
-      await deepClient.delete([packageLinkId, newTypeTypeLinkId, containLinkId])
+      await deepClient.delete([packageLinkId, newTypeTypeLink.id, containLinkId])
     }
     
   })
