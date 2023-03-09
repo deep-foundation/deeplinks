@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.112",
+  "version": "0.0.113",
   "license": "Unlicense",
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey PORT=3006 npm run launch",
@@ -22,7 +22,7 @@
     "snapshot:dump": "node snapshots/dump.js"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.10",
+    "@apollo/client": "3.7.9",
     "@deep-foundation/hasura": "0.0.37",
     "@deep-foundation/materialized-path": "0.0.21",
     "@deep-foundation/npm-packager": "^0.0.5",
