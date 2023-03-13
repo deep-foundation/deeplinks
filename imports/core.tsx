@@ -3,7 +3,7 @@ import { Packager, Package } from './packager';
 export const corePckg: Package = {
   package: {
     name: '@deep-foundation/core',
-    version: '0.0.0',
+    version: '0.0.2',
     uri: 'deep-foundation/core',
     type: 'git',
   },

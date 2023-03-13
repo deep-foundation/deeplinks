@@ -25,7 +25,7 @@
     "@apollo/client": "3.7.9",
     "@deep-foundation/hasura": "0.0.37",
     "@deep-foundation/materialized-path": "0.0.21",
-    "@deep-foundation/npm-packager": "^0.0.5",
+    "@deep-foundation/npm-packager": "0.0.9",
     "@deep-foundation/react-hasura": "0.0.13",
     "@deep-foundation/store": "0.0.17",
     "@types/jest": "^26.0.22",
