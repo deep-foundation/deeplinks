@@ -744,11 +744,14 @@ export class Packager<L extends Link<any>> {
     const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
     const version: any = globalLinks.types[PackageVersion]?.[0] || '0.0.0';
     const pack: any = globalLinks.types[Package]?.[0];
-    const pckg = {
+    const pckg: Package = {
       package: { name: pack?.value?.value, version: version?.value?.value },
       data: [],
-      errors: [],
+      errors: []
     };
+    if (pckg.package.name === '@deep-foundation/core') {
+      pckg.strict = true;
+    }
 
     if (!pack) pckg.errors.push('!package');
     if (!pckg?.package.name) pckg.errors.push('!pckg?.package.name');

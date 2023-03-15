@@ -150,7 +150,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, envs }: IGenerateEng
     }
   }
   if (operation === 'dock') {
-    str = ` docker version -f json`;
+    str = ` docker version -f '{{json .}}'`;
   }
   if (operation === 'compose') {
     str = ` docker-compose version --short`;
