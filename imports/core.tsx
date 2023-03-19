@@ -23,13 +23,6 @@ export const corePckg: Package = {
     { id: 'Then', type: 'Type', from: 'Any', to: 'Promise' },
     { id: 'Resolved', type: 'Type', from: 'Promise', to: 'Any' },
     { id: 'Rejected', type: 'Type', from: 'Promise', to: 'Any' },
-    { id: 'promiseTree', type: 'Tree' },
-    { id: 'promiseTreeAny', type: 'TreeIncludeNode', from: 'promiseTree', to: 'Any' },
-    { id: 'promiseTreeThen', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Then' },
-    { id: 'promiseTreePromise', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Promise' },
-    { id: 'promiseTreeResolved', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Resolved' },
-    { id: 'promiseTreeRejected', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Rejected' },
-    { id: 'promiseTreePromiseResult', type: 'TreeIncludeDown', from: 'promiseTree', to: 'PromiseResult' },
 
     // ===
 
@@ -91,6 +84,14 @@ export const corePckg: Package = {
     { id: 'containTree', type: 'Tree' },
     { id: 'containTreeContain', type: 'TreeIncludeDown', from: 'containTree', to: 'Contain' },
     { id: 'containTreeAny', type: 'TreeIncludeNode', from: 'containTree', to: 'Any' },
+
+    { id: 'promiseTree', type: 'Tree' },
+    { id: 'promiseTreeAny', type: 'TreeIncludeNode', from: 'promiseTree', to: 'Any' },
+    { id: 'promiseTreeThen', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Then' },
+    { id: 'promiseTreePromise', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Promise' },
+    { id: 'promiseTreeResolved', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Resolved' },
+    { id: 'promiseTreeRejected', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Rejected' },
+    { id: 'promiseTreePromiseResult', type: 'TreeIncludeDown', from: 'promiseTree', to: 'PromiseResult' },
 
     { id: 'PackageNamespace', type: 'Type' },
 
