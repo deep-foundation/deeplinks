@@ -320,6 +320,14 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'dockerJSSupportsCompatableHandleRoute', type: 'SupportsCompatable', from: 'dockerSupportsJs', to: 'HandleRoute' },
 
     { id: 'clientJSSupportsCompatableHandleClient', type: 'SupportsCompatable', from: 'clientSupportsJs', to: 'HandleClient' },
+
+    { id: 'promiseTree', type: 'Tree' },
+    { id: 'promiseTreeAny', type: 'TreeIncludeNode', from: 'promiseTree', to: 'Any' },
+    { id: 'promiseTreeThen', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Then' },
+    { id: 'promiseTreePromise', type: 'TreeIncludeNode', from: 'promiseTree', to: 'Promise' },
+    { id: 'promiseTreeResolved', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Resolved' },
+    { id: 'promiseTreeRejected', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Rejected' },
+    { id: 'promiseTreePromiseResult', type: 'TreeIncludeNode', from: 'promiseTree', to: 'PromiseResult' },
   ],
   errors: [],
   strict: true,
