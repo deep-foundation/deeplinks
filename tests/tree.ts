@@ -35,6 +35,7 @@ describe('tree', () => {
       type_id: customTypeLinkId
     });
     linksToDelete.push(customLinkId);
+    await delay(3000);
     try {
       const { data: promiseTreeLinksDownToCustomLink } = await deep.select({
         up: {
