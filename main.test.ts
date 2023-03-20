@@ -15,5 +15,6 @@ import './tests/packager';
 import './tests/sync-handlers';
 // import './tests/messanger';
 import './tests/minilinks-query';
+import './tests/tree';
 
 // TODO error if duplicates
