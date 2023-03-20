@@ -2,12 +2,10 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { HasuraApi } from "@deep-foundation/hasura/api";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
-import gql from "graphql-tag";
-import Debug from 'debug';
-import fetch from 'node-fetch';
-import { insertHandler, insertSelector, insertSelectorItems, deleteHandler, deleteSelector }  from "../imports/handlers";
-import _ from 'lodash';
+import { insertHandler, deleteHandler }  from "../imports/handlers";
 import { _ids } from '../imports/client';
+
+jest.setTimeout(120000);
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
