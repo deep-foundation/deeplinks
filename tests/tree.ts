@@ -4,6 +4,7 @@ import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import { insertHandler, deleteHandler }  from "../imports/handlers";
 import { _ids } from '../imports/client';
+import { delay } from "../imports/promise";
 
 jest.setTimeout(120000);
 
@@ -35,7 +36,7 @@ describe('tree', () => {
       type_id: customTypeLinkId
     });
     linksToDelete.push(customLinkId);
-    await delay(3000);
+    await delay(5000);
     try {
       const { data: promiseTreeLinksDownToCustomLink } = await deep.select({
         up: {
