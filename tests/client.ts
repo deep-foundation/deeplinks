@@ -1,6 +1,8 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
+import { BoolExpLink, MutationInputLink } from "../imports/client_types";
+import { inspect} from 'util'
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -154,4 +156,38 @@ describe('client', () => {
     const packageId = await deepClient.id('@deep-foundation/core');
     assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
   });
+  it(`idLocal get from minilinks`, async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
+    const packageTypeLinkId = await deepClient.id("@deep-foundation/core", "Package");
+    const packageName = "idLocal get from minilinks package";
+    const {data: [packageLink]} = await deepClient.insert({
+      type_id: packageTypeLinkId,
+      string: {
+        data: {
+          value: packageName
+        }
+      }
+    }, {returning: deepClient.selectReturning});
+    const {data: [newTypeTypeLink]} = await deepClient.insert({
+      type_id: typeTypeLinkId,
+    }, {returning: deepClient.selectReturning});
+    const {data: [containLink]} = await deepClient.insert({
+      type_id: containTypeLinkId,
+      from_id: packageLink.id,
+      to_id: newTypeTypeLink.id,
+      string: {
+        data: {
+          value: "Type"
+        }
+      }
+    }, {returning: deepClient.selectReturning});
+    deepClient.minilinks.apply([packageLink,containLink,newTypeTypeLink]);
+    try {
+      const newTypeTypeLinkId = deepClient.idLocal(packageName, "Type");
+      assert.notEqual(newTypeTypeLinkId, undefined);
+    } finally {
+      await deepClient.delete([packageLink.id, newTypeTypeLink.id, containLink.id])
+    }
+  })
 });
