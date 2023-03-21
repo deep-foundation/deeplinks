@@ -22,7 +22,7 @@ import _ from 'lodash';
 import Cors from 'cors';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
-const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
+const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'http://localhost:8000';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
