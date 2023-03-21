@@ -27,6 +27,11 @@ const handleUpdateId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await d
 const handleDeleteId = _ids?.['@deep-foundation/core']?.HandleDelete; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
 const anyTypeId = _ids?.['@deep-foundation/core']?.Any // await deep.id('@deep-foundation/core', 'User');
+const thenTypeId = _ids?.['@deep-foundation/core']?.Then // await deep.id('@deep-foundation/core', 'Then');
+const promiseTypeId = _ids?.['@deep-foundation/core']?.Promise // await deep.id('@deep-foundation/core', 'Promise');
+const resolvedTypeId = _ids?.['@deep-foundation/core']?.Resolved // await deep.id('@deep-foundation/core', 'Resolved');
+const rejectedTypeId = _ids?.['@deep-foundation/core']?.Rejected // await deep.id('@deep-foundation/core', 'Rejected');
+const promiseResultTypeId = _ids?.['@deep-foundation/core']?.PromiseResult // await deep.id('@deep-foundation/core', 'PromiseResult');
 const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
 const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
 const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
@@ -157,7 +162,13 @@ FROM
                                                     )
                                                     OR
                                                     (
-                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
+                                                      (
+                                                        ${anyTypeId} = ("HandlerOperation"."from_id")
+                                                      )
+                                                      AND
+                                                      (
+                                                        ("HandlerOperation"."from_id") NOT IN (${[thenTypeId, promiseTypeId, resolvedTypeId, rejectedTypeId, promiseResultTypeId].join(',')})
+                                                      )
                                                     )
                                                   ) 
                                                   AND (
