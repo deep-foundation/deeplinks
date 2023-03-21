@@ -6,6 +6,7 @@ import { HasuraApi } from'@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
+import { MutationInputLink } from '../imports/client_types';
 // import { _ids } from '../imports/client';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
@@ -1242,44 +1243,33 @@ describe('sync handlers', () => {
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
-        const {
-          data: [{id: customLinkTypeId}]
-        } = await deep.insert({
-          type_id: typeTypeLinkId,
-          out: {
-            data: {
-              type_id: await deep.id("@deep-foundation/core", "Value"),
-              to_id: await deep.id("@deep-foundation/core", "String")
-            }
-          }
-        });
-        const {
-          data: [{id: customLinkId}]
-        } = await deep.insert({
-          type_id: customLinkTypeId,
-          string: {
-            data: {
-              value: "initialValue"
-            }
-          }
-        });
         const handler = await insertHandler(
           handleInsertTypeLinkId,
           anyTypeLinkId,
-          `({deep, data}) => { deep.update({link_id: ${customLinkId}}, {value: "successValue"}, {table: "strings"}); }`,
+          `() => {}`,
           undefined,
           supportsLinkId);
-
           const {
-            data: [{
-              value: {
-                value
-              }
-            }]
-          } = await deep.select({
-            id: customLinkId
+            data: [{id: customTypeLinkId}]
+          } = await deep.insert({
+            type_id: typeTypeLinkId
           });
-          assert.equal(value, "successValue");
+          await delay(5000);
+          const {data: promiseTreeLinksDownToCustomLink} = await deep.select({
+            up: {
+              parent_id: {_eq: customTypeLinkId},
+              tree_id: {_eq: await deep.id("@deep-foundation/core", "promiseTree")}
+            }
+          });
+          console.log({promiseTreeLinksDownToCustomLink})
+          try {
+            assert.isTrue(promiseTreeLinksDownToCustomLink.length > 1);
+            const resolvedTypeLinkId = await deep.id("@deep-foundation/core", "Resolved");
+            const resolvedLinkId = promiseTreeLinksDownToCustomLink.find(link => link.type_id === resolvedTypeLinkId);
+            assert.notStrictEqual(resolvedLinkId, undefined);
+          } finally {
+            await deep.delete([customTypeLinkId, ...Object.values(handler)])
+          }
       });
     });
     describe('Handle delete', () => {
