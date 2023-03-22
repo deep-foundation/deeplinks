@@ -22,7 +22,7 @@ import _ from 'lodash';
 import Cors from 'cors';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
-const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'localhost:8000';
+const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'http://localhost:8000';
 const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
@@ -69,9 +69,12 @@ app.get(['/file'], createProxyMiddleware({
   ws: true,
   pathRewrite: async (path, req) => {
     const headers = req.headers;
-    console.log(headers);
-    const newurl = new URL(`${headers['host']}${path}`);
-    const linkId = newurl.searchParams['linkId'];
+    console.log({headers: headers});
+    const newurl = new URL(`${headers['x-forwarded-proto']}://${headers['host']}${path}`);
+    console.log('This is newURL',newurl);
+    const linkId = newurl.searchParams.get('linkId');
+    console.log('SEARCH PARAMS', newurl.searchParams);
+    console.log('This is linkId',linkId);
     return `/v1/files/${linkId}`;
   }
 }));
