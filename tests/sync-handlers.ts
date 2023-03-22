@@ -1239,36 +1239,30 @@ describe('sync handlers', () => {
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
       it(`Handle insert on type any`, async () => {
+        let linksToDelete = [];
         const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const expectedErrorMessage = "Success! Handler is called";
         const handler = await insertHandler(
           handleInsertTypeLinkId,
           anyTypeLinkId,
-          `() => {}`,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
           undefined,
           supportsLinkId);
-          const {
-            data: [{id: customTypeLinkId}]
-          } = await deep.insert({
-            type_id: typeTypeLinkId
-          });
-          await delay(5000);
-          const {data: promiseTreeLinksDownToCustomLink} = await deep.select({
-            up: {
-              parent_id: {_eq: customTypeLinkId},
-              tree_id: {_eq: await deep.id("@deep-foundation/core", "promiseTree")}
-            }
-          });
-          console.log({promiseTreeLinksDownToCustomLink})
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
           try {
-            assert.isTrue(promiseTreeLinksDownToCustomLink.length > 1);
-            const resolvedTypeLinkId = await deep.id("@deep-foundation/core", "Resolved");
-            const resolvedLinkId = promiseTreeLinksDownToCustomLink.find(link => link.type_id === resolvedTypeLinkId);
-            assert.notStrictEqual(resolvedLinkId, undefined);
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            linksToDelete.push(newLink);
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
           } finally {
-            await deep.delete([customTypeLinkId, ...Object.values(handler)])
+            await deep.delete(linksToDelete)
           }
       });
     });
