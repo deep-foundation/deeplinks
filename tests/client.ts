@@ -190,7 +190,7 @@ describe('client', () => {
       await deepClient.delete([packageLink.id, newTypeTypeLink.id, containLink.id])
     }
   })
-  it(`insert value for link with reserved id`, async () => {
+  it(`insert link with reserved id and string value`, async () => {
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
     const reservedIds = await deepClient.reserve(1);
     try {
