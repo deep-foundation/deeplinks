@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client';
-import { deepcaseSymbolsPckg } from '../imports/deepcase-package';
+import * as deepcasePckg from '@deep-foundation/deepcase/deep.json';
 import { importPackage, sharePermissions } from './1664940577200-tsx';
 
 const debug = Debug('deeplinks:migrations:deepcase');
@@ -20,7 +20,7 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  const importResult = await importPackage(deepcaseSymbolsPckg);
+  const importResult = await importPackage(deepcasePckg);
   log(importResult);
   const packageId = importResult?.packageId;
   if (packageId) {
