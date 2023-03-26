@@ -740,7 +740,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       }
     })
     if(result.length > 0) {
-      return ((result[0] as unknown) as Link<number>).to_id;
+      return ((result[0] as unknown) as Link<number>).id;
     }
     throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
   };
