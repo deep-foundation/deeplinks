@@ -15,10 +15,6 @@ export const corePckg: Package = {
     // TODO NEED_TREE_MP https://github.com/deep-foundation/deeplinks/issues/33
     { id: 'Value', type: 'Type', from: 'Any', to: 'Type' },
 
-    { id: 'Boolean', type: 'Type' },
-    { id: 'True', type: 'Boolean' },
-    { id: 'False', type: 'Boolean' },
-
     { id: 'String', type: 'Type' },
     { id: 'Number', type: 'Type' },
     { id: 'Object', type: 'Type' },
