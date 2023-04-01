@@ -162,13 +162,7 @@ FROM
                                                     )
                                                     OR
                                                     (
-                                                      (
-                                                        ${anyTypeId} = ("HandlerOperation"."from_id")
-                                                      )
-                                                      AND
-                                                      (
-                                                        ("HandlerOperation"."from_id") NOT IN (${[thenTypeId, promiseTypeId, resolvedTypeId, rejectedTypeId, promiseResultTypeId].join(',')})
-                                                      )
+                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
                                                     )
                                                   ) 
                                                   AND (
