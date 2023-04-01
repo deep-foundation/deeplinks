@@ -26,6 +26,12 @@ const handleInsertId = _ids?.['@deep-foundation/core']?.HandleInsert; // await d
 const handleUpdateId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
 const handleDeleteId = _ids?.['@deep-foundation/core']?.HandleDelete; // await deep.id('@deep-foundation/core', 'HandleDelete');
 const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
+const anyTypeId = _ids?.['@deep-foundation/core']?.Any // await deep.id('@deep-foundation/core', 'User');
+const thenTypeId = _ids?.['@deep-foundation/core']?.Then // await deep.id('@deep-foundation/core', 'Then');
+const promiseTypeId = _ids?.['@deep-foundation/core']?.Promise // await deep.id('@deep-foundation/core', 'Promise');
+const resolvedTypeId = _ids?.['@deep-foundation/core']?.Resolved // await deep.id('@deep-foundation/core', 'Resolved');
+const rejectedTypeId = _ids?.['@deep-foundation/core']?.Rejected // await deep.id('@deep-foundation/core', 'Rejected');
+const promiseResultTypeId = _ids?.['@deep-foundation/core']?.PromiseResult // await deep.id('@deep-foundation/core', 'PromiseResult');
 const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
 const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
 const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
@@ -49,7 +55,166 @@ const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RE
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
 
-const typeHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" as "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandleTypeLink" WHERE ( ( ( ("HandleTypeLink"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("HandleTypeLink"."id") = ($1 :: bigint)) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) AND ('true') ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
+const typeHandlersCode = `\`SELECT 
+  coalesce(
+    json_agg("root"), 
+    '[]'
+  ) AS "root" 
+FROM 
+  (
+    SELECT 
+      row_to_json(
+        (
+          SELECT 
+            "_5_e" 
+          FROM 
+            (
+              SELECT 
+                "_4_root.base"."id" AS "id", 
+                "public"."links__value__function"("link" => "_4_root.base") AS "valuseResult", 
+                "handler"."id" as "handler"
+            ) AS "_5_e"
+        )
+      ) AS "root" 
+    FROM 
+      (
+        SELECT 
+          * 
+        FROM 
+          "public"."links" AS "codeLink" 
+        WHERE 
+          (
+            (
+              EXISTS (
+                SELECT 
+                  1 
+                FROM 
+                  "public"."links" AS "handler" 
+                WHERE 
+                  (
+                    (
+                      (
+                        ("handler"."to_id") = ("codeLink"."id")
+                      )
+                    ) 
+                    AND (
+                      (
+                        (
+                          (
+                            EXISTS (
+                              SELECT 
+                                1 
+                              FROM 
+                                "public"."links" AS "supports" 
+                              WHERE 
+                                (
+                                  (
+                                    (
+                                      ("supports"."id") = ("handler"."from_id")
+                                    )
+                                  ) 
+                                  AND (
+                                    (
+                                      (
+                                        (
+                                          (
+                                            (
+                                              ("supports"."id") = (
+                                                ${plv8SupportsJsTypeId} :: bigint
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                            )
+                          ) 
+                          AND (
+                            (
+                              EXISTS (
+                                SELECT 
+                                  1 
+                                FROM 
+                                  "public"."links" AS "HandlerOperation" 
+                                WHERE 
+                                  (
+                                    (
+                                      (
+                                        ("HandlerOperation"."to_id") = ("handler"."id")
+                                      )
+                                    ) 
+                                    AND (
+                                      (
+                                        (
+                                          (
+                                            EXISTS (
+                                              SELECT 
+                                                1 
+                                              FROM 
+                                                "public"."links" AS "HandleTypeLink" 
+                                              WHERE 
+                                                (
+                                                  (
+                                                    (
+                                                      ("HandleTypeLink"."id") = ("HandlerOperation"."from_id")
+                                                    )
+                                                    OR
+                                                    (
+                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
+                                                    )
+                                                  ) 
+                                                  AND (
+                                                    (
+                                                      (
+                                                        (
+                                                          (
+                                                            ("HandleTypeLink"."id") = ($1 :: bigint)
+                                                          )
+                                                        )
+                                                      )
+                                                    )
+                                                  )
+                                                )
+                                            )
+                                          ) 
+                                          AND (
+                                            (
+                                              (
+                                                ("HandlerOperation"."type_id") = ($2 :: bigint)
+                                              ) 
+                                              AND ('true')
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                              )
+                            ) 
+                            AND (
+                              (
+                                (
+                                  ("handler"."type_id") = (${HandlerTypeId} :: bigint)
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+              )
+            )
+          )
+      ) AS "_4_root.base", 
+      "public"."links" AS "handler" 
+    WHERE 
+      "handler"."to_id" = "_4_root.base"."id" 
+      AND "handler"."type_id" = ${HandlerTypeId} :: bigint
+  ) AS "_6_root
+"\``;
 
 const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" AS "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "selector" WHERE ( ( ( ("selector"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("selector"."type_id") = (${SelectorTypeId} :: bigint)) ) AND ( ( ( ("selector"."id") = ANY($1 :: bigint array) ) ) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
 

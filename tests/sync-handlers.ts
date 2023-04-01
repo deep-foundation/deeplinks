@@ -6,6 +6,7 @@ import { HasuraApi } from'@deep-foundation/hasura/api';
 import { sql } from '@deep-foundation/hasura/sql';
 import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
+import { MutationInputLink } from '../imports/client_types';
 // import { _ids } from '../imports/client';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
@@ -1237,6 +1238,33 @@ describe('sync handlers', () => {
         await deleteHandler(handler);
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
+      it(`Handle insert on type any`, async () => {
+        let linksToDelete = [];
+        const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const expectedErrorMessage = "Success! Handler is called";
+        const handler = await insertHandler(
+          handleInsertTypeLinkId,
+          anyTypeLinkId,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
+          undefined,
+          supportsLinkId);
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            linksToDelete.push(newLink);
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
+          } finally {
+            await deep.delete(linksToDelete)
+          }
+      });
     });
     describe('Handle delete', () => {
       it(`Handle delete on type`, async () => {
@@ -1318,6 +1346,34 @@ describe('sync handlers', () => {
         await deleteHandler(handler);
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
+
+      it(`Handle delete on type any`, async () => {
+        let linksToDelete = [];
+        const handleDeleteTypeLinkId = await deep.id('@deep-foundation/core', 'HandleDelete');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const expectedErrorMessage = "Success! Handler is called";
+        const handler = await insertHandler(
+          handleDeleteTypeLinkId,
+          anyTypeLinkId,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
+          undefined,
+          supportsLinkId);
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            await deep.delete(newLink.id);
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
+          } finally {
+            await deep.delete(linksToDelete)
+          }
+      })
     });
     describe('Handle value', () => {
       describe('Handle strings', () => {
@@ -1712,6 +1768,40 @@ describe('sync handlers', () => {
           assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
 
         });
+      });
+      it(`Handle update on type any`, async () => {
+        let linksToDelete = [];
+        const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const expectedErrorMessage = "Success! Handler is called";
+        const handler = await insertHandler(
+          handleUpdateTypeLinkId,
+          anyTypeLinkId,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
+          undefined,
+          supportsLinkId);
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            linksToDelete.push(newLink);
+            await deep.update({
+              link_id: newLink.id,
+            }, {
+              value: "newValue"
+            },{
+              table: 'strings'
+            });
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
+          } finally {
+            await deep.delete(linksToDelete)
+          }
       });
     });
   });

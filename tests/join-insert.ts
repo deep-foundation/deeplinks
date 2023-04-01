@@ -15,7 +15,7 @@ describe('join-insert', () => {
     const r: any = await deep.insert({ type_id: 1, string: { data: { value: 'abc' } }, from: { data: { type_id: 1 } }, to: { data: { type_id: 1 } } }, { returning: `id type_id value from_id from { id type_id } to_id to { id type_id }` });
     const rId = r?.data?.[0]?.id;
     const vId = r?.data?.[0]?.value?.id;
-    assert(r?.data, [{
+    assert.equal(r?.data, [{
       id: rId, type_id: 1,
       value: { id: vId, link_id: rId, value: 'abc' },
       from_id: rId - 1, from: { id: rId - 1, type_id: 1, __typename: 'links' },
