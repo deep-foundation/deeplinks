@@ -1348,31 +1348,31 @@ describe('sync handlers', () => {
       });
 
       it(`Handle delete on type any`, async () => {
+        let linksToDelete = [];
         const handleDeleteTypeLinkId = await deep.id('@deep-foundation/core', 'HandleDelete');
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
-        const {
-          data: [{id: successTypeLinkId}]
-        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+        const expectedErrorMessage = "Success! Handler is called";
         const handler = await insertHandler(
           handleDeleteTypeLinkId,
           anyTypeLinkId,
-          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
           undefined,
           supportsLinkId);
-          const {
-            data: [{id: customLinkTypeId}]
-          } = await deep.insert({
-            type_id: typeTypeLinkId
-          });
-          await deep.delete(customLinkTypeId);
-          const {
-            data: successLinks
-          } = await deep.select({
-            type_id: successTypeLinkId
-          });
-          assert.equal(successLinks.length, 1);
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            await deep.delete(newLink.id);
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
+          } finally {
+            await deep.delete(linksToDelete)
+          }
       })
     });
     describe('Handle value', () => {
@@ -1770,43 +1770,38 @@ describe('sync handlers', () => {
         });
       });
       it(`Handle update on type any`, async () => {
+        let linksToDelete = [];
         const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
-        const {
-          data: [{id: successTypeLinkId}]
-        } = await deep.insert({type_id: typeTypeLinkId, from_id: anyTypeLinkId, to_id: anyTypeLinkId});
+        const expectedErrorMessage = "Success! Handler is called";
         const handler = await insertHandler(
           handleUpdateTypeLinkId,
           anyTypeLinkId,
-          `({deep, data}) => { deep.insert({type_id: ${successTypeLinkId}}); }`,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
           undefined,
           supportsLinkId);
-          const {data: [{id: customTypeLinkId}]} = await deep.insert({
-            type_id: typeTypeLinkId,
-          });
-          const {
-            data: [{id: customLinkId}]
-          } = await deep.insert({
-            type_id: customTypeLinkId,
-            string: {data: {value: "stringValue"}}
-          });
-          await deep.update(
-						customLinkId,
-						{
-							value: 'newStringValue',
-						},
-						{
-							table: 'strings',
-						}
-					);
-          const {
-            data: successLinks
-          } = await deep.select({
-            type_id: successTypeLinkId
-          })
-          assert.equal(successLinks.length, 1);
+          linksToDelete = [...linksToDelete, ...(Object.values(handler))]
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId
+            });
+            linksToDelete.push(newLink);
+            await deep.update({
+              link_id: newLink.id,
+            }, {
+              value: "newValue"
+            },{
+              table: 'strings'
+            });
+          } catch (error) {
+            assert.strictEqual(error.message, expectedErrorMessage)
+          } finally {
+            await deep.delete(linksToDelete)
+          }
       });
     });
   });
