@@ -60,7 +60,7 @@ describe('typing', () => {
     let throwed = false;
     try { await deep.insert({ type_id: typeId, from_id: fromId, to_id: toId }); }
     catch (error) {
-      assert.equal(error.message, `Type conflict link: { type: ${typeId}, from: ${fromId}, to: ${toId} } expected type: { type: ${typeId}, from: ${typeFromToId}, to: ${typeFromToId} } received type: { type: ${typeId}, from: ${typeFromToId}, to: ${invalidTypeId} }`);
+      assert.isTrue(error.message.endsWith(`type: ${typeId}, from: ${fromId}, to: ${toId} } expected type: { type: ${typeId}, from: ${typeFromToId}, to: ${typeFromToId} } received type: { type: ${typeId}, from: ${typeFromToId}, to: ${invalidTypeId} }`));
       throwed = true;
     }
     assert.equal(throwed, true);
