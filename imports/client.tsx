@@ -4,7 +4,7 @@ import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/cli
 import { useLocalStore } from "@deep-foundation/store/local";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits } from "util";
-import { deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from "./gql";
+import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationOptions, insertMutation, updateMutation } from "./gql";
 import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from "./minilinks";
 import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
@@ -425,6 +425,68 @@ export interface DeepClientJWTOptions {
   relogin?: boolean;
 }
 
+
+export type SelectTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
+export type InsertTable = 'links'|'numbers'|'strings'|'objects';
+export type UpdateTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
+export type DeleteTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
+
+export type OperationType = 'select' | 'insert' | 'update' | 'delete';
+export type SerialOperationType = 'insert' | 'update' | 'delete';
+export type Table<TOperationType extends OperationType = OperationType> = TOperationType extends 'select' ? SelectTable : 
+TOperationType extends 'insert' ? InsertTable :
+TOperationType extends 'update' ? UpdateTable :
+TOperationType extends 'delete' ? DeleteTable :
+never;
+
+
+export type SerialOperation<
+TSerialOperationType extends SerialOperationType = SerialOperationType,
+TTable extends Table<TSerialOperationType> = Table<TSerialOperationType>> = {
+  type: TSerialOperationType;
+  table: TTable;
+  data: TSerialOperationType extends 'insert'
+    ? (
+        TTable extends 'numbers' ? MutationInputValue<number> :
+        TTable extends 'strings' ? MutationInputValue<string> :
+        TTable extends 'objects' ? MutationInputValue<any> :
+        MutationInputLink
+      ) | (
+        TTable extends 'numbers' ? MutationInputValue<number> :
+        TTable extends 'strings' ? MutationInputValue<string> :
+        TTable extends 'objects' ? MutationInputValue<any> :
+        MutationInputLink
+      )[]
+      : TSerialOperationType extends 'update'
+    ? (
+      TTable extends 'numbers' ? BoolExpValue<number> :
+      TTable extends 'strings' ? BoolExpValue<string> :
+      TTable extends 'objects' ? BoolExpValue<object> :
+      TTable extends 'can' ? BoolExpCan :
+      TTable extends 'selectors' ? BoolExpSelector :
+      TTable extends 'tree' ? BoolExpTree :
+      TTable extends 'handlers' ? BoolExpHandler :
+      BoolExpLink
+    ) | number | number[]
+    : TSerialOperationType extends 'delete'
+    ? (
+        TTable extends 'numbers' ? BoolExpValue<number> :
+        TTable extends 'strings' ? BoolExpValue<string> :
+        TTable extends 'objects' ? BoolExpValue<object> :
+        TTable extends 'can' ? BoolExpCan :
+        TTable extends 'selectors' ? BoolExpSelector :
+        TTable extends 'tree' ? BoolExpTree :
+        TTable extends 'handlers' ? BoolExpHandler :
+        BoolExpLink
+      ) | number | number[]
+    : never
+};
+
+export type AsyncSerialParams = {
+  operations: Array<SerialOperation<SerialOperationType, Table<SerialOperationType>>>;
+  name?: string;
+};
+
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   useDeepSubscription = useDeepSubscription;
   useDeepQuery = useDeepQuery;
@@ -670,6 +732,59 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     return { ...q, data: (q)?.data?.m0?.returning };
+  };
+
+  async serial<
+    LL = L
+  >({
+    name, operations
+  }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
+    // @ts-ignore
+    let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
+    operationsGroupedByTypeAndTable = operations.reduce((acc, operation) => {
+      if(!acc[operation.type]) {
+        // @ts-ignore
+        acc[operation.type] = {}
+      }
+      if(!acc[operation.type][operation.table]) {
+        acc[operation.type][operation.table] = []
+      }
+      acc[operation.type][operation.table].push(operation);
+      return acc
+    }, operationsGroupedByTypeAndTable);
+    const mutationOptionArray: Array<IGenerateMutationOptions> = [];
+    Object.keys(operationsGroupedByTypeAndTable).map((operationType: SerialOperationType) => {
+      const operationsGroupedByTable = operationsGroupedByTypeAndTable[operationType];
+      Object.keys(operationsGroupedByTable).map((table: Table) => {
+        const operations = operationsGroupedByTable[table];
+        const mutation: IGenerateMutationOptions = {
+          operation: operationType,
+          tableName: table,
+          variables: {
+            objects: operations.map(operation => operation.data)
+          }
+        } 
+        mutationOptionArray.push(mutation);
+      })
+    })
+    
+    let result;
+    try {
+      result = await this.apolloClient.mutate(generateSerial({
+        actions: [
+          mutationOptionArray.map(
+            mutationOptions => generateMutation(mutationOptions)
+            )
+        ],
+        name: name,
+      }))
+      // @ts-ignore
+    } catch(e) {
+      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+      if (sqlError?.message) e.message = sqlError.message;
+      return { ...result, data: (result)?.data?.m0?.returning, error: e };
+    }
+    return { ...result, data: (result)?.data?.m0?.returning };
   };
 
   reserve<LL = L>(count: number): Promise<number[]> {

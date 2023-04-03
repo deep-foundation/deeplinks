@@ -1,8 +1,9 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { DeepClient } from "../imports/client";
+import { DeepClient, SerialOperation } from "../imports/client";
 import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect} from 'util'
+import { createSerialOperation } from "../imports/gql";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -207,5 +208,24 @@ describe('client', () => {
     } finally {
       await deepClient.delete(reservedIds[0]);
     }
+  })
+  describe(`serial`, () => {
+    it('insert', async () => {
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      const operation = createSerialOperation({
+        table: 'links',
+        type: 'insert',
+        data: {
+          type_id: typeTypeLinkId
+        }
+      })
+      const result = await deepClient.serial({
+        operations: [
+          operation,
+          operation
+        ]
+      });
+      console.log({ result })
+    })
   })
 });
