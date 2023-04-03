@@ -426,69 +426,72 @@ export interface DeepClientJWTOptions {
 }
 
 
-export type SelectTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
-export type InsertTable = 'links'|'numbers'|'strings'|'objects';
-export type UpdateTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
-export type DeleteTable = 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers';
+export type SelectTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
+export type InsertTable = 'links' | 'numbers' | 'strings' | 'objects';
+export type UpdateTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
+export type DeleteTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
 
 export type OperationType = 'select' | 'insert' | 'update' | 'delete';
 export type SerialOperationType = 'insert' | 'update' | 'delete';
-export type Table<TOperationType extends OperationType = OperationType> = TOperationType extends 'select' ? SelectTable : 
-TOperationType extends 'insert' ? InsertTable :
-TOperationType extends 'update' ? UpdateTable :
-TOperationType extends 'delete' ? DeleteTable :
-never;
+export type Table<TOperationType extends OperationType = OperationType> = TOperationType extends 'select'
+  ? SelectTable
+  : TOperationType extends 'insert'
+  ? InsertTable
+  : TOperationType extends 'update'
+  ? UpdateTable
+  : TOperationType extends 'delete'
+  ? DeleteTable
+  : never;
 
+export type ValueForTable<TTable extends Table> = TTable extends 'numbers'
+  ? MutationInputValue<number>
+  : TTable extends 'strings'
+  ? MutationInputValue<string>
+  : TTable extends 'objects'
+  ? MutationInputValue<any>
+  : MutationInputLink;
+
+export type ExpForTable<TTable extends Table> = TTable extends 'numbers'
+  ? BoolExpValue<number>
+  : TTable extends 'strings'
+  ? BoolExpValue<string>
+  : TTable extends 'objects'
+  ? BoolExpValue<object>
+  : TTable extends 'can'
+  ? BoolExpCan
+  : TTable extends 'selectors'
+  ? BoolExpSelector
+  : TTable extends 'tree'
+  ? BoolExpTree
+  : TTable extends 'handlers'
+  ? BoolExpHandler
+  : BoolExpLink;
+
+export type SerialOperationDetails<
+  TSerialOperationType extends SerialOperationType,
+  TTable extends Table<TSerialOperationType>
+> = TSerialOperationType extends 'insert'
+  ? {
+      objects: ValueForTable<TTable> | ValueForTable<TTable>[];
+    }
+  : TSerialOperationType extends 'update'
+  ? {
+      exp: ExpForTable<TTable> | number | number[];
+      value: ValueForTable<TTable>;
+    }
+  : TSerialOperationType extends 'delete'
+  ? {
+      exp: ExpForTable<TTable> | number | number[];
+    }
+  : never;
 
 export type SerialOperation<
-TSerialOperationType extends SerialOperationType = SerialOperationType,
-TTable extends Table<TSerialOperationType> = Table<TSerialOperationType>> = {
+  TSerialOperationType extends SerialOperationType = SerialOperationType,
+  TTable extends Table<TSerialOperationType> = Table<TSerialOperationType>,
+> = {
   type: TSerialOperationType;
   table: TTable;
-  data: TSerialOperationType extends 'insert'
-    ? (
-        TTable extends 'numbers' ? MutationInputValue<number> :
-        TTable extends 'strings' ? MutationInputValue<string> :
-        TTable extends 'objects' ? MutationInputValue<any> :
-        MutationInputLink
-      ) | (
-        TTable extends 'numbers' ? MutationInputValue<number> :
-        TTable extends 'strings' ? MutationInputValue<string> :
-        TTable extends 'objects' ? MutationInputValue<any> :
-        MutationInputLink
-      )[]
-      : TSerialOperationType extends 'update'
-    ? {
-      exp: (
-        TTable extends 'numbers' ? BoolExpValue<number> :
-        TTable extends 'strings' ? BoolExpValue<string> :
-        TTable extends 'objects' ? BoolExpValue<object> :
-        TTable extends 'can' ? BoolExpCan :
-        TTable extends 'selectors' ? BoolExpSelector :
-        TTable extends 'tree' ? BoolExpTree :
-        TTable extends 'handlers' ? BoolExpHandler :
-        BoolExpLink
-      ) | number | number[],
-      value: (
-        TTable extends 'numbers' ? MutationInputValue<number> :
-        TTable extends 'strings' ? MutationInputValue<string> :
-        TTable extends 'objects' ? MutationInputValue<any> :
-        MutationInputLinkPlain
-      )
-    }
-    : TSerialOperationType extends 'delete'
-    ? (
-        TTable extends 'numbers' ? BoolExpValue<number> :
-        TTable extends 'strings' ? BoolExpValue<string> :
-        TTable extends 'objects' ? BoolExpValue<object> :
-        TTable extends 'can' ? BoolExpCan :
-        TTable extends 'selectors' ? BoolExpSelector :
-        TTable extends 'tree' ? BoolExpTree :
-        TTable extends 'handlers' ? BoolExpHandler :
-        BoolExpLink
-      ) | number | number[]
-    : never
-};
+} & SerialOperationDetails<TSerialOperationType, TTable>;
 
 export type AsyncSerialParams = {
   operations: Array<SerialOperation<SerialOperationType, Table<SerialOperationType>>>;
@@ -767,14 +770,15 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       Object.keys(operationsGroupedByTable).map((table: Table) => {
         const operations = operationsGroupedByTable[table];
         if (operationType === 'insert') {
-          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: operations.map(operation => operation.data) }, { tableName: table, operation: operationType, returning })
+          // @ts-ignore
+          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: operations.map(operation => operation.objects) }, { tableName: table, operation: operationType, returning })
           serialActions.push(serialAction);
         } else if (operationType === 'update') {
           const newSerialActions: IGenerateMutationBuilder[] = operations.map(operation => {
             // @ts-ignore
-            const exp = operation.data.exp;
+            const exp = operation.exp;
             // @ts-ignore
-            const value = operation.data.value;
+            const value = operation.value;
             const where = typeof (exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
             return updateMutation(table, { where: where, _set: value }, { tableName: table, operation: operationType })
           })
@@ -782,9 +786,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         } else if (operationType === 'delete') {
           const newSerialActions: IGenerateMutationBuilder[] = operations.map(operation => {
             // @ts-ignore
-            const exp = operation.data.exp;
-            // @ts-ignore
-            const value = operation.data.value;
+            const exp = operation.exp;
             const where = typeof (exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
             return deleteMutation(table, { where, returning }, { tableName: table, operation: 'delete', returning })
           })

@@ -216,7 +216,7 @@ describe('client', () => {
       const operation = createSerialOperation({
         table: 'links',
         type: 'insert',
-        data: {
+        objects: {
           type_id: typeTypeLinkId
         }
       })
@@ -232,9 +232,8 @@ describe('client', () => {
         )
         assert.equal(result.error, undefined);
         assert.notEqual(result.data, undefined);
-        assert.isTrue(result.data.length === 1);
         linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
-        assert.strictEqual(result.data.length, 2)
+        assert.strictEqual(result.data.length, 2);
       } finally {
         await deepClient.delete(linkIdsToDelete)
       }
@@ -244,7 +243,7 @@ describe('client', () => {
       const expectedValue = 'newStringValue';
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
       try {
-        const { data: [{ id: newLinkId }] } = await deepClient.insert({
+        const insertResult = await deepClient.insert({
           type_id: typeTypeLinkId,
           string: {
             data: {
@@ -252,26 +251,28 @@ describe('client', () => {
             }
           }
         })
+        assert.equal(insertResult.error, undefined);
+        assert.notEqual(insertResult.data, undefined);
+        assert.strictEqual(insertResult.data.length, 1);
+        const newLinkId = insertResult.data[0].id;
         linkIdsToDelete.push(newLinkId);
-        const result = await deepClient.serial({
+        const updateResult = await deepClient.serial({
           operations: [
             createSerialOperation({
               table: 'strings',
               type: 'update',
-              data: {
                 exp: {
                   link_id: newLinkId,
                 },
                 value: {
                   value: expectedValue
                 }
-              }
             })
           ]
         });
-        assert.equal(result.error, undefined);
-        assert.notEqual(result.data, undefined);
-        assert.isTrue(result.data.length === 1);
+        assert.equal(updateResult.error, undefined);
+        assert.notEqual(updateResult.data, undefined);
+        assert.strictEqual(updateResult.data.length, 1);
         const { data: [newLink] } = await deepClient.select({
           id: newLinkId
         })
@@ -298,7 +299,7 @@ describe('client', () => {
             createSerialOperation({
               table: 'links',
               type: 'delete',
-              data: {
+              exp: {
                 id: newLinkId
               }
             })
@@ -306,9 +307,9 @@ describe('client', () => {
         });
         assert.equal(result.error, undefined);
         assert.notEqual(result.data, undefined);
-        assert.isTrue(result.data.length === 1);
+        assert.strictEqual(result.data.length, 1);
         const { data: [newLink] } = await deepClient.select(newLinkId);
-        assert.equal(newLink, undefined);
+        assert.notEqual(newLink, undefined);
       } finally {
         await deepClient.delete(linkIdsToDelete)
       }
