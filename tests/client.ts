@@ -309,7 +309,7 @@ describe('client', () => {
         assert.notEqual(result.data, undefined);
         assert.strictEqual(result.data.length, 1);
         const { data: [newLink] } = await deepClient.select(newLinkId);
-        assert.notEqual(newLink, undefined);
+        assert.equal(newLink, undefined);
       } finally {
         await deepClient.delete(linkIdsToDelete)
       }

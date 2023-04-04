@@ -767,27 +767,26 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let serialActions: Array<IGenerateMutationBuilder> = [];
     Object.keys(operationsGroupedByTypeAndTable).map((operationType: SerialOperationType) => {
       const operationsGroupedByTable = operationsGroupedByTypeAndTable[operationType];
-      Object.keys(operationsGroupedByTable).map((table: Table) => {
+      Object.keys(operationsGroupedByTable).map((table: Table<typeof operationType>) => {
         const operations = operationsGroupedByTable[table];
         if (operationType === 'insert') {
-          // @ts-ignore
-          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: operations.map(operation => operation.objects) }, { tableName: table, operation: operationType, returning })
+          const insertOperations = operations as Array<SerialOperation<'insert', Table<'insert'>>>;
+          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: insertOperations.map(operation => operation.objects) }, { tableName: table, operation: operationType, returning })
           serialActions.push(serialAction);
         } else if (operationType === 'update') {
-          const newSerialActions: IGenerateMutationBuilder[] = operations.map(operation => {
-            // @ts-ignore
+          const updateOperations = operations as Array<SerialOperation<'update', Table<'update'>>>;
+          const newSerialActions: IGenerateMutationBuilder[] = updateOperations.map(operation => {
             const exp = operation.exp;
-            // @ts-ignore
             const value = operation.value;
-            const where = typeof (exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
+            const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
             return updateMutation(table, { where: where, _set: value }, { tableName: table, operation: operationType })
           })
           serialActions = [...serialActions, ...newSerialActions];
         } else if (operationType === 'delete') {
-          const newSerialActions: IGenerateMutationBuilder[] = operations.map(operation => {
-            // @ts-ignore
+          const deleteOperations = operations as Array<SerialOperation<'delete', Table<'delete'>>>;;
+          const newSerialActions: IGenerateMutationBuilder[] = deleteOperations.map(operation => {
             const exp = operation.exp;
-            const where = typeof (exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
+            const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
             return deleteMutation(table, { where, returning }, { tableName: table, operation: 'delete', returning })
           })
           serialActions = [...serialActions, ...newSerialActions];
