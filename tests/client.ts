@@ -1,8 +1,9 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { DeepClient } from "../imports/client";
+import { DeepClient, SerialOperation } from "../imports/client";
 import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect} from 'util'
+import { createSerialOperation } from "../imports/gql";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -207,5 +208,111 @@ describe('client', () => {
     } finally {
       await deepClient.delete(reservedIds[0]);
     }
+  })
+  describe(`serial`, () => {
+    it('insert', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      const operation = createSerialOperation({
+        table: 'links',
+        type: 'insert',
+        objects: {
+          type_id: typeTypeLinkId
+        }
+      })
+      try {
+        const result = await deepClient.serial({
+          operations: [
+            operation,
+            operation
+          ]
+        });
+        console.log(
+          inspect(result)
+        )
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+        assert.strictEqual(result.data.length, 2);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('update', async () => {
+      let linkIdsToDelete = [];
+      const expectedValue = 'newStringValue';
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const insertResult = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        assert.equal(insertResult.error, undefined);
+        assert.notEqual(insertResult.data, undefined);
+        assert.strictEqual(insertResult.data.length, 1);
+        const newLinkId = insertResult.data[0].id;
+        linkIdsToDelete.push(newLinkId);
+        const updateResult = await deepClient.serial({
+          operations: [
+            createSerialOperation({
+              table: 'strings',
+              type: 'update',
+                exp: {
+                  link_id: newLinkId,
+                },
+                value: {
+                  value: expectedValue
+                }
+            })
+          ]
+        });
+        assert.equal(updateResult.error, undefined);
+        assert.notEqual(updateResult.data, undefined);
+        assert.strictEqual(updateResult.data.length, 1);
+        const { data: [newLink] } = await deepClient.select({
+          id: newLinkId
+        })
+        assert.strictEqual(newLink.value.value, expectedValue)
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('delete', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const { data: [{ id: newLinkId }] } = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        linkIdsToDelete.push(newLinkId);
+        const result = await deepClient.serial({
+          operations: [
+            createSerialOperation({
+              table: 'links',
+              type: 'delete',
+              exp: {
+                id: newLinkId
+              }
+            })
+          ]
+        });
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        assert.strictEqual(result.data.length, 1);
+        const { data: [newLink] } = await deepClient.select(newLinkId);
+        assert.equal(newLink, undefined);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
   })
 });
