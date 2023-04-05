@@ -497,6 +497,7 @@ export type AsyncSerialParams = {
   operations: Array<SerialOperation<SerialOperationType, Table<SerialOperationType>>>;
   name?: string;
   returning?: string;
+  silent?: boolean;
 };
 
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
@@ -749,7 +750,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async serial<
     LL = L
   >({
-    name, operations, returning
+    name, operations, returning, silent
   }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
     // @ts-ignore
     let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
@@ -804,6 +805,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch (e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
+      if (!silent) throw e;
       return { ...result, data: (result)?.data?.m0?.returning, error: e };
     }
     return { ...result, data: (result)?.data?.m0?.returning };
