@@ -772,7 +772,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         const operations = operationsGroupedByTable[table];
         if (operationType === 'insert') {
           const insertOperations = operations as Array<SerialOperation<'insert', Table<'insert'>>>;
-          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: insertOperations.map(operation => operation.objects) }, { tableName: table, operation: operationType, returning })
+          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: [...insertOperations.map(operation => Array.isArray(operation.objects) ? operation.objects : [operation.objects])] }, { tableName: table, operation: operationType, returning })
           serialActions.push(serialAction);
         } else if (operationType === 'update') {
           const updateOperations = operations as Array<SerialOperation<'update', Table<'update'>>>;
