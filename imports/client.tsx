@@ -493,8 +493,10 @@ export type SerialOperation<
   table: TTable;
 } & SerialOperationDetails<TSerialOperationType, TTable>;
 
+export type DeepSerialOperation = SerialOperation<SerialOperationType, Table<SerialOperationType>>
+
 export type AsyncSerialParams = {
-  operations: Array<SerialOperation<SerialOperationType, Table<SerialOperationType>>>;
+  operations: Array<DeepSerialOperation>;
   name?: string;
   returning?: string;
   silent?: boolean;
