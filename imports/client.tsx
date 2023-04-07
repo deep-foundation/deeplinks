@@ -782,7 +782,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
             const exp = operation.exp;
             const value = operation.value;
             const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
-            return updateMutation(table, { where: where, _set: value }, { tableName: table, operation: operationType })
+            return updateMutation(table, { where: where, _set: value }, { tableName: table, operation: operationType ,returning})
           })
           serialActions = [...serialActions, ...newSerialActions];
         } else if (operationType === 'delete') {
