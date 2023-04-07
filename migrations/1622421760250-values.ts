@@ -45,8 +45,8 @@ export const up = async () => {
   await (generateUp({
     schemaName: 'public',
     tableName: 'numbers',
-    valueType: 'float8 NOT NULL DEFAULT 0',
-    customColumnsSql: 'value bigint',
+    valueType: 'numeric NOT NULL DEFAULT 0',
+    customColumnsSql: 'value numeric',
     linkRelation: 'number',
     linksTableName: 'links',
     api,
