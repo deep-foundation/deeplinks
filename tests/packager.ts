@@ -2,7 +2,8 @@ import { generateApolloClient } from "@deep-foundation/hasura/client";
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import { gql } from "@apollo/client";
-import { Packager } from "../imports/packager";
+import { PackageItem, Packager, sort } from "../imports/packager";
+import type { Package } from "../imports/packager";
 import { minilinks } from "../imports/minilinks";
 import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager";
 import Debug from 'debug';
@@ -72,6 +73,31 @@ describe('packager', () => {
       const ml = minilinks(results.data);
       assert(+ml.links.length === +imported.ids.length, 'ml.links.length !== imported.ids.length');
       // TODO best valid checker
+    });
+  });
+  describe('sorting', () => {
+    const references = {
+      id: 'id',
+      from: 'from',
+      to: 'to',
+      type: 'type',
+    };
+    it.only('strict mode: no sorting', () => {
+      const data: PackageItem[] = [
+        { id: 3, value: { value: 'three' }  },
+        { id: 1, value: { value: 'one' } },
+        { id: 2, value: { value: 'two' } },
+      ];
+      const pckg: Package = { package: { name: 'test'}, data, strict: true };
+  
+      const expectedResult = [
+        { id: 3, value: { value: 'three' } },
+        { id: 1, value: { value: 'one' } },
+        { id: 2, value: { value: 'two' } },
+      ];
+  
+      const result = sort(pckg, data, [], references);
+      expect(result.sorted).toEqual(expectedResult);
     });
   });
   if (GIST_URL) {
