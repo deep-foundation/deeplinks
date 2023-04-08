@@ -99,6 +99,28 @@ describe('packager', () => {
       const result = sort(pckg, data, [], references);
       expect(result.sorted).toEqual(expectedResult);
     });
+    it.only('sorting with package, value, and dependencies', () => {
+      const data: PackageItem[] = [
+        { id: 1, package: { dependencyId: 1, containValue: "1" } },
+        { id: 2, value: { value: 'two' } },
+        { id: 3, from: 2, to: 4 },
+        { id: 4, value: { value: 'four' } },
+        { id: 5, type: 3 },
+        { id: 6, package: { dependencyId: 2, containValue: "2" } },
+      ];
+      const pckg: Package = { package: { name: 'test'}, data, strict: true };
+      const expectedResult = [
+        { id: 6, package: { dependencyId: 2, containValue: "2" } },
+        { id: 1, package: { dependencyId: 1, containValue: "1" } },
+        { id: 2, value: { value: 'two' } },
+        { id: 4, value: { value: 'four' } },
+        { id: 3, from: 2, to: 4 },
+        { id: 5, type: 3 },
+      ];
+  
+      const result = sort(pckg, data, [], references);
+      expect(result.sorted).toEqual(expectedResult);
+    });
   });
   if (GIST_URL) {
     describe('links', () => {
