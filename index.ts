@@ -121,11 +121,7 @@ app.post('/file', async (req, res, next) => {
       console.log(`RESPONSE ${response}`);
       let files;
       try {
-<<<<<<< HEAD
         files = JSON.parse(response);
-=======
-        files = JSON.parse(response)
->>>>>>> fb1a0dd7c6eefbb570e124072028db6e14495a05
         console.log('files', files);
         if (!files) return response;
         const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid, $uploadedByUserId: bigint) {
