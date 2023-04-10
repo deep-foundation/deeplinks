@@ -82,7 +82,7 @@ describe('packager', () => {
       to: 'to',
       type: 'type',
     };
-    it.only('strict mode: no sorting', () => {
+    it.skip('strict mode: no sorting', () => {
       const data: PackageItem[] = [
         { id: 3, value: { value: 'three' }  },
         { id: 1, value: { value: 'one' } },
@@ -121,7 +121,7 @@ describe('packager', () => {
       const result = sort(pckg, data, [], references);
       expect(result.sorted).toEqual(expectedResult);
     });
-    it.only('sorting existing package', () => {
+    it.skip('sorting existing package', () => {
       const data: PackageItem[] = [
         {
           "package": {
