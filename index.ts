@@ -118,9 +118,10 @@ app.post('/file', async (req, res, next) => {
       console.log('onProxyRes');
       //update linkId
       const response = responseBuffer.toString('utf8'); // convert buffer to string
+      console.log(`RESPONSE ${response}`);
       let files;
       try {
-        files = JSON.parse(response)?.processedFiles;
+        files = JSON.parse(response)
         console.log('files', files);
         if (!files) return response;
         const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
@@ -131,11 +132,11 @@ app.post('/file', async (req, res, next) => {
             }
           }
         }`;
-        console.log('files[0].id', files[0].id);
+        console.log('files[0].id', files.id);
         const updated = await client.mutate({
           mutation: UPDATE_FILE_LINKID,
           variables: { 
-            fileid: files[0].id,
+            fileid: files.id,
             linkId: linkId,
           },
         });
