@@ -17,9 +17,9 @@ const deep = new DeepClient({ apolloClient });
 export const awaitAllLinks = async () => {
   const result = await deep.select({ });
   for (const link of result.data) {
-    console.log("awating link", link);
+    // console.log("awating link", link);
     await deep.await(link.id);
-    console.log("done awaiting link", link);
+    // console.log("done awaiting link", link);
   }
 }
 

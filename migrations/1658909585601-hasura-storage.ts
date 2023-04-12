@@ -86,7 +86,8 @@ export const up = async () => {
     mime_type text,
     etag text,
     is_uploaded boolean DEFAULT FALSE,
-    uploaded_by_user_id bigint
+    uploaded_by_user_id uuid,
+    uploaded_by_link_id bigint
   );
 
   -- constraints
@@ -203,6 +204,7 @@ export const up = async () => {
           etag: 'etag',
           is_uploaded: 'isUploaded',
           uploaded_by_user_id: 'uploadedByUserId',
+          uploaded_by_link_id: 'uploadedByLinkId',
           size: 'size',
           mime_type: 'mimeType',
           bucket_id: 'bucketId',

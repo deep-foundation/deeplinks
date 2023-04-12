@@ -75,7 +75,19 @@ app.get(['/file'], createProxyMiddleware({
     const linkId = newurl.searchParams.get('linkId');
     console.log('SEARCH PARAMS', newurl.searchParams);
     console.log('This is linkId',linkId);
-    return `/v1/files/${linkId}`;
+
+    const result = await deep.apolloClient.query({
+      query: gql`{
+        files(where: {link_id: {_eq: ${linkId}}}) {
+          id
+        }
+      }`
+    })
+    console.log('result', result)
+    console.log('result.data.files[0].id', result.data.files[0].id)
+    const fileId = result.data.files[0].id;
+
+    return `/v1/files/${fileId}`;
   }
 }));
 
@@ -124,12 +136,12 @@ app.post('/file', async (req, res, next) => {
         files = JSON.parse(response);
         console.log('files', files);
         if (!files) return response;
-        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid, $uploadedByUserId: bigint) {
-          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId, uploadedByUserId: $uploadedByUserId}){
+        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid, $uploadedByLinkId: bigint) {
+          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId, uploadedByLinkId: $uploadedByLinkId }){
             returning {
               id
               link_id
-              uploadedByUserId
+              uploadedByLinkId
             }
           }
         }`;
@@ -139,7 +151,7 @@ app.post('/file', async (req, res, next) => {
           variables: { 
             fileid: files.id,
             linkId: linkId,
-            uploadedByUserId: userId
+            uploadedByLinkId: userId
           },
         });
         console.log('linkid',linkId)
