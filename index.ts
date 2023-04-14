@@ -75,7 +75,19 @@ app.get(['/file'], createProxyMiddleware({
     const linkId = newurl.searchParams.get('linkId');
     console.log('SEARCH PARAMS', newurl.searchParams);
     console.log('This is linkId',linkId);
-    return `/v1/files/${linkId}`;
+
+    const result = await deep.apolloClient.query({
+      query: gql`{
+        files(where: {link_id: {_eq: ${linkId}}}) {
+          id
+        }
+      }`
+    })
+    console.log('result', result)
+    console.log('result.data.files[0].id', result.data.files[0].id)
+    const fileId = result.data.files[0].id;
+
+    return `/v1/files/${fileId}`;
   }
 }));
 
@@ -118,25 +130,28 @@ app.post('/file', async (req, res, next) => {
       console.log('onProxyRes');
       //update linkId
       const response = responseBuffer.toString('utf8'); // convert buffer to string
+      console.log(`RESPONSE ${response}`);
       let files;
       try {
-        files = JSON.parse(response)?.processedFiles;
+        files = JSON.parse(response);
         console.log('files', files);
         if (!files) return response;
-        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid) {
-          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId}){
+        const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid, $uploadedByLinkId: bigint) {
+          updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId, uploadedByLinkId: $uploadedByLinkId }){
             returning {
               id
               link_id
+              uploadedByLinkId
             }
           }
         }`;
-        console.log('files[0].id', files[0].id);
+        console.log('files[0].id', files.id);
         const updated = await client.mutate({
           mutation: UPDATE_FILE_LINKID,
           variables: { 
-            fileid: files[0].id,
+            fileid: files.id,
             linkId: linkId,
+            uploadedByLinkId: userId
           },
         });
         console.log('linkid',linkId)
@@ -147,7 +162,7 @@ app.post('/file', async (req, res, next) => {
           await client.mutate({
             mutation:  gql`mutation DELETE_FILE($fileid: uuid) { deleteFiles(where: {id: {_eq: $fileid}}){ returning { id } } }`,
             variables: { 
-              fileid: files[0].id,
+              fileid: files.id,
             },
           });
           return JSON.stringify({error: 'one link - one file'});

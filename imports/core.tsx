@@ -328,6 +328,8 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'promiseTreeResolved', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Resolved' },
     { id: 'promiseTreeRejected', type: 'TreeIncludeDown', from: 'promiseTree', to: 'Rejected' },
     { id: 'promiseTreePromiseResult', type: 'TreeIncludeNode', from: 'promiseTree', to: 'PromiseResult' },
+
+    { id: 'MigrationsEnd', type: 'Type' },
   ],
   errors: [],
   strict: true,
