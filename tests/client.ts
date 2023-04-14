@@ -424,4 +424,21 @@ describe('client', () => {
       }
     })
   })
+  it('select string table', async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const {data: [newLink]} = await deepClient.insert({
+      type_id: typeTypeLinkId,
+      string: {
+        data: {
+          value: "stringValue"
+        }
+      }
+    })
+    await deepClient.select({
+      link_id: {_eq: newLink.id}
+    },
+    {
+      table: 'strings'
+    })
+  })
 });
