@@ -616,7 +616,9 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
     const table = options?.table || this.table;
-    const returning = options?.returning || table === 'links' ? this.linksSelectReturning : this.valueSelectReturning;
+    const returning = options?.returning || table === 'links' ? this.linksSelectReturning :
+    ['string', 'numbers', 'objects'].includes(table) ? this.valueSelectReturning : 
+    `id`;
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
     console.log({query: generateQuery({
