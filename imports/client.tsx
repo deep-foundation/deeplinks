@@ -610,9 +610,22 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
     const table = options?.table || this.table;
-    const returning = options?.returning || this.selectReturning;
+    const returning = options?.returning || table === 'links' ? this.selectReturning : `id link_id value`;
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
+    console.log({query: generateQuery({
+      queries: [
+        generateQueryData({
+          tableName: table,
+          returning,
+          variables: {
+            limit: where?.limit,
+            ...variables,
+            where,
+          } }),
+      ],
+      name: name,
+    })})
     const q = await this.apolloClient.query(generateQuery({
       queries: [
         generateQueryData({
