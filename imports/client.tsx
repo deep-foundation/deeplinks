@@ -623,19 +623,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     `id`;
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
-    console.log({query: generateQuery({
-      queries: [
-        generateQueryData({
-          tableName: table,
-          returning,
-          variables: {
-            limit: where?.limit,
-            ...variables,
-            where,
-          } }),
-      ],
-      name: name,
-    })})
     const q = await this.apolloClient.query(generateQuery({
       queries: [
         generateQueryData({
