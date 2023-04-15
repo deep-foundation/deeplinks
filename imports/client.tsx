@@ -308,6 +308,8 @@ export interface DeepClientInstance<L = Link<number>> {
   returning?: string;
 
   selectReturning?: string;
+  linksSelectReturning?: string;
+  valueSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -567,8 +569,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.token = options.token;
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
 
-    this.selectReturning = options.selectReturning || 'id type_id from_id to_id value';
-    this.linksSelectReturning = this.selectReturning;
+    this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
+    this.selectReturning = this.linksSelectReturning ;
     this.valueSelectReturning = options.valueSelectReturning || 'id link_id value';
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
