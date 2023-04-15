@@ -570,7 +570,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
 
     this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
-    this.selectReturning = this.linksSelectReturning ;
+    this.selectReturning = options.selectReturning || this.linksSelectReturning;
     this.valueSelectReturning = options.valueSelectReturning || 'id link_id value';
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
