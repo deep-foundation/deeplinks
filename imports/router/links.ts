@@ -117,8 +117,7 @@ export async function processPromises(promises: any[], handleOperationsIds: any[
 }
 
 export const containerController = new ContainerController({
-  gql_docker_domain: +DOCKER ? 'links' : 'hasura',
-  gql_port_path: +DOCKER ? '3006/gql' : '8080/v1/graphql',
+  gql_docker_domain: +DOCKER ? 'deep-links' : 'host.docker.internal',
   handlersHash: {}
 });
 
