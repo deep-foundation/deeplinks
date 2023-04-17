@@ -1244,7 +1244,7 @@ describe('sync handlers', () => {
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
-        const expectedErrorMessage = "Success! Handler is called";
+        const expectedErrorMessage = "Success! Handler is called. This test throw this error because there is a bug with plv8 handler which does not let to catch this error";
         let actualErrorMessage: string;
         const handler = await insertHandler(
           handleInsertTypeLinkId,
