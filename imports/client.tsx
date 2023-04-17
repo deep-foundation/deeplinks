@@ -272,7 +272,7 @@ export interface DeepClientOptions<L = Link<number>> {
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valueSelectReturning?: string;
+  valuesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -309,7 +309,7 @@ export interface DeepClientInstance<L = Link<number>> {
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valueSelectReturning?: string;
+  valuesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -528,7 +528,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valueSelectReturning?: string;
+  valuesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -571,7 +571,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
     this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
     this.selectReturning = options.selectReturning || this.linksSelectReturning;
-    this.valueSelectReturning = options.valueSelectReturning || 'id link_id value';
+    this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
     this.deleteReturning = options.deleteReturning || 'id';
@@ -619,7 +619,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
     const table = options?.table || this.table;
     const returning = options?.returning || table === 'links' ? this.linksSelectReturning :
-    ['string', 'numbers', 'objects'].includes(table) ? this.valueSelectReturning : 
+    ['string', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning : 
     `id`;
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
