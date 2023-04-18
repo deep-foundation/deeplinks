@@ -627,7 +627,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
     table === 'selectors' ? this.selectorsSelectReturning :
     `id`);
-    console.log(`returning: ${returning}; options.returning:${options?.returning}`)
+    // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
     const q = await this.apolloClient.query(generateQuery({
