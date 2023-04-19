@@ -16,6 +16,7 @@ const deepClient = new DeepClient({ apolloClient });
 describe('client', () => {
   it.only(`deep.linkId before login and after`, async () => {
     assert.equal(deepClient.linkId, undefined);
+    assert.notEqual(deepClient.linkId, 0);
     const adminId = await deepClient.id('deep', 'admin');
     const admin = await deepClient.login({ linkId: adminId });
     const deep = new DeepClient({ deep: deepClient, ...admin });
