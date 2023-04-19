@@ -14,6 +14,14 @@ const apolloClient = generateApolloClient({
 const deepClient = new DeepClient({ apolloClient });
 
 describe('client', () => {
+  it.only(`deep.linkId before login and after`, async () => {
+    assert.equal(deepClient.linkId, undefined);
+    const adminId = await deepClient.id('deep', 'admin');
+    const admin = await deepClient.login({ linkId: adminId });
+    const deep = new DeepClient({ deep: deepClient, ...admin });
+    assert.notEqual(deep.linkId, undefined);
+    assert.notEqual(deep.linkId, 0);
+  });
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });
