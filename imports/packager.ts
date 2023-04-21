@@ -1,5 +1,6 @@
 import Debug from 'debug';
 import { DeepClient } from './client';
+import type { DeepSerialOperation } from './client';
 import { Link, minilinks, MinilinksResult } from './minilinks';
 
 const debug = Debug('deeplinks:packager');
@@ -177,13 +178,13 @@ export class Packager<L extends Link<any>> {
       // insert link section
       if (item.type) {
         const insert = { id: +item.id, type_id: +item.type, from_id: +item.from || 0, to_id: +item.to || 0 };
-        const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
-        if (linkInsert?.errors) {
-          log('insertItem linkInsert error', insert);
-          errors.push(linkInsert?.errors);
-        }
-        log('insertItem promise', item.id);
-        await this.client.await(+item.id);
+        // const linkInsert = await this.client.insert(insert, { name: 'IMPORT_PACKAGE_LINK' });
+        const operations : DeepSerialOperation[] = [{
+          table: 'links',
+          type: 'insert',
+          objects: [insert]
+        }];
+
         log('insertItem promise awaited', item.id);
         if (item.value && !item.package) {
           log('insertItem value', item);
@@ -196,19 +197,40 @@ export class Packager<L extends Link<any>> {
           }
           if (!valueLink) {
             log('insertItem insertValue error');
-            errors.push(`Link ${JSON.stringify(item)} for value not founded.`);
+            errors.push(`Link ${JSON.stringify(item)} for value is not found.`);
           }
           else {
             log('insertItem tables');
             const type = typeof(item?.value?.value);
-            const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s` as any, name: 'IMPORT_PACKAGE_VALUE' });
-            log('insertItem valueInsert', valueInsert);
-            if (valueInsert?.errors) {
-              log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });
-              errors.push(valueInsert?.errors);
-            }
+            // const valueInsert = await this.client.insert({ link_id: valueLink.id, ...item.value }, { table: `${type}s` as any, name: 'IMPORT_PACKAGE_VALUE' });
+            operations.push(
+              {
+                // @ts-ignore
+                table: `${type}s`,
+                type: 'insert',
+                objects: [{ 
+                  link_id: valueLink.id, 
+                  ...item.value
+                }]
+              }
+            );
+            // log('insertItem valueInsert', valueInsert);
+            // if (valueInsert?.errors) {
+            //   log('insertItem insertValue error', { link_id: valueLink.id, ...item.value });
+            //   errors.push(valueInsert?.errors);
+            // }
           }
         }
+        const linkInsert = await this.client.serial({
+          name: 'IMPORT_PACKAGE_LINK',
+          operations
+        });
+        if (linkInsert?.errors) {
+          log('insertItem linkInsert error', insert);
+          errors.push(linkInsert?.errors);
+        }
+        log('insertItem promise', item.id);
+        await this.client.await(+item.id);
       }
     } catch(e) {
       log('insertItem error');

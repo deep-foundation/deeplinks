@@ -42,7 +42,7 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
           `, variables: {
             where: {
               _or: [
-                { id: { _eq: id } },
+                // { id: { _eq: id } },
                 { 
                   from_id: { _eq: id },
                   type_id: { _eq: options.Then },
@@ -70,7 +70,7 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
           } })],
           name: 'PROMISE',
         }));
-        log('result', result);
+        log('result', JSON.stringify(result, null, 2));
         try {
           if (result?.errors) {
             log('error', result?.errors);

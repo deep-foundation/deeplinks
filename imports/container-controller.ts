@@ -17,7 +17,6 @@ const DOCKER = process.env.DOCKER || '0';
 
 export interface ContainerControllerOptions {
   gql_docker_domain: string;
-  gql_port_path: string;
   network?: string;
   handlersHash?: any;
 }
@@ -50,8 +49,7 @@ export interface CallOptions {
 }
 
 export const runnerControllerOptionsDefault: ContainerControllerOptions = {
-  gql_docker_domain: 'links',
-  gql_port_path: '3006/gql',
+  gql_docker_domain: 'deep-links',
   network: 'network',
   handlersHash: {},
 };
@@ -60,7 +58,6 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 export class ContainerController {
   gql_docker_domain: string;
-  gql_port_path: string;
   network: string;
   delimiter: string;
   runContainerHash: { [id: string]: Promise<any> } = {};
@@ -68,12 +65,11 @@ export class ContainerController {
   constructor(options?: ContainerControllerOptions) {
     this.network = options?.network || runnerControllerOptionsDefault.network;
     this.gql_docker_domain = options?.gql_docker_domain || runnerControllerOptionsDefault.gql_docker_domain;
-    this.gql_port_path = options?.gql_port_path || runnerControllerOptionsDefault.gql_port_path;
     this.handlersHash = options?.handlersHash || runnerControllerOptionsDefault.handlersHash;
   };
   async _runContainer( containerName: string, dockerPort: number, options: NewContainerOptions ) {
     const { handler, forcePort, forceRestart, publish } = options;
-    const { network, gql_docker_domain, gql_port_path } = this;
+    const { network, gql_docker_domain } = this;
     let done = false;
     let count = 30;
     let dockerRunResult;
@@ -82,7 +78,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker pull ${handler}; docker run -e PORT=${dockerPort} -e GQL_URN=deep-${gql_docker_domain}:${gql_port_path} -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep-${network} -d ${handler}`;
+        const command = `docker pull ${handler}; docker run --add-host host.docker.internal:host-gateway -e PORT=${dockerPort} -e GQL_URN=${gql_docker_domain}:3006/gql -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep-${network} -d ${handler}`;
         log('_runContainer command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('_runContainer dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));

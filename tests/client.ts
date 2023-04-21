@@ -1,6 +1,9 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { DeepClient } from "../imports/client";
+import { DeepClient, SerialOperation } from "../imports/client";
 import { assert } from 'chai';
+import { BoolExpLink, MutationInputLink } from "../imports/client_types";
+import { inspect} from 'util'
+import { createSerialOperation } from "../imports/gql";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -11,6 +14,21 @@ const apolloClient = generateApolloClient({
 const deepClient = new DeepClient({ apolloClient });
 
 describe('client', () => {
+  it.only(`deep.linkId guest and login`, async () => {
+    assert.equal(deepClient.linkId, undefined);
+    assert.notEqual(deepClient.linkId, 0);
+    const guest = await deepClient.guest();
+    const guestDeep = new DeepClient({ deep: deepClient, ...guest });
+    assert.notEqual(guestDeep.linkId, undefined);
+    assert.notEqual(guestDeep.linkId, 0);
+    const guestId = guestDeep.linkId;
+    const adminId = await deepClient.id('deep', 'admin');
+    const admin = await deepClient.login({ linkId: adminId });
+    const deep = new DeepClient({ deep: deepClient, ...admin });
+    assert.notEqual(deep.linkId, undefined);
+    assert.notEqual(deep.linkId, 0);
+    assert.notEqual(deep.linkId, guestId);
+  });
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });
@@ -154,4 +172,288 @@ describe('client', () => {
     const packageId = await deepClient.id('@deep-foundation/core');
     assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
   });
+  it(`idLocal get from minilinks`, async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
+    const packageTypeLinkId = await deepClient.id("@deep-foundation/core", "Package");
+    const packageName = "idLocal get from minilinks package";
+    const {data: [packageLink]} = await deepClient.insert({
+      type_id: packageTypeLinkId,
+      string: {
+        data: {
+          value: packageName
+        }
+      }
+    }, {returning: deepClient.selectReturning});
+    const {data: [newTypeTypeLink]} = await deepClient.insert({
+      type_id: typeTypeLinkId,
+    }, {returning: deepClient.selectReturning});
+    const {data: [containLink]} = await deepClient.insert({
+      type_id: containTypeLinkId,
+      from_id: packageLink.id,
+      to_id: newTypeTypeLink.id,
+      string: {
+        data: {
+          value: "Type"
+        }
+      }
+    }, {returning: deepClient.selectReturning});
+    deepClient.minilinks.apply([packageLink,containLink,newTypeTypeLink]);
+    try {
+      const newTypeTypeLinkId = deepClient.idLocal(packageName, "Type");
+      assert.notEqual(newTypeTypeLinkId, 0);
+      assert.equal(newTypeTypeLinkId, newTypeTypeLink.id);
+    } finally {
+      await deepClient.delete([packageLink.id, newTypeTypeLink.id, containLink.id])
+    }
+  })
+  it(`insert link with reserved id and string value`, async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const reservedIds = await deepClient.reserve(1);
+    try {
+      await deepClient.insert({
+        id: reservedIds[0],
+        type_id: typeTypeLinkId,
+        string: {
+          data: {
+            value: 'stringValue'
+          }
+        }
+      });
+    } finally {
+      await deepClient.delete(reservedIds[0]);
+    }
+  })
+  describe(`serial`, () => {
+    it('insert', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      const operation = createSerialOperation({
+        table: 'links',
+        type: 'insert',
+        objects: {
+          type_id: typeTypeLinkId
+        }
+      })
+      try {
+        const result = await deepClient.serial({
+          operations: [
+            operation,
+          ]
+        });
+        console.log(
+          inspect(result)
+        )
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+        assert.strictEqual(result.data.length, 1);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('update', async () => {
+      let linkIdsToDelete = [];
+      const expectedValue = 'newStringValue';
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const insertResult = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        assert.equal(insertResult.error, undefined);
+        assert.notEqual(insertResult.data, undefined);
+        assert.strictEqual(insertResult.data.length, 1);
+        const newLinkId = insertResult.data[0].id;
+        linkIdsToDelete.push(newLinkId);
+        const operation = createSerialOperation({
+          table: 'strings',
+          type: 'update',
+            exp: {
+              link_id: newLinkId,
+            },
+            value: {
+              value: expectedValue
+            }
+        });
+        const updateResult = await deepClient.serial({
+          operations: [
+            operation
+          ]
+        });
+        assert.equal(updateResult.error, undefined);
+        assert.notEqual(updateResult.data, undefined);
+        assert.strictEqual(updateResult.data.length, 1);
+        const { data: [newLink] } = await deepClient.select({
+          id: newLinkId
+        })
+        assert.strictEqual(newLink.value.value, expectedValue)
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('delete', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const { data: [{ id: newLinkId }] } = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        linkIdsToDelete.push(newLinkId);
+        const operation = createSerialOperation({
+          table: 'links',
+          type: 'delete',
+          exp: {
+            id: newLinkId
+          }
+        });
+        const result = await deepClient.serial({
+          operations: [
+            operation,
+          ]
+        });
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        assert.strictEqual(result.data.length, 1);
+        const { data: [newLink] } = await deepClient.select(newLinkId);
+        assert.equal(newLink, undefined);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('multiple inserts', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      const operation = createSerialOperation({
+        table: 'links',
+        type: 'insert',
+        objects: {
+          type_id: typeTypeLinkId
+        }
+      })
+      try {
+        const result = await deepClient.serial({
+          operations: [
+            operation,
+            operation
+          ]
+        });
+        console.log(
+          inspect(result)
+        )
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+        assert.strictEqual(result.data.length, 2);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('multiple updates', async () => {
+      let linkIdsToDelete = [];
+      const expectedValue = 'newStringValue';
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const insertResult = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        assert.equal(insertResult.error, undefined);
+        assert.notEqual(insertResult.data, undefined);
+        assert.strictEqual(insertResult.data.length, 1);
+        const newLinkId = insertResult.data[0].id;
+        linkIdsToDelete.push(newLinkId);
+        const operation = createSerialOperation({
+          table: 'strings',
+          type: 'update',
+            exp: {
+              link_id: newLinkId,
+            },
+            value: {
+              value: expectedValue
+            }
+        });
+        const updateResult = await deepClient.serial({
+          operations: [
+            operation,
+            operation
+          ]
+        });
+        assert.equal(updateResult.error, undefined);
+        assert.notEqual(updateResult.data, undefined);
+        assert.strictEqual(updateResult.data.length, 2);
+        const { data: [newLink] } = await deepClient.select({
+          id: newLinkId
+        })
+        assert.strictEqual(newLink.value.value, expectedValue)
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+    it('multiple deletes', async () => {
+      let linkIdsToDelete = [];
+      const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      try {
+        const { data: [{ id: newLinkId }] } = await deepClient.insert({
+          type_id: typeTypeLinkId,
+          string: {
+            data: {
+              value: "stringValue"
+            }
+          }
+        })
+        linkIdsToDelete.push(newLinkId);
+        const operation = createSerialOperation({
+          table: 'links',
+          type: 'delete',
+          exp: {
+            id: newLinkId
+          }
+        });
+        const result = await deepClient.serial({
+          operations: [
+            operation,
+            operation
+          ]
+        });
+        assert.equal(result.error, undefined);
+        assert.notEqual(result.data, undefined);
+        assert.strictEqual(result.data.length, 2);
+        const { data: [newLink] } = await deepClient.select(newLinkId);
+        assert.equal(newLink, undefined);
+      } finally {
+        await deepClient.delete(linkIdsToDelete)
+      }
+    })
+  })
+  it('select string table', async () => {
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const {data: [newLink]} = await deepClient.insert({
+      type_id: typeTypeLinkId,
+      string: {
+        data: {
+          value: "stringValue"
+        }
+      }
+    })
+    await deepClient.select({
+      link_id: {_eq: newLink.id}
+    },
+    {
+      table: 'strings'
+    })
+  })
 });

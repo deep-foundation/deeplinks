@@ -1,5 +1,6 @@
 import Debug from 'debug';
 import gql from 'graphql-tag';
+import { SerialOperationType, Table, SerialOperation, SerialOperationDetails } from '../client';
 
 const debug = Debug('deeplinks:gql:serial');
 const log = debug.extend('log');
@@ -51,3 +52,13 @@ export const generateSerial = ({
   log('generateSerialResult', JSON.stringify({ mutation: mutationString, variables }, null, 2));
   return result;
 };
+
+export function createSerialOperation<
+  TSerialOperationType extends SerialOperationType,
+  TTable extends Table<TSerialOperationType>
+>(params: {
+  type: TSerialOperationType;
+  table: TTable;
+} & SerialOperationDetails<TSerialOperationType, TTable>): SerialOperation<TSerialOperationType, TTable> {
+  return params;
+}

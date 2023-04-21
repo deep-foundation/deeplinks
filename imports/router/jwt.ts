@@ -66,7 +66,7 @@ const resolvers = {
         });
         return { token, linkId };
       } catch(error) {
-        return { error: 'unexpected' };
+        return { error };
       }
     },
   }

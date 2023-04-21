@@ -118,3 +118,11 @@ projects/app/electron/app
 
 # migrations
 .migrate
+
+
+**/*.ts
+!**/*.d.ts
+**/*.tsx
+compiler/**
+local/**
+.github/**

@@ -392,15 +392,15 @@ export const up = async () => {
 
         IF (NEW."from_id" != 0 AND NEW."to_id" != 0) THEN
           IF (typeLink."from_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."from_id" != fromLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."type_id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
           END IF;
           IF (typeLink."to_id" != ${_ids?.['@deep-foundation/core']?.Any} AND typeLink."to_id" != toLink."type_id") THEN
-            RAISE EXCEPTION 'Type conflict link: { type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
-              NEW."type_id", NEW."from_id", NEW."to_id",
+            RAISE EXCEPTION 'Type conflict link: { id: %, type: %, from: %, to: % } expected type: { type: %, from: %, to: % } received type: { type: %, from: %, to: % }',
+              NEW."id", NEW."type_id", NEW."from_id", NEW."to_id",
               typeLink."id", typeLink."from_id", typeLink."to_id",
               typeLink."id", fromLink."type_id", toLink."type_id"
             ;
