@@ -114,6 +114,7 @@ export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusRetu
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
     status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
   } catch(e){
+    error('healthz');
     error(e)
     err = e;
   }
@@ -163,6 +164,7 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
     const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
     return { result: { stdout, stderr } }
   } catch(e) {
+    error('_execEngine');
     error(e);
     return { error: e };
   }

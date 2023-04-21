@@ -1,0 +1,1 @@
+echo 'sync__handlers__exports = Object.exports;' >> $LIBPATH;

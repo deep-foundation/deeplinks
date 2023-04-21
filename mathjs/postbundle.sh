@@ -1,0 +1,1 @@
+echo 'const sync__handlers__package = ()=>{let sync__handlers__exports;' "$(<$BUNDLED)" "return sync__handlers__exports;}"$'\n'"exports.code = sync__handlers__package.toString();" > $BUNDLED;
