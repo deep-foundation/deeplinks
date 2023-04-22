@@ -456,4 +456,9 @@ describe('client', () => {
       table: 'strings'
     })
   })
+  describe(`useDeepSubscription`, () => {
+    it(`after deep.guest() and deep.login()`, async () => {
+      
+    })
+  })
 });
