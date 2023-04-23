@@ -583,7 +583,6 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
     this.deleteReturning = options.deleteReturning || 'id';
-    this.deleteReturning = options.deleteReturning || 'id';
 
     this.defaultSelectName = options.defaultSelectName || 'SELECT';
     this.defaultInsertName = options.defaultInsertName || 'INSERT';
