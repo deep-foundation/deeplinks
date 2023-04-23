@@ -274,6 +274,7 @@ export interface DeepClientOptions<L = Link<number>> {
   linksSelectReturning?: string;
   valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  filesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -312,6 +313,7 @@ export interface DeepClientInstance<L = Link<number>> {
   linksSelectReturning?: string;
   valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  filesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -532,6 +534,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   linksSelectReturning?: string;
   valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  filesSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -576,8 +579,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.selectReturning = options.selectReturning || this.linksSelectReturning;
     this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
     this.selectorsSelectReturning = options.selectorsSelectReturning ||'item_id selector_id';
+    this.filesSelectReturning = options.filesSelectReturning ||'id link_id name mime_type';
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
+    this.deleteReturning = options.deleteReturning || 'id';
     this.deleteReturning = options.deleteReturning || 'id';
 
     this.defaultSelectName = options.defaultSelectName || 'SELECT';
@@ -626,7 +631,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     (table === 'links' ? this.linksSelectReturning :
     ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
     table === 'selectors' ? this.selectorsSelectReturning :
-    `id`);
+    `id` ? this.filesSelectReturning : `id`);
+    
     // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
