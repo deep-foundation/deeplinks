@@ -5,7 +5,7 @@ import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect} from 'util'
 import { createSerialOperation } from "../imports/gql";
 import {render} from '@testing-library/react'
-import { DeepProvider } from '@deep-foundation/deeplinks/imports/client';
+import { DeepProvider } from '../imports/client';
 import React from "react";
 
 const apolloClient = generateApolloClient({
