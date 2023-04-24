@@ -217,10 +217,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   handleOperationDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
-  // log('handleOperationTypeId', handleOperationTypeId);
-
-  // !!! potential PROBLEM, this should be handled in promise trigger 
-  const dockerSupportsJsType = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  handleOperationDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
     promise_links(where: {
@@ -284,7 +281,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   handleSelectorDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
-  // handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
+  handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
     promise_links(where: {
