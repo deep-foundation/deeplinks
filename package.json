@@ -31,7 +31,6 @@
   "dependencies": {
     "@apollo/client": "3.7.9",
     "@deep-foundation/deepcase": "0.0.16",
-    "@deep-foundation/deeplinks": "file:deep-foundation-deeplinks-0.0.141.tgz",
     "@deep-foundation/hasura": "^0.0.40",
     "@deep-foundation/materialized-path": "^0.0.22",
     "@deep-foundation/npm-packager": "0.0.24",
