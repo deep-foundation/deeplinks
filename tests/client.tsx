@@ -1,9 +1,12 @@
 import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { DeepClient, SerialOperation } from "../imports/client";
+import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client";
 import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect} from 'util'
 import { createSerialOperation } from "../imports/gql";
+import {render} from '@testing-library/react'
+import { DeepProvider } from '@deep-foundation/deeplinks/imports/client';
+import React from "react";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -458,7 +461,21 @@ describe('client', () => {
   })
   describe(`useDeepSubscription`, () => {
     it(`after deep.guest() and deep.login()`, async () => {
-      
+      const resultElementTestId = "resultElementTestId";
+      const userTypeLinkId = await deepClient.id("@deep-foundation/core", "User");
+      function UseDeepSubscriptionWrapper() {
+        const {data}=useDeepSubscription({
+          type_id: userTypeLinkId
+        });
+
+        return <p data-testid={resultElementTestId}>{data}</p>
+      }
+      const renderResult = render(<DeepProvider apolloClient={deepClient.apolloClient}>
+          <UseDeepSubscriptionWrapper/>
+        </DeepProvider>);
+        const resultElement = renderResult.getByTestId(resultElementTestId)
+        console.log(`resultElement`)
+        console.dir(resultElement)
     })
   })
 });
