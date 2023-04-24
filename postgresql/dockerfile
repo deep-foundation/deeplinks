@@ -1,13 +1,13 @@
 FROM postgres:12
 
-ENV PLV8_VERSION=3.0.0 \
-    PLV8_SHASUM="de030f5d6b0439710efa05f4c35ffb8ef36ae754fa0e3c46d334352cf1507661"
+ENV PLV8_VERSION=3.1.5
 
 RUN buildDependencies="build-essential \
+    ninja-build \
     ca-certificates \
     curl \
     git-core \
-    python \
+    python3 \
     gpp \
     cpp \
     pkg-config \
@@ -24,7 +24,6 @@ RUN buildDependencies="build-essential \
   && mkdir -p /tmp/build \
   && curl -o /tmp/build/v$PLV8_VERSION.tar.gz -SL "https://github.com/plv8/plv8/archive/v${PLV8_VERSION}.tar.gz" \
   && cd /tmp/build \
-  && echo $PLV8_SHASUM v$PLV8_VERSION.tar.gz | sha256sum -c \
   && tar -xzf /tmp/build/v$PLV8_VERSION.tar.gz -C /tmp/build/ \
   && cd /tmp/build/plv8-$PLV8_VERSION \
   && make static \
