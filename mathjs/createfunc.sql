@@ -1,3 +1,0 @@
-CREATE FUNCTION test() RETURNS JSON AS $func$
-
-$func$ LANGUAGE plv8;

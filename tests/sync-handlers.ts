@@ -125,7 +125,7 @@ const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.i
 
 log({handleInsertTypeId, handleUpdateTypeId, handleDeleteTypeId, userTypeId,packageTypeId, containTypeId,plv8SupportsJsTypeId, HandlerTypeId, SelectorTypeId, AllowSelectTypeId, AllowSelectId,  AllowAdminId});
 
-describe('sync handlers', () => {
+describe.only('sync handlers', () => {
   describe('Prepare fuction', () => {
     it(`handleInsert`, async () => {
       const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -992,8 +992,8 @@ describe('sync handlers', () => {
     });
   });
 
-  describe('require package', () => {
-    it(`require mathjs`, async () => {
+  describe.only('require package', () => {
+    it.only(`require mathjs`, async () => {
       const debug = log.extend('HandleInsert');
 
       const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -1009,6 +1009,42 @@ describe('sync handlers', () => {
         handleInsertTypeId,
         typeId, 
         `({deep, require, data}) => { const mathjs = require('mathjs'); if (mathjs.atan2(3, -3) / mathjs.pi == 0.75) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+      debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+    });
+    it.only(`require jsonschema`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('customLinkId', customLinkId);
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, require, data}) => { var validate = require('jsonschema').validate; if (validate(4, {"type": "number"}).valid) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
         undefined,
         supportsId
       );
