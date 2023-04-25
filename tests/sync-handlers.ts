@@ -125,7 +125,7 @@ const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.i
 
 log({handleInsertTypeId, handleUpdateTypeId, handleDeleteTypeId, userTypeId,packageTypeId, containTypeId,plv8SupportsJsTypeId, HandlerTypeId, SelectorTypeId, AllowSelectTypeId, AllowSelectId,  AllowAdminId});
 
-describe.only('sync handlers', () => {
+describe('sync handlers', () => {
   describe('Prepare fuction', () => {
     it(`handleInsert`, async () => {
       const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
@@ -992,8 +992,8 @@ describe.only('sync handlers', () => {
     });
   });
 
-  describe.only('require package', () => {
-    it.only(`require mathjs`, async () => {
+  describe('require package', () => {
+    it(`require mathjs`, async () => {
       const debug = log.extend('HandleInsert');
 
       const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -1029,7 +1029,7 @@ describe.only('sync handlers', () => {
       debug('delete handler', await deleteHandler(handler));
       assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
     });
-    it.only(`require jsonschema`, async () => {
+    it(`require jsonschema`, async () => {
       const debug = log.extend('HandleInsert');
 
       const typeId = await deep.id('@deep-foundation/core', 'Operation');
