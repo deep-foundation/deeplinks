@@ -26,7 +26,7 @@ export const up = async () => {
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
-  const dockerSupportsJsId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  const dockerIsolationProviderTypeId = await deep.id('@deep-foundation/core', 'DockerIsolationProvider');
 
   // create sql type values_operation_type upper case
   await api.sql(sql`CREATE TYPE public.values_operation_type AS ENUM ('INSERT', 'UPDATE', 'DELETE');`);
@@ -114,8 +114,9 @@ export const up = async () => {
       SELECT id, type_id FROM links l
       WHERE
           "from_id" = NEW."type_id"
-      AND "type_id" = ${handleInsertTypeId} 
-      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND "type_id" = ${handleInsertTypeId}
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       PERFORM insert_promise(NEW."id", HANDLE_INSERT."id", HANDLE_INSERT."type_id", null, NEW);
     END LOOP;
@@ -137,7 +138,8 @@ export const up = async () => {
           s.item_id = NEW."id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleInsertTypeId}
-      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+      id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."id", SELECTOR.query_id, user_id) THEN
         PERFORM insert_promise(NEW."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, null, NEW, SELECTOR.selector_id);
@@ -165,7 +167,8 @@ export const up = async () => {
       WHERE
           "from_id" = OLD."type_id"
       AND "type_id" = ${handleDeleteTypeId} 
-      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       PERFORM insert_promise(OLD."id", HANDLE_DELETE."id", HANDLE_DELETE."type_id", OLD);
     END LOOP;
@@ -180,7 +183,8 @@ export const up = async () => {
           s.item_id = OLD."id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleDeleteTypeId}
-      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+      id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."id", SELECTOR.query_id, user_id) THEN
         PERFORM insert_promise(OLD."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, OLD, null, SELECTOR.selector_id);

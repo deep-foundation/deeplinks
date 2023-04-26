@@ -135,7 +135,7 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
   const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api, deep } = options;
 
   const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-  const dockerSupportsJsId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  const dockerIsolationProviderTypeId = await deep.id('@deep-foundation/core', 'DockerIsolationProvider');
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$
   DECLARE
@@ -152,7 +152,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       WHERE
           "from_id" = updated_link."type_id"
       AND "type_id" = ${handleUpdateTypeId} 
-      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'INSERT');
     END LOOP;
@@ -167,7 +168,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
           s.item_id = NEW."link_id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
-      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+      id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
         PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'INSERT');
@@ -191,7 +193,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       WHERE
           "from_id" = updated_link."type_id"
       AND "type_id" = ${handleUpdateTypeId} 
-      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'UPDATE');
     END LOOP;
@@ -206,7 +209,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
           s.item_id = NEW."link_id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
-      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+      id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
         PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'UPDATE');
@@ -230,7 +234,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
       WHERE
           "from_id" = updated_link."type_id"
       AND "type_id" = ${handleUpdateTypeId} 
-      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       PERFORM insert_promise(updated_link."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", updated_link, updated_link, null, 'DELETE');
     END LOOP;
@@ -245,7 +250,8 @@ export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () 
           s.item_id = OLD."link_id"
       AND s.selector_id = h.from_id
       AND h.type_id = ${handleUpdateTypeId}
-      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+      id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${dockerIsolationProviderTypeId})
     LOOP
       IF SELECTOR.query_id = 0 OR bool_exp_execute(OLD."link_id", SELECTOR.query_id, user_id) THEN
         PERFORM insert_promise(updated_link."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, updated_link, updated_link, SELECTOR.selector_id, 'DELETE');
