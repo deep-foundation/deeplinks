@@ -630,7 +630,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     (table === 'links' ? this.linksSelectReturning :
     ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
     table === 'selectors' ? this.selectorsSelectReturning :
-    `id` ? this.filesSelectReturning : `id`);
+    table === 'files' ? this.filesSelectReturning : `id`);
     
     // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
