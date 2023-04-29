@@ -4,14 +4,18 @@ import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect} from 'util'
 import { createSerialOperation } from "../imports/gql";
-import {render} from '@testing-library/react'
+import {render, screen, waitFor} from '@testing-library/react'
 import { DeepProvider } from '../imports/client';
-import React from "react";
+import React, { useEffect } from "react";
+import { ApolloProvider } from "@apollo/client";
+import '@testing-library/jest-dom';
+
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
   secret: process.env.DEEPLINKS_HASURA_SECRET,
+  ws: true
 });
 
 const deepClient = new DeepClient({ apolloClient });
@@ -460,22 +464,47 @@ describe('client', () => {
     })
   })
   describe(`useDeepSubscription`, () => {
-    it(`after deep.guest() and deep.login()`, async () => {
-      const resultElementTestId = "resultElementTestId";
-      const userTypeLinkId = await deepClient.id("@deep-foundation/core", "User");
-      function UseDeepSubscriptionWrapper() {
-        const {data}=useDeepSubscription({
-          type_id: userTypeLinkId
-        });
+    it(`type`, async () => {
+      await setup();
+  
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
+  
+      await waitFor(() => {
+        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      });
+  
+      expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
 
-        return <p data-testid={resultElementTestId}>{data}</p>
+      const dataLengthText = screen.getByText(/items loaded$/);
+      const dataLength = parseInt(dataLengthText.textContent);
+      expect(dataLength).toBeGreaterThan(0);
+
+      async function setup() {
+        const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+      
+        function TestHookComponent() {
+          const { loading, data, error } = useDeepSubscription({
+            type_id: typeTypeLinkId,
+          });
+          if (loading) {
+            return <div>Loading...</div>;
+          }
+
+          if(error) {
+            return <div>Error: {error.message}</div>
+          }
+      
+          return <div>{data.length} items loaded</div>;
+        }
+      
+        render(
+          <ApolloProvider client={deepClient.apolloClient}>
+            <DeepProvider>
+              <TestHookComponent />
+            </DeepProvider>
+          </ApolloProvider>
+        );
       }
-      const renderResult = render(<DeepProvider apolloClient={deepClient.apolloClient}>
-          <UseDeepSubscriptionWrapper/>
-        </DeepProvider>);
-        const resultElement = renderResult.getByTestId(resultElementTestId)
-        console.log(`resultElement`)
-        console.dir(resultElement)
     })
   })
 });
