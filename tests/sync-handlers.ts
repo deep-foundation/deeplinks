@@ -37,78 +37,78 @@ const apolloClient = generateApolloClient({
 
 const deep = new DeepClient({ apolloClient });
 
-beforeAll(async () => {
+// beforeAll(async () => {
   // manual remigrate plv8
-  console.log('manual remigrating...');
-  await api.sql(`${createPrepareFunction}`);
-  await api.sql(`${createDeepClientFunction}`);
+  // console.log('manual remigrating...');
+  // await api.sql(`${createPrepareFunction}`);
+  // await api.sql(`${createDeepClientFunction}`);
   
-  await api.sql(dropSyncInsertTrigger);
-  await api.sql(dropSyncInsertTriggerFunction);
+  // await api.sql(dropSyncInsertTrigger);
+  // await api.sql(dropSyncInsertTriggerFunction);
 
-  await api.sql(dropSyncDeleteTrigger);
-  await api.sql(dropSyncDeleteTriggerFunction);
+  // await api.sql(dropSyncDeleteTrigger);
+  // await api.sql(dropSyncDeleteTriggerFunction);
 
-  await api.sql(dropSyncInsertStringsTrigger);
-  await api.sql(dropSyncInsertStringsTriggerFunction);
+  // await api.sql(dropSyncInsertStringsTrigger);
+  // await api.sql(dropSyncInsertStringsTriggerFunction);
 
-  await api.sql(dropSyncUpdateStringsTrigger);
-  await api.sql(dropSyncUpdateStringsTriggerFunction);
+  // await api.sql(dropSyncUpdateStringsTrigger);
+  // await api.sql(dropSyncUpdateStringsTriggerFunction);
 
-  await api.sql(dropSyncDeleteStringsTrigger);
-  await api.sql(dropSyncDeleteStringsTriggerFunction);
+  // await api.sql(dropSyncDeleteStringsTrigger);
+  // await api.sql(dropSyncDeleteStringsTriggerFunction);
 
-  await api.sql(dropSyncInsertNumbersTrigger);
-  await api.sql(dropSyncInsertNumbersTriggerFunction);
+  // await api.sql(dropSyncInsertNumbersTrigger);
+  // await api.sql(dropSyncInsertNumbersTriggerFunction);
 
-  await api.sql(dropSyncUpdateNumbersTrigger);
-  await api.sql(dropSyncUpdateNumbersTriggerFunction);
+  // await api.sql(dropSyncUpdateNumbersTrigger);
+  // await api.sql(dropSyncUpdateNumbersTriggerFunction);
 
-  await api.sql(dropSyncDeleteNumbersTrigger);
-  await api.sql(dropSyncDeleteNumbersTriggerFunction);
+  // await api.sql(dropSyncDeleteNumbersTrigger);
+  // await api.sql(dropSyncDeleteNumbersTriggerFunction);
 
-  await api.sql(dropSyncInsertObjectsTrigger);
-  await api.sql(dropSyncInsertObjectsTriggerFunction);
+  // await api.sql(dropSyncInsertObjectsTrigger);
+  // await api.sql(dropSyncInsertObjectsTriggerFunction);
 
-  await api.sql(dropSyncUpdateObjectsTrigger);
-  await api.sql(dropSyncUpdateObjectsTriggerFunction);
+  // await api.sql(dropSyncUpdateObjectsTrigger);
+  // await api.sql(dropSyncUpdateObjectsTriggerFunction);
 
-  await api.sql(dropSyncDeleteObjectsTrigger);
-  await api.sql(dropSyncDeleteObjectsTriggerFunction);
+  // await api.sql(dropSyncDeleteObjectsTrigger);
+  // await api.sql(dropSyncDeleteObjectsTriggerFunction);
 
-  await api.sql(createSyncInsertObjectsTriggerFunction);
-  await api.sql(createSyncInsertObjectsTrigger);
+  // await api.sql(createSyncInsertObjectsTriggerFunction);
+  // await api.sql(createSyncInsertObjectsTrigger);
 
-  await api.sql(createSyncUpdateObjectsTriggerFunction);
-  await api.sql(createSyncUpdateObjectsTrigger);
+  // await api.sql(createSyncUpdateObjectsTriggerFunction);
+  // await api.sql(createSyncUpdateObjectsTrigger);
 
-  await api.sql(createSyncDeleteObjectsTriggerFunction);
-  await api.sql(createSyncDeleteObjectsTrigger);
+  // await api.sql(createSyncDeleteObjectsTriggerFunction);
+  // await api.sql(createSyncDeleteObjectsTrigger);
 
-  await api.sql(createSyncInsertNumbersTriggerFunction);
-  await api.sql(createSyncInsertNumbersTrigger);
+  // await api.sql(createSyncInsertNumbersTriggerFunction);
+  // await api.sql(createSyncInsertNumbersTrigger);
 
-  await api.sql(createSyncUpdateNumbersTriggerFunction);
-  await api.sql(createSyncUpdateNumbersTrigger);
+  // await api.sql(createSyncUpdateNumbersTriggerFunction);
+  // await api.sql(createSyncUpdateNumbersTrigger);
 
-  await api.sql(createSyncDeleteNumbersTriggerFunction);
-  await api.sql(createSyncDeleteNumbersTrigger);
+  // await api.sql(createSyncDeleteNumbersTriggerFunction);
+  // await api.sql(createSyncDeleteNumbersTrigger);
   
-  await api.sql(createSyncInsertTriggerFunction);
-  await api.sql(createSyncInsertTrigger);
+  // await api.sql(createSyncInsertTriggerFunction);
+  // await api.sql(createSyncInsertTrigger);
 
-  await api.sql(createSyncDeleteTriggerFunction);
-  await api.sql(createSyncDeleteTrigger);
+  // await api.sql(createSyncDeleteTriggerFunction);
+  // await api.sql(createSyncDeleteTrigger);
 
-  await api.sql(createSyncInsertStringsTriggerFunction);
-  await api.sql(createSyncInsertStringsTrigger);
+  // await api.sql(createSyncInsertStringsTriggerFunction);
+  // await api.sql(createSyncInsertStringsTrigger);
 
-  await api.sql(createSyncUpdateStringsTriggerFunction);
-  await api.sql(createSyncUpdateStringsTrigger);
+  // await api.sql(createSyncUpdateStringsTriggerFunction);
+  // await api.sql(createSyncUpdateStringsTrigger);
 
-  await api.sql(createSyncDeleteStringsTriggerFunction);
-  await api.sql(createSyncDeleteStringsTrigger);
-});
+  // await api.sql(createSyncDeleteStringsTriggerFunction);
+  // await api.sql(createSyncDeleteStringsTrigger);
+// });
 
 const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
 const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
