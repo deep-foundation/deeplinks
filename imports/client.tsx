@@ -1117,11 +1117,8 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   }, [query, options]);
   const result = useSubscription(wq.query, { variables: wq?.variables });
   useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
-  const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
-  console.log(`reuslt`)
-  console.dir(result)
-  console.log(`mlResult`)
-  console.dir(mlResult)
+  const mlResult = useMinilinksSubscription(deep.minilinks,{ id: { _in: result?.data?.q0?.map(l => l.id) } });
+  
   return {
     ...result,
     data: mlResult,
