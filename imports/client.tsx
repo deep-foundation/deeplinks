@@ -1,10 +1,10 @@
 import atob from 'atob';
-import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery, useSubscription } from "@apollo/client";
+import { ApolloClient, ApolloError, ApolloQueryResult, useApolloClient, gql, useQuery, useSubscription, FetchResult } from "@apollo/client";
 import { generateApolloClient, IApolloClient } from "@deep-foundation/hasura/client";
 import { useLocalStore } from "@deep-foundation/store/local";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits, inspect } from "util";
-import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, updateMutation } from "./gql";
+import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, ISerialResult, updateMutation } from "./gql";
 import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from "./minilinks";
 import { awaitPromise } from "./promise";
 import { useTokenController } from "./react-token";
@@ -807,7 +807,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           const newSerialActions: IGenerateMutationBuilder[] = deleteOperations.map(operation => {
             const exp = operation.exp;
             const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
-            return deleteMutation(table, { where, returning }, { tableName: table, operation: 'delete', returning })
+            return deleteMutation(table, { where}, { tableName: table, operation: operationType, returning })
           })
           serialActions = [...serialActions, ...newSerialActions];
         }
@@ -827,7 +827,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!silent) throw e;
       return { ...result, data: (result)?.data?.m0?.returning, error: e };
     }
-    return { ...result, data: (result)?.data?.m0?.returning };
+    // @ts-ignore
+    return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
   };
 
   reserve<LL = L>(count: number): Promise<number[]> {
@@ -1117,6 +1118,10 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   const result = useSubscription(wq.query, { variables: wq?.variables });
   useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
   const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
+  console.log(`reuslt`)
+  console.dir(result)
+  console.log(`mlResult`)
+  console.dir(mlResult)
   return {
     ...result,
     data: mlResult,
