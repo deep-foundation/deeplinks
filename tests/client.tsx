@@ -577,9 +577,14 @@ describe('client', () => {
   
       expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
 
-      const dataLengthText = screen.getByText(/items loaded$/);
-      const dataLength = parseInt(dataLengthText.textContent);
-      expect(dataLength).toBeGreaterThan(0);
+      await waitFor(() => {
+        const dataLengthText = screen.getByText(/items loaded$/);
+        expect(dataLengthText).toBeInTheDocument();
+        const dataLength = parseInt(dataLengthText.textContent);
+         expect(dataLength).toBeGreaterThan(0);
+      }, {timeout: 10000});
+
+      
 
       async function setup() {
         const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
