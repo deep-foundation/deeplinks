@@ -1,4 +1,6 @@
 const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
 const packageJson = require(path.resolve(__dirname,`./node_modules/${process.env.LIBNAME}/package.json`));
 module.exports = {
   entry: path.resolve(__dirname, `./node_modules/${process.env.LIBNAME}`, packageJson.main),
@@ -32,6 +34,11 @@ module.exports = {
       zlib: require.resolve('browserify-zlib'),
     },
   },
+  plugins: [
+    new CleanWebpackPlugin({
+      cleanAfterEveryBuildPatterns: ['*.LICENSE.txt'],
+    }),
+  ],
 };
 console.log(module.exports);
 
