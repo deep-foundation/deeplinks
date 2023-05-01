@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "(cd local && docker-compose down || true) && cross-env npm_config_yes=true JWT_SECRET=\"{\\\"type\\\":\\\"HS256\\\",\\\"key\\\":\\\"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R\\\"}\" MIGRATIONS_HASURA_PATH=localhost:8080 MIGRATIONS_HASURA_SSL=0 MIGRATIONS_HASURA_SECRET=myadminsecretkey MIGRATIONS_DEEPLINKS_URL=http://host.docker.internal:3006 DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey PORT=3006 npm run launch",
     "launch": "ts-node ./index.ts;",
-    "bundle-mathjs": "export LIBNAME=mathjs; node ./bundles/deeplinks-prepare-bundle.js && webpack && node ./bundles/deeplinks-postbundle.js",
+    "bundle-mathjs": "export LIBNAME=mathjs; node ./bundles/deeplinks-bundler-prepare.js && webpack && node ./bundles/deeplinks-bundler-postbundle.js",
     "bundle-mathjs-test": "node ./bundles/mathjs.js",
-    "bundle-jsonschema": "export LIBNAME=jsonschema;  node ./bundles/deeplinks-prepare-bundle.js && webpack && node ./bundles/deeplinks-postbundle.js",
+    "bundle-jsonschema": "export LIBNAME=jsonschema;  node ./bundles/deeplinks-bundler-prepare.js && webpack && node ./bundles/deeplinks-bundler-postbundle.js",
     "bundle-jsonschema-test": "node ./bundles/jsonschema.js",
     "bundle-all": "npm run bundle-mathjs && npm run bundle-jsonschema && npm run bundle-jsonschema-test && npm run bundle-mathjs-test",
     "package:build": "tsc --project tsconfig.json && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts)",

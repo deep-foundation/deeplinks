@@ -36,7 +36,9 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin({
+      protectWebpackAssets: false,
       cleanAfterEveryBuildPatterns: ['*.LICENSE.txt'],
+      cleanOnceBeforeBuildPatterns: [], 
     }),
   ],
 };
