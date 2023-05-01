@@ -131,3 +131,7 @@ projects/app/electron/app
 # snapshots
 /snapshots/[0-9]*
 /snapshots/[0-9]*.migrate
+
+
+# webpack
+!webpack.config.js
