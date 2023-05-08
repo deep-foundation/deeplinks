@@ -1465,7 +1465,7 @@ describe('sync handlers', () => {
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
 
-      it.only(`Handle update on type any`, async () => {
+      it(`Handle update on type any`, async () => {
         let linkIdsToUpdate = [];
         const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
         const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
