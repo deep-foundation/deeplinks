@@ -14,7 +14,7 @@ const apolloClient = generateApolloClient({
 const deepClient = new DeepClient({ apolloClient });
 
 describe('client', () => {
-  it.only(`deep.linkId guest and login`, async () => {
+  it(`deep.linkId guest and login`, async () => {
     assert.equal(deepClient.linkId, undefined);
     assert.notEqual(deepClient.linkId, 0);
     const guest = await deepClient.guest();

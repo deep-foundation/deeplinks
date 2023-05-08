@@ -25,6 +25,7 @@ export const up = async () => {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+  const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
   const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
   const dockerSupportsJsId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
 
@@ -146,6 +147,51 @@ export const up = async () => {
     RETURN NEW;
   END; $$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__promise__insert__trigger AFTER INSERT ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__insert__function();`);
+  
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__update__function() RETURNS TRIGGER AS $$ 
+  DECLARE 
+    PROMISE bigint;
+    SELECTOR record;
+    HANDLE_UPDATE record;
+    user_id bigint;
+    hasura_session json;
+  BEGIN
+    FOR HANDLE_UPDATE IN
+      SELECT id, type_id FROM links l
+      WHERE
+          "from_id" = NEW."type_id"
+      AND "type_id" = ${handleUpdateTypeId} 
+      AND EXISTS(select true from links where "id" = l."to_id" AND "from_id" = ${dockerSupportsJsId})
+    LOOP
+      PERFORM insert_promise(NEW."id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", OLD, NEW);
+    END LOOP;
+
+    IF (
+      NEW."type_id" = ${handleScheduleTypeId}
+    ) THEN
+      INSERT INTO links ("type_id") VALUES (${promiseTypeId}) RETURNING id INTO PROMISE;
+      INSERT INTO links ("type_id", "from_id", "to_id") VALUES (${thenTypeId}, NEW.from_id, PROMISE);
+    END IF;
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
+
+    FOR SELECTOR IN
+      SELECT s.selector_id, h.id as handle_operation_id, h.type_id as handle_operation_type_id, s.query_id
+      FROM selectors s, links h
+      WHERE
+          s.item_id = NEW."id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${handleUpdateTypeId}
+      AND EXISTS(select true from links where "id" = h."to_id" AND "from_id" = ${dockerSupportsJsId})
+    LOOP
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."id", SELECTOR.query_id, user_id) THEN
+        PERFORM insert_promise(NEW."id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, OLD, NEW, SELECTOR.selector_id);
+      END IF;
+    END LOOP;
+    RETURN NEW;
+  END; $$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__promise__update__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__update__function();`);
 
   const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
 
@@ -257,6 +303,8 @@ export const down = async () => {
 
   await api.sql(sql`DROP TRIGGER IF EXISTS z_${LINKS_TABLE_NAME}__promise__insert__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__insert__function CASCADE;`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__update__trigger ON "${LINKS_TABLE_NAME}";`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__update__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__promise__delete__function CASCADE;`);
 

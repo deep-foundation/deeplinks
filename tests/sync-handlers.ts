@@ -1381,6 +1381,126 @@ describe('sync handlers', () => {
           }
       })
     });
+    describe('Handle update', () => {
+      it(`Handle update on type`, async () => {
+        const debug = log.extend('HandleUpdate');
+
+        const typeId = await deep.id('@deep-foundation/core', 'Type');
+        const anyId = await deep.id('@deep-foundation/core', 'Any');
+        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+        const customLinkId = inserted?.data?.[0]?.id;
+
+        const handler = await insertHandler(
+          handleUpdateTypeId,
+          typeId, 
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          undefined,
+          supportsId
+        );
+        debug('handler', handler);
+        debug('customLinkId', customLinkId);
+
+        const linkId = (await deep.insert({ type_id: typeId, from_id: typeId, to_id: typeId }))?.data?.[0].id;
+        
+        try {
+          const updated = await deep.update(linkId, { to_id: anyId });
+          console.log('updated', updated);
+        } catch (e){
+          debug('update error: ', e);
+        }
+        
+        const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+        debug('insertedByHandler', insertedByHandler);
+
+        if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+        debug('delete handler', await deleteHandler(handler));
+        await deep.delete(customLinkId);
+        await deep.delete(linkId);
+        assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+      });
+      it(`Handle update on selector`, async () => {
+        const debug = log.extend('HandleUpdateSelect');
+
+        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const selector = await insertSelector();
+        debug('selector', selector);
+        const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
+
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+        const customLinkId = inserted?.data?.[0]?.id;
+
+        const handler = await insertHandler(
+          handleUpdateTypeId,
+          selectorId,
+          `({deep, data}) => { deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}}); }`,
+          undefined,
+          supportsId);
+
+        const { data: [{ id: newToId }] } = await deep.insert({ type_id: nodeTypeId });
+        const selectorItem = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
+
+        debug('handler', handler);
+        try {
+          const updated = await deep.update(selectorItem.linkId, { to_id: newToId });
+          debug('updated', updated);
+        } catch (e){
+          error(e);
+        }
+
+        const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+        debug('insertedByHandler', insertedByHandler);
+
+        if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+        await deep.delete(customLinkId);
+        debug('deleteSelector');
+        await deleteSelector(selector);
+        debug('deleteHandler');
+        await deleteHandler(handler);
+        assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+      });
+
+      it.only(`Handle update on type any`, async () => {
+        let linkIdsToUpdate = [];
+        const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const expectedErrorMessage = "Success! Handler is called";
+        let actualErrorMessage: string;
+        const handler = await insertHandler(
+          handleUpdateTypeLinkId,
+          anyTypeLinkId,
+          `() => {
+            throw new Error("${expectedErrorMessage}");
+          }`,
+          undefined,
+          supportsLinkId);
+          try {
+            const {data: [newLink]} = await deep.insert({
+              type_id: typeTypeLinkId,
+              from_id: anyTypeLinkId,
+              to_id: anyTypeLinkId,
+            });
+            linkIdsToUpdate.push(newLink.id);
+            await deep.update(newLink.id, {
+              to_id: typeTypeLinkId,
+            });
+          } catch (error) {
+            actualErrorMessage = error.message;
+          } finally {
+            await deleteHandler(handler);
+            await deep.delete(linkIdsToUpdate)
+            debug({actualErrorMessage, expectedErrorMessage})
+            assert.strictEqual(actualErrorMessage, expectedErrorMessage)
+          }
+      })
+    });
     describe('Handle value', () => {
       describe('Handle strings', () => {
         it('Handle insert string', async () => {

@@ -226,7 +226,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     promise_links(where: {
       ${!!oldLink?.id ? `old_link_id: { _eq: ${oldLink?.id } }` : "old_link_id: { _is_null: true }"},
       ${!!newLink?.id ? `new_link_id: { _eq: ${newLink?.id } }` : "new_link_id: { _is_null: true }"},
-      ${operation == "Update" ? `values_operation: { _eq: "${valuesOperation}" }` : "values_operation: { _is_null: true }" },
+      ${typeof(valuesOperation) !== 'undefined' ? `values_operation: { _eq: "${valuesOperation}" }` : "values_operation: { _is_null: true }" },
       handle_operation_type_id: { _eq: ${handleOperationTypeId} },
       selector_id: { _is_null: true }
     }) {
@@ -705,6 +705,9 @@ export default async (req, res) => {
         } else if(operation === 'DELETE') {
           await handleOperation('Delete', triggeredByLinkId, oldRow, newRow);
           await handleSelectorOperation('Delete', triggeredByLinkId, oldRow, newRow);
+        } else if(operation === 'UPDATE') {
+          await handleOperation('Update', triggeredByLinkId, oldRow, newRow);
+          await handleSelectorOperation('Update', triggeredByLinkId, oldRow, newRow);
         }
 
         const typeId = current.type_id;
