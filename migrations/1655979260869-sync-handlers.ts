@@ -613,6 +613,13 @@ export const createSyncDeleteTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}_
 export const dropSyncDeleteTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__handlers__delete__trigger ON "${LINKS_TABLE_NAME}";`;
 export const dropSyncDeleteTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__delete__trigger__function CASCADE;`;
 
+// update link trigger
+
+export const createSyncUpdateTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__update__handler__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, false)} $$ LANGUAGE plv8;`;
+export const createSyncUpdateTrigger = sql`CREATE TRIGGER a_${LINKS_TABLE_NAME}__sync__update__handler__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__sync__update__handler__function();`;
+export const dropSyncUpdateTrigger = sql`DROP TRIGGER a_${LINKS_TABLE_NAME}__sync__update__handler__trigger ON "${LINKS_TABLE_NAME}";`;
+export const dropSyncUpdateTriggerFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__update__handler__function CASCADE;`;
+
 // strings triggers
 
 export const createSyncInsertStringsTriggerFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__insert__strings__trigger__function() RETURNS TRIGGER AS $$ ${triggerFunctionFabric(handleUpdateId, true)} $$ LANGUAGE plv8;`;
@@ -676,6 +683,9 @@ export const up = async () => {
   
   await api.sql(createSyncInsertTriggerFunction);
   await api.sql(createSyncInsertTrigger);
+
+  await api.sql(createSyncUpdateTriggerFunction);
+  await api.sql(createSyncUpdateTrigger);
 
   await api.sql(createSyncDeleteTriggerFunction);
   await api.sql(createSyncDeleteTrigger);

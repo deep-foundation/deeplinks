@@ -448,20 +448,6 @@ export const up = async () => {
     $function$;
     CREATE TRIGGER ${TABLE_NAME}__permissions__insert_links__trigger AFTER INSERT ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__insert_links__function();
   `);
-  await api.sql(sql`
-    CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__update_links__function()
-    RETURNS trigger
-    LANGUAGE plpgsql
-    AS $function$
-      BEGIN
-        IF (OLD."from_id" != NEW."from_id" OR OLD."to_id" != NEW."to_id" OR OLD."type_id" != NEW."type_id") THEN
-          RAISE EXCEPTION 'Links can not be updated in this version.';
-        END IF;
-        RETURN NEW;
-      END;
-    $function$;
-    CREATE TRIGGER ${TABLE_NAME}__permissions__update_links__trigger AFTER UPDATE ON "${TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${TABLE_NAME}__permissions__update_links__function();
-  `);
   log('delete');
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION public.${TABLE_NAME}__permissions__delete_links__function()

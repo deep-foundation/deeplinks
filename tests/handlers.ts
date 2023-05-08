@@ -536,6 +536,26 @@ describe('Async handlers', () => {
       await deleteHandler(handler);
       assert.isTrue(!!promiseResult);
     });
+    it(`handle update`, async () => {
+      // const numberToThrow = randomInteger(5000000, 9999999999);
+      const numberToThrow = nextHandlerResult();
+
+      const typeId = await deep.id('@deep-foundation/core', 'Type');
+      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const handler = await insertHandler(handleUpdateTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
+
+      const linkId = (await deep.insert({ type_id: typeId, from_id: typeId, to_id: typeId }))?.data?.[0].id;
+      console.log({ linkId });
+      await deep.update(linkId, { to_id: await deep.id('@deep-foundation/core', 'Any') });
+      await deep.await(linkId);
+      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
+      console.log(promiseResults);
+      const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
+      await deletePromiseResult(promiseResult, linkId);
+      await deleteHandler(handler);
+      assert.isTrue(!!promiseResult);
+    });
     it(`handle delete`, async () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();

@@ -27,9 +27,14 @@ const api = new HasuraApi({
 export const MP_TABLE_NAME = 'mp';
 export const TREE_TABLE_NAME = 'tree';
 
-const trigger = Trigger({
+const triggerOptionos = {
   mpTableName: MP_TABLE_NAME,
   graphTableName: LINKS_TABLE_NAME,
+
+  id_field: 'id',
+  to_field: 'to_id',
+  from_field: 'from_id',
+
   id_type: 'bigint',
   iteratorInsertDeclare: 'groupRow RECORD;',
   iteratorDeleteArgumentSend: 'groupRow',
@@ -49,6 +54,10 @@ const trigger = Trigger({
     ) LOOP`,
   iteratorInsertEnd: 'END LOOP;',
   groupInsert: 'groupRow."id"',
+
+  additionalFields: '',
+  additionalData: '',
+
   iteratorDeleteDeclare: 'groupRow RECORD;',
   iteratorDeleteBegin: `FOR groupRow IN (
     SELECT
@@ -124,7 +133,10 @@ const trigger = Trigger({
     l.from_id = groupRow.id AND
     l.to_id IN (flowLink.type_id, ${_ids?.['@deep-foundation/core']?.Any})
   )`,
-});
+
+  postfix: '',
+};
+const trigger = Trigger(triggerOptionos);
 
 const DEFAULT_SCHEMA = process.env.MIGRATIONS_SCHEMA || 'public';
 const DEFAULT_TREE_TABLE = TREE_TABLE_NAME;
@@ -541,11 +553,65 @@ export const up = async () => {
     api,
   });
   await api.sql(trigger.upFunctionInsertNode());
+  await api.sql(trigger.upFunctionUpdateNode());
   await api.sql(trigger.upFunctionDeleteNode());
   await api.sql(trigger.upTriggerDelete());
+  await api.sql(trigger.upTriggerUpdate());
   await api.sql(trigger.upTriggerInsert());
+  await (() => {
+    const {
+      mpTableName,
+      graphTableName,
+    
+      id_field,
+      to_field,
+      from_field,
+      id_type,
+    
+      iteratorInsertDeclare,
+      iteratorInsertBegin,
+      iteratorInsertEnd,
+      iteratorDeleteArgumentSend,
+      iteratorDeleteArgumentGet,
+      iteratorDeleteDeclare,
+      iteratorDeleteBegin,
+      iteratorDeleteEnd,
+      groupInsert,
+      groupDelete,
+      additionalFields,
+      additionalData,
+    
+      isAllowSpreadFromCurrent,
+      isAllowSpreadCurrentTo,
+    
+      isAllowSpreadToCurrent,
+      isAllowSpreadCurrentFrom,
+    
+      isAllowSpreadToInCurrent,
+      isAllowSpreadCurrentFromOut,
+    
+      isAllowSpreadFromOutCurrent,
+      isAllowSpreadCurrentToIn,
+    
+      postfix,
+    } = triggerOptionos;
+  })();
   await api.sql(sql`select create_btree_indexes_for_all_columns('${SCHEMA}', '${MP_TABLE_NAME}');`);
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__insert__function() RETURNS TRIGGER AS $trigger$ BEGIN
+    IF (NEW."type_id" IN (${_ids?.['@deep-foundation/core']?.TreeIncludeDown},${_ids?.['@deep-foundation/core']?.TreeIncludeUp},${_ids?.['@deep-foundation/core']?.TreeIncludeNode}, ${_ids?.['@deep-foundation/core']?.TreeIncludeIn}, ${_ids?.['@deep-foundation/core']?.TreeIncludeOut}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentFrom}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrentFrom})) THEN
+      PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id" OR NEW."to_id"=${_ids?.['@deep-foundation/core']?.Any};
+    END IF;
+    RETURN NEW;
+  END; $trigger$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__tree_include__update__function() RETURNS TRIGGER AS $trigger$
+  DECLARE groupRow RECORD;
+  BEGIN
+    IF (NEW."type_id" IN (${_ids?.['@deep-foundation/core']?.TreeIncludeDown},${_ids?.['@deep-foundation/core']?.TreeIncludeUp},${_ids?.['@deep-foundation/core']?.TreeIncludeNode}, ${_ids?.['@deep-foundation/core']?.TreeIncludeIn}, ${_ids?.['@deep-foundation/core']?.TreeIncludeOut}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentFrom}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrentFrom})) THEN
+      SELECT ${LINKS_TABLE_NAME}.* INTO groupRow FROM ${LINKS_TABLE_NAME} WHERE "id"=OLD."from_id" AND "type_id" = ${_ids?.['@deep-foundation/core']?.Tree};
+      PERFORM ${MP_TABLE_NAME}__delete_link__function_core(${LINKS_TABLE_NAME}.*, groupRow)
+      FROM ${LINKS_TABLE_NAME} WHERE type_id=OLD."to_id" OR OLD."to_id"=${_ids?.['@deep-foundation/core']?.Any};
+    END IF;
     IF (NEW."type_id" IN (${_ids?.['@deep-foundation/core']?.TreeIncludeDown},${_ids?.['@deep-foundation/core']?.TreeIncludeUp},${_ids?.['@deep-foundation/core']?.TreeIncludeNode}, ${_ids?.['@deep-foundation/core']?.TreeIncludeIn}, ${_ids?.['@deep-foundation/core']?.TreeIncludeOut}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentFrom}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrentFrom})) THEN
       PERFORM ${MP_TABLE_NAME}__insert_link__function_core(${LINKS_TABLE_NAME}.*, NEW."from_id")
       FROM ${LINKS_TABLE_NAME} WHERE type_id=NEW."to_id" OR NEW."to_id"=${_ids?.['@deep-foundation/core']?.Any};
@@ -565,6 +631,7 @@ export const up = async () => {
   END; $trigger$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__tree_include__insert__trigger AFTER INSERT ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__tree_include__insert__function();`);
   await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__tree_include__delete__trigger AFTER DELETE ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__tree_include__delete__function();`);
+  await api.sql(sql`CREATE TRIGGER ${LINKS_TABLE_NAME}__tree_include__update__trigger AFTER UPDATE ON "${LINKS_TABLE_NAME}" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__tree_include__update__function();`);
 
   log('tree view')
   await api.sql(sql`
@@ -610,8 +677,10 @@ export const down = async () => {
   `);
   log('dropInclude');
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__function CASCADE;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__update__function CASCADE;`);
   await api.sql(sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__function CASCADE;`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__insert__trigger ON "${LINKS_TABLE_NAME}";`);
+  await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__update__trigger ON "${LINKS_TABLE_NAME}";`);
   await api.sql(sql`DROP TRIGGER IF EXISTS ${LINKS_TABLE_NAME}__tree_include__delete__trigger ON "${LINKS_TABLE_NAME}";`);
   log('dropRels');
   await downRels({
@@ -621,8 +690,10 @@ export const down = async () => {
   });
   log('dropTrigger');
   await api.sql(trigger.downFunctionInsertNode());
+  await api.sql(trigger.downFunctionUpdateNode());
   await api.sql(trigger.downFunctionDeleteNode());
   await api.sql(trigger.downTriggerDelete());
+  await api.sql(trigger.downTriggerUpdate());
   await api.sql(trigger.downTriggerInsert());
   log('dropTable');
   await downTable({
