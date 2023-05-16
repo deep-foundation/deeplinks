@@ -11,7 +11,6 @@ services:
     ports:
       - 3006:3006
     restart: always
-    pull_policy: always
     environment:
       DEEPLINKS_HASURA_PATH: '${DEEPLINKS_HASURA_PATH}'
       DEEPLINKS_HASURA_SSL: '${DEEPLINKS_HASURA_SSL}'
