@@ -86,7 +86,6 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   envs['MIGRATIONS_SCHEMA'] = envs['MIGRATIONS_SCHEMA'] ? envs['MIGRATIONS_SCHEMA'] : 'public';
   envs['MIGRATIONS_RL_TABLE'] = envs['MIGRATIONS_RL_TABLE'] ? envs['MIGRATIONS_RL_TABLE'] : 'rl_example__links__reserved';
   envs['MIGRATIONS_DATE_TYPE_SQL'] = envs['MIGRATIONS_DATE_TYPE_SQL'] ? envs['MIGRATIONS_DATE_TYPE_SQL'] : 'timestamp';
-  envs['DEFAULT_RL_CRON_SHEDULE'] = envs['DEFAULT_RL_CRON_SHEDULE'] ? envs['DEFAULT_RL_CRON_SHEDULE'] : '0 * * * *';
   envs['RESERVED_LIFETIME_MS'] = envs['RESERVED_LIFETIME_MS'] ? envs['RESERVED_LIFETIME_MS'] : 24 * 60 * 60 * 1000;
   // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
