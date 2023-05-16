@@ -32,6 +32,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 const execP = promisify(exec);
 const DOCKER = process.env.DOCKER || '0';
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
+const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER || 'http://localhost:3007';
 export interface ICallOptions {
   operation: 'run' | 'sleep' | 'reset';
   envs: { [key: string]: string; };
@@ -52,6 +53,7 @@ interface IExecEngineReturn {
 interface IGenerateEngineStrOptions {
   operation: string;
   isDeeplinksDocker: 0 | 1 | undefined;
+  isDeepcaseDocker: 0 | 1 | undefined;
   envs: any;
 }
 interface IGenerateEnvsOptions {
@@ -112,14 +114,27 @@ export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusRetu
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
     status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
   } catch(e){
-    error('healthz');
     error(e)
     err = e;
   }
   return { result: status?.data?.docker, error: err };
 };
 
-const _generateEngineStr = ({ operation, isDeeplinksDocker, envs }: IGenerateEngineStrOptions): string => {
+
+export const _checkDeepcaseStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
+  let status;
+  let err;
+  try {
+    // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
+    status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3007' : NEXT_PUBLIC_DEEPLINKS_SERVER}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
+  } catch(e){
+    error(e)
+    err = e;
+  }
+  return { result: status?.data?.docker, error: err };
+};
+
+const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs }: IGenerateEngineStrOptions): string => {
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
@@ -132,7 +147,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, envs }: IGenerateEng
     str = ` cd "${path.normalize(`${_hasura}/local/`)}"  && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
   }
   if (operation === 'run') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main && docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main && docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && npm run docker && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose -p deep up' : '' } ) && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
@@ -162,7 +177,6 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
     const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
     return { result: { stdout, stderr } }
   } catch(e) {
-    error('_execEngine');
     error(e);
     return { error: e };
   }
@@ -179,11 +193,12 @@ export async function call (options: ICallOptions) {
   }
   log({options});
   const isDeeplinksDocker = await _checkDeeplinksStatus();
+  const isDeepcaseDocker = await _checkDeepcaseStatus();
   log({isDeeplinksDocker});
 
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   log({envs});
-  const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, envs} )
+  const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
   const engine = await _execEngine({ envsStr, engineStr }) ;
   log({engine});

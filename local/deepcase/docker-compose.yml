@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  case:
+    container_name: deep-case
+    image: deepf/deepcase:main
+    networks:
+      - network
+    ports:
+    - "3007:3007"
+    depends_on:
+    - "hasura"
+    restart: always
+    pull_policy: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts: ['host.docker.internal:host-gateway']
+networks:
+  network:
+    name: deep-network
+    driver: bridge
