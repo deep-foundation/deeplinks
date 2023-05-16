@@ -124,5 +124,4 @@ projects/app/electron/app
 !**/*.d.ts
 **/*.tsx
 compiler/**
-local/**
 .github/**
