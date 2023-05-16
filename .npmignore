@@ -121,6 +121,7 @@ projects/app/electron/app
 
 
 **/*.ts
+!migrations/**/*.ts
 !**/*.d.ts
 **/*.tsx
 .github/**
