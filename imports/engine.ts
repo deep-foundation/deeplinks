@@ -59,9 +59,7 @@ interface IGenerateEnvsOptions {
   envs: any;
 }
 
-
-const _hasura = path.normalize(`${__dirname}/../../hasura`);
-const _deepcase = path.normalize(`${__dirname}/../../deepcase`);
+const _hasura = path.normalize(`${__dirname}/../node_modules/@deep-foundation/hasura`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
