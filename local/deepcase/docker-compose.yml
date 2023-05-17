@@ -7,8 +7,6 @@ services:
       - network
     ports:
     - "3007:3007"
-    depends_on:
-    - "hasura"
     restart: always
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
