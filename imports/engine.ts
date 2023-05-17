@@ -76,7 +76,9 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   const deepcasePort = 3007;
 
   envs['DEEPLINKS_PORT'] = envs['DEEPLINKS_PORT'] ? envs['DEEPLINKS_PORT'] : deeplinksPort;
-  envs['DEEPCASE_PORT'] = envs['DEECASE_PORT'] ? envs['DEEPCASE_PORT'] : deepcasePort;
+  envs['DEEPCASE_PORT'] = envs['DEEPCASE_PORT'] ? envs['DEEPCASE_PORT'] : deepcasePort;
+  envs['DEEPLINKS_PUBLIC_URL'] = envs['DEEPLINKS_PUBLIC_URL'] ? envs['DEEPLINKS_PUBLIC_URL'] : DEEPLINKS_PUBLIC_URL;
+  envs['DEEPLINKS_HASURA_STORAGE_URL'] = envs['DEEPLINKS_HASURA_STORAGE_URL'] ? envs['DEEPLINKS_HASURA_STORAGE_URL'] : 'http://localhost:8000';
   envs['npm_config_yes'] = envs['npm_config_yes'] ? envs['npm_config_yes'] : 'true';
   envs['JWT_SECRET'] = envs['JWT_SECRET'] ? envs['JWT_SECRET'] : `${platform !== "win32" ? "'" : ''}{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}${platform !== "win32" ? "'" : ''}`;
   envs['MIGRATIONS_ID_TYPE_SQL'] = envs['MIGRATIONS_ID_TYPE_SQL'] ? envs['MIGRATIONS_ID_TYPE_SQL'] : 'bigint';
