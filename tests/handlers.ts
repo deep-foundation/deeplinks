@@ -545,12 +545,10 @@ describe('Async handlers', () => {
       const handler = await insertHandler(handleUpdateTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
       const linkId = (await deep.insert({ type_id: typeId, from_id: typeId, to_id: typeId }))?.data?.[0].id;
-      console.log({ linkId });
       await deep.update(linkId, { to_id: await deep.id('@deep-foundation/core', 'Any') });
       await deep.await(linkId);
       const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
-      console.log(promiseResults);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
       await deletePromiseResult(promiseResult, linkId);
       await deleteHandler(handler);
@@ -1048,7 +1046,6 @@ describe('Async handlers', () => {
       const handlingErrorLinks = (await client.query({
         query: gql`${queryString}`,
       }))?.data?.links;
-      console.log('handlingErrorLinks', handlingErrorLinks);
 
       const handlingErrorLink = handlingErrorLinks[0];
       const hanldingErrorValue = handlingErrorLink?.object;

@@ -299,9 +299,7 @@ describe('client', () => {
               operation
             ]
           });
-          console.log(
-            inspect(result)
-          )
+          inspect(result);
           assert.equal(result.error, undefined);
           assert.notEqual(result.data, undefined);
           linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];

@@ -13,13 +13,12 @@ const root = new DeepClient({ apolloClient });
 let adminToken: string;
 let deep: any;
 
-beforeAll(async () => {
-  const { linkId, token } = await root.jwt({ linkId: await root.id('deep', 'admin') });
-  adminToken = token;
-  deep = new DeepClient({ deep: root, token: adminToken, linkId });
-});
-
 describe('typing', () => {
+  beforeAll(async () => {
+    const { linkId, token } = await root.jwt({ linkId: await root.id('deep', 'admin') });
+    adminToken = token;
+    deep = new DeepClient({ deep: root, token: adminToken, linkId });
+  });
   it(`type required`, async () => {
     let throwed = false;
     try { await deep.insert({ type_id: 999999 }); }
