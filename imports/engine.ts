@@ -182,7 +182,9 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
 
 const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr: string; } ): Promise<IExecEngineReturn> => {
   try {
-    const { stdout, stderr } = await execP(`${envsStr} ${engineStr}`);
+    const command = `${envsStr} ${engineStr}`;
+    console.log(command);
+    const { stdout, stderr } = await execP(command);
     return { result: { stdout, stderr } }
   } catch(e) {
     error(e);
