@@ -525,6 +525,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   deep: DeepClientInstance<L>;
 
+  client: IApolloClient<any>;
   apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
   table?: string;
@@ -566,6 +567,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
 
     if (!this.apolloClient) throw new Error('apolloClient is invalid');
+
+    this.client = this.apolloClient;
 
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();

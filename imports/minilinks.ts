@@ -555,7 +555,7 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
 export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
-  console.log('54353246234562346435')
+  // console.log('54353246234562346435')
   const [iteration, setIteration] = useState(0);
   useEffect(() => {
     const iterationsInterval = setInterval(() => {
