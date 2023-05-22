@@ -235,7 +235,8 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
 
 export const serializeQuery = (exp: any, env: string = 'links'): any => {
   const { limit, order_by, offset, distinct_on, ...where } = exp;
-  const result: any = { where: serializeWhere(where, env) };
+  const result: any = { where: typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(where, env) : { id: { _eq: exp } } };
+  // const result: any = { where: serializeWhere(where, env) };
   if (limit) result.limit = limit;
   if (order_by) result.order_by = order_by;
   if (offset) result.offset = offset;
@@ -627,7 +628,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     if (!exp) {
       return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     }
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table || 'links') : { id: { _eq: exp } };
+    const query = serializeQuery(exp, options?.table || 'links');
     const table = options?.table || this.table;
     const returning = options?.returning ?? 
     (table === 'links' ? this.linksSelectReturning :
@@ -644,9 +645,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           tableName: table,
           returning,
           variables: {
-            limit: where?.limit,
             ...variables,
-            where,
+            ...query,
           } }),
       ],
       name: name,
@@ -715,7 +715,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     name?: string;
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
+    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
@@ -723,7 +723,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let q;
     try {
       q = await this.apolloClient.mutate(generateSerial({
-        actions: [updateMutation(table, { ...variables, where, _set: value }, { tableName: table, operation: 'update', returning })],
+        actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
         name: name,
       }));
     } catch(e) {
@@ -753,7 +753,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     silent?: boolean;
   }):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
-    const where = typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(exp, options?.table === this.table || !options?.table ? 'links' : 'value') : { id: { _eq: exp } };
+    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
@@ -761,7 +761,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let q;
     try {
       q = await this.apolloClient.mutate(generateSerial({
-        actions: [deleteMutation(table, { ...variables, where, returning }, { tableName: table, operation: 'delete', returning })],
+        actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
         name: name,
       }));
       // @ts-ignore
@@ -806,16 +806,16 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
           const newSerialActions: IGenerateMutationBuilder[] = updateOperations.map(operation => {
             const exp = operation.exp;
             const value = operation.value;
-            const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
-            return updateMutation(table, { where: where, _set: value }, { tableName: table, operation: operationType ,returning})
+            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
+            return updateMutation(table, {...query, _set: value }, { tableName: table, operation: operationType ,returning})
           })
           serialActions = [...serialActions, ...newSerialActions];
         } else if (operationType === 'delete') {
           const deleteOperations = operations as Array<SerialOperation<'delete', Table<'delete'>>>;;
           const newSerialActions: IGenerateMutationBuilder[] = deleteOperations.map(operation => {
             const exp = operation.exp;
-            const where = typeof (exp) === 'object' ? Array.isArray(exp) ? { id: { _in: exp } } : serializeWhere(exp, table === this.table || !table ? 'links' : 'value') : { id: { _eq: exp } };
-            return deleteMutation(table, { where}, { tableName: table, operation: operationType, returning })
+            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
+            return deleteMutation(table, { ...query }, { tableName: table, operation: operationType, returning })
           })
           serialActions = [...serialActions, ...newSerialActions];
         }
