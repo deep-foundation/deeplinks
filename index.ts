@@ -58,6 +58,7 @@ app.use('/gql', createProxyMiddleware({
   target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
+  logLevel: 'debug',
   pathRewrite: {
     "/gql": "/v1/graphql",
   },
@@ -66,15 +67,16 @@ app.use('/gql', createProxyMiddleware({
 app.get(['/file'], createProxyMiddleware({
   target: DEEPLINKS_HASURA_STORAGE_URL,
   changeOrigin: true,
-  ws: true,
+  logLevel: 'debug',
   pathRewrite: async (path, req) => {
+    console.log('/file get proxy', 'path', path);
     const headers = req.headers;
-    console.log({headers: headers});
+    console.log('/file get proxy', '{headers: headers}', {headers: headers});
     const newurl = new URL(`${headers['x-forwarded-proto']}://${headers['host']}${path}`);
-    console.log('This is newURL',newurl);
+    console.log('/file get proxy', 'newurl', newurl);
     const linkId = newurl.searchParams.get('linkId');
-    console.log('SEARCH PARAMS', newurl.searchParams);
-    console.log('This is linkId',linkId);
+    console.log('/file get proxy', 'newurl.searchParams', newurl.searchParams);
+    console.log('/file get proxy', 'linkId', linkId);
 
     const result = await deep.apolloClient.query({
       query: gql`{
@@ -83,8 +85,8 @@ app.get(['/file'], createProxyMiddleware({
         }
       }`
     })
-    console.log('result', result)
-    console.log('result.data.files[0].id', result.data.files[0].id)
+    console.log('/file get proxy', 'result', result)
+    console.log('/file get proxy', 'result.data.files[0].id', result.data.files[0].id)
     const fileId = result.data.files[0].id;
 
     return `/v1/files/${fileId}`;
@@ -171,7 +173,6 @@ app.post('/file', async (req, res, next) => {
       return response;
     }),
     changeOrigin: true,
-    ws: true,
     pathRewrite: {
       "/file": "/v1/files",
     },
@@ -184,6 +185,7 @@ app.use(['/v1','/v1alpha1','/v2','/console'], createProxyMiddleware({
   target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
+  logLevel: 'debug',
 }));
 
 //   hasura-admin
