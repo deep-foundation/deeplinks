@@ -1,7 +1,7 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import path from 'path';
-import internalIp from 'internal-ip';
+import {internalIpV6, internalIpV4} from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
@@ -194,7 +194,7 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
 
 export async function call (options: ICallOptions) {
 
-  const envs = { ...options.envs, DOCKERHOST: await internalIp.v4() };
+  const envs = { ...options.envs, DOCKERHOST: await internalIpV4() };
   if (platform !== "win32"){
     fixPath();
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
