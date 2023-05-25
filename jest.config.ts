@@ -1,4 +1,8 @@
 export default {
   preset: 'ts-jest',
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
+  // testEnvironmentOptions: {
+  //   url: "http://localhost/",
+  // },
+  verbose: true,
 };
