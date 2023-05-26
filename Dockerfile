@@ -21,6 +21,7 @@ ENV DOCKER 1
 ENV DEBUG_COLORS true
 ENV DEBUG deeplinks:*
 
+RUN apk update
 RUN apk add docker-compose=1.27.4-r0
 
 EXPOSE 3006
