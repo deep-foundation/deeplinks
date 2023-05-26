@@ -56,8 +56,8 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
       - name: docker init
         run: cd local/actions && docker-compose -p deep up -d
-      - name: docker ps
-        run: docker ps
+      - name: docker log deep-links
+        run: docker log deep-links
       - name: migrate
         run: npm run migrate
       - name: snapshot:create
