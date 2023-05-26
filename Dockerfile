@@ -1,5 +1,5 @@
-FROM node:16.20.0 AS node
-FROM docker:20.10.8-dind-alpine3.13 
+FROM node:16.20.0-alpine3.17 AS node
+FROM docker:20.10.8-dind-alpine3.14
 
 COPY --from=node /usr/lib /usr/lib
 COPY --from=node /usr/local/share /usr/local/share
@@ -22,7 +22,6 @@ ENV DEBUG_COLORS true
 ENV DEBUG deeplinks:*
 
 RUN apk add docker-compose=1.27.4-r0
-RUN apk add --no-cache libgcc libstdc++ libc6-compat openssl
 
 EXPOSE 3006
 ENTRYPOINT ["node", "index.js"]
