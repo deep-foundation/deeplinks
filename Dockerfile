@@ -22,6 +22,7 @@ ENV DEBUG_COLORS true
 ENV DEBUG deeplinks:*
 
 RUN apk add docker-compose=1.27.4-r0
+RUN apk add --no-cache libgcc libstdc++ libc6-compat
 
 EXPOSE 3006
 ENTRYPOINT ["node", "index.js"]
