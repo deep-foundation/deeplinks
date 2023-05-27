@@ -143,15 +143,12 @@ export const up = async () => {
             IN (
               SELECT cache.*
               FROM "${TABLE_NAME}" as cache
-              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId)
+              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId) AND (
+                cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+              )
             )
             LOOP
-              IF (caches."selector_include_id" != 0) THEN
-                INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleAction."from_id", ruleAction."id");
-              END IF;
-              IF (caches."selector_exclude_id" != 0) THEN
-                INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleAction."from_id", ruleAction."id");
-              END IF;
+              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleAction."from_id", ruleAction."id");
             END LOOP;
           END IF;
           IF (ruleObject IS NOT NULL) THEN
@@ -159,15 +156,12 @@ export const up = async () => {
             IN (
               SELECT cache.*
               FROM "${TABLE_NAME}" as cache
-              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId)
+              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId) AND (
+                cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+              )
             )
             LOOP
-              IF (caches."selector_include_id" != 0) THEN
-                INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleObject."from_id", ruleObject."id");
-              END IF;
-              IF (caches."selector_include_id" != 0) THEN
-                INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleObject."from_id", ruleObject."id");
-              END IF;
+              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleObject."from_id", ruleObject."id");
             END LOOP;
           END IF;
           IF (ruleSubject IS NOT NULL) THEN
@@ -175,15 +169,12 @@ export const up = async () => {
             IN (
               SELECT cache.*
               FROM "${TABLE_NAME}" as cache
-              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId)
+              WHERE cache."id" IN (insertedIncludeId, insertedExcludeId) AND (
+                cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+              )
             )
             LOOP
-            IF (caches."selector_include_id" != 0) THEN
-              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleSubject."from_id", ruleSubject."id");
-            END IF;
-            IF (caches."selector_include_id" != 0) THEN
-              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleSubject."from_id", ruleSubject."id");
-            END IF;
+              INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", ruleSubject."from_id", ruleSubject."id");
             END LOOP;
           END IF;
         END IF;
@@ -198,15 +189,12 @@ export const up = async () => {
         IN (
           SELECT cache.*
           FROM "${TABLE_NAME}" as cache
-          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0
+          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0 AND (
+            cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+          )
         )
         LOOP
-          IF (caches."selector_include_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
-          IF (caches."selector_exclude_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
+          INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_action_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
         END LOOP;
       END IF;
       IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')}) THEN
@@ -214,15 +202,12 @@ export const up = async () => {
         IN (
           SELECT cache.*
           FROM "${TABLE_NAME}" as cache
-          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0
+          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0 AND (
+            cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+          )
         )
         LOOP
-          IF (caches."selector_include_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
-          IF (caches."selector_exclude_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
+          INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_object_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
         END LOOP;
       END IF;
       IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleSubject')}) THEN
@@ -230,15 +215,12 @@ export const up = async () => {
         IN (
           SELECT cache.*
           FROM "${TABLE_NAME}" as cache
-          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0
+          WHERE cache."selector_id" = NEW."to_id" AND cache."rule_id" = 0 AND (
+            cache."selector_include_id" != 0 OR cache."selector_exclude_id" != 0
+          )
         )
         LOOP
-          IF (caches."selector_include_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
-          IF (caches."selector_exclude_id" != 0) THEN
-            INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
-          END IF;
+          INSERT INTO "${TABLE_NAME}" ("link_id", "tree_id", "selector_include_id", "selector_exclude_id", "selector_tree_id", "selector_id", "selector_filter_bool_exp_id", "rule_id", "rule_subject_id") VALUES (caches."link_id", caches."tree_id", caches."selector_include_id", caches."selector_exclude_id", caches."selector_tree_id", caches."selector_id", caches."selector_filter_bool_exp_id", NEW."from_id", NEW."id");
         END LOOP;
       END IF;
     RETURN NEW;
