@@ -2,19 +2,19 @@ require('dotenv').config();
 
 jest.setTimeout(1000000);
 
+// Please move slowest tests to bottom to make progress bar more dynamic and get more tests done first.
+
 import './tests/client';
 import './tests/join-insert';
 import './tests/typing';
 import './tests/selectors';
 import './tests/bool_exp';
 import './tests/permissions';
-import './tests/handlers';
-import './tests/minilinks';
 import './tests/demo';
 import './tests/packager';
-import './tests/sync-handlers';
 // import './tests/messanger';
-import './tests/minilinks-query';
 import './tests/tree';
 
-// TODO error if duplicates
+// Slow tests here:
+import './tests/sync-handlers';
+import './tests/handlers';
