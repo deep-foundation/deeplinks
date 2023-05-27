@@ -151,6 +151,7 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
     for (let k = 0; k < keys.length; k++) {
       const key = keys[k];
       const type = typeof(exp[key]);
+      if (typeof(exp[key]) === 'undefined') throw new Error(`value of key "${key}" can't be undefined`);
       let setted: any = false;
       const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
       // if this is link
@@ -212,7 +213,7 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
         ) ? (
           // just parse each item in array
           serializeWhere(exp[key], env)
-         ) : (
+        ) : (
           // if we know context
           _serialize?.[env]?.relations?.[key]
         ) ? (
