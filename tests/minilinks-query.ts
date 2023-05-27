@@ -84,7 +84,7 @@ describe('minilinks-query', () => {
       { id: 2, type_id: 2, string: { value: 'abc' } },
     ]);
     expect(mlc.query({
-      value: { value: { _eq: 'abc' } }
+      string: { value: { _eq: 'abc' } }
     })).to.have.lengthOf(1);
   });
   it(`minilinks.query { value: { value: { _like: 'bc' } } }`, async () => {
