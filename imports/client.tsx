@@ -11,7 +11,7 @@ import { useTokenController } from "./react-token";
 import { reserve } from "./reserve";
 import Debug from 'debug';
 import { corePckg } from './core';
-import { BoolExpCan, BoolExpHandler, BoolExpLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types';
+import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types';
 
 const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
@@ -335,7 +335,7 @@ export interface DeepClientInstance<L = Link<number>> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], options?: {
     table?: Table;
     returning?: string;
@@ -368,7 +368,7 @@ export interface DeepClientInstance<L = Link<number>> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], value: (
     Table extends 'numbers' ? MutationInputValue<number> :
     Table extends 'strings' ? MutationInputValue<string> :
@@ -389,7 +389,7 @@ export interface DeepClientInstance<L = Link<number>> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], options?: {
     table?: Table;
     returning?: string;
@@ -405,7 +405,7 @@ export interface DeepClientInstance<L = Link<number>> {
   serializeWhere(exp: any, env?: string): any;
   serializeQuery(exp: any, env?: string): any;
 
-  id(start: DeepClientStartItem | BoolExpLink, ...path: DeepClientPathItem[]): Promise<number>;
+  id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number>;
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
@@ -475,7 +475,7 @@ export type ExpForTable<TTable extends Table> = TTable extends 'numbers'
   ? BoolExpTree
   : TTable extends 'handlers'
   ? BoolExpHandler
-  : BoolExpLink;
+  : QueryLink;
 
 export type SerialOperationDetails<
   TSerialOperationType extends SerialOperationType,
@@ -515,8 +515,8 @@ export type AsyncSerialParams = {
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   useDeepSubscription = useDeepSubscription;
   useDeepQuery = useDeepQuery;
-  useMinilinksQuery = (query: BoolExpLink) => useMinilinksQuery(this.minilinks, query);
-  useMinilinksSubscription = (query: BoolExpLink) => useMinilinksSubscription(this.minilinks, query)
+  useMinilinksQuery = (query: QueryLink) => useMinilinksQuery(this.minilinks, query);
+  useMinilinksSubscription = (query: QueryLink) => useMinilinksSubscription(this.minilinks, query)
   useDeep = useDeep;
   DeepProvider = DeepProvider;
   DeepContext = DeepContext;
@@ -619,7 +619,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], options?: {
     table?: Table;
     returning?: string;
@@ -703,7 +703,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], value: (
     Table extends 'numbers' ? MutationInputValue<number> :
     Table extends 'strings' ? MutationInputValue<string> :
@@ -745,7 +745,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     Table extends 'selectors' ? BoolExpSelector :
     Table extends 'tree' ? BoolExpTree :
     Table extends 'handlers' ? BoolExpHandler :
-    BoolExpLink
+    QueryLink
   ) | number | number[], options?: {
     table?: Table;
     returning?: string;
@@ -860,7 +860,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
    * @returns number
    */
-  async id(start: DeepClientStartItem | BoolExpLink, ...path: DeepClientPathItem[]): Promise<number> {
+  async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
       return ((await this.select(start)) as any)?.data?.[0]?.id;
     }
@@ -1048,7 +1048,7 @@ export function useDeep() {
 }
 
 export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
-  query: BoolExpLink,
+  query: QueryLink,
   options?: {
     table?: Table;
     returning?: string;
@@ -1091,7 +1091,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
 }
 
 export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
-  query: BoolExpLink,
+  query: QueryLink,
   options?: {
     table?: Table;
     returning?: string;
