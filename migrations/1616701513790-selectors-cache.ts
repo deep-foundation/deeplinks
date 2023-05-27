@@ -184,6 +184,39 @@ export const up = async () => {
         UPDATE "${TABLE_NAME}" SET "selector_filter_bool_exp_id" = NEW."to_id" WHERE "selector_id" = NEW."from_id";
       END IF;
 
+      IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'SelectorInclude')}) THEN 
+        FOR caches IN ( 
+          SELECT DISTINCT ON(cache."selector_tree_id", cache."selector_id", cache."rule_id", cache."rule_object_id", cache."rule_subject_id", cache."rule_action_id")
+                 cache.*
+          FROM "${TABLE_NAME}" as cache
+          WHERE cache."selector_id" = NEW."from_id"
+        ) 
+        LOOP 
+          INSERT INTO "${TABLE_NAME}" (
+            "link_id",
+            "selector_include_id",
+            "selector_filter_bool_exp_id",
+            "selector_tree_id",
+            "selector_id",
+            "rule_id", 
+            "rule_object_id",
+            "rule_subject_id",
+            "rule_action_id"
+          ) VALUES (
+            NEW."to_id",
+            NEW."id",
+            caches."selector_filter_bool_exp_id",
+            caches."selector_tree_id",
+            caches."selector_id",
+            caches."rule_id",
+            caches."rule_object_id",
+            caches."rule_subject_id",
+            caches."rule_action_id"
+          );
+        END LOOP;
+        -- TODO: Insert selector include cache row if nothing to multiply (first creation of selector and selector include)
+      END IF;
+
       IF (NEW."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleAction')}) THEN
         FOR caches
         IN (
