@@ -6,7 +6,7 @@
     "noImplicitAny": false,
     "removeComments": true,
     "jsx": "react",
-    "module": "commonjs",
+    "module": "ESNext",
     "moduleResolution": "node",
     "target": "es2015",
     "skipLibCheck": true,
