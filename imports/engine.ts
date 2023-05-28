@@ -1,18 +1,11 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import path from 'path';
-// import {internalIpV4} from 'internal-ip';
+import {internalIpV4} from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
-import * as fixPathModule from 'fix-path';
-
-const fixPath = fixPathModule.default;
-
-let internalIpV4;
-import('internal-ip').then((internalIp) => {
-  internalIpV4 = internalIp.internalIpV4;
-});
+import fixPath from 'fix-path';
 
 function isElectron() {
   // @ts-ignore
