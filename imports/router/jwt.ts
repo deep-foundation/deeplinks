@@ -1,10 +1,10 @@
-import { jwt } from '../jwt';
-import { generateRemoteSchema } from '@deep-foundation/hasura/remote-schema';
+import { jwt } from '../jwt.js';
+import { generateRemoteSchema } from '@deep-foundation/hasura/remote-schema.js';
 import gql from 'graphql-tag';
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { DeepClient } from '../client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { DeepClient } from '../client.js';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,

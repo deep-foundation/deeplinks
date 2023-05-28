@@ -1,7 +1,7 @@
 import Debug from 'debug';
-import { DeepClient } from './client';
-import type { DeepSerialOperation } from './client';
-import { Link, minilinks, MinilinksResult } from './minilinks';
+import { DeepClient } from './client.js';
+import type { DeepSerialOperation } from './client.js';
+import { Link, minilinks, MinilinksResult } from './minilinks.js';
 
 const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');

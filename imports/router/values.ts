@@ -1,22 +1,23 @@
 import Debug from 'debug';
 
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { HasuraApi } from "@deep-foundation/hasura/api";
-// import { sql } from '@deep-foundation/hasura/sql';
-import { gql } from '@apollo/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+// import { sql } from '@deep-foundation/hasura/sql.js';
+import apolloModule from '@apollo/client';
+const { gql} = apolloModule;
 import vm from 'vm';
 
-import { permissions } from '../permission';
-import { findPromiseLink, reject, resolve } from '../promise';
-import { DeepClient } from '../client';
-import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
+import { permissions } from '../permission.js';
+import { findPromiseLink, reject, resolve } from '../promise.js';
+import { DeepClient } from '../client.js';
+import { ALLOWED_IDS, DENIED_IDS } from '../global-ids.js';
 import axios from 'axios';
 import crypto from 'crypto';
 import { 
   handleOperation,
   handleSelectorOperation,
-} from './links';
-import { boolExpToSQL } from '../bool_exp_to_sql';
+} from './links.js';
+import { boolExpToSQL } from '../bool_exp_to_sql.js';
 
 const SCHEMA = 'public';
 

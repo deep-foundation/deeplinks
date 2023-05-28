@@ -1,6 +1,6 @@
-import { generateQuery, generateQueryData } from '../gql';
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateQuery, generateQueryData } from '../gql/index.js';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 
 const RESERVED_LIFETIME_MS = +process.env.RESERVED_LIFETIME || 24 * 60 * 60 * 1000;
 

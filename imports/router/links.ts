@@ -1,14 +1,15 @@
 import Debug from 'debug';
 
-import { HasuraApi } from "@deep-foundation/hasura/api";
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-// import { sql } from '@deep-foundation/hasura/sql';
-import { gql } from '@apollo/client';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+// import { sql } from '@deep-foundation/hasura/sql.js';
+import apolloModule from '@apollo/client';
+const { gql} = apolloModule;
 
-import { DeepClient } from '../client';
-import { ContainerController } from '../container-controller';
-import { ALLOWED_IDS, DENIED_IDS } from '../global-ids';
-import { findPromiseLink, reject, resolve } from '../promise';
+import { DeepClient } from '../client.js';
+import { ContainerController } from '../container-controller.js';
+import { ALLOWED_IDS, DENIED_IDS } from '../global-ids.js';
+import { findPromiseLink, reject, resolve } from '../promise.js';
 import { promisify } from 'util';
 import {exec} from 'child_process';
 import waitOn from 'wait-on';

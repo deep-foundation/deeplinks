@@ -1,10 +1,10 @@
 import express from 'express';
-import links from './links';
-import values from './values';
-import reservedCleaner from './reserved-cleaner';
-import reserved from './reserved';
-import healthz from './healthz';
-import scheduler from './scheduler';
+import links from './links.js';
+import values from './values.js';
+import reservedCleaner from './reserved-cleaner.js';
+import reserved from './reserved.js';
+import healthz from './healthz.js';
+import scheduler from './scheduler.js';
 
 const router:express.IRouter = express.Router();
 

@@ -1,6 +1,6 @@
-import { _serialize, _boolExpFields, serializeWhere, serializeQuery } from "./client";
-import { BoolExpLink, ComparasionType, QueryLink } from "./client_types";
-import { MinilinkCollection, MinilinksGeneratorOptions, Link } from "./minilinks";
+import { _serialize, _boolExpFields, serializeWhere, serializeQuery } from './client.js';
+import { BoolExpLink, ComparasionType, QueryLink } from './client_types.js';
+import { MinilinkCollection, MinilinksGeneratorOptions, Link } from './minilinks.js';
 
 export interface BoolExpLinkMinilinks extends BoolExpLink {
   _applies?: ComparasionType<number>;

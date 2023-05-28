@@ -1,9 +1,9 @@
-import { jwt } from '../jwt';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { jwt } from '../jwt.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import gql from 'graphql-tag';
-import { generateSerial, insertMutation } from '../gql';
+import { generateSerial, insertMutation } from '../gql/index.js';
 import { ApolloServer } from 'apollo-server-express';
-import { DeepClient } from '../client';
+import { DeepClient } from '../client.js';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 
 const JWT_SECRET = process.env.JWT_SECRET;

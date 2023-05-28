@@ -1,4 +1,4 @@
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client";
 import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
@@ -7,7 +7,8 @@ import { createSerialOperation } from "../imports/gql";
 import {render, screen, waitFor} from '@testing-library/react'
 import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
-import { ApolloProvider } from "@apollo/client";
+import apolloModule from '@apollo/client';
+const { ApolloProvider } = apolloModule;
 import '@testing-library/jest-dom';
 
 

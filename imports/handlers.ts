@@ -1,6 +1,6 @@
 import { assert } from 'chai';
-import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { DeepClient } from "./client";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { DeepClient } from './client.js';
 import _ from 'lodash';
 
 const apolloClient = generateApolloClient({

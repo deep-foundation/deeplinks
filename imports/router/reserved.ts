@@ -1,6 +1,6 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { HasuraApi } from "@deep-foundation/hasura/api";
-import { generateMutation, generateSerial, insertMutation } from '../gql';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateMutation, generateSerial, insertMutation } from '../gql/index.js';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:eh:reserved');

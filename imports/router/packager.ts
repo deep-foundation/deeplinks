@@ -1,14 +1,14 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import Gists from 'gists';
 import gql from 'graphql-tag';
-import { isEmpty } from 'lodash';
+import _ from 'lodash';
 import os from 'os';
 import path from 'path';
 import url from 'url';
-import { DeepClient } from '../client';
-import { Packager } from '../packager';
+import { DeepClient } from '../client.js';
+import { Packager } from '../packager.js';
 
 const tmpdir = os.tmpdir();
 
@@ -141,10 +141,10 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
       if (deepPckgContent?.errors?.length) {
         errors.push(...deepPckgContent.errors);
       }
-      if (isEmpty(deepPckgContent?.package)) {
+      if (_.isEmpty(deepPckgContent?.package)) {
         errors.push('!package');
       }
-      if (isEmpty(deepPckgContent?.data)) {
+      if (_.isEmpty(deepPckgContent?.data)) {
         errors.push('!data');
       }
       if (errors.length) return { errors };

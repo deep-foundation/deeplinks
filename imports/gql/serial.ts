@@ -1,6 +1,6 @@
 import Debug from 'debug';
 import gql from 'graphql-tag';
-import { SerialOperationType, Table, SerialOperation, SerialOperationDetails } from '../client';
+import { SerialOperationType, Table, SerialOperation, SerialOperationDetails } from '../client.js';
 
 const debug = Debug('deeplinks:gql:serial');
 const log = debug.extend('log');

@@ -1,5 +1,8 @@
-import { ApolloClient, gql } from "@apollo/client";
-import { generateQuery, generateQueryData } from "./gql";
+import apolloModule from '@apollo/client';
+import type { ApolloClient } from '@apollo/client';
+const { gql } = apolloModule;
+
+import { generateQuery, generateQueryData } from './gql/index.js';
 
 export interface ReseveOptions {
   count: number;

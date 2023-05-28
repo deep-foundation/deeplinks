@@ -1,5 +1,5 @@
 import { assert, expect } from 'chai';
-import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from '../imports/minilinks';
+import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from '../imports/minilinks.js';
 
 describe('minilinks-query', () => {
   it(`minilinks.query { _or: [{ id: { _eq: 1 } }, { id: { _eq: 2 } }] }`, async () => {

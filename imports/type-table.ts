@@ -1,6 +1,6 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { sql } from '@deep-foundation/hasura/sql';
-import { DeepClient } from './client';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { DeepClient } from './client.js';
 
 export interface ITypeTableStringOptions {
   schemaName: string;

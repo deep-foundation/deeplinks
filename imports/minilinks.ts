@@ -1,12 +1,12 @@
-import _remove from 'lodash/remove';
-import _isEqual from 'lodash/isEqual';
-import _isEqualWith from 'lodash/isEqualWith';
+import _remove from 'lodash/remove.js';
+import _isEqual from 'lodash/isEqual.js';
+import _isEqualWith from 'lodash/isEqualWith.js';
 import EventEmitter from 'events';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
 import { inherits } from 'util';
-import { minilinksQuery, minilinksQueryIs } from './minilinks-query';
-import { QueryLink } from './client_types';
+import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
+import { QueryLink } from './client_types.js';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');

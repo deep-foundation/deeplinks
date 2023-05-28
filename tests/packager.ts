@@ -1,7 +1,8 @@
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
-import { gql } from "@apollo/client";
+import apolloModule from '@apollo/client';
+const { gql } = apolloModule;
 import { PackageItem, Packager, sort } from "../imports/packager";
 import type { Package } from "../imports/packager";
 import { minilinks } from "../imports/minilinks";

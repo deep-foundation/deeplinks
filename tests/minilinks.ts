@@ -1,5 +1,5 @@
 import { assert, expect } from 'chai';
-import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from '../imports/minilinks';
+import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from '../imports/minilinks.js';
 
 describe('minilinks', () => {
   it(`add 1 3 5`, async () => {

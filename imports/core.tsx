@@ -1,4 +1,4 @@
-import { Packager, Package } from './packager';
+import { Packager, Package } from './packager.js';
 
 export const corePckg: Package = {
   package: {

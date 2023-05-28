@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
 
-export * from './mutation';
-export * from './query';
-export * from './serial';
+export * from './mutation.js';
+export * from './query.js';
+export * from './serial.js';

@@ -1,14 +1,14 @@
 import { assert, expect } from 'chai';
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from "../imports/client";
 import { insertHandler, insertSelector, insertSelectorItem, deleteHandler, deleteSelector }  from "../imports/handlers";
 import { HasuraApi } from'@deep-foundation/hasura/api';
-import { sql } from '@deep-foundation/hasura/sql';
-import { _ids } from '../imports/client';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { _ids } from '../imports/client.js';
 import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
-import { MutationInputLink } from '../imports/client_types';
-// import { _ids } from '../imports/client';
+import { MutationInputLink } from '../imports/client_types.js';
+// import { _ids } from '../imports/client.js';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
 const log = debug.extend('log');

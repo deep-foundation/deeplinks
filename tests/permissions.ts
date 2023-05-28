@@ -1,4 +1,4 @@
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from "../imports/client";
 import { assert, expect } from 'chai';
 import { stringify } from "querystring";

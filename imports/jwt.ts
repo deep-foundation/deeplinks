@@ -1,4 +1,4 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import JWT from 'jsonwebtoken';
 
 export interface Options {

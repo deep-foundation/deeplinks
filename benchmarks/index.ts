@@ -1,6 +1,6 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { Suite } from 'benchmark';
-import { DeepClient } from '../imports/client';
+import { DeepClient } from '../imports/client.js';
 import _ from 'lodash';
 import Debug from 'debug';
 

@@ -1,5 +1,5 @@
-import { HasuraApi } from "@deep-foundation/hasura/api";
-import { generateApolloClient } from "@deep-foundation/hasura/client";
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { assert, expect } from 'chai';
 import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp_to_sql";
 import { DeepClient } from "../imports/client";

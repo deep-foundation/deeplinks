@@ -1,6 +1,6 @@
-import { ApolloClient } from "@apollo/client";
+import type { ApolloClient } from '@apollo/client';
 import Debug from 'debug';
-import { generateQuery, generateQueryData, generateSerial, insertMutation } from "./gql";
+import { generateQuery, generateQueryData, generateSerial, insertMutation } from './gql/index.js';
 
 
 const debug = Debug('deeplinks:promise');

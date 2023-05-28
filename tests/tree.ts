@@ -1,9 +1,9 @@
-import { generateApolloClient } from "@deep-foundation/hasura/client";
-import { HasuraApi } from "@deep-foundation/hasura/api";
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import { insertHandler, deleteHandler }  from "../imports/handlers";
-import { _ids } from '../imports/client';
+import { _ids } from '../imports/client.js';
 import { delay } from "../imports/promise";
 
 jest.setTimeout(120000);
