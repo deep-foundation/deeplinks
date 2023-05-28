@@ -5,7 +5,9 @@ import path from 'path';
 import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
-import * as fixPath from 'fix-path';
+import * as fixPathModule from 'fix-path';
+
+const fixPath = fixPathModule.default;
 
 let internalIpV4;
 import('internal-ip').then((internalIp) => {
