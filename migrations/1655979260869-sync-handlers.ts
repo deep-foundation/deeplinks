@@ -1,10 +1,10 @@
 
 import Debug from 'debug';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { DeepClient } from '../imports/client';;
-import { api, TABLE_NAME as LINKS_TABLE_NAME } from '../migrations/1616701513782-links';
-import { sql } from '@deep-foundation/hasura/sql';
-import { _ids } from '../imports/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { DeepClient } from '../imports/client.js';;
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from '../migrations/1616701513782-links.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { _ids } from '../imports/client.js';
 
 const debug = Debug('deeplinks:migrations:plv8');
 const log = debug.extend('log');

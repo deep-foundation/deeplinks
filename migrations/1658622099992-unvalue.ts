@@ -1,5 +1,5 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { sql } from '@deep-foundation/hasura/sql';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:migrations:links');

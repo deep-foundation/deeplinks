@@ -1,9 +1,9 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { sql } from '@deep-foundation/hasura/sql';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { permissions } from '../imports/permission';
+import { permissions } from '../imports/permission.js';
 import waitOn from 'wait-on';
-import { linksPermissions } from '../migrations/1622421760260-permissions'
+import { linksPermissions } from './1622421760260-permissions.js'
 
 const debug = Debug('deeplinks:migrations:hasura-storage');
 const log = debug.extend('log');

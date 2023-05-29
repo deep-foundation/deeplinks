@@ -1,8 +1,8 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
-import * as tsxPckg from '@deep-foundation/tsx/deep.json';
-import { Packager } from '../imports/packager';
+import { DeepClient } from '../imports/client.js';
+import * as tsxPckg from '@deep-foundation/tsx/deep.json' assert { type: 'json'};
+import { Packager } from '../imports/packager.js';
 
 const debug = Debug('deeplinks:migrations:tsx');
 const log = debug.extend('log');

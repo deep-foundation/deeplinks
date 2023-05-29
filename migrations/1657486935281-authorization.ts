@@ -1,6 +1,6 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import Debug from 'debug';
-import { typeDefsString as as } from '../imports/router/authorization';
+import { typeDefsString as as } from '../imports/router/authorization.js';
 
 const debug = Debug('deeplinks:migrations:authorization');
 const log = debug.extend('log');

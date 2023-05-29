@@ -1,12 +1,12 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { DeepClient, _ids } from '../imports/client';
-import { permissions } from '../imports/permission';
-import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { MP_TABLE_NAME, TREE_TABLE_NAME } from './1621815803572-materialized-path';
-import { SELECTORS_TABLE_NAME } from './1622421760258-selectors';
-import { CAN_TABLE_NAME } from './1622421760259-can';
+import { DeepClient, _ids } from '../imports/client.js';
+import { permissions } from '../imports/permission.js';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
+import { MP_TABLE_NAME, TREE_TABLE_NAME } from './1621815803572-materialized-path.js';
+import { SELECTORS_TABLE_NAME } from './1622421760258-selectors.js';
+import { CAN_TABLE_NAME } from './1622421760259-can.js';
 
 const debug = Debug('deeplinks:migrations:permissions');
 const log = debug.extend('log');

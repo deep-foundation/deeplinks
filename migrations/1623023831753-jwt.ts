@@ -1,7 +1,7 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import Debug from 'debug';
-import { typeDefsString as gs } from '../imports/router/guest';
-import { typeDefsString as js } from '../imports/router/jwt';
+import { typeDefsString as gs } from '../imports/router/guest.js';
+import { typeDefsString as js } from '../imports/router/jwt.js';
 
 const debug = Debug('deeplinks:migrations:jwt');
 const log = debug.extend('log');

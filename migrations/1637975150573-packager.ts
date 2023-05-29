@@ -1,8 +1,8 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
-import { typeDefsString } from '../imports/router/packager';
+import { DeepClient } from '../imports/client.js';
+import { typeDefsString } from '../imports/router/packager.js';
 
 const debug = Debug('deeplinks:migrations:packager');
 const log = debug.extend('log');

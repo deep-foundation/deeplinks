@@ -1,9 +1,9 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { Trigger } from '@deep-foundation/materialized-path/trigger.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
-import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { DeepClient } from '../imports/client.js';
+import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
 
 const debug = Debug('deeplinks:migrations:type-mp');
 const log = debug.extend('log');

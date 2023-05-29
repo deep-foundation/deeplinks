@@ -1,9 +1,9 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { sql } from '@deep-foundation/hasura/sql';
-import { DeepClient } from '../imports/client';
-import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table';
+import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { DeepClient } from '../imports/client.js';
+import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table.js';
 
 const debug = Debug('deeplinks:migrations:promises');
 const log = debug.extend('log');

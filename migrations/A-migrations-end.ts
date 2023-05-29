@@ -1,6 +1,6 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
+import { DeepClient } from '../imports/client.js';
 
 const debug = Debug('deeplinks:migrations:migratios-end');
 const log = debug.extend('log');

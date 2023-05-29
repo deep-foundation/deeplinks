@@ -20,8 +20,5 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true
-  },
-  "exclude": [
-    "migrations"
-  ]
+  }
 }

@@ -1,11 +1,11 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql';
-import { DeepClient, _ids } from '../imports/client';
-import { api, SCHEMA } from './1616701513782-links';
-import { MP_TABLE_NAME } from './1621815803572-materialized-path';
-import { BOOL_EXP_TABLE_NAME } from './1622421760250-values';
+import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql.js';
+import { DeepClient, _ids } from '../imports/client.js';
+import { api, SCHEMA } from './1616701513782-links.js';
+import { MP_TABLE_NAME } from './1621815803572-materialized-path.js';
+import { BOOL_EXP_TABLE_NAME } from './1622421760250-values.js';
 
 const debug = Debug('deeplinks:migrations:selectors');
 const log = debug.extend('log');

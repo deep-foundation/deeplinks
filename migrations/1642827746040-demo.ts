@@ -1,13 +1,13 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table';
-import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
-import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { permissions } from '../imports/permission';
-import { sql } from '@deep-foundation/hasura/sql';
-import { DeepClient } from '../imports/client';
-import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table';
+import { up as upTable, down as downTable } from '@deep-foundation/materialized-path/table.js';
+import { up as upRels, down as downRels } from '@deep-foundation/materialized-path/relationships.js';
+import { Trigger } from '@deep-foundation/materialized-path/trigger.js';
+import { api, SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
+import { permissions } from '../imports/permission.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { DeepClient } from '../imports/client.js';
+import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table.js';
 
 const debug = Debug('deeplinks:migrations:demo');
 const log = debug.extend('log');

@@ -1,12 +1,12 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
-import { down as downRels, up as upRels } from '@deep-foundation/materialized-path/relationships';
-import { down as downTable, up as upTable } from '@deep-foundation/materialized-path/table';
-import { Trigger } from '@deep-foundation/materialized-path/trigger';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { down as downRels, up as upRels } from '@deep-foundation/materialized-path/relationships.js';
+import { down as downTable, up as upTable } from '@deep-foundation/materialized-path/table.js';
+import { Trigger } from '@deep-foundation/materialized-path/trigger.js';
 import Debug from 'debug';
-import { _ids } from '../imports/client';
-import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { _ids } from '../imports/client.js';
+import { SCHEMA, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
 
 const debug = Debug('deeplinks:migrations:materialized-path');
 const log = debug.extend('log');

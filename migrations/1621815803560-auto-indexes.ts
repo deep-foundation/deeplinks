@@ -1,6 +1,6 @@
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:migrations:auto-indexes');

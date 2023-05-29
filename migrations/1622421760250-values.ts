@@ -1,14 +1,14 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { generateMutation, generateSerial, insertMutation } from '../imports/gql';
-import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
+import { generateMutation, generateSerial, insertMutation } from '../imports/gql/index.js';
+import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
 import times from 'lodash/times';
 import { time } from 'console';
-import { Packager, Package } from '../imports/packager';
-import { DeepClient } from '../imports/client';
-import { HasuraApi } from '@deep-foundation/hasura/api';
-import { sql } from '@deep-foundation/hasura/sql';
-import { generateUp, generateDown } from '../imports/type-table';
+import { Packager, Package } from '../imports/packager.js';
+import { DeepClient } from '../imports/client.js';
+import { HasuraApi } from '@deep-foundation/hasura/api.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
+import { generateUp, generateDown } from '../imports/type-table.js';
 
 export const BOOL_EXP_TABLE_NAME = 'bool_exp';
 

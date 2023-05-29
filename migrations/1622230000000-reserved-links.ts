@@ -1,6 +1,6 @@
 import Debug from 'debug';
-import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links';
-import { sql } from '@deep-foundation/hasura/sql';
+import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 
 const debug = Debug('deeplinks:migrations:reserved-links');
 const log = debug.extend('log');

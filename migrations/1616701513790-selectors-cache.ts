@@ -1,8 +1,8 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
-import { api, SCHEMA } from './1616701513782-links';
+import { DeepClient } from '../imports/client.js';
+import { api, SCHEMA } from './1616701513782-links.js';
 
 const debug = Debug('deeplinks:migrations:selectors');
 const log = debug.extend('log');

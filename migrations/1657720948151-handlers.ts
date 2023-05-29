@@ -1,10 +1,10 @@
-import { generateApolloClient } from '@deep-foundation/hasura/client';
-import { sql } from '@deep-foundation/hasura/sql';
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client';
-import { permissions } from '../imports/permission';
-import { api, SCHEMA } from './1616701513782-links';
-import { linksPermissions } from './1622421760260-permissions';
+import { DeepClient } from '../imports/client.js';
+import { permissions } from '../imports/permission.js';
+import { api, SCHEMA } from './1616701513782-links.js';
+import { linksPermissions } from './1622421760260-permissions.js';
 
 const debug = Debug('deeplinks:migrations:handlers');
 const log = debug.extend('log');

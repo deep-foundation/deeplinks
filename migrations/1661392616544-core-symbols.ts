@@ -1,6 +1,6 @@
 import Debug from 'debug';
-import { coreSymbolsPckg } from '../imports/core-symbols';
-import { importPackage } from './1664940577200-tsx';
+import { coreSymbolsPckg } from '../imports/core-symbols.js';
+import { importPackage } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:core-symbols');
 const log = debug.extend('log');
