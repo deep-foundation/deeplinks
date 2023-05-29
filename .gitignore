@@ -135,5 +135,3 @@ projects/app/electron/app
 
 # webpack
 !webpack.config.js
-
-/migrations-dist
