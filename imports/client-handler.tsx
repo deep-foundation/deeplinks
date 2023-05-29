@@ -1,6 +1,5 @@
 import { DeepClient } from './client.js';
-import apolloModule from '@apollo/client';
-const { gql} = apolloModule;
+import { gql } from '@apollo/client/index.js';
 
 export async function evalClientHandler({
   value,

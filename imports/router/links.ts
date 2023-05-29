@@ -3,8 +3,7 @@ import Debug from 'debug';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 // import { sql } from '@deep-foundation/hasura/sql.js';
-import apolloModule from '@apollo/client';
-const { gql} = apolloModule;
+import { gql } from '@apollo/client/index.js';
 
 import { DeepClient } from '../client.js';
 import { ContainerController } from '../container-controller.js';

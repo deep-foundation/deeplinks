@@ -7,8 +7,7 @@ import { createSerialOperation } from "../imports/gql";
 import {render, screen, waitFor} from '@testing-library/react'
 import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
-import apolloModule from '@apollo/client';
-const { ApolloProvider } = apolloModule;
+import { ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 
 

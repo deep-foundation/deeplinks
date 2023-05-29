@@ -1,6 +1,5 @@
-import apolloModule from '@apollo/client';
-import type { ApolloClient } from '@apollo/client';
-const { gql } = apolloModule;
+import { gql } from '@apollo/client/index.js';
+import type { ApolloClient } from '@apollo/client/index.js';
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from './gql/index.js';
 
 export interface ReservedOptions {
