@@ -1,3 +1,5 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const  { promisify } = require('util');
 const { exec } = require('child_process');
 const { promises: fs } = require('fs');

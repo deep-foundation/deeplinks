@@ -90,7 +90,7 @@
     "@testing-library/react": "^14.0.0",
     "clean-webpack-plugin": "^4.0.0",
     "jest": "^29.5.0",
-    "migrate": "github:Konard/node-migrate",
+    "migrate": "^2.0.0",
     "react-dom": "^18.2.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
