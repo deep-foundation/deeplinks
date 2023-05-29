@@ -6,8 +6,6 @@ import { insertHandler, deleteHandler }  from "../imports/handlers";
 import { _ids } from '../imports/client.js';
 import { delay } from "../imports/promise";
 
-jest.setTimeout(120000);
-
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
   ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
