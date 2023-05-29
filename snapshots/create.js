@@ -1,10 +1,15 @@
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const  { promisify } = require('util');
 const { exec } = require('child_process');
 const { promises: fs } = require('fs');
 const execP = promisify(exec);
 const path = require('path');
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const _deeplinks = path.normalize(`${__dirname}/..`);
 
 const create = async () => {
