@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
-import * as deepcasePckg from '@deep-foundation/deepcase/deep.json' assert { type: 'json'};
+import deepcasePckg from '@deep-foundation/deepcase/deep.json' assert { type: 'json'};
 import { importPackage, sharePermissions } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:deepcase');

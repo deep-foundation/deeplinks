@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
-import * as npmPackagerPckg from '@deep-foundation/npm-packager-ui/deep.json' assert { type: 'json'};
+import npmPackagerUiPckg from '@deep-foundation/npm-packager-ui/deep.json' assert { type: 'json'};
 import { importPackage, sharePermissions } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:npm-packager-ui');
@@ -20,7 +20,7 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  const importResult = await importPackage(npmPackagerPckg);
+  const importResult = await importPackage(npmPackagerUiPckg);
   log(importResult);
   const packageId = importResult?.packageId;
   if (packageId) {
