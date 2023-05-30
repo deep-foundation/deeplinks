@@ -1100,11 +1100,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     name?: string;
     mini?: string;
   },
-): {
-  data?: LL[];
-  error?: any;
-  loading: boolean;
-} {
+): UseDeepSubscriptionResult<LL> {
   const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
   const deep = useDeep();
   const wq = useMemo(() => {
@@ -1133,4 +1129,10 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     ...result,
     data: mlResult,
   };
+}
+
+export interface UseDeepSubscriptionResult<LL = Link<number>> {
+  data?: LL[];
+  error?: any;
+  loading: boolean;
 }
