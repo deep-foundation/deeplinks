@@ -6,6 +6,7 @@ import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
 import fixPath from 'fix-path';
+import { fileURLToPath } from 'url';
 
 function isElectron() {
   // @ts-ignore
@@ -60,6 +61,9 @@ interface IGenerateEnvsOptions {
   isDeeplinksDocker: 0 | 1 | undefined;
   envs: any;
 }
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const _hasura = path.normalize(`${__dirname}/../node_modules/@deep-foundation/hasura`);
 const _deeplinks = path.normalize(`${__dirname}/../`);
