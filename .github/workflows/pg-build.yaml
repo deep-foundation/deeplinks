@@ -4,10 +4,6 @@ on:
     branches: [ deeplinks-70-menzorg ]
     paths:
       - postgresql/**
-  pull_request:
-    branches: [ deeplinks-70-menzorg ]
-    paths:
-      - postgresql/**
   workflow_dispatch:
 defaults:
   run:
