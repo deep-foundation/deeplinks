@@ -465,7 +465,7 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
   ml,
   filter: (currentLink: L, oldLink: L, newLink: L) => boolean,
   results: (l?: L, ml?: any, oldLink?: L, newLink?: L) => R,
-  interval: number,
+  interval?: number,
 ): R {
   const [state, setState] = useState<R>();
   useEffect(() => {
