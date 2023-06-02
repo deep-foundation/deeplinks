@@ -80,7 +80,7 @@ export const up = async () => {
     DECLARE
       selectorTree RECORD;
       selectorCursor RECORD;
-      selectorFilter bigint = 0;
+      selectorFilter RECORD;
       boolExpId bigint = 0;
       selectorId bigint;
       ruleAction RECORD;

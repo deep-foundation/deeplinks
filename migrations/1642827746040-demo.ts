@@ -8,6 +8,7 @@ import { permissions } from '../imports/permission.js';
 import { sql } from '@deep-foundation/hasura/sql.js';
 import { DeepClient } from '../imports/client.js';
 import { promiseTriggersUp, promiseTriggersDown } from '../imports/type-table.js';
+import { types } from 'util';
 
 const debug = Debug('deeplinks:migrations:demo');
 const log = debug.extend('log');
@@ -24,7 +25,7 @@ const deep = new DeepClient({
 });
 
 let i = 0;
-const insertRule = async (admin, options: {
+const insertRule = async (containName, admin, options: {
   subject: any;
   object: any;
   action: any;
@@ -32,6 +33,13 @@ const insertRule = async (admin, options: {
   i++;
   const { data: [{ id: ruleId }] } = await admin.insert({
     type_id: await admin.id('@deep-foundation/core', 'Rule'),
+    in: { data: [
+      {
+        type_id: await admin.id('@deep-foundation/core', 'Contain'),
+        from_id: await admin.id('deep', 'admin'),
+        string: { data: { value: containName } },
+      },
+    ] },
     out: { data: [
       {
         type_id: await admin.id('@deep-foundation/core', 'RuleSubject'),
@@ -80,7 +88,7 @@ export const up = async () => {
       to_id: await deep.id('@deep-foundation/core', 'containTree'),
     } },
   };
-  await insertRule(admin, {
+  await insertRule('adminPackageInstallPublish', admin, {
     subject: adminWhere,
     object: [
       {
@@ -119,7 +127,7 @@ export const up = async () => {
       },
     ],
   });
-  await insertRule(admin, {
+  await insertRule('usersCanSeeAll', admin, {
     subject: usersWhere,
     object: [
       {
@@ -150,7 +158,7 @@ export const up = async () => {
       },
     ],
   });
-  await insertRule(admin, {
+  await insertRule('usersCanLoginAdmin', admin, {
     subject: usersWhere,
     object: [
       {
@@ -173,74 +181,77 @@ export const up = async () => {
       },
     ],
   });
-  await insertRule(admin, {
+  const types = [
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'Active'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'Focus'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'Contain'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'Space'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'Query'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+      to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+      out: { data: {
+        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+  ];
+  await insertRule('usersCanInsertSafeLinks', admin, {
     subject: usersWhere,
     object: [
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Active'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Focus'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Contain'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Space'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Query'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
-        to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Query'),
-          object: { data: { value: {
-            _or: [
-              { from_id: { _eq: 0 } },
-              { from: {
-                _by_item: {
-                  group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-                  path_item_id: { _eq: 'X-Deep-User-Id' },
-                },
-              } },
-            ],
-          } } }
-        } },
-      },
+      ...types,
+      // {
+      //   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+      //   to: { data: {
+      //     type_id: await deep.id('@deep-foundation/core', 'Query'),
+      //     object: { data: { value: {
+      //       _or: [
+      //         { from_id: { _eq: 0 } },
+      //         { from: {
+      //           _by_item: {
+      //             group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+      //             path_item_id: { _eq: 'X-Deep-User-Id' },
+      //           },
+      //         } },
+      //       ],
+      //     } } }
+      //   } },
+      // },
     ],
     action: [
       {
@@ -253,43 +264,18 @@ export const up = async () => {
       },
     ],
   });
-  await insertRule(admin, {
+  await insertRule('usersCanUpdateSafeLinks', admin, {
     subject: usersWhere,
     object: [
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Contain'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Focus'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Query'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
+      ...types,
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Query'),
           object: { data: { value: {
-            from: {
-              _by_item: {
-                group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-                path_item_id: { _eq: 'X-Deep-User-Id' },
-              },
+            _by_item: {
+              group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+              path_item_id: { _eq: 'X-Deep-User-Id' },
             },
           } } }
         } },
@@ -306,51 +292,18 @@ export const up = async () => {
       },
     ],
   });
-  await insertRule(admin, {
+  await insertRule('usersCanDeleteSafeLinks', admin, {
     subject: usersWhere,
     object: [
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Focus'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Active'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Query'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'Space'),
-        out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
-        } },
-      },
+      ...types,
       {
         type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
           type_id: await deep.id('@deep-foundation/core', 'Query'),
           object: { data: { value: {
-            from: {
-              _by_item: {
-                group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
-                path_item_id: { _eq: 'X-Deep-User-Id' },
-              },
+            _by_item: {
+              group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+              path_item_id: { _eq: 'X-Deep-User-Id' },
             },
           } } }
         } },

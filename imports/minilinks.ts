@@ -464,7 +464,8 @@ export function useMinilinksConstruct<L extends Link<number>>(options?: any): Mi
 export function useMinilinksFilter<L extends Link<number>, R = any>(
   ml,
   filter: (currentLink: L, oldLink: L, newLink: L) => boolean,
-  results: (l: L, ml, oldLink: L, newLink: L) => R,
+  results: (l?: L, ml?: any, oldLink?: L, newLink?: L) => R,
+  interval: number,
 ): R {
   const [state, setState] = useState<R>();
   useEffect(() => {
@@ -491,8 +492,13 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
         setState(results(nl, ml, ol, nl));
       }
     };
+    let timeout;
+    if (interval) timeout = setTimeout(() => {
+      results(undefined, ml);
+    }, interval);
     ml.emitter.on('apply', applyListener);
     return () => {
+      clearTimeout(timeout);
       ml.emitter.removeListener('added', addedListener);
       ml.emitter.removeListener('updated', updatedListener);
       ml.emitter.removeListener('removed', removedListener);

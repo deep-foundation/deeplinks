@@ -26,6 +26,48 @@ export const up = async () => {
   if (packageId) {
     await sharePermissions(await root.id('deep', 'admin'), packageId);
   }
+  const usersCanInsertSafeLinks = await root.id('deep', 'admin', 'usersCanInsertSafeLinks');
+  const usersCanUpdateSafeLinks = await root.id('deep', 'admin', 'usersCanUpdateSafeLinks');
+  const usersCanDeleteSafeLinks = await root.id('deep', 'admin', 'usersCanDeleteSafeLinks');
+
+  const { data: rules } = await root.select({
+    'up': {
+      'parent_id': { _in: [usersCanInsertSafeLinks, usersCanUpdateSafeLinks, usersCanDeleteSafeLinks] },
+    }
+  });
+  root.minilinks.apply([...rules]);
+  const insertSelector = root.minilinks.byId[usersCanInsertSafeLinks]?.outByType?.[root.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  const updateSelector = root.minilinks.byId[usersCanUpdateSafeLinks]?.outByType?.[root.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  const deleteSelector = root.minilinks.byId[usersCanDeleteSafeLinks]?.outByType?.[root.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  await root.insert([
+    {
+      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+      from_id: insertSelector,
+      to_id: await root.id('@deep-foundation/deepcase', 'Traveler'),
+      out: { data: {
+        type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await root.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+      from_id: updateSelector,
+      to_id: await root.id('@deep-foundation/deepcase', 'Traveler'),
+      out: { data: {
+        type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await root.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+    {
+      type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
+      from_id: deleteSelector,
+      to_id: await root.id('@deep-foundation/deepcase', 'Traveler'),
+      out: { data: {
+        type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
+        to_id: await root.id('@deep-foundation/core', 'containTree'),
+      } },
+    },
+  ]);
 };
 
 export const down = async () => {
