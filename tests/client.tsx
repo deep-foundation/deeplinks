@@ -10,12 +10,16 @@ import React, { useEffect } from "react";
 import { ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 
+const graphQlPath = `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`;
+const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
+const secret = process.env.DEEPLINKS_HASURA_SECRET;
+const ws = true;
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
-  secret: process.env.DEEPLINKS_HASURA_SECRET,
-  ws: true
+  path: graphQlPath,
+  ssl,
+  secret,
+  ws
 });
 
 const deepClient = new DeepClient({ apolloClient });
@@ -562,6 +566,16 @@ describe('client', () => {
     {
       table: 'strings'
     })
+  })
+  it('deepClient token availability when secret is passed to apolloClient', async () => {
+    const apolloClient = generateApolloClient({
+      path: graphQlPath,
+      ssl: true,
+      ws: true,
+      secret
+    });
+    const deep = new DeepClient({ apolloClient });
+    assert.notEqual(deep.token, undefined)
   })
   describe(`useDeepSubscription`, () => {
     it(`type`, async () => {
