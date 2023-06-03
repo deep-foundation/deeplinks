@@ -626,6 +626,37 @@ describe('client', () => {
           );
         }
       })
+      it('rerender with loading:true must occur only once', async () => {
+        let renderCount = 0;
+        let loadingCount = 0;
+      
+        function TestComponent() {
+          const deepSubscriptionResult = useDeepSubscription({
+            id: {
+              _id: ['@deep-foundation/core']
+            }
+          });
+      
+          renderCount += 1;
+          
+          if (deepSubscriptionResult.loading) {
+            loadingCount += 1;
+          }
+      
+          return null;
+        }
+      
+        render(
+          <ApolloProvider client={deepClient.apolloClient}>
+            <DeepProvider>
+              <TestComponent />
+            </DeepProvider>
+          </ApolloProvider>
+        );
+      
+        assert(renderCount > 1, 'TestComponent must be rerendered more than once');
+        assert(loadingCount === 1, 'loading:true must occur only once');
+      });
     })
   })
 });
