@@ -577,53 +577,55 @@ describe('client', () => {
     const deep = new DeepClient({ apolloClient });
     assert.notEqual(deep.token, undefined)
   })
-  describe(`useDeepSubscription`, () => {
-    it(`type`, async () => {
-      await setup();
+  describe('react', () => {
+    describe(`useDeepSubscription`, () => {
+      it(`type`, async () => {
+        await setup();
+    
+        expect(screen.getByText('Loading...')).toBeInTheDocument();
+    
+        await waitFor(() => {
+          expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+        });
+    
+        expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
   
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+        await waitFor(() => {
+          const dataLengthText = screen.getByText(/items loaded$/);
+          expect(dataLengthText).toBeInTheDocument();
+          const dataLength = parseInt(dataLengthText.textContent);
+           expect(dataLength).toBeGreaterThan(0);
+        }, {timeout: 10000});
   
-      await waitFor(() => {
-        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-      });
+        
   
-      expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
-
-      await waitFor(() => {
-        const dataLengthText = screen.getByText(/items loaded$/);
-        expect(dataLengthText).toBeInTheDocument();
-        const dataLength = parseInt(dataLengthText.textContent);
-         expect(dataLength).toBeGreaterThan(0);
-      }, {timeout: 10000});
-
-      
-
-      async function setup() {
-        const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      
-        function TestHookComponent() {
-          const { loading, data, error } = useDeepSubscription({
-            type_id: typeTypeLinkId,
-          });
-          if (loading) {
-            return <div>Loading...</div>;
+        async function setup() {
+          const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+        
+          function TestHookComponent() {
+            const { loading, data, error } = useDeepSubscription({
+              type_id: typeTypeLinkId,
+            });
+            if (loading) {
+              return <div>Loading...</div>;
+            }
+  
+            if(error) {
+              return <div>Error: {error.message}</div>
+            }
+        
+            return <div>{data.length} items loaded</div>;
           }
-
-          if(error) {
-            return <div>Error: {error.message}</div>
-          }
-      
-          return <div>{data.length} items loaded</div>;
+        
+          render(
+            <ApolloProvider client={deepClient.apolloClient}>
+              <DeepProvider>
+                <TestHookComponent />
+              </DeepProvider>
+            </ApolloProvider>
+          );
         }
-      
-        render(
-          <ApolloProvider client={deepClient.apolloClient}>
-            <DeepProvider>
-              <TestHookComponent />
-            </DeepProvider>
-          </ApolloProvider>
-        );
-      }
+      })
     })
   })
 });
