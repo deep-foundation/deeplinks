@@ -9,13 +9,18 @@ import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
 import { ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
+import { useDeep } from '../imports/client';
 
+const graphQlPath = `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`;
+const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
+const secret = process.env.DEEPLINKS_HASURA_SECRET;
+const ws = true;
 
 const apolloClient = generateApolloClient({
-  path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
-  ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
-  secret: process.env.DEEPLINKS_HASURA_SECRET,
-  ws: true
+  path: graphQlPath,
+  ssl,
+  secret,
+  ws
 });
 
 const deepClient = new DeepClient({ apolloClient });
@@ -563,53 +568,165 @@ describe('client', () => {
       table: 'strings'
     })
   })
-  describe(`useDeepSubscription`, () => {
-    it(`type`, async () => {
-      await setup();
+  it('deepClient token must not be undefined when secret is passed to apolloClient', async () => {
+    const apolloClient = generateApolloClient({
+      path: graphQlPath,
+      ssl: true,
+      ws: true,
+      secret
+    });
+    const deep = new DeepClient({ apolloClient });
+    assert.notEqual(deep.token, undefined)
+  })
+  describe('react', () => {
+    describe(`useDeepSubscription`, () => {
+      it(`type`, async () => {
+        await setup();
+    
+        expect(screen.getByText('Loading...')).toBeInTheDocument();
+    
+        await waitFor(() => {
+          expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+        });
+    
+        expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
   
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+        await waitFor(() => {
+          const dataLengthText = screen.getByText(/items loaded$/);
+          expect(dataLengthText).toBeInTheDocument();
+          const dataLength = parseInt(dataLengthText.textContent);
+           expect(dataLength).toBeGreaterThan(0);
+        }, {timeout: 10000});
   
-      await waitFor(() => {
-        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-      });
+        
   
-      expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
-
-      await waitFor(() => {
-        const dataLengthText = screen.getByText(/items loaded$/);
-        expect(dataLengthText).toBeInTheDocument();
-        const dataLength = parseInt(dataLengthText.textContent);
-         expect(dataLength).toBeGreaterThan(0);
-      }, {timeout: 10000});
-
+        async function setup() {
+          const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+        
+          function TestHookComponent() {
+            const { loading, data, error } = useDeepSubscription({
+              type_id: typeTypeLinkId,
+            });
+            if (loading) {
+              return <div>Loading...</div>;
+            }
+  
+            if(error) {
+              return <div>Error: {error.message}</div>
+            }
+        
+            return <div>{data.length} items loaded</div>;
+          }
+        
+          render(
+            <ApolloProvider client={deepClient.apolloClient}>
+              <DeepProvider>
+                <TestHookComponent />
+              </DeepProvider>
+            </ApolloProvider>
+          );
+        }
+      })
+      it('rerender with loading:true must occur only once', async () => {
+        let renderCount = 0;
+        let loadingCount = 0;
       
-
-      async function setup() {
-        const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      
-        function TestHookComponent() {
-          const { loading, data, error } = useDeepSubscription({
-            type_id: typeTypeLinkId,
+        function TestComponent() {
+          const deepSubscriptionResult = useDeepSubscription({
+            id: {
+              _id: ['@deep-foundation/core']
+            }
           });
-          if (loading) {
-            return <div>Loading...</div>;
-          }
-
-          if(error) {
-            return <div>Error: {error.message}</div>
+      
+          renderCount += 1;
+          
+          if (deepSubscriptionResult.loading) {
+            loadingCount += 1;
           }
       
-          return <div>{data.length} items loaded</div>;
+          return null;
         }
       
         render(
           <ApolloProvider client={deepClient.apolloClient}>
             <DeepProvider>
-              <TestHookComponent />
+              <TestComponent />
             </DeepProvider>
           </ApolloProvider>
         );
-      }
+      
+        await waitFor(() => {
+          assert(renderCount > 1, 'TestComponent must be rerendered more than once');
+          assert(loadingCount === 1, 'loading:true must occur only once');
+        });
+      });
+      it('rerender with loading:false must occur only once', async () => {
+        let renderCount = 0;
+        let loadingCount = 0;
+      
+        function TestComponent() {
+          const deepSubscriptionResult = useDeepSubscription({
+            id: {
+              _id: ['@deep-foundation/core']
+            }
+          });
+      
+          renderCount += 1;
+          
+          if (!deepSubscriptionResult.loading) {
+            loadingCount += 1;
+          }
+      
+          return null;
+        }
+      
+        render(
+          <ApolloProvider client={deepClient.apolloClient}>
+            <DeepProvider>
+              <TestComponent />
+            </DeepProvider>
+          </ApolloProvider>
+        );
+      
+        await waitFor(() => {
+          assert(renderCount > 1, 'TestComponent must be rerendered more than once');
+          assert(loadingCount === 1, 'loading:false must occur only once');
+        });
+      });
+    })
+    describe('login', () => {
+      it('login with secret', async () => {
+        const apolloClient = generateApolloClient({
+          path: graphQlPath,
+          ssl: true,
+          ws: true,
+        });
+        const deep = new DeepClient({ apolloClient });
+        let deepInComponent: DeepClient;
+        
+          function TestComponent() {
+            deepInComponent = useDeep();
+            useEffect(() => {
+              deepInComponent.login({
+                token: secret
+              })
+            }, [])
+        
+            return null;
+          }
+        
+          render(
+            <ApolloProvider client={deepClient.apolloClient}>
+              <DeepProvider>
+                <TestComponent />
+              </DeepProvider>
+            </ApolloProvider>
+          );
+        
+          await waitFor(() => {
+            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+          });
+      })
     })
   })
 });
