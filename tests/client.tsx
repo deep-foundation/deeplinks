@@ -9,6 +9,7 @@ import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
 import { ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
+import { useDeep } from '../imports/client';
 
 const graphQlPath = `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`;
 const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
@@ -692,6 +693,40 @@ describe('client', () => {
           assert(loadingCount === 1, 'loading:false must occur only once');
         });
       });
+    })
+    describe('login', () => {
+      it('login with secret', async () => {
+        const apolloClient = generateApolloClient({
+          path: graphQlPath,
+          ssl: true,
+          ws: true,
+        });
+        const deep = new DeepClient({ apolloClient });
+        let deepInComponent: DeepClient;
+        
+          function TestComponent() {
+            deepInComponent = useDeep();
+            useEffect(() => {
+              deepInComponent.login({
+                token: secret
+              })
+            }, [])
+        
+            return null;
+          }
+        
+          render(
+            <ApolloProvider client={deepClient.apolloClient}>
+              <DeepProvider>
+                <TestComponent />
+              </DeepProvider>
+            </ApolloProvider>
+          );
+        
+          await waitFor(() => {
+            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+          });
+      })
     })
   })
 });
