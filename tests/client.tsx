@@ -567,7 +567,7 @@ describe('client', () => {
       table: 'strings'
     })
   })
-  it('deepClient token availability when secret is passed to apolloClient', async () => {
+  it('deepClient token must not be undefined when secret is passed to apolloClient', async () => {
     const apolloClient = generateApolloClient({
       path: graphQlPath,
       ssl: true,
