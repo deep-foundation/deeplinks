@@ -452,7 +452,8 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const linkid = plv8.execute(insertLinkString)[0]?.id;
       const linkCheck = checkInsertPermission(linkid, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
-      const value = number || string || object;
+      if (object && typeof object !== 'object') plv8.elog(ERROR, 'inserting value is not object');
+      const value = number || string || JSON.stringify(object);
       if (!value) return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueStringCode};
       const valueId = plv8.execute(insertValueString)[0]?.id;
