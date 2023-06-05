@@ -541,11 +541,11 @@ export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, 
 export function useMinilinksApply<L extends Link<number>>(ml, name: string, data?: L[]): any {
   const [strictName] = useState(name);
   useEffect(() => {
-    ml.apply(data, strictName);
     return () => {
       ml.apply([], strictName);
     };
-  }, [data]);
+  }, []);
+  ml.apply(data, strictName);
 }
 
 /**
