@@ -241,9 +241,11 @@ describe('client', () => {
       it('one insert', async () => {
         let linkIdsToDelete = [];
         const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+        const resultAlias = "resultAlias";
         const operation = createSerialOperation({
           table: 'links',
           type: 'insert',
+          resultAlias,
           objects: {
             type_id: typeTypeLinkId
           }
@@ -256,7 +258,7 @@ describe('client', () => {
           });
           assert.equal(result.error, undefined);
           assert.notEqual(result.data, undefined);
-          linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+          linkIdsToDelete = [...linkIdsToDelete, ...result.data[resultAlias].map(link => link.id)];
           assert.strictEqual(result.data.length, 1);
         } finally {
           await deepClient.delete(linkIdsToDelete)
@@ -265,9 +267,11 @@ describe('client', () => {
       it('multiple inserts in one operation', async () => {
         let linkIdsToDelete = [];
         const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+        const resultAlias = "resultAlias";
         const operation = createSerialOperation({
           table: 'links',
           type: 'insert',
+          resultAlias,
           objects: {
             type_id: typeTypeLinkId
           }
@@ -281,7 +285,7 @@ describe('client', () => {
           });
           assert.equal(result.error, undefined);
           assert.notEqual(result.data, undefined);
-          linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+          linkIdsToDelete = [...linkIdsToDelete, ...result.data[resultAlias].map(link => link.id)];
           assert.strictEqual(result.data.length, 2);
         } finally {
           await deepClient.delete(linkIdsToDelete)
@@ -290,9 +294,11 @@ describe('client', () => {
       it('multiple inserts ine multiple operations', async () => {
         let linkIdsToDelete = [];
         const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+        const resultAlias = "resultAlias";
         const operation = createSerialOperation({
           table: 'links',
           type: 'insert',
+          resultAlias,
           objects: {
             type_id: typeTypeLinkId
           }
@@ -307,7 +313,7 @@ describe('client', () => {
           inspect(result);
           assert.equal(result.error, undefined);
           assert.notEqual(result.data, undefined);
-          linkIdsToDelete = [...linkIdsToDelete, ...result.data.map(link => link.id)];
+          linkIdsToDelete = [...linkIdsToDelete, ...result.data[resultAlias].map(link => link.id)];
           assert.strictEqual(result.data.length, 2);
         } finally {
           await deepClient.delete(linkIdsToDelete)
