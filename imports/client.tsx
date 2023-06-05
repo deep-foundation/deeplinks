@@ -511,6 +511,7 @@ export type SerialOperation<
 > = {
   type: TSerialOperationType;
   table: TTable;
+  resultAlias?: string;
 } & SerialOperationDetails<TSerialOperationType, TTable>;
 
 export type DeepSerialOperation = SerialOperation<SerialOperationType, Table<SerialOperationType>>
