@@ -135,6 +135,9 @@ projects/app/electron/app
 /benchmarks/**/*.js
 /benchmarks/**/*.js.map
 /benchmarks/**/*.d.ts
+/automation/**/*.js
+/automation/**/*.js.map
+/automation/**/*.d.ts
 
 # snapshots
 /snapshots/[0-9]*
