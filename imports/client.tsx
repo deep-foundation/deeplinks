@@ -790,7 +790,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     LL = L
   >({
     name, operations, returning, silent
-  }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
+  }: AsyncSerialParams): Promise<DeepClientResult<Record<string, Array<{ id: number }>>>> {
     // @ts-ignore
     let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
     operationsGroupedByTypeAndTable = operations.reduce((acc, operation) => {
