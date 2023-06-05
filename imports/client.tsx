@@ -846,8 +846,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       if (!silent) throw e;
       return { ...result, data: (result)?.data?.m0?.returning, error: e };
     }
-    // @ts-ignore
-    return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
+   
+    return { ...result, data: (result)?.data && Object.entries((result)?.data).reduce<Record<string, any>>((returningPerAlias, [alias, m]) => {
+      // @ts-ignore
+      returningPerAlias[alias] = m.returning;
+      return returningPerAlias
+    }, {})};
   };
 
   reserve<LL = L>(count: number): Promise<number[]> {
