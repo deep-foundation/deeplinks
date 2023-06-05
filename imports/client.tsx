@@ -152,7 +152,7 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
     for (let k = 0; k < keys.length; k++) {
       const key = keys[k];
       const type = typeof(exp[key]);
-      if (typeof(exp[key]) === 'undefined') throw new Error(`value of key "${key}" can't be undefined`);
+      if (typeof(exp[key]) === 'undefined') throw new Error(`${key} === undefined`);
       let setted: any = false;
       const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
       // if this is link
@@ -166,6 +166,15 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
             // else just equal
             setted = result[key] = { _eq: exp[key] };
           }
+        } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+          // if field is not boolExp (_and _or _not) but contain array
+          // @ts-ignore
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]));
+        }
+      } else if (env === 'tree') {
+        // if field contain primitive type - string/number
+        if (type === 'string' || type === 'number') {
+          setted = result[key] = { _eq: exp[key] };
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
