@@ -698,10 +698,15 @@ describe('client', () => {
       it('login with secret', async () => {
         const apolloClient = generateApolloClient({
           path: graphQlPath,
-          ssl: true,
-          ws: true,
+          ssl: ssl,
         });
-        const deep = new DeepClient({ apolloClient });
+        const unloginedDeep = new DeepClient({ apolloClient });
+        const guest = await unloginedDeep.guest();
+        const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
+        const admin = await guestDeep.login({
+          linkId: await guestDeep.id('deep', 'admin'),
+        });
+        const deep = new DeepClient({ deep: guestDeep, ...admin });
         let deepInComponent: DeepClient;
         
           function TestComponent() {
