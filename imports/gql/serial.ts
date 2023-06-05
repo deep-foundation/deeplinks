@@ -59,6 +59,7 @@ export function createSerialOperation<
 >(params: {
   type: TSerialOperationType;
   table: TTable;
+  resultAlias?: string;
 } & SerialOperationDetails<TSerialOperationType, TTable>): SerialOperation<TSerialOperationType, TTable> {
   return params;
 }
