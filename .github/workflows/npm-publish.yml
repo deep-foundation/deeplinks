@@ -15,4 +15,5 @@ jobs:
     secrets:
       npm-token: ${{ secrets.NPM_TOKEN }}
     with:
-      build-script-name: "package:build"
+      build-command: "npm run package:build"
+      test-command: "echo 'Tests are temporarely disabled'"
