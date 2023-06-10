@@ -4,6 +4,7 @@ import { Trigger } from '@deep-foundation/materialized-path/trigger.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
 import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
+import { _ids } from '../imports/client.js';
 
 const debug = Debug('deeplinks:migrations:type-mp');
 const log = debug.extend('log');
@@ -34,13 +35,13 @@ const createTrigger = async () => {
     mpTableName: MP_TABLE_NAME,
     graphTableName: LINKS_TABLE_NAME,
     id_type: 'bigint',
-    iteratorInsertDeclare: `groupRow bigint DEFAULT 0;`,
+    iteratorInsertDeclare: `groupRow bigint DEFAULT ${_ids?.['@deep-foundation/core']?.typesTree};`,
     iteratorDeleteArgumentSend: 'groupRow',
-    iteratorDeleteArgumentGet: `groupRow bigint = 0`,
+    iteratorDeleteArgumentGet: `groupRow bigint = ${_ids?.['@deep-foundation/core']?.typesTree}`,
     iteratorInsertBegin: ``,
     iteratorInsertEnd: '',
     groupInsert: 'groupRow',
-    iteratorDeleteDeclare: `groupRow bigint DEFAULT 0;`,
+    iteratorDeleteDeclare: `groupRow bigint DEFAULT ${_ids?.['@deep-foundation/core']?.typesTree};`,
     iteratorDeleteBegin: ``,
     iteratorDeleteEnd: '',
     groupDelete: 'groupRow',

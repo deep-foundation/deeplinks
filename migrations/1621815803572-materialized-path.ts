@@ -50,6 +50,7 @@ const triggerOptionos = {
     mpInclude."to_id" IN (NEW.type_id, ${_ids?.['@deep-foundation/core']?.Any}) AND
     mpInclude."from_id" = mpGroup."id" AND
     mpGroup."type_id" = ${_ids?.['@deep-foundation/core']?.Tree} AND
+    mpGroup."id" != ${_ids?.['@deep-foundation/core']?.typesTree} AND
     ((groupid != 0 AND groupid = mpGroup."id") OR groupid = 0)
     ) LOOP`,
   iteratorInsertEnd: 'END LOOP;',
@@ -69,7 +70,8 @@ const triggerOptionos = {
     mpInclude."type_id" IN (${_ids?.['@deep-foundation/core']?.TreeIncludeDown},${_ids?.['@deep-foundation/core']?.TreeIncludeUp},${_ids?.['@deep-foundation/core']?.TreeIncludeNode}, ${_ids?.['@deep-foundation/core']?.TreeIncludeIn}, ${_ids?.['@deep-foundation/core']?.TreeIncludeOut}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrent}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentFrom}, ${_ids?.['@deep-foundation/core']?.TreeIncludeCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeFromCurrentTo}, ${_ids?.['@deep-foundation/core']?.TreeIncludeToCurrentFrom}) AND
     mpInclude."to_id" IN (OLD.type_id, ${_ids?.['@deep-foundation/core']?.Any}) AND
     mpInclude."from_id" = mpGroup."id" AND
-    mpGroup."type_id" = ${_ids?.['@deep-foundation/core']?.Tree}
+    mpGroup."type_id" = ${_ids?.['@deep-foundation/core']?.Tree} AND
+    mpGroup."id" != ${_ids?.['@deep-foundation/core']?.typesTree}
   ) LOOP`,
   iteratorDeleteEnd: 'END LOOP;',
   groupDelete: 'groupRow."id"',
