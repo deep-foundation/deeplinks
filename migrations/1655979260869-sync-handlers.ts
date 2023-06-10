@@ -49,7 +49,7 @@ const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
 
-const insertValueStringCode = `\`INSERT INTO \${number ? 'number' : string ? 'string' : object ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``;
+const insertValueStringCode = `\`INSERT INTO \${checkedNumber ? 'number' : checkedString ? 'string' : checkedObject ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``;
 const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RETURNING id;\``;
 
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
@@ -447,13 +447,20 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     insert: function(exp, options) {
       const { id, type_id, from_id, to_id, number, string, object } = exp;
       if (options?.table && !['links', 'strings', 'numbers', 'objects'].includes(options?.table)) plv8.elog(ERROR, 'insert to '.concat(options?.table, ' not permitted'));
+      if (
+        number && typeof number !== 'number' || number?.data?.value && typeof number?.data?.value !== 'number'  ||
+        string && typeof string !== 'string' || string?.data?.value && typeof string?.data?.value !== 'string'  ||
+        object && typeof object !== 'object' || object?.data?.value && typeof object?.data?.value !== 'object' 
+        ) plv8.elog(ERROR, 'value type error');
       const ids = {};
+      const checkedNumber = number?.data?.value ? number?.data?.value : number;
+      const checkedString = string?.data?.value ? string?.data?.value : string;
+      const checkedObject = object?.data?.value ? object?.data?.value : object;
       let insertLinkString = ${insertLinkStringCode};
       const linkid = plv8.execute(insertLinkString)[0]?.id;
       const linkCheck = checkInsertPermission(linkid, ownerId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
-      if (object && typeof object !== 'object') plv8.elog(ERROR, 'inserting value is not object');
-      const value = number || string || JSON.stringify(object);
+      const value = checkedNumber || checkedString || JSON.stringify(checkedObject);
       if (!value) return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueStringCode};
       const valueId = plv8.execute(insertValueString)[0]?.id;
