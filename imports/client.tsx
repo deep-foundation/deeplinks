@@ -526,14 +526,13 @@ export function checkAndFillShorts(obj) {
   for (var i in obj) {
       if (!obj.hasOwnProperty(i)) continue;
       if ((typeof obj[i]) == 'object' && obj[i] !== null) {
-        if ( typeof obj[i] === 'object' && i === 'object' && obj[i]?.data?.value === undefined ) { obj[i] = { data: { value: obj[i]}}; continue; }
+        if (typeof obj[i] === 'object' && i === 'object' && obj[i]?.data?.value === undefined) { obj[i] = { data: { value: obj[i] } }; continue; }
         if (typeof obj[i] === 'object' && (i === 'to' || i === 'from' || i === 'in' || i === 'out') && obj[i]?.data === undefined) obj[i] = { data: obj[i] };
         checkAndFillShorts(obj[i]);
       }
-      else if ( i === 'string' &&  typeof obj[i] === 'string' || i === 'number' &&  typeof obj[i] === 'number') obj[i] = { data: { value: obj[i]}}; 
+      else if (i === 'string' && typeof obj[i] === 'string' || i === 'number' && typeof obj[i] === 'number') obj[i] = { data: { value: obj[i] } }; 
   }
 }
-
 
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   useDeepSubscription = useDeepSubscription;
