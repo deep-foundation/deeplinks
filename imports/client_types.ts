@@ -179,23 +179,23 @@ export interface MutationInputLinkPlain {
   from_id?: number;
   to_id?: number;
   type_id?: number;
-  from?: { data: MutationInputLink };
-  to?: { data: MutationInputLink };
-  out?: { data: MutationInputLink | MutationInputLink[] };
-  in?: { data: MutationInputLink | MutationInputLink[] };
-  number?: { data: MutationInputValue<number> };
-  string?: { data: MutationInputValue<string> };
-  object?: { data: MutationInputValue<any> };
+  from?: { data: MutationInputLink } | MutationInputLink;
+  to?: { data: MutationInputLink } | MutationInputLink;
+  out?: { data: MutationInputLink | MutationInputLink[] } | MutationInputLink | MutationInputLink[];
+  in?: { data: MutationInputLink | MutationInputLink[] } | MutationInputLink | MutationInputLink[];
+  number?: { data: MutationInputValue<number> } | number;
+  string?: { data: MutationInputValue<string> } | string;
+  object?: { data: MutationInputValue<any> } | any;
   typed?: { data: MutationInputLink | MutationInputLink[] };
 }
 export interface MutationInputLink extends MutationInputLinkPlain {
-  from?: { data: MutationInputLink };
-  to?: { data: MutationInputLink };
-  out?: { data: MutationInputLink | MutationInputLink[] };
-  in?: { data: MutationInputLink | MutationInputLink[] };
-  number?: { data: MutationInputValue<number> };
-  string?: { data: MutationInputValue<string> };
-  object?: { data: MutationInputValue<any> };
+  from?: { data: MutationInputLink } | MutationInputLink;
+  to?: { data: MutationInputLink } | MutationInputLink;
+  out?: { data: MutationInputLink | MutationInputLink[] } | MutationInputLink | MutationInputLink[];
+  in?: { data: MutationInputLink | MutationInputLink[] } | MutationInputLink | MutationInputLink[];
+  number?: { data: MutationInputValue<number> } | number;
+  string?: { data: MutationInputValue<string> } | string;
+  object?: { data: MutationInputValue<any> } | any;
   typed?: { data: MutationInputLink | MutationInputLink[] };
 }
 export interface MutationInputValue<T> {
