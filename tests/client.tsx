@@ -695,7 +695,7 @@ describe('client', () => {
       });
     })
     describe('login', () => {
-      it('login with secret', async () => {
+      it('login with token', async () => {
         const apolloClient = generateApolloClient({
           path: graphQlPath,
           ssl: ssl,
@@ -713,8 +713,9 @@ describe('client', () => {
             deepInComponent = useDeep();
             useEffect(() => {
               deepInComponent.login({
-                token: secret
+                token: deep.token
               })
+              // deepInComponent.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
             }, [])
         
             return null;
