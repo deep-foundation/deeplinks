@@ -1,4 +1,3 @@
-
 import Debug from 'debug';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from '../imports/client.js';;
@@ -325,12 +324,13 @@ const fillValueByLinksCode = /*javascript*/`(links) => {
   for (let i = 0; i < links.length; i++){
     linkId = links[i].id;
     table = 'strings';
-    const stringValue = plv8.execute(${selectValueTable});
+    const stringValue = plv8.execute(${selectValueTable})?.[0];
     table = 'objects';
-    const objectValue = plv8.execute(${selectValueTable});
+    const objectValue = plv8.execute(${selectValueTable})?.[0];
     table = 'numbers';
-    const numberValue = plv8.execute(${selectValueTable});
-    links[i].value = stringValue?.[0] || objectValue?.[0] || numberValue?.[0];
+    let numberValue = plv8.execute(${selectValueTable})?.[0];
+    if (numberValue) numberValue = Number(numberValue);
+    links[i].value = stringValue || objectValue || numberValue;
   }
 }`;
 
@@ -531,14 +531,24 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
     const link = plv8.execute("select * from links where id = $1", [ linkId ])[0];
     prepared = link ? prepare(link, ${handleOperationTypeId}) : [];
     data = {
-      triggeredByLinkId: default_user_id,
-      oldLink: { ...link, value: OLD ? OLD : undefined},
-      newLink: { ...link, value: NEW ? NEW : undefined}
+      triggeredByLinkId: Number(default_user_id),
+      oldLink: { 
+        id: Number(OLD?.id),
+        from_id: Number(OLD?.from_id),
+        to_id: Number(OLD?.to_id),
+        type_id: Number(OLD?.type_id),
+        value: OLD ? { id: Number(OLD.id), link_id: Number(OLD.link_id), value: typeof OLD.value === 'number' ? Number(OLD.value) : OLD.value } : undefined }, 
+      newLink: { 
+        id: Number(NEW?.id),
+        from_id: Number(NEW?.from_id),
+        to_id: Number(NEW?.to_id),
+        type_id: Number(NEW?.type_id), 
+        value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined }, 
     };
   } else {
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
-      triggeredByLinkId: default_user_id,
+      triggeredByLinkId: Number(default_user_id),
       oldLink: OLD ? {
         id: Number(OLD?.id),
         from_id: Number(OLD?.from_id),
