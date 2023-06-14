@@ -2235,7 +2235,7 @@ describe('sync handlers', () => {
       });
     });
     describe('Check value in data', () => {
-      it(`Handle delete on type`, async () => {
+      it(`Check in insert link`, async () => {
         const debug = log.extend('HandleDelete');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -2272,7 +2272,7 @@ describe('sync handlers', () => {
         debug('delete handler', await deleteHandler(handler));
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
-      it(`Handle delete on type`, async () => {
+      it(`Check in update link`, async () => {
         const debug = log.extend('HandleInsert');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
