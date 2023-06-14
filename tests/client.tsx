@@ -7,7 +7,7 @@ import { createSerialOperation } from "../imports/gql";
 import {render, screen, waitFor} from '@testing-library/react'
 import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
-import { ApolloProvider } from '@apollo/client/index.js';
+import { ApolloClient, ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 import { useDeep } from '../imports/client';
 
@@ -16,14 +16,18 @@ const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
 const secret = process.env.DEEPLINKS_HASURA_SECRET;
 const ws = true;
 
-const apolloClient = generateApolloClient({
-  path: graphQlPath,
-  ssl,
-  secret,
-  ws
-});
+let apolloClient: ApolloClient<any>;
+let deepClient: DeepClient;
 
-const deepClient = new DeepClient({ apolloClient });
+beforeAll(async () => {
+  apolloClient = generateApolloClient({
+    path: graphQlPath,
+    ssl,
+    secret,
+    ws
+  });
+  deepClient = new DeepClient({ apolloClient });
+})
 
 describe('client', () => {
   it(`deep.linkId guest and login`, async () => {
@@ -723,6 +727,35 @@ describe('client', () => {
         
           render(
             <ApolloProvider client={deepClient.apolloClient}>
+              <DeepProvider>
+                <TestComponent />
+              </DeepProvider>
+            </ApolloProvider>
+          );
+        
+          await waitFor(() => {
+            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+          });
+      })
+      it('login with token in apollo client', async () => {
+        // await deepClient.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
+        const token = deepClient.token;
+        assert.isTrue(!!token)
+        const apolloClient = generateApolloClient({
+          path: graphQlPath,
+          ssl: ssl,
+          token
+        });
+        let deepInComponent: DeepClient;
+        
+          function TestComponent() {
+            deepInComponent = useDeep();
+       
+            return null;
+          }
+        
+          render(
+            <ApolloProvider client={apolloClient}>
               <DeepProvider>
                 <TestComponent />
               </DeepProvider>
