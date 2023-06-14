@@ -533,16 +533,16 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
     data = {
       triggeredByLinkId: Number(default_user_id),
       oldLink: { 
-        id: Number(OLD?.id),
-        from_id: Number(OLD?.from_id),
-        to_id: Number(OLD?.to_id),
-        type_id: Number(OLD?.type_id),
+        id: Number(link?.id),
+        from_id: Number(link?.from_id),
+        to_id: Number(link?.to_id),
+        type_id: Number(link?.type_id),
         value: OLD ? { id: Number(OLD.id), link_id: Number(OLD.link_id), value: typeof OLD.value === 'number' ? Number(OLD.value) : OLD.value } : undefined }, 
       newLink: { 
-        id: Number(NEW?.id),
-        from_id: Number(NEW?.from_id),
-        to_id: Number(NEW?.to_id),
-        type_id: Number(NEW?.type_id), 
+        id: Number(link?.id),
+        from_id: Number(link?.from_id),
+        to_id: Number(link?.to_id),
+        type_id: Number(link?.type_id), 
         value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined }, 
     };
   } else {
