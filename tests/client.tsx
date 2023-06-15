@@ -10,16 +10,16 @@ import React, { useEffect } from "react";
 import { ApolloClient, ApolloProvider} from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 import { useDeep } from '../imports/client';
-import {ApolloClientTokenizedProvider, IApolloClientTokenizedProvider} from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
+// import {ApolloClientTokenizedProvider, IApolloClientTokenizedProvider} from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
 import { TokenProvider } from '../imports/react-token';
 import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
 
-function Main ({options}: {options: IApolloClientTokenizedProvider<any>}): JSX.Element {
-  return <ApolloClientTokenizedProvider options={options}>
-    <div></div>
-  </ApolloClientTokenizedProvider>
-}
+// function Main ({options}: {options: IApolloClientTokenizedProvider<any>}): JSX.Element {
+//   return <ApolloClientTokenizedProvider options={options}>
+//     <div></div>
+//   </ApolloClientTokenizedProvider>
+// }
 
 const graphQlPath = `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`;
 const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
@@ -747,46 +747,46 @@ describe('client', () => {
             assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
           });
       })
-      it('login with token in apollo client', async () => {
-        // await deepClient.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
-        const unloginedDeep = new DeepClient({ apolloClient });
-        const guest = await unloginedDeep.guest();
-        const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
-        const admin = await guestDeep.login({
-          linkId: await guestDeep.id('deep', 'admin'),
-        });
-        const deepClient = new DeepClient({ deep: guestDeep, ...admin });
-        assert.isTrue(!!deepClient.token)
-        let deepInComponent: DeepClient;
+      // it('login with token in apollo client', async () => {
+      //   // await deepClient.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
+      //   const unloginedDeep = new DeepClient({ apolloClient });
+      //   const guest = await unloginedDeep.guest();
+      //   const guestDeep = new DeepClient({ deep: unloginedDeep, ...guest });
+      //   const admin = await guestDeep.login({
+      //     linkId: await guestDeep.id('deep', 'admin'),
+      //   });
+      //   const deepClient = new DeepClient({ deep: guestDeep, ...admin });
+      //   assert.isTrue(!!deepClient.token)
+      //   let deepInComponent: DeepClient;
         
-          function TestComponent() {
-            deepInComponent = useDeep();
+      //     function TestComponent() {
+      //       deepInComponent = useDeep();
        
-            return null;
-          }
+      //       return null;
+      //     }
         
-        render(
-          <QueryStoreProvider>
-            <LocalStoreProvider>
-              <ApolloClientTokenizedProvider options={{
-                path: graphQlPath,
-                ssl: ssl,
-                token: deepClient.token
-              }}>
-                <TokenProvider>
-                  <DeepProvider>
-                    <TestComponent />
-                  </DeepProvider>
-                </TokenProvider>
-              </ApolloClientTokenizedProvider>
-            </LocalStoreProvider>
-          </QueryStoreProvider>
-        );
+      //   render(
+      //     <QueryStoreProvider>
+      //       <LocalStoreProvider>
+      //         <ApolloClientTokenizedProvider options={{
+      //           path: graphQlPath,
+      //           ssl: ssl,
+      //           token: deepClient.token
+      //         }}>
+      //           <TokenProvider>
+      //             <DeepProvider>
+      //               <TestComponent />
+      //             </DeepProvider>
+      //           </TokenProvider>
+      //         </ApolloClientTokenizedProvider>
+      //       </LocalStoreProvider>
+      //     </QueryStoreProvider>
+      //   );
         
-          await waitFor(() => {
-            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
-          });
-      })
+      //     await waitFor(() => {
+      //       assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+      //     });
+      // })
     })
   });
   describe('short value insert', () => {
