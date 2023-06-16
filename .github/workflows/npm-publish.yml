@@ -17,3 +17,4 @@ jobs:
     with:
       build-command: "npm run package:build"
       test-command: "echo 'Tests are temporarely disabled'"
+      should-generate-documentation: false
