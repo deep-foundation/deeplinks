@@ -1,0 +1,15 @@
+name: Npm Test
+
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+  workflow_dispatch:
+
+jobs:
+  main:
+    uses: deep-foundation/workflows/.github/workflows/npm-test.yml@main
+    secrets:
+      npm-token: ${{ secrets.NPM_TOKEN }}
+    with:
+      build-command: "npm run build"
+      test-command: "echo 'Tests are temporarely disabled'"
