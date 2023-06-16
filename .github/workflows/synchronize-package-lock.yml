@@ -1,0 +1,9 @@
+name: Synchronize package-lock.json
+
+on:
+  workflow_dispatch:
+
+      
+jobs:
+  main:
+    uses: deep-foundation/workflows/.github/workflows/synchronize-package-lock.yml@main
