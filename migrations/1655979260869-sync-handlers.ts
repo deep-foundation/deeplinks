@@ -322,15 +322,15 @@ const fillValueByLinksCode = /*javascript*/`(links) => {
   let linkId;
   if (!links.length) return links;
   for (let i = 0; i < links.length; i++){
-    linkId = links[i].id;
+    linkId = Number(links[i].id);
     table = 'strings';
     const stringValue = plv8.execute(${selectValueTable})?.[0];
     table = 'objects';
     const objectValue = plv8.execute(${selectValueTable})?.[0];
     table = 'numbers';
     let numberValue = plv8.execute(${selectValueTable})?.[0];
-    if (numberValue) numberValue = Number(numberValue);
-    links[i].value = stringValue || objectValue || numberValue;
+    const value = stringValue || objectValue || numberValue;
+    if (value) links[i].value = { id: Number(value?.id), link_id: Number(value?.link_id), value: numberValue ? Number(value.value) : value.value};
   }
 }`;
 
@@ -537,15 +537,19 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         from_id: Number(link?.from_id),
         to_id: Number(link?.to_id),
         type_id: Number(link?.type_id),
-        value: OLD ? { id: Number(OLD.id), link_id: Number(OLD.link_id), value: typeof OLD.value === 'number' ? Number(OLD.value) : OLD.value } : undefined }, 
+        value: OLD ? { id: Number(OLD.id), link_id: Number(OLD.link_id), value: typeof OLD.value === 'number' ? Number(OLD.value) : OLD.value } : undefined
+      }, 
       newLink: { 
         id: Number(link?.id),
         from_id: Number(link?.from_id),
         to_id: Number(link?.to_id),
         type_id: Number(link?.type_id), 
-        value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined }, 
+        value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined
+      }, 
     };
   } else {
+    const link = { id: NEW?.id || OLD?.id };
+    fillValueByLinks([link]);
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
       triggeredByLinkId: Number(default_user_id),
@@ -554,13 +558,13 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         from_id: Number(OLD?.from_id),
         to_id: Number(OLD?.to_id),
         type_id: Number(OLD?.type_id),
-        value: fillValueByLinks([OLD])
+        value: link?.value
       } : undefined, newLink: NEW ? {
         id: Number(NEW?.id),
         from_id: Number(NEW?.from_id),
         to_id: Number(NEW?.to_id),
         type_id: Number(NEW?.type_id),
-        value: fillValueByLinks([NEW])
+        value: link?.value
       } : undefined,
     };
   }

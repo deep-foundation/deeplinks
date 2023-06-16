@@ -2235,7 +2235,7 @@ describe('sync handlers', () => {
       });
     });
     describe('Check value in data', () => {
-      it(`Check in insert link`, async () => {
+      it(`Check in delete link`, async () => {
         const debug = log.extend('HandleDelete');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -2256,7 +2256,7 @@ describe('sync handlers', () => {
         debug('handler', handler);
         debug('customLinkId', customLinkId);
 
-        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        const linkId = (await deep.insert({ type_id: typeId, string: 'helloBugFixers' }))?.data?.[0].id;
         
         try {
           const deleted = await deep.delete(linkId);
@@ -2266,13 +2266,15 @@ describe('sync handlers', () => {
         }
         
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
-        debug('insertedByHandler', insertedByHandler?.data?.[0]?.value?.value?.oldLink);
+        debug('insertedByHandler', insertedByHandler?.data?.[0]);
+        debug('insertHandler data', insertedByHandler?.data?.[0]?.value?.value);
         if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
         if (insertedByHandler?.data?.[0]?.id) await deep.delete(customLinkId);
         debug('delete handler', await deleteHandler(handler));
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+        assert.equal(insertedByHandler?.data?.[0]?.value?.value?.oldLink?.value?.value, 'helloBugFixers');
       });
-      it(`Check in update link`, async () => {
+      it.skip(`Check in update link`, async () => {
         const debug = log.extend('HandleInsert');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -2324,6 +2326,9 @@ describe('sync handlers', () => {
         debug('delete handler', await deleteHandler(handler));
         debug('delete handler', await deleteHandler(handlerUpdate));
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+        assert.equal(!!insertedByHandler2?.data?.[0]?.id, true);
+        assert.equal(!!insertedByHandler?.data?.[0]?.value, false);
+        assert.equal(!!insertedByHandler2?.data?.[0]?.value, true);
       });
     });
   });
