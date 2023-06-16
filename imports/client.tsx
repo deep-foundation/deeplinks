@@ -2,7 +2,7 @@ import atob from 'atob';
 import { gql, useQuery, useSubscription, useApolloClient } from '@apollo/client/index.js';
 import type { ApolloQueryResult } from '@apollo/client/index.js';
 import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
-import { useLocalStore } from '@deep-foundation/store/local.js';
+import { useLocalStore } from '@deep-foundation/store/local.js'; 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits, inspect } from "util";
 import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, ISerialResult, updateMutation } from './gql/index.js';
