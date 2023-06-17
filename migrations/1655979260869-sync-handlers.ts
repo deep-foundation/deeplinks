@@ -45,6 +45,11 @@ const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // aw
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
 const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
 
+const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
+
+const parseJwtCode = `
+DECLARE parts varchar array := string_to_array($1, '.'); BEGIN RETURN concat('{ "headers":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[1]), 'utf-8'),', "payload":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[2]), 'utf-8'),'}'); END;`;
+
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
 
@@ -281,14 +286,14 @@ const prepareFunction = /*javascript*/`
   };
 
   const typeHandlers = plv8.execute(${typeHandlersCode}, [ link.type_id, handletypeid ])[0].root.map((textFile)=>{return {value: textFile?.valuseResult?.value, id: textFile?.handler}} );
-  for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = getOwner(typeHandlers[i].id); }
+  for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = Number(getOwner(typeHandlers[i].id)); }
 
   const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.query_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
   const testedSelectors = [];
   for (let i = 0; i < selectors.length; i++){ if (!selectors[i].query_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].query_id, user_id])) testedSelectors.push(selectors[i].selector_id); }
   
   const selectorHandlers = plv8.execute(${selectorHandlersCode}, [ testedSelectors, handletypeid ])[0].root.map((textFile)=>{return{value: textFile?.valuseResult?.value, id: textFile?.handler}});
-  for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = getOwner(selectorHandlers[i].id); }
+  for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = Number(getOwner(selectorHandlers[i].id)); }
 
   const handlers = typeHandlers.concat(selectorHandlers);
 
@@ -377,11 +382,11 @@ const setPush =  `\`\${setFileds[i]} = '\${_set[setFileds[i]]}'::\${table === 's
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
-  hasura_session['x-hasura-user-id'] = Number(ownerId);
-  plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify(hasura_session), true]);
   return {
-    linkId: ownerId,
+    linkId: Number(ownerId),
     id: (start, ...path) => {
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
       try {
         const pathToWhere = (start, path) => {
           const pckg = ${pckgCode};
@@ -408,6 +413,8 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
       if (_where?.object) plv8.elog(ERROR, 'link.object relation is not supported in deep.client mini');
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
       if (!options?.table || options?.table === 'links'){
         const { id, type_id, from_id, to_id, number, string, object, value } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
@@ -415,7 +422,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const fillValueByLinks = ${fillValueByLinksCode};
         let where = generateSelectWhere(_where);
         let links = [];
-        if (where) links = plv8.execute(${selectWithPermissions}, [ ownerId ]);
+        if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId ]);
         fillValueByLinks(links);
         return { data: links };
       }
@@ -424,7 +431,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const generateSelectWhere = ${generateSelectWhereCode};
         let where = generateSelectWhere(_where);
         let links = [];
-        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ ownerId ]);
+        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId ]);
         return { data: links };
       }
       if (options?.table === 'can'){
@@ -452,13 +459,15 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         string && typeof string !== 'string' || string?.data?.value && typeof string?.data?.value !== 'string'  ||
         object && typeof object !== 'object' || object?.data?.value && typeof object?.data?.value !== 'object' 
         ) plv8.elog(ERROR, 'value type error');
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
       const ids = {};
       const checkedNumber = number?.data?.value ? number?.data?.value : number;
       const checkedString = string?.data?.value ? string?.data?.value : string;
       const checkedObject = object?.data?.value ? object?.data?.value : object;
       let insertLinkString = ${insertLinkStringCode};
       const linkid = plv8.execute(insertLinkString)[0]?.id;
-      const linkCheck = checkInsertPermission(linkid, ownerId);
+      const linkCheck = checkInsertPermission(linkid, this.linkId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = checkedNumber || checkedString || JSON.stringify(checkedObject);
       if (!value) return { data: [{ id: linkid }]};
@@ -471,7 +480,9 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const { id, link_id, value } = criteria || {};
       if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
       const { table } = options || {};
-      const linkCheck = checkUpdatePermission(link_id, ownerId);
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkUpdatePermission(link_id, this.linkId);
       if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
       
       const whereArr = [];
@@ -497,7 +508,9 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (!id) throw new Error('No valid id to delete');
       const { table } = options || {};
       if (table && !['links', 'strings', 'numbers', 'objects'].includes(table)) plv8.elog(ERROR, 'delete from '.concat(table, ' not permitted'));
-      const linkCheck = checkDeleteLinkPermission(id, ownerId, table);
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkDeleteLinkPermission(id, this.linkId, table);
       if (!linkCheck) plv8.elog(ERROR, 'Delete not permitted');
       const deleteString = ${deleteStringCode};
       let linkid;
@@ -508,6 +521,25 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         linkid = plv8.execute(deleteString, [ id ])[0].id;
       }
       return { data: [{ id: linkid }]};
+    },
+    login: function(options) {
+      let { token, linkId } = options;
+      if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
+      if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
+      if (token && !linkId) linkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
+      if (linkId) {
+        this.linkId = linkId;
+        hasura_session['x-hasura-user-id'] = linkId;
+        return ({ linkId, token })
+      }
+      return ({ error: 'no link founded'});
+    },
+    new: function(options) {
+      let { token, linkId } = options;
+      if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
+      if ( token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
+      if (token && !linkId) linkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
+      return deepFabric(linkId, hasura_session);
     }
   }
 }`;
@@ -604,7 +636,7 @@ const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
 const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
 const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
-const deep = (${deepFabric})(clientlinkid, hasura_session);
+const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
 const result = operation === 'id' || operation === 'update' ? deep[operation](...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
@@ -620,6 +652,12 @@ export const dropPrepareFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAM
 
 export const createDeepClientFunction = sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__sync__handlers__deep__client(clientLinkId bigint, operation text, args jsonb, options jsonb) RETURNS jsonb AS $$ ${deepClientFunction} $$ LANGUAGE plv8;`;
 export const dropDeepClientFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__sync__handlers__deep__client CASCADE;`;
+
+export const createDecodeBase64urlFunction = sql`CREATE OR REPLACE function ${LINKS_TABLE_NAME}__decode__base64url(text) returns bytea as $$ ${decodeBase64urlCode} $$ language sql strict immutable;`;
+export const dropDecodeBase64urlFunction = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__decode__base64url CASCADE;`;
+
+export const createParseJwtFunction = sql`CREATE OR REPLACE function ${LINKS_TABLE_NAME}__parse__jwt(text) returns JSONB as $$ ${parseJwtCode} $$language plpgsql;`;
+export const dropParseJwtFunction  = sql`DROP FUNCTION IF EXISTS ${LINKS_TABLE_NAME}__parse__jwt CASCADE;`;
 
 // insert link trigger
 
@@ -700,6 +738,8 @@ export const up = async () => {
   await api.sql(sql`CREATE EXTENSION IF NOT EXISTS plv8;`);
 
   await api.sql(createPrepareFunction);
+  await api.sql(createDecodeBase64urlFunction);
+  await api.sql(createParseJwtFunction);
 
   await api.sql(createDeepClientFunction);
   
@@ -738,14 +778,14 @@ export const up = async () => {
 
   await api.sql(createSyncDeleteObjectsTriggerFunction);
   await api.sql(createSyncDeleteObjectsTrigger);
-  
-
 };
 
 export const down = async () => {
   log('down');
 
   await api.sql(dropPrepareFunction);
+  await api.sql(dropDecodeBase64urlFunction);
+  await api.sql(dropParseJwtFunction);
 
   await api.sql(dropDeepClientFunction);
 

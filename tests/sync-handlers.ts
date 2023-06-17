@@ -158,6 +158,181 @@ describe('sync handlers', () => {
       assert.equal(value?.value, 'HelloBugFixers');
       assert.equal(value?.id, selected?.data?.[0]?.value?.id);
     });
+    it(`login as guest and insert`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const guest = await deep.guest({});
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('customLinkId', customLinkId);
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, data}) => {
+          const initId = deep.linkId;
+          deep.login({linkId:${guest.linkId}});
+          deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}, object: { initId, guestId: deep.linkId }});
+        }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+
+      debug('adminId', await deep.id('deep', 'admin'));
+      debug('insertedByHandler', insertedByHandler?.data);
+      debug('insertedByHandler data', insertedByHandler?.data?.[0]?.value?.value);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, false);
+    });
+    it(`login as guest, relogin as admin and insert`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const guest = await deep.guest({});
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('customLinkId', customLinkId);
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, data}) => {
+          deep.login({linkId:${await deep.id('deep', 'admin')}});
+          deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}});
+        }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+
+      debug('adminId', await deep.id('deep', 'admin'));
+      debug('insertedByHandler', insertedByHandler?.data);
+      debug('insertedByHandler data', insertedByHandler?.data?.[0]?.value?.value);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+    });
+    it(`new client by linkId`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const guest = await deep.guest({});
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('customLinkId', customLinkId);
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, data}) => {
+          const newDeep = deep.new({linkId:${await deep.id('deep', 'admin')}});
+          newDeep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}, object: {linkId: newDeep.linkId}});
+        }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+
+      debug('adminId', await deep.id('deep', 'admin'));
+      debug('insertedByHandler', insertedByHandler?.data);
+      debug('insertedByHandler data', insertedByHandler?.data?.[0]?.value?.value);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+      assert.equal(insertedByHandler?.data?.[0]?.value?.value?.linkId, await deep.id('deep', 'admin'));
+    });
+    it(`new client by jwt`, async () => {
+      const debug = log.extend('HandleInsert');
+
+      const typeId = await deep.id('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      
+      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+      const customLinkId = inserted?.data?.[0]?.id;
+      debug('admin Token', (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token);
+      
+
+      const handler = await insertHandler(
+        handleInsertTypeId,
+        typeId, 
+        `({deep, data}) => {
+          const newDeep = deep.new({token:'${(await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token}'});
+          newDeep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}, object: {linkId: newDeep.linkId}});
+        }`,
+        undefined,
+        supportsId
+      );
+      debug('handler', handler);
+      
+      try {
+        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        debug('linkId', linkId);
+        debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+      } catch (e){
+        debug('insert error: ', e);
+      }
+
+      const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+
+      debug('adminId', await deep.id('deep', 'admin'));
+      debug('insertedByHandler', insertedByHandler?.data);
+      debug('insertedByHandler data', insertedByHandler?.data?.[0]?.value?.value);
+      if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+      await deep.delete(customLinkId);
+      debug('delete handler', await deleteHandler(handler));
+      assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
+      assert.equal(insertedByHandler?.data?.[0]?.value?.value?.linkId, await deep.id('deep', 'admin'));
+    });
     describe('permissions', () => {
       describe('select', () => {
         it(`root can select from tree`, async () => {
@@ -2274,7 +2449,7 @@ describe('sync handlers', () => {
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
         assert.equal(insertedByHandler?.data?.[0]?.value?.value?.oldLink?.value?.value, 'helloBugFixers');
       });
-      it.skip(`Check in update link`, async () => {
+      it(`Check in update link`, async () => {
         const debug = log.extend('HandleInsert');
 
         const typeId = await deep.id('@deep-foundation/core', 'Operation');
@@ -2327,7 +2502,7 @@ describe('sync handlers', () => {
         debug('delete handler', await deleteHandler(handlerUpdate));
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
         assert.equal(!!insertedByHandler2?.data?.[0]?.id, true);
-        assert.equal(!!insertedByHandler?.data?.[0]?.value, false);
+        assert.equal(!!insertedByHandler?.data?.[0]?.value, true);
         assert.equal(!!insertedByHandler2?.data?.[0]?.value, true);
       });
     });
