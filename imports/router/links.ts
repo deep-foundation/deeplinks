@@ -615,7 +615,6 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
   if (operation == 'INSERT') {
     // get dockerImage from isolation provider
     const isolationProvider = await deep.select({
-      type_id: await deep.id('@deep-foundation/core', 'DockerIsolationProvider'),
       in: {
         id: { _eq: handlePortLink.id },
       },
