@@ -78,7 +78,7 @@ export class ContainerController {
       if (count < 0) return { error: 'timeout _runContainer' };
       count--;
       try {
-        const command = `docker pull ${handler}; docker run --add-host host.docker.internal:host-gateway -e PORT=${dockerPort} -e GQL_URN=${gql_docker_domain}:3006/gql -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep-${network} -d ${handler}`;
+        const command = `docker pull ${handler}; docker run --add-host host.docker.internal:host-gateway --restart unless-stopped -e PORT=${dockerPort} -e GQL_URN=${gql_docker_domain}:3006/gql -e GQL_SSL=0 --name ${containerName} ${publish ? `-p ${dockerPort}:${dockerPort}` : `--expose ${dockerPort}` } --net deep-${network} -d ${handler}`;
         log('_runContainer command', { command });
         const dockerRunResultObject = await execAsync(command);
         log('_runContainer dockerRunResultObject', JSON.stringify(dockerRunResultObject, null, 2));
@@ -104,9 +104,15 @@ export class ContainerController {
         const container = { name: containerName, host, port: dockerPort, options };
         log('_runContainer container', container);
         
-        // wait on
-        const waitResult = await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
-        log('_runContainer npx done', { waitResult });
+        try 
+        {
+          // wait on
+          const waitResult = await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
+          log('_runContainer npx done', { waitResult });
+        } catch (e) {
+          error('_runContainer error', e);
+          return { error: 'wait-on healthz timeout _runContainer' };
+        }
 
         return container;
       }
