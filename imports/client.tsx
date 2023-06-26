@@ -1086,6 +1086,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   loading: boolean;
 } {
   const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
+  debug('useDeepQuery', miniName, query, options);
   const deep = useDeep();
   const wq = useMemo(() => {
     const sq = serializeQuery(query);
@@ -1125,6 +1126,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   },
 ): UseDeepSubscriptionResult<LL> {
   const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
+  debug('useDeepSubscription', miniName, query, options);
   const deep = useDeep();
   const wq = useMemo(() => {
     const sq = serializeQuery(query);
@@ -1158,4 +1160,9 @@ export interface UseDeepSubscriptionResult<LL = Link<number>> {
   data?: LL[];
   error?: any;
   loading: boolean;
+}
+
+export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: number; loading: boolean; error?: any } {
+  const result = useDeepQuery({ id: { _id: [start, ...path] } });
+  return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
