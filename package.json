@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.199",
+  "version": "0.0.200",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.14",
-    "@deep-foundation/deepcase": "0.0.23",
+    "@deep-foundation/deepcase": "^0.0.23",
     "@deep-foundation/finder": "^0.0.3",
     "@deep-foundation/hasura": "^0.0.45",
     "@deep-foundation/materialized-path": "0.0.24",
