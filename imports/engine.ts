@@ -243,5 +243,5 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, engineStr }) ;
   log({engine});
 
-  return { ...options, platform, isDeeplinksDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  return { ...options, platform, __filename, __dirname, isDeeplinksDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
