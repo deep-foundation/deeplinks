@@ -8,6 +8,8 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 
+const packageJson = require(path.normalize(`${process.cwd()}/package.json`));
+
 function isElectron() {
   // @ts-ignore
   if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process?.type === 'renderer') {
@@ -65,8 +67,8 @@ interface IGenerateEnvsOptions {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const _hasura = path.normalize(`${__dirname}/../node_modules/@deep-foundation/hasura`);
-const _deeplinks = path.normalize(`${__dirname}/../`);
+const _hasura = path.normalize(`${process.cwd()}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
+const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${process.cwd()}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
@@ -182,10 +184,10 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}"  && npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}"  && npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''}`;
   }
   if (operation === 'run') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } ) && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } )`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
@@ -243,5 +245,5 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, engineStr }) ;
   log({engine});
 
-  return { ...options, platform, isDeeplinksDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  return { ...options, platform, __filename, __dirname, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
