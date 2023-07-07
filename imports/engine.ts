@@ -8,6 +8,8 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 
+const packageJson = require(`${process.cwd()}/package.json`);
+
 function isElectron() {
   // @ts-ignore
   if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process?.type === 'renderer') {
@@ -65,8 +67,8 @@ interface IGenerateEnvsOptions {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const _hasura = path.normalize(`${__dirname}/../node_modules/@deep-foundation/hasura`);
-const _deeplinks = path.normalize(`${__dirname}/../`);
+const _hasura = path.normalize(`${process.cwd()}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
+const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${process.cwd()}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
