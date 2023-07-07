@@ -1,4 +1,4 @@
-FROM node:16.20.0-alpine3.17 AS node
+FROM node:18.16.1-alpine3.17 AS node
 FROM docker:20.10.8-dind-alpine3.14
 
 COPY --from=node /usr/lib /usr/lib
