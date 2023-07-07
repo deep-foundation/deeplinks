@@ -8,7 +8,7 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 
-const packageJson = require(`${process.cwd()}/package.json`);
+const packageJson = require(path.normalize(`${process.cwd()}/package.json`));
 
 function isElectron() {
   // @ts-ignore
