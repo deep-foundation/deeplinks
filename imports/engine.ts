@@ -8,7 +8,6 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import path from 'path';
 
 const filePath = path.normalize(`${process.cwd()}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
