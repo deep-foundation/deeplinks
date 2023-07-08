@@ -7,8 +7,11 @@ import Debug from 'debug';
 // @ts-ignore
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import path from 'path';
 
-const packageJson = require(path.normalize(`${process.cwd()}/package.json`));
+const filePath = path.normalize(`${process.cwd()}/package.json`);
+const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
 function isElectron() {
   // @ts-ignore
