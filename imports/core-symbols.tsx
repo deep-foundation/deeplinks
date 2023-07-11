@@ -11,7 +11,7 @@ export const coreSymbolsPckg: Package = {
     {
       name: '@deep-foundation/core',
       version: '0.0.0',
-    }
+    } 
   ],
   data: [
     { id: 'Type', package: { dependencyId: 1, containValue: 'Type' } },
