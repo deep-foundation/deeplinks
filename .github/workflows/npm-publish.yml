@@ -15,6 +15,4 @@ jobs:
     secrets:
       npm-token: ${{ secrets.NPM_TOKEN }}
     with:
-      build-command: ${{ env.NPM_BUILD_COMMAND }}
-      test-command: ${{ env.NPM_TEST_COMMAND }}
-      should-generate-documentation: false
+      should-generate-documentation: ${{ vars.SHOULD_GENERATE_DOCUMENTATION }}
