@@ -9,5 +9,5 @@ jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-test.yml@main
     with:
-      build-command: "npm run package:build"
-      test-command: "echo 'Tests are temporarely disabled'"
+      build-command: ${{ env.NPM_BUILD_COMMAND }}
+      test-command: ${{ env.NPM_TEST_COMMAND }}
