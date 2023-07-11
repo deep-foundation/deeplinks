@@ -8,6 +8,3 @@ on:
 jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-test.yml@main
-    with:
-      build-command: ${{ env.NPM_BUILD_COMMAND }}
-      test-command: ${{ env.NPM_TEST_COMMAND }}
