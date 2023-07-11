@@ -395,8 +395,7 @@ export class Packager<L extends Link<any>> {
         { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } },
         { in: { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } } },
         { type_id: { _eq: PackageVersion }, to: { id: { _eq: options.packageLinkId } } },
-      ],
-      order_by: {id: 'asc'}
+      ]
     }, {
       name: 'LOAD_PACKAGE_LINKS',
       returning: `
