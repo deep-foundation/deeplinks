@@ -337,13 +337,13 @@ export interface DeepClientInstance<L = Link<number>> {
 
   stringify(any?: any): string;
 
-  select<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp, options?: ReadOptions): Promise<DeepClientResult<LL[]>>;
+  select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>>;
 
-  insert<Table extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects , options?: WriteOptions):Promise<DeepClientResult<{ id }[]>>;
+  insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable> , options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  update<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp, value: UpdateValue, options?: WriteOptions):Promise<DeepClientResult<{ id }[]>>;
+  update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  delete<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp, options?: WriteOptions):Promise<DeepClientResult<{ id }[]>>;
+  delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
   reserve<LL = L>(count: number): Promise<number[]>;
 
@@ -571,7 +571,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   serializeQuery = serializeQuery;
   serializeWhere = serializeWhere;
 
-  async select<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp, options?: ReadOptions): Promise<DeepClientResult<LL[]>> {
+  async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) {
       return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     }
@@ -603,7 +603,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.q0 };
   };
 
-  async insert<Table extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects, options?: WriteOptions):Promise<DeepClientResult<{ id }[]>> {
+  async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
 
@@ -627,7 +627,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async update<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp, value: UpdateValue, options?: WriteOptions):Promise<DeepClientResult<{ id }[]>> {
+  async update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
@@ -649,7 +649,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async delete<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp, options?: WriteOptions):Promise<DeepClientResult<{ id }[]>> {
+  async delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
@@ -1041,45 +1041,46 @@ export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepC
   return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
 
-export type Exp = (
-  Table extends 'numbers' ? BoolExpValue<number> :
-  Table extends 'strings' ? BoolExpValue<string> :
-  Table extends 'objects' ? BoolExpValue<object> :
-  Table extends 'can' ? BoolExpCan :
-  Table extends 'selectors' ? BoolExpSelector :
-  Table extends 'tree' ? BoolExpTree :
-  Table extends 'handlers' ? BoolExpHandler :
+export type Exp<TTable extends Table> = (
+  TTable extends 'numbers' ? BoolExpValue<number> :
+  TTable extends 'strings' ? BoolExpValue<string> :
+  TTable extends 'objects' ? BoolExpValue<object> :
+  TTable extends 'can' ? BoolExpCan :
+  TTable extends 'selectors' ? BoolExpSelector :
+  TTable extends 'tree' ? BoolExpTree :
+  TTable extends 'handlers' ? BoolExpHandler :
   QueryLink
 ) | number | number[];
 
-export type UpdateValue = (
-  Table extends 'numbers' ? MutationInputValue<number> :
-  Table extends 'strings' ? MutationInputValue<string> :
-  Table extends 'objects' ? MutationInputValue<any> :
+export type UpdateValue<TTable extends Table> = (
+  TTable extends 'numbers' ? MutationInputValue<number> :
+  TTable extends 'strings' ? MutationInputValue<string> :
+  TTable extends 'objects' ? MutationInputValue<any> :
   MutationInputLinkPlain
 );
 
-export type InsertObjects = (
-  Table extends 'numbers' ? MutationInputValue<number> :
-  Table extends 'strings' ? MutationInputValue<string> :
-  Table extends 'objects' ? MutationInputValue<any> :
+export type InsertObjects<TTable extends Table> = (
+  TTable extends 'numbers' ? MutationInputValue<number> :
+  TTable extends 'strings' ? MutationInputValue<string> :
+  TTable extends 'objects' ? MutationInputValue<any> :
   MutationInputLink
 ) | (
-  Table extends 'numbers' ? MutationInputValue<number> :
-  Table extends 'strings' ? MutationInputValue<string> :
-  Table extends 'objects' ? MutationInputValue<any> :
+  TTable extends 'numbers' ? MutationInputValue<number> :
+  TTable extends 'strings' ? MutationInputValue<string> :
+  TTable extends 'objects' ? MutationInputValue<any> :
   MutationInputLink
 )[]
 
-export type Options = {
-  table?: Table;
+export type Options<TTable extends Table> = {
+  table?: TTable;
   returning?: string;
   variables?: any;
   name?: string;
 };
 
-export type ReadOptions = Options;
+export type ReadOptions<TTable extends Table> = Options<TTable>;
 
-export type WriteOptions = Options & {
+export type WriteOptions<TTable extends Table>  = Options<TTable> & {
   silent?: boolean;
 }
+
