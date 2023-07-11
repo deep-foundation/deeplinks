@@ -8,5 +8,4 @@ on:
 jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-build.yml@main
-    with:
-      build-command: ${{ vars.NPM_BUILD_COMMAND }}
+
