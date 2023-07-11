@@ -22,7 +22,7 @@ export interface PackageIdentifier {
 export interface Package {
   package: PackageIdentifier;
   data: PackageItem[];
-  dependencies?: { [id: number]: PackageIdentifier };
+  dependencies?: Array<PackageIdentifier>;
   strict?: boolean;
   errors?: PackagerError[];
 }
