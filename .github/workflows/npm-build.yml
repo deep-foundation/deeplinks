@@ -8,7 +8,5 @@ on:
 jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-build.yml@main
-    secrets:
-      npm-token: ${{ secrets.NPM_TOKEN }}
     with:
       build-command: "npm run build"
