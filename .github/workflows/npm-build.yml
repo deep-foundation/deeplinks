@@ -9,4 +9,4 @@ jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-build.yml@main
     with:
-      build-command: ${{ env.NPM_BUILD_COMMAND }}
+      build-command: ${{ vars.NPM_BUILD_COMMAND }}
