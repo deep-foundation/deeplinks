@@ -8,4 +8,3 @@ on:
 jobs:
   main:
     uses: deep-foundation/workflows/.github/workflows/npm-build.yml@main
-
