@@ -7,12 +7,12 @@ export const coreSymbolsPckg: Package = {
     uri: 'deep-foundation/core-symbols',
     type: 'git',
   },
-  dependencies: {
-    1: {
+  dependencies: [
+    {
       name: '@deep-foundation/core',
       version: '0.0.0',
-    },
-  },
+    }
+  ],
   data: [
     { id: 'Type', package: { dependencyId: 1, containValue: 'Type' } },
     { id: 'Package', package: { dependencyId: 1, containValue: 'Package' } },
