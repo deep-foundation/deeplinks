@@ -15,4 +15,4 @@ jobs:
     secrets:
       npm-token: ${{ secrets.NPM_TOKEN }}
     with:
-      should-generate-documentation: ${{ vars.SHOULD_GENERATE_DOCUMENTATION }}
+      should-generate-documentation: ${{ vars.SHOULD_GENERATE_DOCUMENTATION == 'true' }}
