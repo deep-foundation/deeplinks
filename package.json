@@ -37,7 +37,7 @@
     "@deep-foundation/finder": "^0.0.4",
     "@deep-foundation/hasura": "^0.0.45",
     "@deep-foundation/materialized-path": "0.0.24",
-    "@deep-foundation/npm-packager": "^0.0.27",
+    "@deep-foundation/npm-packager": "^0.0.29",
     "@deep-foundation/npm-packager-ui": "0.0.8",
     "@deep-foundation/react-hasura": "0.0.15",
     "@deep-foundation/store": "^0.0.19",
