@@ -228,9 +228,6 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
 }
 
 export async function call (options: ICallOptions) {
-
-  const envs = { ...options.envs, DOCKERHOST: await internalIpV4() };
-  
   //@ts-ignore
   const envs = { ...options.envs, DOCKERHOST: internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync() };
   if (platform !== "win32"){
