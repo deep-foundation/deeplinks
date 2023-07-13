@@ -1,7 +1,7 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import path from 'path';
-import {internalIpV4} from 'internal-ip';
+import * as internalIp from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
@@ -9,8 +9,7 @@ import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
-const filePath = path.normalize(`${process.cwd()}/package.json`);
-const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+import { remote } from 'electron'
 
 function isElectron() {
   // @ts-ignore
@@ -25,6 +24,11 @@ function isElectron() {
   }
   return false;
 }
+
+const appPath = process.cwd();
+const filePath = path.normalize(`${appPath}/package.json`);
+const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -226,6 +230,9 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
 export async function call (options: ICallOptions) {
 
   const envs = { ...options.envs, DOCKERHOST: await internalIpV4() };
+  
+  //@ts-ignore
+  const envs = { ...options.envs, DOCKERHOST: internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync() };
   if (platform !== "win32"){
     fixPath();
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
@@ -241,7 +248,7 @@ export async function call (options: ICallOptions) {
   log({envs});
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
-  const engine = await _execEngine({ envsStr, engineStr }) ;
+  const engine = await _execEngine({ envsStr, engineStr });
   log({engine});
 
   return { ...options, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
