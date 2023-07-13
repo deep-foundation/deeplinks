@@ -41,7 +41,7 @@
     "@deep-foundation/npm-packager-ui": "0.0.8",
     "@deep-foundation/react-hasura": "0.0.15",
     "@deep-foundation/store": "^0.0.19",
-    "@deep-foundation/tsx": "0.0.3",
+    "@deep-foundation/tsx": "^0.0.4",
     "@types/jest": "^29.5.1",
     "@types/node": "^20.2.4",
     "@types/react": "^18.2.7",
