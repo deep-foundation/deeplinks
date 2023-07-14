@@ -8,7 +8,7 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { rootPath } from 'electron-root-path';
+import { rootPath } from 'root-path-electron';
 // import { remote } from 'electron'
 
 function isElectron() {
