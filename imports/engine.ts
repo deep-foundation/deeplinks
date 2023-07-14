@@ -8,8 +8,8 @@ import Debug from 'debug';
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
-import { remote } from 'electron'
+import { rootPath } from 'electron-root-path';
+// import { remote } from 'electron'
 
 function isElectron() {
   // @ts-ignore
@@ -25,7 +25,9 @@ function isElectron() {
   return false;
 }
 
-const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
+
+// const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
+const appPath = isElectron() ? rootPath : process.cwd();
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
