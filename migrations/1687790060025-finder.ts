@@ -20,12 +20,12 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  console.log('pckg', JSON.stringify(pckg, null, 2));
+  log('pckg', JSON.stringify(pckg, null, 2));
   const importResult = await importPackage(pckg);
-  console.log('importResult', JSON.stringify(importResult, null, 2));
+  log('importResult', JSON.stringify(importResult, null, 2));
   log(importResult);
   const packageId = importResult?.packageId;
-  console.log('packageId', packageId);
+  log('packageId', packageId);
   if (packageId) {
     await sharePermissions(await root.id('deep', 'admin'), packageId);
   }
