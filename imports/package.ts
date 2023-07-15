@@ -4,7 +4,7 @@ import { DeepClient } from './client';
  * Represents a deep package
  * 
  * @remarks
- * Contains name of the package and all the links as the objects with id method which returns the id of the link.
+ * This class intended to be extended by packages  
  * 
  * @example
 ```ts
