@@ -40,9 +40,10 @@ export class Package {
     return await this.deep.id(this.name, ...names);
   }
 
-  async idLocal(...names: string[]) {
+  idLocal(...names: string[]) {
     return this.deep.idLocal(this.name, ...names);
   }
+
 }
 
 export interface PackageConstructorParam {
