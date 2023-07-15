@@ -18,10 +18,11 @@ export class Package {
   /**
    * Name of the package
    */
-  public name: string = '@deep-foundation/capacitor-device';
+  public name: string;
 
   constructor(param: PackageConstructorParam) {
     this.deep = param.deep;
+    this.name = param.name;
   }
 
   public createEntity(...names: string[]) {
@@ -45,5 +46,6 @@ export class Package {
 }
 
 export interface PackageConstructorParam {
+  name: string;
   deep: DeepClient;
 }
