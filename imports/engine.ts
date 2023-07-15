@@ -209,7 +209,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
     }
   }
   if (operation === 'dock') {
-    str = ` docker version -f '{{json .}}'`;
+    str = ` docker version -f ${platform === "win32" ? 'json' : "'{{json .}}'"}`;
   }
   if (operation === 'compose') {
     str = ` docker-compose version --short`;
