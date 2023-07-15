@@ -22,7 +22,7 @@ export interface PackageIdentifier {
 export interface Package {
   package: PackageIdentifier;
   data: PackageItem[];
-  dependencies?: Array<PackageIdentifier>;
+  dependencies?: { [id: number]: PackageIdentifier };
   strict?: boolean;
   errors?: PackagerError[];
 }
@@ -395,7 +395,8 @@ export class Packager<L extends Link<any>> {
         { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } },
         { in: { type_id: { _eq: Contain }, from: { id: { _eq: options.packageLinkId } } } },
         { type_id: { _eq: PackageVersion }, to: { id: { _eq: options.packageLinkId } } },
-      ]
+      ],
+      order_by: {id: 'asc'}
     }, {
       name: 'LOAD_PACKAGE_LINKS',
       returning: `

@@ -10,12 +10,13 @@ import React, { useEffect } from "react";
 import { ApolloClient, ApolloProvider} from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 import { useDeep } from '../imports/client';
-import {ApolloClientTokenizedProvider, IApolloClientTokenizedProvider} from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
+import { IApolloClientGeneratorOptions } from '@deep-foundation/hasura/client';
+import {ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
 import { TokenProvider } from '../imports/react-token';
 import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
 
-function Main ({options}: {options: IApolloClientTokenizedProvider<any>}): JSX.Element {
+function Main ({options}: {options: IApolloClientGeneratorOptions}): JSX.Element {
   return <ApolloClientTokenizedProvider options={options}>
     <div></div>
   </ApolloClientTokenizedProvider>

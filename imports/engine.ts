@@ -1,16 +1,15 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import path from 'path';
-import {internalIpV4} from 'internal-ip';
+import * as internalIp from 'internal-ip';
 import axios from 'axios';
 import Debug from 'debug';
 // @ts-ignore
 import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
-const filePath = path.normalize(`${process.cwd()}/package.json`);
-const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+import { rootPath } from 'root-path-electron';
+// import { remote } from 'electron'
 
 function isElectron() {
   // @ts-ignore
@@ -25,6 +24,13 @@ function isElectron() {
   }
   return false;
 }
+
+
+// const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
+const appPath = isElectron() ? rootPath : process.cwd();
+const filePath = path.normalize(`${appPath}/package.json`);
+const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -66,8 +72,8 @@ interface IGenerateEnvsOptions {
   envs: any;
 }
 
-const _hasura = path.normalize(`${process.cwd()}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
-const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${process.cwd()}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
+const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
+const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
@@ -122,7 +128,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   envs['RESERVED_LIFETIME_MS'] = envs['RESERVED_LIFETIME_MS'] ? envs['RESERVED_LIFETIME_MS'] : 24 * 60 * 60 * 1000;
   // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
-  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? '' : '/tmp/'}.migrate`;
+  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? '' : '/tmp/deep/'}.migrate`;
   if (isGitpod) {
     envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `$(gp url ${hasuraPort})`;
     envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep-hasura:${hasuraPort}`;
@@ -180,13 +186,13 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
   }
   if (operation === 'migrate') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v ${platform === "win32" ? _deeplinks : envs['MIGRATIONS_DIR']}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}"  && npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''}`;
   }
   if (operation === 'run') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v ${platform === "win32" ? _deeplinks : '/tmp'}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } )`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v ${platform === "win32" ? _deeplinks : envs['MIGRATIONS_DIR']}:/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } npm run docker-local && npx -q wait-on --timeout 10000 ${+DOCKER ? `http-get://deep-hasura` : 'tcp'}:8080 && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } )`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
@@ -224,8 +230,8 @@ const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr:
 }
 
 export async function call (options: ICallOptions) {
-
-  const envs = { ...options.envs, DOCKERHOST: await internalIpV4() };
+  //@ts-ignore
+  const envs = { ...options.envs, DOCKERHOST: internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync() };
   if (platform !== "win32"){
     fixPath();
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
@@ -241,7 +247,7 @@ export async function call (options: ICallOptions) {
   log({envs});
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
-  const engine = await _execEngine({ envsStr, engineStr }) ;
+  const engine = await _execEngine({ envsStr, engineStr });
   log({engine});
 
   return { ...options, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
