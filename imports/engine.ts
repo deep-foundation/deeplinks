@@ -250,11 +250,12 @@ export async function call (options: ICallOptions) {
   log({envs});
 
   let permissionsResult;
+  let user;
 
   if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
     const { stdout, stderr } =  await execP('whoami');
 
-    const user = stdout;
+    user = stdout;
 
     const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
     const options = {
@@ -281,5 +282,5 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  return { ...options, platform, _hasura, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
