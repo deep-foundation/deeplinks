@@ -228,7 +228,7 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
     } else {
       const icns = isElectron() ? path.normalize(`${appPath}/resources/assets/appIcon.icns`) : undefined;
       const options = {
-        name: 'Deep.Case',
+        name: 'Deep Case',
         icns,
         env: envs,
       };
