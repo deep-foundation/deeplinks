@@ -13,6 +13,8 @@ import { rootPath } from 'root-path-electron';
 import sudo from 'sudo-prompt';
 import { json } from 'body-parser';
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 function isElectron() {
   // @ts-ignore
   if (typeof window !== 'undefined' && typeof window.process === 'object' && window.process?.type === 'renderer') {
@@ -232,6 +234,7 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
 }
 
 let permissionsAreGiven = false;
+let permissionsAreChecking = false;
 
 export async function call (options: ICallOptions) {
   //@ts-ignore
@@ -253,34 +256,42 @@ export async function call (options: ICallOptions) {
   let permissionsResult;
   let user;
 
-  if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
-    const { stdout, stderr } =  await execP('whoami');
+  if (permissionsAreChecking) {
+    while(permissionsAreChecking) {
+      await delay(1000);
+    }
+  } else {  
+    if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
+      permissionsAreChecking = true;
+      const { stdout, stderr } =  await execP('whoami');
 
-    user = stdout;
-    console.log('whoami: ', user);
+      user = stdout;
+      console.log('whoami: ', user);
 
-    const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
-    const options = {
-      name: 'Deep Case',
-      icns,
-      env: envs,
-    };
-    const execPromise = new Promise((resolve, reject) => {
-      sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
-        if (error) {
-          console.log('permissions error', error);
-          console.dir(error);
-          resolve({ error });
-        } else {
-          resolve({ result: { stdout, stderr } });
-        }
+      const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
+      const options = {
+        name: 'Deep Case',
+        icns,
+        env: envs,
+      };
+      const execPromise = new Promise((resolve, reject) => {
+        sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
+          if (error) {
+            console.log('permissions error', error);
+            console.dir(error);
+            resolve({ error });
+          } else {
+            resolve({ result: { stdout, stderr } });
+          }
+        });
       });
-    });
-    permissionsResult = await execPromise;
+      permissionsResult = await execPromise;
 
-    console.log('permissionsResult', JSON.stringify(permissionsResult))
+      console.log('permissionsResult', JSON.stringify(permissionsResult))
 
-    permissionsAreGiven = !permissionsResult.error;
+      permissionsAreGiven = !permissionsResult.error;
+      permissionsAreChecking = false;
+    }
   }
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
