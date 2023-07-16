@@ -266,7 +266,7 @@ export async function call (options: ICallOptions) {
       env: envs,
     };
     const execPromise = new Promise((resolve, reject) => {
-      sudo.exec(`sudo usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
+      sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
         if (error) {
           console.log('permissions error', error);
           console.dir(error);
