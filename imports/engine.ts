@@ -11,6 +11,7 @@ import fs from 'fs';
 import { rootPath } from 'root-path-electron';
 // import { remote } from 'electron'
 import sudo from 'sudo-prompt';
+import { json } from 'body-parser';
 
 function isElectron() {
   // @ts-ignore
@@ -256,6 +257,7 @@ export async function call (options: ICallOptions) {
     const { stdout, stderr } =  await execP('whoami');
 
     user = stdout;
+    console.log('whoami: ', user);
 
     const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
     const options = {
@@ -273,6 +275,8 @@ export async function call (options: ICallOptions) {
       });
     });
     permissionsResult = await execPromise;
+
+    console.log('permissionsResult', JSON.stringify(permissionsResult))
 
     permissionsAreGiven = !permissionsResult.error;
   }
