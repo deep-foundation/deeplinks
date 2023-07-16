@@ -220,35 +220,17 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
 
 const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs:any; engineStr: string; } ): Promise<IExecEngineReturn> => {
   try {
-    if (platform === "win32"){
-      const command = `${envsStr} ${engineStr}`;
-      console.log(command);
-      const { stdout, stderr } = await execP(command);
-      return { result: { stdout, stderr } }
-    } else {
-      const icns = isElectron() ? path.normalize(`${appPath}/resources/assets/appIcon.icns`) : undefined;
-      const options = {
-        name: 'Deep Case',
-        icns,
-        env: envs,
-      };
-      const execPromise = new Promise((resolve, reject) => {
-        sudo.exec(engineStr, options, (error, stdout, stderr) => {
-          if (error) {
-            reject({ error });
-          } else {
-            resolve({ result: { stdout, stderr } });
-          }
-        });
-      });
-      const execResult = await execPromise;
-      return execResult;
-    }
+    const command = `${envsStr} ${engineStr}`;
+    console.log(command);
+    const { stdout, stderr } = await execP(command);
+    return { result: { stdout, stderr } };
   } catch(e) {
     error(e);
     return { error: e };
   }
 }
+
+let permissionsAreGiven = false;
 
 export async function call (options: ICallOptions) {
   //@ts-ignore
@@ -266,10 +248,38 @@ export async function call (options: ICallOptions) {
 
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   log({envs});
+
+  let permissionsResult;
+
+  if (!permissionsAreGiven && isElectron()) {
+    const { stdout, stderr } =  await execP('whoami');
+
+    const user = stdout;
+
+    const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
+    const options = {
+      name: 'Deep Case',
+      icns,
+      env: envs,
+    };
+    const execPromise = new Promise((resolve, reject) => {
+      sudo.exec(`sudo usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
+        if (error) {
+          resolve({ error });
+        } else {
+          resolve({ result: { stdout, stderr } });
+        }
+      });
+    });
+    permissionsResult = await execPromise;
+
+    permissionsAreGiven = !permissionsResult.error;
+  }
+
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  return { ...options, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  return { ...options, platform, _hasura, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
