@@ -83,9 +83,9 @@ const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): string => {
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
-  const hasuraPort = 8080;
-  const deeplinksPort = 3006;
-  const deepcasePort = 3007;
+  const hasuraPort = '8080';
+  const deeplinksPort = '3006';
+  const deepcasePort = '3007';
 
   envs['DEEPLINKS_PORT'] = envs['DEEPLINKS_PORT'] ? envs['DEEPLINKS_PORT'] : deeplinksPort;
   envs['DEEPCASE_PORT'] = envs['DEEPCASE_PORT'] ? envs['DEEPCASE_PORT'] : deepcasePort;
@@ -252,7 +252,7 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
 
 export async function call (options: ICallOptions) {
   //@ts-ignore
-  const envs = { ...options.envs, DOCKERHOST: internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync() };
+  const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
   if (platform !== "win32"){
     fixPath();
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
