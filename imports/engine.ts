@@ -251,7 +251,7 @@ export async function call (options: ICallOptions) {
 
   let permissionsResult;
 
-  if (!permissionsAreGiven && isElectron()) {
+  if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
     const { stdout, stderr } =  await execP('whoami');
 
     const user = stdout;
