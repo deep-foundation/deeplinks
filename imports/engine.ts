@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { rootPath } from 'root-path-electron';
 // import { remote } from 'electron'
+import sudo from 'sudo-prompt';
 
 function isElectron() {
   // @ts-ignore
@@ -217,12 +218,32 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   return str;
 }
 
-const _execEngine = async ({ envsStr, engineStr }: { envsStr: string; engineStr: string; } ): Promise<IExecEngineReturn> => {
+const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs:any; engineStr: string; } ): Promise<IExecEngineReturn> => {
   try {
-    const command = `${envsStr} ${engineStr}`;
-    console.log(command);
-    const { stdout, stderr } = await execP(command);
-    return { result: { stdout, stderr } }
+    if (platform === "win32"){
+      const command = `${envsStr} ${engineStr}`;
+      console.log(command);
+      const { stdout, stderr } = await execP(command);
+      return { result: { stdout, stderr } }
+    } else {
+      const icns = isElectron() ? path.normalize(`${appPath}/resources/assets/appIcon.icns`) : undefined;
+      const options = {
+        name: 'Deepcase',
+        icns,
+        env: envs,
+      };
+      const execPromise = new Promise((resolve, reject) => {
+        sudo.exec(engineStr, options, (error, stdout, stderr) => {
+          if (error) {
+            reject({ result: { stdout, stderr } });
+          } else {
+            resolve({ result: { stdout, stderr } });
+          }
+        });
+      });
+      const execResult = await execPromise;
+      return execResult;
+    }
   } catch(e) {
     error(e);
     return { error: e };
@@ -247,7 +268,7 @@ export async function call (options: ICallOptions) {
   log({envs});
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
-  const engine = await _execEngine({ envsStr, engineStr });
+  const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
   return { ...options, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
