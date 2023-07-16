@@ -235,7 +235,7 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
       const execPromise = new Promise((resolve, reject) => {
         sudo.exec(engineStr, options, (error, stdout, stderr) => {
           if (error) {
-            reject({ result: { stdout, stderr } });
+            reject({ error });
           } else {
             resolve({ result: { stdout, stderr } });
           }
