@@ -44,6 +44,23 @@ export class Package {
     return this.deep.idLocal(this.name, ...names);
   }
 
+  // TODO: test this draft
+  async applyMiniLinks() {
+    const {data: packageLinks} = await this.deep.select({
+      up: {
+        tree_id: {
+          _id: ["@deep-foundation/core", 'containTree']
+        },
+        parent_id: {
+          _id: [this.name]
+        }
+      }
+    })
+    if(!packageLinks) {
+      throw new Error(`Package with name ${this.name} is not found`)
+    }
+    this.deep.minilinks.apply(packageLinks)
+  }
 }
 
 export interface PackageConstructorParam {
