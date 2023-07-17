@@ -44,7 +44,17 @@ export class Package {
     return this.deep.idLocal(this.name, ...names);
   }
 
-  // TODO: test this draft
+  /**
+   * Pastes your links into minilinks
+   * 
+   * @example
+   * #### Use applyMiniLinks and idLocal
+```ts
+const package = new Package({deep});
+await package.applyMiniLinks();
+const deviceLinkId = await package.Device.idLocal();
+```
+   */
   async applyMiniLinks() {
     const {data: packageLinks} = await this.deep.select({
       up: {
