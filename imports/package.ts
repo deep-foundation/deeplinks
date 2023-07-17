@@ -64,6 +64,16 @@ const myLinkId = await package.id("MyLinkName");
     return await this.deep.id(this.name, ...names);
   }
 
+    /**
+   * Gets id of the package link from minilinks
+   * 
+   * @example
+   * #### Get id of the package link from minilinks
+```ts
+const package = new Package({deep});
+const myLinkId = await package.idLocal("MyLinkName");
+```
+   */
   idLocal(...names: string[]) {
     return this.deep.idLocal(this.name, ...names);
   }
