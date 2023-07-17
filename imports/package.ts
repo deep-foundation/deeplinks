@@ -20,7 +20,7 @@ export class Package {
    */
   public name: string;
 
-  constructor(param: PackageConstructorParam) {
+  constructor(param: PackageOptions) {
     this.deep = param.deep;
     this.name = param.name;
   }
@@ -107,7 +107,7 @@ const deviceLinkId = await package.Device.idLocal();
   }
 }
 
-export interface PackageConstructorParam {
+export interface PackageOptions {
   name: string;
   deep: DeepClient;
 }
