@@ -8,7 +8,7 @@ import { DeepClient } from './client';
  * 
  * @example
 ```ts
-const package = new Package({deep});
+const package = new Package({deep, name});
 const {name: packageName} = package;
 const batteryLevelValueLinkId = await package.batteryLevelValue.id();
 ```
