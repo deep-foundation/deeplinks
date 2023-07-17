@@ -50,6 +50,16 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
     };
   }
 
+  /**
+   * Gets id of the package link
+   * 
+   * @example
+   * #### Get id of the package link
+```ts
+const package = new Package({deep});
+const myLinkId = await package.id("MyLinkName");
+```
+   */
   async id(...names: string[]) {
     return await this.deep.id(this.name, ...names);
   }
