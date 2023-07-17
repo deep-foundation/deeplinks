@@ -25,6 +25,20 @@ export class Package {
     this.name = param.name;
   }
 
+  /**
+   * Creates an entity
+   * 
+   * @example
+   * #### Create an entity
+```ts
+class MyPackage extends Package {
+  public yourLinkName = this.createEntity("YourLinkName");
+}
+const myPackage = new MyPackage({deep});
+const myLinkId = await myPackage.yourLinkName.id();
+const myLinkLocalId = await myPackage.yourLinkName.idLocal();
+```
+   */
   public createEntity(...names: string[]) {
     return {
       id: async () => {
