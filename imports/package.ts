@@ -31,7 +31,7 @@ export class Package {
         return await this.id(this.name, ...names);
       },
       idLocal: async () => {
-        return await this.idLocal(this.name, ...names);
+        return this.idLocal(this.name, ...names);
       },
     };
   }
