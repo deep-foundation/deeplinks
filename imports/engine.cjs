@@ -181,7 +181,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
   return envsStr;
 };
 
-exports._checkDeeplinksStatus = async () => {
+const _checkDeeplinksStatus = async () => {
   let status;
   let err;
   try {
@@ -193,8 +193,9 @@ exports._checkDeeplinksStatus = async () => {
   }
   return { result: status?.data?.docker, error: err };
 };
+exports._checkDeeplinksStatus = _checkDeeplinksStatus;
 
-exports._checkDeepcaseStatus = async () => {
+const _checkDeepcaseStatus = async () => {
   let status;
   let err;
   try {
@@ -206,6 +207,7 @@ exports._checkDeepcaseStatus = async () => {
   }
   return { result: status?.data?.docker, error: err };
 };
+exports._checkDeepcaseStatus = _checkDeepcaseStatus;
 
 const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs }) => {
   let str;
@@ -260,7 +262,7 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
 let permissionsAreGiven = false;
 let permissionsAreChecking = false;
 
-exports.call = async (options) => {
+const call = async (options) => {
   //@ts-ignore
   const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
   if (platform !== "win32"){
@@ -321,6 +323,7 @@ exports.call = async (options) => {
       permissionsAreChecking = false;
     }
   }
+  exports.call = call;
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
