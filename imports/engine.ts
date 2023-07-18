@@ -40,7 +40,7 @@ const printLog = (logPath, logText) => {
 
 
 // const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
-function findParentPackageJson(dir) {
+function findParentPackageJson(dir) : string {
   if (fs.existsSync(path.join(dir, 'package.json'))) {
       return dir;
   }
@@ -51,9 +51,15 @@ function findParentPackageJson(dir) {
   return findParentPackageJson(parentDir);
 }
 
+let rootDir = findParentPackageJson(__dirname);
+
+if (rootDir && path.basename(rootDir) === 'app') {
+  rootDir = path.dirname(rootDir);
+}
+
 console.log('__dirname', __dirname);
-console.log('findParentPackageJson(__dirname)', findParentPackageJson(__dirname))
-const appPath = isElectron() ? rootPath : (findParentPackageJson(__dirname) || process.cwd());
+console.log('rootDir', rootDir)
+const appPath = isElectron() ? rootPath : (rootDir || process.cwd());
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
