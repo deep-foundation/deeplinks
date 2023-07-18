@@ -265,24 +265,35 @@ let permissionsAreChecking = false;
 
 export async function call (options: ICallOptions) {
   //@ts-ignore
+  const isDeeplinksDocker = await _checkDeeplinksStatus();
+  const isDeepcaseDocker = await _checkDeepcaseStatus();
+  log({isDeeplinksDocker});
   const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
+
+  const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+  let user;
   if (platform !== "win32"){
     fixPath();
-    envs['PATH'] = `'${process?.env?.['PATH']}'`;
+    const whoami =  await execP('whoami');
+    const home =  await execP('echo $HOME');
+
+    user = whoami.stdout;
+    console.log('whoami: ', user);
+    console.log('whoami: ', home.stdout);
+    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
+    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`);
+
+    const nvmExists = fs.existsSync(path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`));
+    envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
 
   log({options});
-  const isDeeplinksDocker = await _checkDeeplinksStatus();
-  const isDeepcaseDocker = await _checkDeepcaseStatus();
-  log({isDeeplinksDocker});
 
-  const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   log({envs});
 
   let permissionsResult;
-  let user;
 
   if (permissionsAreChecking) {
     while(permissionsAreChecking) {
@@ -294,8 +305,6 @@ export async function call (options: ICallOptions) {
       const { stdout, stderr } =  await execP('whoami');
 
       user = stdout;
-      console.log('whoami: ', user);
-      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
       const options = {
@@ -331,16 +340,6 @@ export async function call (options: ICallOptions) {
   log({engine});
 
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
-
-  if (isElectron() && process.platform !== 'win32') {
-    permissionsAreChecking = true;
-    const { stdout, stderr } =  await execP('whoami');
-
-    user = stdout;
-    console.log('whoami: ', user);
-    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-    printLog(envs['MIGRATIONS_DIR'], `PATHBIN HERE ${process.execPath}`);
-  }
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
