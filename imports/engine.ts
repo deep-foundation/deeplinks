@@ -153,7 +153,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   envs['RESERVED_LIFETIME_MS'] = envs['RESERVED_LIFETIME_MS'] ? envs['RESERVED_LIFETIME_MS'] : String(24 * 60 * 60 * 1000);
   // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
-  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? _deeplinks : '/tmp/deep'}`;
+  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? '%userprofile%/\AppData/\Local/\Temp/\deep' : '/tmp/deep'}`;
   if (isGitpod) {
     envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `$(gp url ${hasuraPort})`;
     envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep-hasura:${hasuraPort}`;
