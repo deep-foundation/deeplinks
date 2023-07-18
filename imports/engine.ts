@@ -34,7 +34,7 @@ const orintLog = (logPath, logText) => {
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
   if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
-  if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
+  if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs started... Hello bugfixers!\n\n');
   fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), logText);
 }
 
