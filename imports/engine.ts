@@ -1,17 +1,17 @@
-const { promisify } = require('util');
-const { exec } = require('child_process');
-const path = require('path');
-const internalIp = require('internal-ip');
-const axios = require('axios');
-const Debug = require('debug');
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import path from 'path';
+import * as internalIp from 'internal-ip';
+import axios from 'axios';
+import Debug from 'debug';
 // @ts-ignore
-const fixPath = require('fix-path');
-const { fileURLToPath } = require('url');
-const fs = require('fs');
-const { rootPath } = require('root-path-electron');
-// const { remote } = require('electron');
-const sudo = require('sudo-prompt');
-const { json } = require('body-parser');
+import fixPath from 'fix-path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import { rootPath } from 'root-path-electron';
+// import { remote } from 'electron'
+import sudo from 'sudo-prompt';
+import { json } from 'body-parser';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -40,7 +40,7 @@ const printLog = (logPath, logText) => {
 
 
 // const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
-function findParentPackageJson(dir) {
+function findParentPackageJson(dir) : string {
   if (fs.existsSync(path.join(dir, 'package.json'))) {
       return dir;
   }
@@ -75,33 +75,33 @@ const execP = promisify(exec);
 const DOCKER = process.env.DOCKER || '0';
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || 'http://localhost:3006';
 const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER || 'http://localhost:3007';
-// export interface ICallOptions {
-//   operation: 'run' | 'sleep' | 'reset';
-//   envs: { [key: string]: string; };
-// }
+export interface ICallOptions {
+  operation: 'run' | 'sleep' | 'reset';
+  envs: { [key: string]: string; };
+}
 
-// interface ICheckDeeplinksStatusReturn {
-//   result?: 1 | 0 | undefined;
-//   error?: any;
-// }
-// interface IExecEngineReturn {
-//   result?: {
-//     stdout: string;
-//     stderr: string;
-//   };
-//   error?: any;
-// }
+interface ICheckDeeplinksStatusReturn {
+  result?: 1 | 0 | undefined;
+  error?: any;
+}
+interface IExecEngineReturn {
+  result?: {
+    stdout: string;
+    stderr: string;
+  };
+  error?: any;
+}
 
-// interface IGenerateEngineStrOptions {
-//   operation: string;
-//   isDeeplinksDocker: 0 | 1 | undefined;
-//   isDeepcaseDocker: 0 | 1 | undefined;
-//   envs: any;
-// }
-// interface IGenerateEnvsOptions {
-//   isDeeplinksDocker: 0 | 1 | undefined;
-//   envs: any;
-// }
+interface IGenerateEngineStrOptions {
+  operation: string;
+  isDeeplinksDocker: 0 | 1 | undefined;
+  isDeepcaseDocker: 0 | 1 | undefined;
+  envs: any;
+}
+interface IGenerateEnvsOptions {
+  isDeeplinksDocker: 0 | 1 | undefined;
+  envs: any;
+}
 
 const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
 const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
@@ -110,7 +110,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
+const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): string => {
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
   const hasuraPort = '8080';
@@ -183,7 +183,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
   return envsStr;
 };
 
-export const _checkDeeplinksStatus = async () => {
+export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
   let status;
   let err;
   try {
@@ -197,7 +197,7 @@ export const _checkDeeplinksStatus = async () => {
 };
 
 
-export const _checkDeepcaseStatus = async () => {
+export const _checkDeepcaseStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
   let status;
   let err;
   try {
@@ -210,7 +210,7 @@ export const _checkDeepcaseStatus = async () => {
   return { result: status?.data?.docker, error: err };
 };
 
-const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs }) => {
+const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs }: IGenerateEngineStrOptions): string => {
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
@@ -248,7 +248,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   return str;
 }
 
-const _execEngine = async ({ envsStr, envs, engineStr } ) => {
+const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs:any; engineStr: string; } ): Promise<IExecEngineReturn> => {
   try {
     const command = `${envsStr} ${engineStr}`;
     console.log(command);
@@ -263,7 +263,7 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
 let permissionsAreGiven = false;
 let permissionsAreChecking = false;
 
-export async function call (options) {
+export async function call (options: ICallOptions) {
   //@ts-ignore
   const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
   if (platform !== "win32"){
@@ -366,14 +366,6 @@ export async function call (options) {
     permissionsResult = await execPromise;
     printLog(envs['MIGRATIONS_DIR'], `'PATH': ${JSON.stringify(permissionsResult, null, 2)}`);
   }
-
-
-
-
-
-
-
-
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
