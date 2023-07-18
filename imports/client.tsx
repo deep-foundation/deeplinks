@@ -873,6 +873,17 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return !!result?.data?.length;
   }
 
+  async name(input: Link<number> | number): Promise<string | undefined> {
+    const id = typeof(input) === 'number' ? input : input.id;
+
+    const {data: [self]} = await this.select(this.serializeWhere({
+      type: ['@deep-foundation/core', 'Contain'],
+      to_id: { _eq: id },
+    }));
+    // @ts-ignore
+    return self.value?.value;
+  };
+
   nameLocal(input: Link<number> | number): string | undefined {
     const id = typeof(input) === 'number' ? input : input.id;
     // @ts-ignore
