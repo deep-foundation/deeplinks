@@ -340,6 +340,7 @@ export async function call (options: ICallOptions) {
     console.log('whoami: ', user);
     printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
     printLog(envs['MIGRATIONS_DIR'], `PATHBIN HERE ${process.execPath}`);
+  }
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
