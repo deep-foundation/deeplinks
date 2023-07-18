@@ -29,7 +29,7 @@ function isElectron() {
   return false;
 }
 
-const orintLog = (logPath, logText) => {
+const printLog = (logPath, logText) => {
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
@@ -253,6 +253,10 @@ export async function call (options: ICallOptions) {
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
+
+  const lsResult =  await execP('ls ~');
+  printLog(envs['MIGRATIONS_DIR'], `'ls result': ${JSON.stringify(lsResult, null, 2)}`);
+
   log({options});
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
@@ -275,7 +279,7 @@ export async function call (options: ICallOptions) {
 
       user = stdout;
       console.log('whoami: ', user);
-      orintLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
+      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
       const options = {
@@ -287,11 +291,11 @@ export async function call (options: ICallOptions) {
         sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
           if (error) {
             console.log('permissions error', error);
-            orintLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
+            printLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
             console.dir(error);
             resolve({ error });
           } else {
-            orintLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
+            printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
             resolve({ result: { stdout, stderr } });
           }
         });
@@ -310,7 +314,7 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  orintLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
+  printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
