@@ -1,17 +1,17 @@
-import { promisify } from 'util';
-import { exec } from 'child_process';
-import path from 'path';
-import * as internalIp from 'internal-ip';
-import axios from 'axios';
-import Debug from 'debug';
+const { promisify } = require('util');
+const { exec } = require('child_process');
+const path = require('path');
+const internalIp = require('internal-ip');
+const axios = require('axios');
+const Debug = require('debug');
 // @ts-ignore
-import fixPath from 'fix-path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { rootPath } from 'root-path-electron';
-// import { remote } from 'electron'
-import sudo from 'sudo-prompt';
-import { json } from 'body-parser';
+const fixPath = require('fix-path');
+const { fileURLToPath } = require('url');
+const fs = require('fs');
+const { rootPath } = require('root-path-electron');
+// const { remote } = require('electron');
+const sudo = require('sudo-prompt');
+const { json } = require('body-parser');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
