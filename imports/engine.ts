@@ -332,10 +332,6 @@ export async function call (options: ICallOptions) {
 
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
 
-
-
-
-
   if (isElectron() && process.platform !== 'win32') {
     permissionsAreChecking = true;
     const { stdout, stderr } =  await execP('whoami');
@@ -343,29 +339,7 @@ export async function call (options: ICallOptions) {
     user = stdout;
     console.log('whoami: ', user);
     printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-
-    const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
-    const options = {
-      name: 'Deep Case',
-      icns,
-      env: envs,
-    };
-    const execPromise = new Promise((resolve, reject) => {
-      sudo.exec(`echo $PATH ${user}`, options, (error, stdout, stderr) => {
-        if (error) {
-          console.log('path error', error);
-          printLog(envs['MIGRATIONS_DIR'], `'path error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
-          console.dir(error);
-          resolve({ error });
-        } else {
-          printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
-          resolve({ result: { stdout, stderr } });
-        }
-      });
-    });
-    permissionsResult = await execPromise;
-    printLog(envs['MIGRATIONS_DIR'], `'PATH': ${JSON.stringify(permissionsResult, null, 2)}`);
-  }
+    printLog(envs['MIGRATIONS_DIR'], `PATHBIN HERE ${process.execPath}`);
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
