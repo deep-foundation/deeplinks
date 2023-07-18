@@ -34,10 +34,6 @@ function isElectron() {
 const appPath = isElectron() ? rootPath : process.env.npm_root;
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-if (!fs.existsSync(path.normalize(`${appPath}/deeplogs.txt`))) {
-  fs.writeFileSync(`${appPath}/deeplogs.txt`, '\n\nDeep-logs start\n\n');
-}
-
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -302,7 +298,10 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  fs.appendFileSync(`${appPath}/deeplogs.txt`, JSON.stringify(engine, null, 2));
+  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`))) {
+    fs.writeFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
+  }
+  fs.appendFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
