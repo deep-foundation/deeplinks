@@ -44,7 +44,7 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
       id: async () => {
         return await this.id(this.name, ...names);
       },
-      idLocal: async () => {
+      idLocal: () => {
         return this.idLocal(this.name, ...names);
       },
     };
