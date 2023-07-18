@@ -31,7 +31,7 @@ function isElectron() {
 
 
 // const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
-const appPath = isElectron() ? rootPath : process.env.npm_root;
+const appPath = isElectron() ? rootPath : (process.env.npm_root || process.cwd());
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
