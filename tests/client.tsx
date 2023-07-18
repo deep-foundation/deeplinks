@@ -59,21 +59,51 @@ describe('client', () => {
   it('name', async () => {
     const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-    const {data: [newTypeTypeLink]} = await deepClient.insert({
-      type_id: typeTypeLinkId,
+    const typeName = "MyTypeName"
+    const reservedLinkIds = await deepClient.reserve(2);
+    const newTypeLinkId = reservedLinkIds.pop()!;
+    const containLinkId = reservedLinkIds.pop()!;
+    await deepClient.serial({
+      operations: [
+        {
+          type: 'insert',
+          table: 'links',
+          objects: {
+            id: newTypeLinkId,
+            type_id: typeTypeLinkId,
+          }
+        },
+        {
+          type: 'insert',
+          table: 'links',
+          objects: {
+            type_id: containTypeLinkId,
+            from_id: deepClient.linkId,
+            to_id: newTypeLinkId,
+          }
+        },
+        {
+          type: 'insert',
+          table: 'strings',
+          objects: {
+            link_id: containLinkId,
+            value: typeName
+          }
+        }
+      ]
     });
     await deepClient.insert({
       type_id: containTypeLinkId,
       from_id: await deepClient.id('deep', 'admin'),
-      to_id: newTypeTypeLink.id,
+      to_id: newTypeLinkId,
       string: {
         data: {
-          value: "MySuperType"
+          value: typeName
         }
       }
     });
 
-    assert.equal(await deepClient.name(newTypeTypeLink.id), "MySuperType");
+    assert.equal(await deepClient.name(newTypeLinkId), typeName);
   });
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
