@@ -323,7 +323,6 @@ const call = async (options) => {
       permissionsAreChecking = false;
     }
   }
-  exports.call = call;
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   log({engineStr});
@@ -365,3 +364,4 @@ const call = async (options) => {
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
+exports.call = call;
