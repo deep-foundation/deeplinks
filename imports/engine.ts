@@ -298,9 +298,11 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`))) {
-    fs.writeFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
-  }
+  console.log('MIGRATIONS_DIR', envs['MIGRATIONS_DIR']);
+  console.log('existsSync deep', fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}`)));
+  console.log('existsSync logs', fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`)));
+  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}`))) fs.mkdirSync(envs['MIGRATIONS_DIR']);
+  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
   fs.appendFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
