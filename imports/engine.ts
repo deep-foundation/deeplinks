@@ -262,29 +262,37 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
 
 let permissionsAreGiven = false;
 let permissionsAreChecking = false;
+let pathNvmFixed = false;
 
 export async function call (options: ICallOptions) {
   //@ts-ignore
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
-  log({isDeeplinksDocker});
-  const envs = { ...options.envs, DOCKERHOST: String((internalIp as any).internalIpV4 ? await (internalIp as any).internalIpV4() : internalIp?.v4?.sync()) };
 
+  const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+
+  printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(isDeeplinksDocker, null, 2)}`);
+  printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(isDeepcaseDocker, null, 2)}`);
+  
+  log({isDeeplinksDocker});
   let user;
   if (platform !== "win32"){
     fixPath();
-    const whoami =  await execP('whoami');
-    const home =  await execP('echo $HOME');
+    if (!pathNvmFixed){
+      const whoami =  await execP('whoami');
+      const home =  await execP('echo $HOME');
 
-    user = whoami.stdout;
-    console.log('whoami: ', user);
-    console.log('whoami: ', home.stdout);
-    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`);
+      user = whoami.stdout;
+      console.log('whoami: ', user);
+      console.log('home: ', home.stdout);
+      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
+      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`);
 
-    const nvmExists = fs.existsSync(path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`));
-    envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
+      const nvmExists = fs.existsSync(path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`));
+      envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
+      pathNvmFixed = true;
+    }
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
@@ -339,6 +347,7 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
+  printLog(envs['MIGRATIONS_DIR'], `engineStr: ${engineStr}`);
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
