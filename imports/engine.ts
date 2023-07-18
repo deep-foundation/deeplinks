@@ -302,7 +302,7 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  fs.appendFileSync(`${appPath}/deeplogs.txt`, JSON.stringify(engine));
+  fs.appendFileSync(`${appPath}/deeplogs.txt`, JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
