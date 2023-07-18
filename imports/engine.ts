@@ -268,7 +268,7 @@ export async function call (options: ICallOptions) {
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   log({isDeeplinksDocker});
-  const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
+  const envs = { ...options.envs, DOCKERHOST: String((internalIp as any).internalIpV4 ? await (internalIp as any).internalIpV4() : internalIp?.v4?.sync()) };
 
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   let user;
