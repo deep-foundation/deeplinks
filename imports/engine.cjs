@@ -6,12 +6,10 @@ const axios = require('axios');
 const Debug = require('debug');
 // @ts-ignore
 const fixPath = require('fix-path');
-const { fileURLToPath } = require('url');
 const fs = require('fs');
 const { rootPath } = require('root-path-electron');
 // const { remote } = require('electron');
 const sudo = require('sudo-prompt');
-const { json } = require('body-parser');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 

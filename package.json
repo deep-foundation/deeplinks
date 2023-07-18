@@ -57,7 +57,7 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "electron": "^13.1.9",
-    "fix-path": "^4.0.0",
+    "fix-path": "^3.0.0",
     "get-port": "^5.1.1",
     "gists": "^2.0.0",
     "graphql": "^15.8.0",
