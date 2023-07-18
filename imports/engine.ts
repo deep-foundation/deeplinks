@@ -29,6 +29,15 @@ function isElectron() {
   return false;
 }
 
+const orintLog = (logPath, logText) => {
+  console.log('MIGRATIONS_DIR', logPath);
+  console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
+  console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
+  if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
+  if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
+  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), logText);
+}
+
 
 // const appPath = isElectron() ? remote.app.getAppPath() : process.cwd();
 const appPath = isElectron() ? rootPath : (process.env.npm_root || process.cwd());
@@ -259,13 +268,14 @@ export async function call (options: ICallOptions) {
     while(permissionsAreChecking) {
       await delay(1000);
     }
-  } else {  
+  } else {
     if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
       permissionsAreChecking = true;
       const { stdout, stderr } =  await execP('whoami');
 
       user = stdout;
       console.log('whoami: ', user);
+      orintLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
       const options = {
@@ -277,9 +287,11 @@ export async function call (options: ICallOptions) {
         sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
           if (error) {
             console.log('permissions error', error);
+            orintLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
             console.dir(error);
             resolve({ error });
           } else {
+            orintLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
             resolve({ result: { stdout, stderr } });
           }
         });
@@ -298,12 +310,7 @@ export async function call (options: ICallOptions) {
   const engine = await _execEngine({ envsStr, envs, engineStr });
   log({engine});
 
-  console.log('MIGRATIONS_DIR', envs['MIGRATIONS_DIR']);
-  console.log('existsSync deep', fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}`)));
-  console.log('existsSync logs', fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`)));
-  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}`))) fs.mkdirSync(envs['MIGRATIONS_DIR']);
-  if (!fs.existsSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), '\n\nDeep-logs start\n\n');
-  fs.appendFileSync(path.normalize(`${envs['MIGRATIONS_DIR']}/deeplogs.txt`), JSON.stringify(engine, null, 2));
+  orintLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
