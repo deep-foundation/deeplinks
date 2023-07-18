@@ -183,7 +183,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
   return envsStr;
 };
 
-export const _checkDeeplinksStatus = async () => {
+exports._checkDeeplinksStatus = async () => {
   let status;
   let err;
   try {
@@ -196,8 +196,7 @@ export const _checkDeeplinksStatus = async () => {
   return { result: status?.data?.docker, error: err };
 };
 
-
-export const _checkDeepcaseStatus = async () => {
+exports._checkDeepcaseStatus = async () => {
   let status;
   let err;
   try {
@@ -263,7 +262,7 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
 let permissionsAreGiven = false;
 let permissionsAreChecking = false;
 
-export async function call (options) {
+exports.call = async (options) => {
   //@ts-ignore
   const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
   if (platform !== "win32"){
@@ -332,10 +331,6 @@ export async function call (options) {
 
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
 
-
-
-
-
   if (isElectron() && process.platform !== 'win32') {
     permissionsAreChecking = true;
     const { stdout, stderr } =  await execP('whoami');
@@ -366,14 +361,6 @@ export async function call (options) {
     permissionsResult = await execPromise;
     printLog(envs['MIGRATIONS_DIR'], `'PATH': ${JSON.stringify(permissionsResult, null, 2)}`);
   }
-
-
-
-
-
-
-
-
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
