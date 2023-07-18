@@ -159,7 +159,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): strin
   envs['RESERVED_LIFETIME_MS'] = envs['RESERVED_LIFETIME_MS'] ? envs['RESERVED_LIFETIME_MS'] : String(24 * 60 * 60 * 1000);
   // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
-  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? _deeplinks : '/tmp/deep'}`;
+  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? '%userprofile%/\AppData/\Local/\Temp/\deep' : '/tmp/deep'}`;
   if (isGitpod) {
     envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `$(gp url ${hasuraPort})`;
     envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep-hasura:${hasuraPort}`;
@@ -331,8 +331,49 @@ export async function call (options: ICallOptions) {
   log({engine});
 
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
-  const lsResult =  await execP('ls ~');
-  printLog(envs['MIGRATIONS_DIR'], `'ls result': ${JSON.stringify(lsResult, null, 2)}`);
+
+
+
+
+
+  if (isElectron() && process.platform !== 'win32') {
+    permissionsAreChecking = true;
+    const { stdout, stderr } =  await execP('whoami');
+
+    user = stdout;
+    console.log('whoami: ', user);
+    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
+
+    const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
+    const options = {
+      name: 'Deep Case',
+      icns,
+      env: envs,
+    };
+    const execPromise = new Promise((resolve, reject) => {
+      sudo.exec(`echo $PATH ${user}`, options, (error, stdout, stderr) => {
+        if (error) {
+          console.log('path error', error);
+          printLog(envs['MIGRATIONS_DIR'], `'path error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
+          console.dir(error);
+          resolve({ error });
+        } else {
+          printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
+          resolve({ result: { stdout, stderr } });
+        }
+      });
+    });
+    permissionsResult = await execPromise;
+    printLog(envs['MIGRATIONS_DIR'], `'PATH': ${JSON.stringify(permissionsResult, null, 2)}`);
+  }
+
+
+
+
+
+
+
+
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
