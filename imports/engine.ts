@@ -267,9 +267,6 @@ export async function call (options: ICallOptions) {
     envs['PATH'] = process?.env?.['Path'];
   }
 
-  const lsResult =  await execP('ls ~');
-  printLog(envs['MIGRATIONS_DIR'], `'ls result': ${JSON.stringify(lsResult, null, 2)}`);
-
   log({options});
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
@@ -328,6 +325,8 @@ export async function call (options: ICallOptions) {
   log({engine});
 
   printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
+  const lsResult =  await execP('ls ~');
+  printLog(envs['MIGRATIONS_DIR'], `'ls result': ${JSON.stringify(lsResult, null, 2)}`);
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
