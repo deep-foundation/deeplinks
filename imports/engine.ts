@@ -305,7 +305,7 @@ const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissi
         });
       });
       const result: { result?: { stdout: string, stderr: string }, error?: any} = await execPromise;
-      userAddedtoDockerGroup = result.error;
+      userAddedtoDockerGroup = !result.error;
       userAddingToDockerGroupInProcess = false;
       return result;
     }
