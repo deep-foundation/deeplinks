@@ -108,6 +108,7 @@ interface IGenerateEngineStrOptions {
   isDeeplinksDocker: 0 | 1 | undefined;
   isDeepcaseDocker: 0 | 1 | undefined;
   envs: any;
+  needNPX: boolean;
 }
 interface IGenerateEnvsOptions {
   isDeeplinksDocker: 0 | 1 | undefined;
