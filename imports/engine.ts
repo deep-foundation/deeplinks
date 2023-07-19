@@ -273,8 +273,8 @@ export async function call (options: ICallOptions) {
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
   const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
 
-  printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(isDeeplinksDocker, null, 2)}`);
-  printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(isDeepcaseDocker, null, 2)}`);
+  printLog(envs['MIGRATIONS_DIR'], `isDeeplinksDocker: = ${JSON.stringify(isDeeplinksDocker, null, 2)}`.replace("\\n", "\n"));
+  printLog(envs['MIGRATIONS_DIR'], `isDeepcaseDocker: = ${JSON.stringify(isDeepcaseDocker, null, 2)}`.replace("\\n", "\n"));
   
   log({isDeeplinksDocker});
   let user;
@@ -288,7 +288,7 @@ export async function call (options: ICallOptions) {
       console.log('whoami: ', user);
       console.log('home: ', home.stdout);
       printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`);
+      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`.replace("\\n", "\n"));
 
       const nvmExists = fs.existsSync(path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`));
       envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
@@ -325,18 +325,18 @@ export async function call (options: ICallOptions) {
         sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
           if (error) {
             console.log('permissions error', error);
-            printLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
+            printLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2).replace("\\n", "\n")}`);
             console.dir(error);
             resolve({ error });
           } else {
-            printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
+            printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2).replace("\\n", "\n"));
             resolve({ result: { stdout, stderr } });
           }
         });
       });
       permissionsResult = await execPromise;
 
-      console.log('permissionsResult', JSON.stringify(permissionsResult))
+      console.log('permissionsResult', JSON.stringify(permissionsResult).replace("\\n", "\n"))
 
       permissionsAreGiven = !permissionsResult.error;
       permissionsAreChecking = false;
@@ -349,7 +349,7 @@ export async function call (options: ICallOptions) {
   log({engine});
 
   printLog(envs['MIGRATIONS_DIR'], `engineStr: ${engineStr}`);
-  printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
+  printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2).replace("\\n", "\n"));
 
   return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
