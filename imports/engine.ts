@@ -30,13 +30,15 @@ function isElectron() {
   return false;
 }
 
-const printLog = (logPath, logText) => {
+const printLog = (logPath, log, title) => {
+  const textToLog = `${title ? `${title}: ` : ''}${typeof log === 'string' ? log : JSON.stringify(log, null, 2).replace("\\n", "\n")}`;
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
   if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
   if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs started... Hello bugfixers!\n\n');
-  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), logText);
+  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), textToLog);
+  log(textToLog);
 }
 
 
@@ -92,6 +94,13 @@ interface IExecEngineReturn {
   };
   error?: any;
 }
+interface ICheckPermissionReturn {
+  result?: {
+    stdout: string;
+    stderr: string;
+  };
+  error?: any;
+}
 
 interface IGenerateEngineStrOptions {
   operation: string;
@@ -111,7 +120,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const _generateEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): string => {
+const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions): string => {
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
   const hasuraPort = '8080';
@@ -261,59 +270,21 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
   }
 }
 
-let permissionsAreGiven = false;
-let permissionsAreChecking = false;
+
+let userAddedtoDockerGroup = false;
+let userAddingToDockerGroupInProcess = false;
 let pathNvmFixed = false;
+let user;
+let homeDir;
 
-export async function call (options: ICallOptions) {
-  //@ts-ignore
-  const isDeeplinksDocker = await _checkDeeplinksStatus();
-  const isDeepcaseDocker = await _checkDeepcaseStatus();
-
-  const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
-  const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
-
-  printLog(envs['MIGRATIONS_DIR'], `isDeeplinksDocker: = ${JSON.stringify(isDeeplinksDocker, null, 2)}`.replace("\\n", "\n"));
-  printLog(envs['MIGRATIONS_DIR'], `isDeepcaseDocker: = ${JSON.stringify(isDeepcaseDocker, null, 2)}`.replace("\\n", "\n"));
-  
-  log({isDeeplinksDocker});
-  let user;
-  if (platform !== "win32"){
-    fixPath();
-    if (!pathNvmFixed){
-      const whoami =  await execP('whoami');
-      const home =  await execP('echo $HOME');
-
-      user = whoami.stdout;
-      console.log('whoami: ', user);
-      console.log('home: ', home.stdout);
-      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${JSON.stringify(home, null, 2)}`.replace("\\n", "\n"));
-
-      const nvmExists = fs.existsSync(path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`));
-      envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${home.stdout}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
-      pathNvmFixed = true;
-    }
-  } else {
-    envs['PATH'] = process?.env?.['Path'];
-  }
-
-  log({options});
-
-  log({envs});
-
-  let permissionsResult;
-
-  if (permissionsAreChecking) {
-    while(permissionsAreChecking) {
+const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissionReturn> => {
+  if (userAddingToDockerGroupInProcess) {
+    while(userAddingToDockerGroupInProcess) {
       await delay(1000);
     }
   } else {
-    if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
-      permissionsAreChecking = true;
-      const { stdout, stderr } =  await execP('whoami');
-
-      user = stdout;
+    if (!userAddedtoDockerGroup && isElectron() && process.platform !== 'win32') {
+      userAddingToDockerGroupInProcess = true;
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
       const options = {
@@ -324,32 +295,62 @@ export async function call (options: ICallOptions) {
       const execPromise = new Promise((resolve, reject) => {
         sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
           if (error) {
-            console.log('permissions error', error);
-            printLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2).replace("\\n", "\n")}`);
-            console.dir(error);
+            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr }, error }, 'permissions error');
             resolve({ error });
           } else {
-            printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2).replace("\\n", "\n"));
+            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr } }, 'permissionsResult');
             resolve({ result: { stdout, stderr } });
           }
         });
       });
-      permissionsResult = await execPromise;
-
-      console.log('permissionsResult', JSON.stringify(permissionsResult).replace("\\n", "\n"))
-
-      permissionsAreGiven = !permissionsResult.error;
-      permissionsAreChecking = false;
+      const result: { result?: { stdout: string, stderr: string }, error?: any} = await execPromise;
+      userAddedtoDockerGroup = result.error;
+      userAddingToDockerGroupInProcess = false;
+      return result;
     }
+  }
+}
+
+const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
+  const whoami =  await execP('whoami');
+  const home =  await execP('echo $HOME');
+  homeDir = whoami.stdout;
+  user = home.stdout;
+
+  printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
+  printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
+
+  const nvmExists = fs.existsSync(path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`));
+  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
+  pathNvmFixed = true;
+  return true;
+}
+
+export async function call (options: ICallOptions) {
+  //@ts-ignore
+  const isDeeplinksDocker = await _checkDeeplinksStatus();
+  const isDeepcaseDocker = await _checkDeepcaseStatus();
+  const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
+  const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+
+  printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
+  printLog(envs['MIGRATIONS_DIR'], options, `options`);
+  printLog(envs['MIGRATIONS_DIR'], isDeeplinksDocker, `isDeeplinksDocker`);
+  printLog(envs['MIGRATIONS_DIR'], isDeepcaseDocker, `isDeepcaseDocker`);
+
+  if (platform !== "win32"){
+    fixPath();
+    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+  } else {
+    envs['PATH'] = process?.env?.['Path'];
   }
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
-  log({engineStr});
   const engine = await _execEngine({ envsStr, envs, engineStr });
-  log({engine});
 
-  printLog(envs['MIGRATIONS_DIR'], `engineStr: ${engineStr}`);
-  printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2).replace("\\n", "\n"));
-
-  return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  printLog(envs['MIGRATIONS_DIR'], engineStr, `engineStr`);
+  printLog(envs['MIGRATIONS_DIR'], engine, `engine`);
+  
+  return { ...options, user, homeDir, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
