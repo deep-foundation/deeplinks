@@ -225,7 +225,8 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${needNPX ? 'npm i -g npx &&' : ''} && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}"${needNPX ? ' && npm i -g npx' : ''} && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
+    needNPX = false;
   }
   if (operation === 'migrate') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
@@ -245,9 +246,10 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   }
   if (operation === 'reset') {
     if (platform === "win32") {
-      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
+      str = ` cd "${_deeplinks}"${needNPX ? ' && npm i -g npx' : ''} && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
     } else {
-      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
+      str = ` cd "${_deeplinks}" ${needNPX ? ' && npm i -g npx' : ''}  && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
+      needNPX = false;
     }
   }
   if (operation === 'dock') {
