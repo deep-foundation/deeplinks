@@ -194,6 +194,13 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions)
   return envsStr;
 };
 
+let userAddedtoDockerGroup = false;
+let userAddingToDockerGroupInProcess = false;
+let pathNvmFixed = false;
+let user;
+let homeDir;
+let needNPX = false;
+
 export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
   let status;
   let err;
@@ -221,7 +228,7 @@ export const _checkDeepcaseStatus = async (): Promise<ICheckDeeplinksStatusRetur
   return { result: status?.data?.docker, error: err };
 };
 
-const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs }: IGenerateEngineStrOptions): string => {
+const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, envs, needNPX }: IGenerateEngineStrOptions): string => {
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
@@ -272,14 +279,6 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
     return { error: e };
   }
 }
-
-
-let userAddedtoDockerGroup = false;
-let userAddingToDockerGroupInProcess = false;
-let pathNvmFixed = false;
-let user;
-let homeDir;
-let needNPX = false;
 
 const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissionReturn> => {
   if (userAddingToDockerGroupInProcess) {
@@ -353,7 +352,7 @@ export async function call (options: ICallOptions) {
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
-  const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
+  const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs, needNPX} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
 
   printLog(envs['MIGRATIONS_DIR'], engineStr, `engineStr`);
