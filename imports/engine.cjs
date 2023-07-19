@@ -27,13 +27,15 @@ function isElectron() {
   return false;
 }
 
-const printLog = (logPath, logText) => {
+const printLog = (logPath, log, title) => {
+  const textToLog = `${title ? `${title}: ` : ''}${typeof log === 'string' ? log : JSON.stringify(log, null, 2).replace("\\n", "\n")}`;
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
   if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
   if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs started... Hello bugfixers!\n\n');
-  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), logText);
+  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), textToLog);
+  log(textToLog);
 }
 
 
@@ -89,6 +91,13 @@ const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER ||
 //   };
 //   error?: any;
 // }
+// interface ICheckPermissionReturn {
+//   result?: {
+//     stdout: string;
+//     stderr: string;
+//   };
+//   error?: any;
+// }
 
 // interface IGenerateEngineStrOptions {
 //   operation: string;
@@ -101,8 +110,8 @@ const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER ||
 //   envs: any;
 // }
 
-const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? rootDir : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
-const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? rootDir : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
+const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
+const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
@@ -157,7 +166,7 @@ const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
   envs['RESERVED_LIFETIME_MS'] = envs['RESERVED_LIFETIME_MS'] ? envs['RESERVED_LIFETIME_MS'] : String(24 * 60 * 60 * 1000);
   // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
-  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? '%userprofile%/\AppData/\Local/\Temp/\deep' : '/tmp/deep'}`;
+  envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? `${os.tmpdir()}\\deep` : '/tmp/deep'}`;
   if (isGitpod) {
     envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `$(gp url ${hasuraPort})`;
     envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep-hasura:${hasuraPort}`;
@@ -259,42 +268,21 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
   }
 }
 
-let permissionsAreGiven = false;
-let permissionsAreChecking = false;
 
-const call = async (options) => {
-  //@ts-ignore
-  const envs = { ...options.envs, DOCKERHOST: String(internalIp.internalIpV4 ? await internalIp.internalIpV4() : internalIp?.v4?.sync()) };
-  if (platform !== "win32"){
-    fixPath();
-    envs['PATH'] = `'${process?.env?.['PATH']}'`;
-  } else {
-    envs['PATH'] = process?.env?.['Path'];
-  }
+let userAddedtoDockerGroup = false;
+let userAddingToDockerGroupInProcess = false;
+let pathNvmFixed = false;
+let user;
+let homeDir;
 
-  log({options});
-  const isDeeplinksDocker = await _checkDeeplinksStatus();
-  const isDeepcaseDocker = await _checkDeepcaseStatus();
-  log({isDeeplinksDocker});
-
-  const envsStr = _generateEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
-  log({envs});
-
-  let permissionsResult;
-  let user;
-
-  if (permissionsAreChecking) {
-    while(permissionsAreChecking) {
+const _AddUserToDocker = async (envs, user) => {
+  if (userAddingToDockerGroupInProcess) {
+    while(userAddingToDockerGroupInProcess) {
       await delay(1000);
     }
   } else {
-    if (!permissionsAreGiven && isElectron() && process.platform !== 'win32') {
-      permissionsAreChecking = true;
-      const { stdout, stderr } =  await execP('whoami');
-
-      user = stdout;
-      console.log('whoami: ', user);
-      printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
+    if (!userAddedtoDockerGroup && isElectron() && process.platform !== 'win32') {
+      userAddingToDockerGroupInProcess = true;
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
       const options = {
@@ -305,63 +293,63 @@ const call = async (options) => {
       const execPromise = new Promise((resolve, reject) => {
         sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
           if (error) {
-            console.log('permissions error', error);
-            printLog(envs['MIGRATIONS_DIR'], `'permissions error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
-            console.dir(error);
+            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr }, error }, 'permissions error');
             resolve({ error });
           } else {
-            printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
+            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr } }, 'permissionsResult');
             resolve({ result: { stdout, stderr } });
           }
         });
       });
-      permissionsResult = await execPromise;
-
-      console.log('permissionsResult', JSON.stringify(permissionsResult))
-
-      permissionsAreGiven = !permissionsResult.error;
-      permissionsAreChecking = false;
+      const result = await execPromise;
+      userAddedtoDockerGroup = result.error;
+      userAddingToDockerGroupInProcess = false;
+      return result;
     }
+  }
+}
+
+const _AddNvmDirToPathEnv = async (envs) => {
+  const whoami =  await execP('whoami');
+  const home =  await execP('echo $HOME');
+  homeDir = whoami.stdout;
+  user = home.stdout;
+
+  printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
+  printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
+
+  const nvmExists = fs.existsSync(path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`));
+  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
+  pathNvmFixed = true;
+  return true;
+}
+
+const call = async (options) => {
+  //@ts-ignore
+  const isDeeplinksDocker = await _checkDeeplinksStatus();
+  const isDeepcaseDocker = await _checkDeepcaseStatus();
+  const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
+  const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+
+  printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
+  printLog(envs['MIGRATIONS_DIR'], options, `options`);
+  printLog(envs['MIGRATIONS_DIR'], isDeeplinksDocker, `isDeeplinksDocker`);
+  printLog(envs['MIGRATIONS_DIR'], isDeepcaseDocker, `isDeepcaseDocker`);
+
+  if (platform !== "win32"){
+    fixPath();
+    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+  } else {
+    envs['PATH'] = process?.env?.['Path'];
   }
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
-  log({engineStr});
   const engine = await _execEngine({ envsStr, envs, engineStr });
-  log({engine});
 
-  printLog(envs['MIGRATIONS_DIR'], JSON.stringify(engine, null, 2));
-
-  if (isElectron() && process.platform !== 'win32') {
-    permissionsAreChecking = true;
-    const { stdout, stderr } =  await execP('whoami');
-
-    user = stdout;
-    console.log('whoami: ', user);
-    printLog(envs['MIGRATIONS_DIR'], `whoami: = ${user}`);
-
-    const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
-    const options = {
-      name: 'Deep Case',
-      icns,
-      env: envs,
-    };
-    const execPromise = new Promise((resolve, reject) => {
-      sudo.exec(`echo $PATH ${user}`, options, (error, stdout, stderr) => {
-        if (error) {
-          console.log('path error', error);
-          printLog(envs['MIGRATIONS_DIR'], `'path error': ${JSON.stringify({ result: { stdout, stderr } }, null, 2)}`);
-          console.dir(error);
-          resolve({ error });
-        } else {
-          printLog(envs['MIGRATIONS_DIR'], JSON.stringify({ result: { stdout, stderr } }, null, 2));
-          resolve({ result: { stdout, stderr } });
-        }
-      });
-    });
-    permissionsResult = await execPromise;
-    printLog(envs['MIGRATIONS_DIR'], `'PATH': ${JSON.stringify(permissionsResult, null, 2)}`);
-  }
-
-  return { ...options, platform, _hasura, user, permissionsResult, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
+  printLog(envs['MIGRATIONS_DIR'], engineStr, `engineStr`);
+  printLog(envs['MIGRATIONS_DIR'], engine, `engine`);
+  
+  return { ...options, user, homeDir, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
 exports.call = call;

@@ -113,8 +113,8 @@ interface IGenerateEnvsOptions {
   envs: any;
 }
 
-const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
-const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? process.cwd() : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
+const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
+const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
 const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
