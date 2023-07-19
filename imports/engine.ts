@@ -14,6 +14,14 @@ import { rootPath } from 'root-path-electron';
 import sudo from 'sudo-prompt';
 import { json } from 'body-parser';
 
+const debug = Debug('deeplinks:engine');
+const log = debug.extend('log');
+const error = debug.extend('error');
+// Force enable this file errors output
+const namespaces = Debug.disable();
+const platform = process?.platform;
+Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 function isElectron() {
@@ -30,8 +38,8 @@ function isElectron() {
   return false;
 }
 
-const printLog = (logPath, log, title) => {
-  const textToLog = `${title ? `${title}: ` : ''}${typeof log === 'string' ? log : JSON.stringify(log, null, 2).replace("\\n", "\n")}`;
+const printLog = (logPath, logObject, title) => {
+  const textToLog = `${title ? `${title}: ` : ''}${typeof logObject === 'string' ? logObject : JSON.stringify(logObject, null, 2).replace("\\n", "\n")}`;
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
@@ -66,13 +74,6 @@ const appPath = isElectron() ? rootPath : (rootDir || process.cwd());
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
-const debug = Debug('deeplinks:engine');
-const log = debug.extend('log');
-const error = debug.extend('error');
-// Force enable this file errors output
-const namespaces = Debug.disable();
-const platform = process?.platform;
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const execP = promisify(exec);
 const DOCKER = process.env.DOCKER || '0';
