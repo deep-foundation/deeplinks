@@ -68,8 +68,6 @@ if (rootDir && path.basename(rootDir) === 'app') {
   rootDir = path.dirname(rootDir);
 }
 
-console.log('__dirname', __dirname);
-console.log('rootDir', rootDir)
 const appPath = isElectron() ? rootPath : (rootDir || process.cwd());
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -284,7 +282,7 @@ const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissi
       await delay(1000);
     }
   } else {
-    if (!userAddedtoDockerGroup && isElectron() && process.platform !== 'win32') {
+    if (isElectron()) {
       userAddingToDockerGroupInProcess = true;
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
