@@ -36,13 +36,13 @@ function isElectron() {
 }
 
 const printLog = (logPath, logObject, title) => {
-  const textToLog = `${title ? `${title}: ` : ''}${typeof logObject === 'string' ? logObject : JSON.stringify(logObject, null, 2).replace("\\n", "\n")}`;
+  const textToLog = `${title ? `${title}: ` : ''}${typeof logObject === 'string' ? logObject : JSON.stringify(logObject, null, 2)?.replace("\\n", "\n")}`;
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
   if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
   if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs started... Hello bugfixers!\n\n');
-  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), textToLog);
+  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), `${textToLog}\n\n`);
   log(textToLog);
 }
 
@@ -66,7 +66,7 @@ if (rootDir && path.basename(rootDir) === 'app') {
 }
 
 console.log('__dirname', __dirname);
-console.log('rootDir', rootDir)
+console.log('rootDir', rootDir);
 const appPath = isElectron() ? rootPath : (rootDir || process.cwd());
 const filePath = path.normalize(`${appPath}/package.json`);
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -282,7 +282,7 @@ const _AddUserToDocker = async (envs, user) => {
       await delay(1000);
     }
   } else {
-    if (!userAddedtoDockerGroup && isElectron() && process.platform !== 'win32') {
+    if (isElectron()) {
       userAddingToDockerGroupInProcess = true;
 
       const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
@@ -303,7 +303,7 @@ const _AddUserToDocker = async (envs, user) => {
         });
       });
       const result = await execPromise;
-      userAddedtoDockerGroup = result.error;
+      userAddedtoDockerGroup = !result.error;
       userAddingToDockerGroupInProcess = false;
       return result;
     }
