@@ -39,13 +39,13 @@ function isElectron() {
 }
 
 const printLog = (logPath, logObject, title) => {
-  const textToLog = `${title ? `${title}: ` : ''}${typeof logObject === 'string' ? logObject : JSON.stringify(logObject, null, 2).replace("\\n", "\n")}`;
+  const textToLog = `${title ? `${title}: ` : ''}${typeof logObject === 'string' ? logObject : JSON.stringify(logObject, null, 2)?.replace("\\n", "\n")}`;
   console.log('MIGRATIONS_DIR', logPath);
   console.log('existsSync deep', fs.existsSync(path.normalize(`${logPath}`)));
   console.log('existsSync logs', fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`)));
   if (!fs.existsSync(path.normalize(`${logPath}`))) fs.mkdirSync(logPath);
   if (!fs.existsSync(path.normalize(`${logPath}/deeplogs.txt`))) fs.writeFileSync(path.normalize(`${logPath}/deeplogs.txt`), '\n\nDeep-logs started... Hello bugfixers!\n\n');
-  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), textToLog);
+  fs.appendFileSync(path.normalize(`${logPath}/deeplogs.txt`), `${textToLog}\n\n`);
   log(textToLog);
 }
 
