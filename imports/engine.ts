@@ -346,6 +346,7 @@ export async function call (options: ICallOptions) {
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
+  printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
