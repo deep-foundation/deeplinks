@@ -118,7 +118,7 @@ const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
 const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
 const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
-const _generateEnvs = ({ envs, isDeeplinksDocker }) => {
+const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
   let envsStr = '';
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
   const hasuraPort = '8080';
@@ -313,8 +313,8 @@ const _AddUserToDocker = async (envs, user) => {
 const _AddNvmDirToPathEnv = async (envs) => {
   const whoami =  await execP('whoami');
   const home =  await execP('echo $HOME');
-  homeDir = whoami.stdout;
-  user = home.stdout;
+  homeDir = home.stdout;
+  user = whoami.stdout;
 
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
@@ -344,6 +344,7 @@ const call = async (options) => {
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
+  printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
   const engineStr = _generateEngineStr({ operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
