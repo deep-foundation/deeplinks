@@ -225,7 +225,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${needNPX ? 'npm i -g npx &&' : ''} && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
   }
   if (operation === 'migrate') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
@@ -277,6 +277,7 @@ let userAddingToDockerGroupInProcess = false;
 let pathNvmFixed = false;
 let user;
 let homeDir;
+let needNPX = false;
 
 const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissionReturn> => {
   if (userAddingToDockerGroupInProcess) {
@@ -346,6 +347,7 @@ export async function call (options: ICallOptions) {
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
+    if (!envs['PATH'].includes('nvm')) needNPX = true;
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
