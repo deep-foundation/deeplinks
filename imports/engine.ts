@@ -343,6 +343,7 @@ export async function call (options: ICallOptions) {
     fixPath();
     if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
     if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+    envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
