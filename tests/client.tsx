@@ -62,7 +62,7 @@ describe('client', () => {
     const typeName = "MyTypeName"
     const reservedLinkIds = await deepClient.reserve(2);
     const newTypeLinkId = reservedLinkIds.pop()!;
-    const containLinkId = reservedLinkIds.pop()!;
+    const containLinkId = reservedLinkIds.pop()!;  
     await deepClient.serial({
       operations: [
         {
@@ -77,8 +77,9 @@ describe('client', () => {
           type: 'insert',
           table: 'links',
           objects: {
+            id: containLinkId,
             type_id: containTypeLinkId,
-            from_id: deepClient.linkId,
+            from_id: await deepClient.id('deep', 'admin'),
             to_id: newTypeLinkId,
           }
         },
@@ -92,17 +93,6 @@ describe('client', () => {
         }
       ]
     });
-    await deepClient.insert({
-      type_id: containTypeLinkId,
-      from_id: await deepClient.id('deep', 'admin'),
-      to_id: newTypeLinkId,
-      string: {
-        data: {
-          value: typeName
-        }
-      }
-    });
-
     assert.equal(await deepClient.name(newTypeLinkId), typeName);
   });
   it(`{ id: 5 }`, () => {
