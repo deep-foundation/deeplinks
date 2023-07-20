@@ -353,10 +353,10 @@ export async function call (options: ICallOptions) {
     printLog(envs['MIGRATIONS_DIR'], envs['PATH'].includes('nvm'), `envs['PATH'].includes('nvm')`);
     if (envs['PATH'].includes('nvm')) {
       const nvmPath =  (await execP('where nvm')).stdout;
-      printLog(envs['MIGRATIONS_DIR'], nvmPath, `where nvm`);
-      printLog(envs['MIGRATIONS_DIR'], !fs.existsSync(nvmPath), `!fs.existsSync(nvmPath)`); 
-      printLog(envs['MIGRATIONS_DIR'], !fs.existsSync(nvmPath.replace('\\', '\\\\')), `!fs.existsSync(nvmPath.replace('\\', '\\\\'))`);      
-      if (!fs.existsSync(nvmPath))
+      printLog(envs['MIGRATIONS_DIR'], nvmPath, `nvmPath`);
+      const nvmPathExist =  (await execP(`if exist ${nvmPath} (echo 1) else (echo 0)`)).stdout;
+      printLog(envs['MIGRATIONS_DIR'], nvmPathExist, `nvmPathExist`);      
+      if (!nvmPathExist)
         needNPX = true;
     } else {
       needNPX = true;
