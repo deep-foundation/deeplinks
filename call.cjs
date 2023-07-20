@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { call } = require('./imports/engine.cjs');
+const { call } = require('./imports/engine-server.cjs');
 
 const DEEPLINKS_CALL_OPTIONS = process.env.DEEPLINKS_CALL_OPTIONS || '{ "operation": "run" }';
 
