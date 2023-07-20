@@ -328,12 +328,14 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
 }
 
 export async function call (options: ICallOptions) {
-  //@ts-ignore
+  
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
   const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+  user =  (await execP('whoami')).stdout;
 
+  printLog(envs['MIGRATIONS_DIR'], user, `user`);
   printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
   printLog(envs['MIGRATIONS_DIR'], options, `options`);
   printLog(envs['MIGRATIONS_DIR'], isDeeplinksDocker, `isDeeplinksDocker`);
@@ -341,8 +343,9 @@ export async function call (options: ICallOptions) {
 
   if (platform !== "win32"){
     fixPath();
-    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
-    if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+    // if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+    await execP(`usermod -aG docker ${user}`);
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
