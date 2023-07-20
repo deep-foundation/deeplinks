@@ -333,7 +333,6 @@ export async function call (options: ICallOptions) {
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
   const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
-  user =  (await execP('whoami')).stdout;
 
   printLog(envs['MIGRATIONS_DIR'], user, `user`);
   printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
@@ -345,7 +344,6 @@ export async function call (options: ICallOptions) {
     fixPath();
     // if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
-    await execP(`usermod -aG docker ${user}`);
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
