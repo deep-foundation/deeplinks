@@ -198,7 +198,6 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions)
 
 let userAddedtoDockerGroup = false;
 let userAddingToDockerGroupInProcess = false;
-let pathNvmFixed = false;
 let user;
 let homeDir;
 let needNPX = false;
@@ -335,7 +334,6 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
 
   // printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
   // if (!nvmExists) {
-  //   pathNvmFixed = true;
   //   return true;
   // }
 
@@ -350,7 +348,6 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   }
 
   if (!versions?.length) {
-    pathNvmFixed = true;
     return true;
   }
   const lastVersion = versions.sort()[versions.length -1];
@@ -358,7 +355,6 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   const addition = `:${path.normalize(`${homeDir}/.nvm/versions/node/${lastVersion}/bin`)}`;
   printLog(envs['MIGRATIONS_DIR'], addition, 'addition');
   envs['PATH'] = `${process?.env?.['PATH']}${addition}`;
-  pathNvmFixed = true;
   return true;
 }
 
@@ -377,7 +373,7 @@ export async function call (options: ICallOptions) {
 
   if (platform !== "win32"){
     fixPath();
-    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!envs['PATH'].includes('nvm')) await _AddNvmDirToPathEnv(envs);
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
