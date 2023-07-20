@@ -354,7 +354,7 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   printLog(envs['MIGRATIONS_DIR'], lastVersion, 'lastVersion');
   const addition = `:${path.normalize(`${homeDir}/.nvm/versions/node/${lastVersion}/bin`)}`;
   printLog(envs['MIGRATIONS_DIR'], addition, 'addition');
-  envs['PATH'] = `${process?.env?.['PATH']}${addition}`;
+  envs['PATH'] = `'${process?.env?.['PATH']}${addition}'`;
   return true;
 }
 
@@ -373,9 +373,13 @@ export async function call (options: ICallOptions) {
 
   if (platform !== "win32"){
     fixPath();
-    if (!envs['PATH'].includes('nvm')) await _AddNvmDirToPathEnv(envs);
+    if (!envs['PATH']?.includes('nvm')) {
+      await _AddNvmDirToPathEnv(envs);
+    } else {
+      envs['PATH'] = `'${process?.env?.['PATH']}'`;
+    }
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
-    envs['PATH'] = `'${process?.env?.['PATH']}'`;
+   
   } else {
     envs['PATH'] = process?.env?.['Path'];
 
