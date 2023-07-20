@@ -105,6 +105,7 @@ const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER ||
 //   isDeeplinksDocker: 0 | 1 | undefined;
 //   isDeepcaseDocker: 0 | 1 | undefined;
 //   envs: any;
+//   needNPX: boolean;
 // }
 // interface IGenerateEnvsOptions {
 //   isDeeplinksDocker: 0 | 1 | undefined;
@@ -194,7 +195,6 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
 
 let userAddedtoDockerGroup = false;
 let userAddingToDockerGroupInProcess = false;
-let pathNvmFixed = false;
 let user;
 let homeDir;
 let needNPX = false;
@@ -314,24 +314,54 @@ const _AddUserToDocker = async (envs, user) => {
 const _AddNvmDirToPathEnv = async (envs) => {
   const whoami =  await execP('whoami');
   const home =  await execP('echo $HOME');
-  homeDir = home.stdout;
-  user = whoami.stdout;
+  homeDir = home.stdout.trim();
+  user = whoami.stdout.trim();
 
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
 
-  const nvmExists = fs.existsSync(path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`));
-  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
-  pathNvmFixed = true;
+  // let nvmExists;
+
+  // try {
+  //   fs.accessSync(`/home/menzorg/.nvm/versions/node`, fs.constants.F_OK);
+  //   nvmExists = true;
+  // } catch(e){
+  //   printLog(envs['MIGRATIONS_DIR'], e?.message, 'nvmError');
+  //   nvmExists = false;
+  // }
+
+  // printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
+  // if (!nvmExists) {
+  //   return true;
+  // }
+
+  // var fs = require('fs'); var versions = fs.readdirSync(${process.env['HOME']}/.nvm/versions/node); console.log(versions[versions.length-1])
+
+  let versions = [];
+  try {
+    versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);
+    printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
+  } catch(e){
+    printLog(envs['MIGRATIONS_DIR'], e.toString(), 'versions error');
+  }
+
+  if (!versions?.length) {
+    return true;
+  }
+  const lastVersion = versions.sort()[versions.length -1];
+  printLog(envs['MIGRATIONS_DIR'], lastVersion, 'lastVersion');
+  const addition = `:${path.normalize(`${homeDir}/.nvm/versions/node/${lastVersion}/bin`)}`;
+  printLog(envs['MIGRATIONS_DIR'], addition, 'addition');
+  envs['PATH'] = `'${process?.env?.['PATH']}${addition}'`;
   return true;
 }
 
 const call = async (options) => {
-
+  
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
-  const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+  let envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
 
   printLog(envs['MIGRATIONS_DIR'], user, `user`);
   printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
@@ -341,9 +371,13 @@ const call = async (options) => {
 
   if (platform !== "win32"){
     fixPath();
-    // if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!envs['PATH']?.includes('nvm')) {
+      await _AddNvmDirToPathEnv(envs);
+    } else {
+      envs['PATH'] = `'${process?.env?.['PATH']}'`;
+    }
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
-    envs['PATH'] = `'${process?.env?.['PATH']}'`;
+   
   } else {
     envs['PATH'] = process?.env?.['Path'];
 
@@ -360,6 +394,7 @@ const call = async (options) => {
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
+  envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   const engineStr = _generateEngineStr({ needNPX, operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
 
