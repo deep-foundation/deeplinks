@@ -363,7 +363,7 @@ export async function call (options: ICallOptions) {
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
-  const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+  let envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
 
   printLog(envs['MIGRATIONS_DIR'], user, `user`);
   printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
@@ -396,6 +396,7 @@ export async function call (options: ICallOptions) {
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
+  envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   const engineStr = _generateEngineStr({ needNPX, operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
 
