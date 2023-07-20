@@ -201,7 +201,7 @@ let userAddingToDockerGroupInProcess = false;
 let pathNvmFixed = false;
 let user;
 let homeDir;
-let needNPX;
+let needNPX = false;
 
 export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusReturn> => {
   let status;
@@ -349,14 +349,18 @@ export async function call (options: ICallOptions) {
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
+
+    printLog(envs['MIGRATIONS_DIR'], envs['PATH'].includes('nvm'), `envs['PATH'].includes('nvm')`);
     if (envs['PATH'].includes('nvm')) {
       const nvmPath =  (await execP('where nvm')).stdout;
+      printLog(envs['MIGRATIONS_DIR'], nvmPath, `where nvm`);
+      printLog(envs['MIGRATIONS_DIR'], !fs.existsSync(path.normalize(nvmPath)), `!fs.existsSync(path.normalize(nvmPath))`);      
       if (!fs.existsSync(path.normalize(nvmPath)))
         needNPX = true;
     } else {
       needNPX = true;
     }
-    
+    printLog(envs['MIGRATIONS_DIR'], needNPX, `needNPX`);
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
