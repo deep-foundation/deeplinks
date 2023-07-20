@@ -316,8 +316,8 @@ const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissi
 const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   const whoami =  await execP('whoami');
   const home =  await execP('echo $HOME');
-  homeDir = home.stdout;
-  user = whoami.stdout;
+  homeDir = home.stdout.trim();
+  user = whoami.stdout.trim();
 
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
