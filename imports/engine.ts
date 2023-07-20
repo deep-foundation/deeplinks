@@ -325,10 +325,16 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
 
   const nvmExists = fs.existsSync(`${homeDir}/.nvm/versions/node`);
   printLog(envs['MIGRATIONS_DIR'], nvmExists, 'fs.existsSync(`${homeDir}/.nvm/versions/node`)');
-  if (!nvmExists) return true;
+  if (!nvmExists) {
+    pathNvmFixed = true;
+    return true;
+  }
   const versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);;
   printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
-  if (versions.length === 0) return true;
+  if (versions.length === 0) {
+    pathNvmFixed = true;
+    return true;
+  }
   envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/${versions.sort()[0]}/bin`)}` : ''}'`;
   pathNvmFixed = true;
   return true;
