@@ -92,16 +92,6 @@ describe('client', () => {
         }
       ]
     });
-    await deepClient.insert({
-      type_id: containTypeLinkId,
-      from_id: await deepClient.id('deep', 'admin'),
-      to_id: newTypeLinkId,
-      string: {
-        data: {
-          value: typeName
-        }
-      }
-    });
 
     assert.equal(await deepClient.name(newTypeLinkId), typeName);
   });
