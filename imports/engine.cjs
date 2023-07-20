@@ -192,6 +192,12 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
   return envsStr;
 };
 
+let userAddedtoDockerGroup = false;
+let userAddingToDockerGroupInProcess = false;
+let pathNvmFixed = false;
+let user;
+let homeDir;
+
 const _checkDeeplinksStatus = async () => {
   let status;
   let err;
@@ -230,7 +236,7 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}"  && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && npm i -g npx && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''}`;
   }
   if (operation === 'run') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz && cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } ) ${+envs['MANUAL_MIGRATIONS'] ? `&& npm run migrate -- -f ${envs['MIGRATIONS_DIR']}` : ''}`;
@@ -244,9 +250,9 @@ const _generateEngineStr = ({ operation, isDeeplinksDocker, isDeepcaseDocker, en
   }
   if (operation === 'reset') {
     if (platform === "win32") {
-      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
+      str = ` cd "${_deeplinks}" && npm i -g npx && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
     } else {
-      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
+      str = ` cd "${_deeplinks}" npm i -g npx && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrations && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
     }
   }
   if (operation === 'dock') {
@@ -269,13 +275,6 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
     return { error: e };
   }
 }
-
-
-let userAddedtoDockerGroup = false;
-let userAddingToDockerGroupInProcess = false;
-let pathNvmFixed = false;
-let user;
-let homeDir;
 
 const _AddUserToDocker = async (envs, user) => {
   if (userAddingToDockerGroupInProcess) {
@@ -342,6 +341,7 @@ const call = async (options) => {
     fixPath();
     if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
     if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
+    envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
     envs['PATH'] = process?.env?.['Path'];
   }
