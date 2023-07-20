@@ -354,7 +354,7 @@ export async function call (options: ICallOptions) {
     if (envs['PATH'].includes('nvm')) {
       const whereNvm =  (await execP('where nvm'));
       printLog(envs['MIGRATIONS_DIR'], whereNvm, `whereNvm`);      
-      if (!whereNvm.stderr)
+      if (whereNvm.stderr)
         needNPX = true;
     } else {
       needNPX = true;
