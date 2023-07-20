@@ -323,8 +323,13 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
 
-  const nvmExists = fs.existsSync(path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`));
-  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/v18.16.1/bin`)}` : ''}'`;
+  const nvmExists = fs.existsSync(path.normalize(`${homeDir}/.nvm/versions/node`));
+  printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
+  if (!nvmExists) return true;
+  const versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);;
+  printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
+  if (versions.length === 0) return true;
+  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? path.normalize(`${homeDir}/.nvm/versions/node/${versions.sort()[0]}/bin`) : ''}'`;
   pathNvmFixed = true;
   return true;
 }
@@ -344,7 +349,7 @@ export async function call (options: ICallOptions) {
 
   if (platform !== "win32"){
     fixPath();
-    // if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
     envs['PATH'] = `'${process?.env?.['PATH']}'`;
   } else {
