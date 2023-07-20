@@ -323,30 +323,39 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
 
-  let nvmExists;
+  // try {
+  //   fs.accessSync(`/home/menzorg/.nvm/versions/node`, fs.constants.F_OK);
+  //   nvmExists = true;
+  // } catch(e){
+  //   printLog(envs['MIGRATIONS_DIR'], e?.message, 'nvmError');
+  //   nvmExists = false;
+  // }
 
+  // printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
+  // if (!nvmExists) {
+  //   pathNvmFixed = true;
+  //   return true;
+  // }
+
+  // var fs = require('fs'); var versions = fs.readdirSync(${process.env['HOME']}/.nvm/versions/node); console.log(versions[versions.length-1])
+
+  let versions = [];
   try {
-    fs.accessSync(`${homeDir}/.nvm/versions/node`, fs.constants.F_OK);
-    nvmExists = true;
+    versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);
+    printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
   } catch(e){
-    nvmExists = false;
+    printLog(envs['MIGRATIONS_DIR'], e.toString(), 'versions error');
   }
 
-  printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
-
-  
-  printLog(envs['MIGRATIONS_DIR'], nvmExists, 'fs.existsSync(`${homeDir}/.nvm/versions/node`)');
-  if (!nvmExists) {
+  if (!versions?.length) {
     pathNvmFixed = true;
     return true;
   }
-  const versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);;
-  printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
-  if (versions.length === 0) {
-    pathNvmFixed = true;
-    return true;
-  }
-  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/${versions.sort()[0]}/bin`)}` : ''}'`;
+  const lastVersion = versions.sort()[versions.length -1];
+  printLog(envs['MIGRATIONS_DIR'], lastVersion, 'lastVersion');
+  const addition = `:${path.normalize(`${homeDir}/.nvm/versions/node/${lastVersion}/bin`)}`;
+  printLog(envs['MIGRATIONS_DIR'], addition, 'addition');
+  envs['PATH'] = `'${process?.env?.['PATH']}${addition}'`;
   pathNvmFixed = true;
   return true;
 }
