@@ -71,6 +71,7 @@ const myLinkId = await package.id("MyLinkName");
    * #### Get id of the package link from minilinks
 ```ts
 const package = new Package({deep});
+await package.applyMiniLinks();
 const myLinkId = await package.idLocal("MyLinkName");
 ```
    */
