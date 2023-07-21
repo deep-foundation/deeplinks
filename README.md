@@ -1,4 +1,9 @@
-# deep-foundation deeplinks
+[![npm](https://img.shields.io/npm/v/@deep-foundation/deeplinks.svg)](https://www.npmjs.com/package/@deep-foundation/deeplinks)
+[![Gitpod](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/deep-foundation/deeplinks) 
+[![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.gg/deep-foundation)
 
-[![npm version](https://badge.fury.io/js/%40deep-foundation%2Fdeeplinks.svg)](https://badge.fury.io/js/%40deep-foundation%2Fdeeplinks) 
-[![develop deep-foundation](https://badgen.net/badge/develop/deep-foundation)](https://github.com/deep-foundation/dev)
+# Usage
+## Library
+See [Documentation] for examples and API
+
+[Documentation]: https://deep-foundation.github.io/deeplinks/
