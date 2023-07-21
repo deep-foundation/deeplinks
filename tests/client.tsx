@@ -56,6 +56,45 @@ describe('client', () => {
     assert.notEqual(deep.linkId, 0);
     assert.notEqual(deep.linkId, guestId);
   });
+  it('name', async () => {
+    const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
+    const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
+    const typeName = "MyTypeName"
+    const reservedLinkIds = await deepClient.reserve(2);
+    const newTypeLinkId = reservedLinkIds.pop()!;
+    const containLinkId = reservedLinkIds.pop()!;  
+    await deepClient.serial({
+      operations: [
+        {
+          type: 'insert',
+          table: 'links',
+          objects: {
+            id: newTypeLinkId,
+            type_id: typeTypeLinkId,
+          }
+        },
+        {
+          type: 'insert',
+          table: 'links',
+          objects: {
+            id: containLinkId,
+            type_id: containTypeLinkId,
+            from_id: await deepClient.id('deep', 'admin'),
+            to_id: newTypeLinkId,
+          }
+        },
+        {
+          type: 'insert',
+          table: 'strings',
+          objects: {
+            link_id: containLinkId,
+            value: typeName
+          }
+        }
+      ]
+    });
+    assert.equal(await deepClient.name(newTypeLinkId), typeName);
+  });
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
   });
