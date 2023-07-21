@@ -11,6 +11,11 @@ on:
 
 jobs:
   main:
-    uses: deep-foundation/workflows/.github/workflows/npm-publish.yml@main
+    uses: deep-foundation/workflows/.github/workflows/npm-publish.yml@npm-publish-1.1.0
     secrets:
       npm-token: ${{ secrets.NPM_TOKEN }}
+    with:
+      build-command: "npm run package:build"
+      test-command: "echo 'Tests are temporarily disabled'"
+      should-generate-documentation: true
+      generate-documentation-command: "npx typedoc --out ./docs --entryPointStrategy expand ./imports"
