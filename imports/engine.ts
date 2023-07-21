@@ -198,7 +198,6 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }: IGenerateEnvsOptions)
 
 let userAddedtoDockerGroup = false;
 let userAddingToDockerGroupInProcess = false;
-let pathNvmFixed = false;
 let user;
 let homeDir;
 let needNPX = false;
@@ -317,37 +316,45 @@ const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissi
 const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   const whoami =  await execP('whoami');
   const home =  await execP('echo $HOME');
-  homeDir = home.stdout;
-  user = whoami.stdout;
+  homeDir = home.stdout.trim();
+  user = whoami.stdout.trim();
 
   printLog(envs['MIGRATIONS_DIR'], user, 'whoami');
   printLog(envs['MIGRATIONS_DIR'], homeDir, 'homeDir');
 
-  let nvmExists;
+  // let nvmExists;
 
+  // try {
+  //   fs.accessSync(`/home/menzorg/.nvm/versions/node`, fs.constants.F_OK);
+  //   nvmExists = true;
+  // } catch(e){
+  //   printLog(envs['MIGRATIONS_DIR'], e?.message, 'nvmError');
+  //   nvmExists = false;
+  // }
+
+  // printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
+  // if (!nvmExists) {
+  //   return true;
+  // }
+
+  // var fs = require('fs'); var versions = fs.readdirSync(${process.env['HOME']}/.nvm/versions/node); console.log(versions[versions.length-1])
+
+  let versions = [];
   try {
-    fs.accessSync(`${homeDir}/.nvm/versions/node`, fs.constants.F_OK);
-    nvmExists = true;
+    versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);
+    printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
   } catch(e){
-    nvmExists = false;
+    printLog(envs['MIGRATIONS_DIR'], e.toString(), 'versions error');
   }
 
-  printLog(envs['MIGRATIONS_DIR'], nvmExists, 'nvmExists');
-
-  
-  printLog(envs['MIGRATIONS_DIR'], nvmExists, 'fs.existsSync(`${homeDir}/.nvm/versions/node`)');
-  if (!nvmExists) {
-    pathNvmFixed = true;
+  if (!versions?.length) {
     return true;
   }
-  const versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);;
-  printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
-  if (versions.length === 0) {
-    pathNvmFixed = true;
-    return true;
-  }
-  envs['PATH'] = `'${process?.env?.['PATH']}${nvmExists ? `:${path.normalize(`${homeDir}/.nvm/versions/node/${versions.sort()[0]}/bin`)}` : ''}'`;
-  pathNvmFixed = true;
+  const lastVersion = versions.sort()[versions.length -1];
+  printLog(envs['MIGRATIONS_DIR'], lastVersion, 'lastVersion');
+  const addition = `:${path.normalize(`${homeDir}/.nvm/versions/node/${lastVersion}/bin`)}`;
+  printLog(envs['MIGRATIONS_DIR'], addition, 'addition');
+  envs['PATH'] = `'${process?.env?.['PATH']}${addition}'`;
   return true;
 }
 
@@ -356,7 +363,7 @@ export async function call (options: ICallOptions) {
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
   const envs = { ...options.envs, DOCKERHOST: String(internalIp?.v4?.sync()) };
-  const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
+  let envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
 
   printLog(envs['MIGRATIONS_DIR'], user, `user`);
   printLog(envs['MIGRATIONS_DIR'], envs, `envs`);
@@ -366,9 +373,13 @@ export async function call (options: ICallOptions) {
 
   if (platform !== "win32"){
     fixPath();
-    if (!pathNvmFixed) await _AddNvmDirToPathEnv(envs);
+    if (!envs['PATH']?.includes('nvm')) {
+      await _AddNvmDirToPathEnv(envs);
+    } else {
+      envs['PATH'] = `'${process?.env?.['PATH']}'`;
+    }
     // if (!userAddedtoDockerGroup) await _AddUserToDocker(envs, user);
-    envs['PATH'] = `'${process?.env?.['PATH']}'`;
+   
   } else {
     envs['PATH'] = process?.env?.['Path'];
 
@@ -385,6 +396,7 @@ export async function call (options: ICallOptions) {
   }
   printLog(envs['MIGRATIONS_DIR'], envs['PATH'], `PATH`);
 
+  envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   const engineStr = _generateEngineStr({ needNPX, operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
 
