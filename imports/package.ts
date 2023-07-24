@@ -39,14 +39,15 @@ const myLinkId = await myPackage.yourLinkName.id();
 const myLinkLocalId = await myPackage.yourLinkName.idLocal();
 ```
    */
-  public createEntity(...names: string[]) {
+  public createEntity(name: string) {
     return {
       id: async () => {
-        return await this.id(this.name, ...names);
+        return await this.id(this.name, name);
       },
       idLocal: () => {
-        return this.idLocal(this.name, ...names);
+        return this.idLocal(this.name, name);
       },
+      name: name
     };
   }
 
