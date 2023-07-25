@@ -49,15 +49,19 @@ export const up = async () => {
       (
         (
           generated_from_link."type_id" = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')} AND
-          generated_from_link."to_id" = dist_link."id" AND
-          generated_from_link."from_id" = src_link."id"
+          generated_from_link."from_id" = dist_link."id" AND
+          generated_from_link."to_id" = src_link."id"
         ) OR (
-          dist_link."id" = src_link."id"
+          src_link."id" = dist_link."id" AND
+          NOT EXISTS (SELECT * FROM ${TABLE_NAME} as checked WHERE (
+            checked."type_id" = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')} AND
+            (checked."to_id" IN (src_link."id", dist_link."id") OR checked."from_id" IN (src_link."id", dist_link."id"))
+          ))
         )
       ) AND
       supports_link."from_id" = isolation_provider_link."id" AND
       supports_link."to_id" = execution_provider_link."id" AND
-      handler_link."to_id" = dist_link."id";
+      (handler_link."to_id" = dist_link."id" OR handler_link."to_id" = src_link."id");
   `);
   await api.query({
     type: 'track_table',
