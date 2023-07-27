@@ -885,7 +885,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   };
 
   nameLocal(input: Link<number> | number): string | undefined {
-    const id = typeof(input) === 'number' ? input : input.id;
+    const id = typeof(input) === 'number' ? input : input?.id;
+    if (!id) return;
     // @ts-ignore
     return this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id)?.value?.value;
   }
