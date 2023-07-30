@@ -1,8 +1,8 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
-import pckg from '@deep-foundation/finder/deep.json' assert { type: 'json'};
-import { importPackage, sharePermissions } from './1664940577200-tsx.js';
+// import pckg from '@deep-foundation/finder/deep.json' assert { type: 'json'};
+// import { importPackage, sharePermissions } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:finder');
 const log = debug.extend('log');
@@ -20,15 +20,15 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  log('pckg', JSON.stringify(pckg, null, 2));
-  const importResult = await importPackage(pckg);
-  log('importResult', JSON.stringify(importResult, null, 2));
-  log(importResult);
-  const packageId = importResult?.packageId;
-  log('packageId', packageId);
-  if (packageId) {
-    await sharePermissions(await root.id('deep', 'admin'), packageId);
-  }
+  // log('pckg', JSON.stringify(pckg, null, 2));
+  // const importResult = await importPackage(pckg);
+  // log('importResult', JSON.stringify(importResult, null, 2));
+  // log(importResult);
+  // const packageId = importResult?.packageId;
+  // log('packageId', packageId);
+  // if (packageId) {
+  //   await sharePermissions(await root.id('deep', 'admin'), packageId);
+  // }
 };
 
 export const down = async () => {
