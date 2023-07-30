@@ -11,8 +11,6 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { rootPath } from 'root-path-electron';
 // import { remote } from 'electron'
-import sudo from 'sudo-prompt';
-import { json } from 'body-parser';
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -276,40 +274,6 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
   } catch(e) {
     error(e);
     return { error: e };
-  }
-}
-
-const _AddUserToDocker = async (envs: any, user: string): Promise<ICheckPermissionReturn> => {
-  if (userAddingToDockerGroupInProcess) {
-    while(userAddingToDockerGroupInProcess) {
-      await delay(1000);
-    }
-  } else {
-    if (isElectron()) {
-      userAddingToDockerGroupInProcess = true;
-
-      const icns = path.normalize(`${appPath}/resources/assets/appIcon.icns`);
-      const options = {
-        name: 'Deep Case',
-        icns,
-        env: envs,
-      };
-      const execPromise = new Promise((resolve, reject) => {
-        sudo.exec(`usermod -aG docker ${user}`, options, (error, stdout, stderr) => {
-          if (error) {
-            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr }, error }, 'permissions error');
-            resolve({ error });
-          } else {
-            printLog(envs['MIGRATIONS_DIR'], { result: { stdout, stderr } }, 'permissionsResult');
-            resolve({ result: { stdout, stderr } });
-          }
-        });
-      });
-      const result: { result?: { stdout: string, stderr: string }, error?: any} = await execPromise;
-      userAddedtoDockerGroup = !result.error;
-      userAddingToDockerGroupInProcess = false;
-      return result;
-    }
   }
 }
 
