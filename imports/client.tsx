@@ -586,21 +586,27 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
-    const q = await this.apolloClient.query(generateQuery({
-      queries: [
-        generateQueryData({
-          tableName: table,
-          returning,
-          variables: {
-            ...variables,
-            ...query,
-          } }),
-      ],
-      name: name,
-    }));
+    
+    try {
+      const q = await this.apolloClient.query(generateQuery({
+        queries: [
+          generateQueryData({
+            tableName: table,
+            returning,
+            variables: {
+              ...variables,
+              ...query,
+            } }),
+        ],
+        name: name,
+      }));
 
-    // @ts-ignore
-    return { ...q, data: (q)?.data?.q0 };
+      return { ...q, data: (q)?.data?.q0 };
+    } catch (error) {
+      const errorWrapper = new Error('There was an error with the Apollo query') as any;
+      errorWrapper.innerError = error;
+      throw errorWrapper;
+    }
   };
 
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
