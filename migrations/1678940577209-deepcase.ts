@@ -1,8 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
-// import deepcasePckg from '@deep-foundation/deepcase/deep.json' assert { type: 'json'};
-import { importPackage, sharePermissions } from './1664940577200-tsx.js';
+import { sharePermissions } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:deepcase');
 const log = debug.extend('log');
@@ -54,9 +53,8 @@ export const up = async () => {
 
   log('adminId', adminId);
   const packageId = await installPackage(deep, '@deep-foundation/deepcase');
-  if (packageId) {
-    await sharePermissions(adminId, packageId, false);
-  }
+  await sharePermissions(adminId, packageId);
+
   const usersCanInsertSafeLinks = await deep.id('deep', 'admin', 'usersCanInsertSafeLinks');
   const usersCanUpdateSafeLinks = await deep.id('deep', 'admin', 'usersCanUpdateSafeLinks');
   const usersCanDeleteSafeLinks = await deep.id('deep', 'admin', 'usersCanDeleteSafeLinks');
