@@ -586,7 +586,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
     const name = options?.name || this.defaultSelectName;
-    
+
     try {
       const q = await this.apolloClient.query(generateQuery({
         queries: [
@@ -603,7 +603,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
       return { ...q, data: (q)?.data?.q0 };
     } catch (error) {
-      const errorWrapper = new Error('There was an error with the Apollo query') as any;
+      const errorWrapper = new Error('There was an error with the Apollo query in DeepClient select method.') as any;
       errorWrapper.innerError = error;
       throw errorWrapper;
     }
