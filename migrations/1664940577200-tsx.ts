@@ -30,19 +30,22 @@ export const importPackage = async (pckg) => {
   return importResult;
 }
 
-export const sharePermissions = async (userId, packageId) => {
-  await root.insert([
-    {
-      type_id: await root.id('@deep-foundation/core', 'Contain'),
-      from_id: userId,
-      to_id: packageId,
-    },
+export const sharePermissions = async (userId, packageId, createContain = true) => {
+  const links = [
     {
       type_id: await root.id('@deep-foundation/core', 'Join'),
       from_id: packageId,
       to_id: userId,
-    },
-  ]);
+    }
+  ];
+  if (createContain) {
+    links.push({
+      type_id: await root.id('@deep-foundation/core', 'Contain'),
+      from_id: userId,
+      to_id: packageId,
+    });
+  }
+  await root.insert(links);
 }
 
 export const up = async () => {
