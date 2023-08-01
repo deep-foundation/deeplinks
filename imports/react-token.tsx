@@ -3,7 +3,7 @@ import { TokenContext } from '@deep-foundation/react-hasura/token-context.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
 import { useCookiesStore } from '@deep-foundation/store/cookies.js'
 
-export function useTokenController() {
+export function useTokenController() : [string, (string) => string] {
   const [localToken, setLocalToken] = useLocalStore('dc-dg-token', '');
   const [cookieToken, setCookieToken] = useCookiesStore('dc-dg-token', '');
 
