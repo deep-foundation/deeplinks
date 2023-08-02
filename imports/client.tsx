@@ -602,10 +602,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       }));
 
       return { ...q, data: (q)?.data?.q0 };
-    } catch (error) {
-      const errorWrapper = new Error('There was an error with the Apollo query in DeepClient select method.') as any;
-      errorWrapper.innerError = error;
-      throw errorWrapper;
+    } catch (e) {
+      throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
     }
   };
 
@@ -626,7 +624,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw e;
+      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e });
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     // @ts-ignore
@@ -648,7 +646,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw e;
+      if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     // @ts-ignore
@@ -672,7 +670,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw e;
+      if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     return { ...q, data: (q)?.data?.m0?.returning };
