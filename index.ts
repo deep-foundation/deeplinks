@@ -22,6 +22,7 @@ import { containerController, DOCKER, getJwt } from './imports/router/links.js';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks.js';
 import _ from 'lodash';
 import Cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'http://localhost:8000';
@@ -40,6 +41,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
 
 const app = express();
+app.use(cookieParser());
 const httpServer = http.createServer(app);
 
 app.get('/gql', expressPlayground({
@@ -73,7 +75,9 @@ app.get(['/file'], createProxyMiddleware({
   pathRewrite: async (path, req) => {
     console.log('/file get proxy', 'path', path);
     const headers = req.headers;
-    console.log('/file get proxy', '{headers: headers}', {headers: headers});
+    console.log('/file get proxy', 'headers', headers);
+    const cookies = req.cookies;
+    console.log('/file get proxy', 'cookies', JSON.stringify(cookies, null, 2));
     const newurl = new URL(`${headers['x-forwarded-proto']}://${headers['host']}${path}`);
     console.log('/file get proxy', 'newurl', newurl);
     const linkId = newurl.searchParams.get('linkId');
@@ -99,24 +103,27 @@ const cors = Cors({ methods: ['POST', 'OPTIONS'] });
 app.use(cors);
 
 app.post('/file', async (req, res, next) => {
-  console.log('DEEPLINKS_HASURA_STORAGE_URL', DEEPLINKS_HASURA_STORAGE_URL);
+  console.log('/file post proxy','DEEPLINKS_HASURA_STORAGE_URL', DEEPLINKS_HASURA_STORAGE_URL);
   // canObject
   const headers = req.headers;
+
+  const cookies = req.cookies;
+  console.log('/file post proxy', 'cookies', JSON.stringify(cookies, null, 2));
   let userId;
   let linkId;
   try {
     const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
     userId = +(JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id']);
     linkId = +(headers['linkId'] || headers['linkid']);
-    console.log('linkId',linkId);
+    console.log('/file post proxy','linkId',linkId);
   } catch (e){
-    console.log('error: ', e);
+    console.log('/file post proxy','error: ', e);
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
   const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || userId === await deep.id('deep', 'admin');
-  console.log('can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', userId === await deep.id('deep', 'admin'));
-  console.log('userId', userId, typeof(userId));
-  console.log('canResult', canResult);
+  console.log('/file post proxy','can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', userId === await deep.id('deep', 'admin'));
+  console.log('/file post proxy','userId', userId, typeof(userId));
+  console.log('/file post proxy','canResult', canResult);
   if (!canResult) return res.status(403).send(`You cant update link ##${linkId} as user ##${userId}, and user ##${userId} is not admin.`);
   //insert file
   await createProxyMiddleware({
@@ -124,21 +131,21 @@ app.post('/file', async (req, res, next) => {
     selfHandleResponse: true,
     logLevel: 'debug',
     onError: (err, req, res, target) => {
-      console.log('onError', err);
+      console.log('/file post proxy','onError', err);
       res.writeHead(500, {
         'Content-Type': 'text/plain',
       });
       res.end('Something went wrong. And we are reporting a custom error message.');
     },
     onProxyRes: responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
-      console.log('onProxyRes');
+      console.log('/file post proxy','onProxyRes');
       //update linkId
       const response = responseBuffer.toString('utf8'); // convert buffer to string
-      console.log(`RESPONSE ${response}`);
+      console.log('/file post proxy',`RESPONSE ${response}`);
       let files;
       try {
         files = JSON.parse(response);
-        console.log('files', files);
+        console.log('/file post proxy','files', files);
         if (!files) return response;
         const UPDATE_FILE_LINKID = gql`mutation UPDATE_FILE_LINKID($linkId: bigint, $fileid: uuid, $uploadedByLinkId: bigint) {
           updateFiles(where: {id: {_eq: $fileid}}, _set: {link_id: $linkId, uploadedByLinkId: $uploadedByLinkId }){
@@ -149,7 +156,7 @@ app.post('/file', async (req, res, next) => {
             }
           }
         }`;
-        console.log('files[0].id', files.id);
+        console.log('/file post proxy','files[0].id', files.id);
         const updated = await client.mutate({
           mutation: UPDATE_FILE_LINKID,
           variables: { 
@@ -158,10 +165,10 @@ app.post('/file', async (req, res, next) => {
             uploadedByLinkId: userId
           },
         });
-        console.log('linkid',linkId)
-        console.log('data',updated?.data?.updateFiles?.returning);
+        console.log('/file post proxy','linkid',linkId)
+        console.log('/file post proxy','data',updated?.data?.updateFiles?.returning);
       } catch (e){
-        console.log('try error: ', e);
+        console.log('/file post proxy','try error: ', e);
          if (files[0]?.id){
           await client.mutate({
             mutation:  gql`mutation DELETE_FILE($fileid: uuid) { deleteFiles(where: {id: {_eq: $fileid}}){ returning { id } } }`,
