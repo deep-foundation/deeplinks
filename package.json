@@ -83,7 +83,8 @@
     "wait-on": "^7.0.1"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "@deep-foundation/deepcase": "^0.0.40"
   },
   "engines": {
     "node": "^18.16.1"
