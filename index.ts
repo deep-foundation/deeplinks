@@ -120,8 +120,8 @@ app.post('/file', async (req, res, next) => {
     console.log('/file post proxy','error: ', e);
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
-  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || await deep.can(userId, userId, await deep.id('@deep-foundation/core', 'AllowAdmin'));
-  console.log('/file post proxy','can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', await deep.can(userId, userId, await deep.id('@deep-foundation/core', 'AllowAdmin')));
+  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || await deep.can(null, userId, await deep.id('@deep-foundation/core', 'AllowAdmin'));
+  console.log('/file post proxy','can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', await deep.can(null, userId, await deep.id('@deep-foundation/core', 'AllowAdmin')));
   console.log('/file post proxy','userId', userId, typeof(userId));
   console.log('/file post proxy','canResult', canResult);
   if (!canResult) return res.status(403).send(`You cant update link ##${linkId} as user ##${userId}, and user ##${userId} is not admin.`);
