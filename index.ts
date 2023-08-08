@@ -118,11 +118,13 @@ app.get(['/file'], createProxyMiddleware({
       if (tokenCookie) {
         token = JSON.parse(tokenCookie)?.value;
         console.log('/file get proxy', 'cookie token', token);
+        if (token) {
+          req.headers.authorization = `Bearer ${token}`;
+        }
+        console.log('/file get proxy', 'cookie token is set as header token');
       }
     }
     console.log('/file get proxy', 'result token', token);
-
-    req.headers.authorization = `Bearer ${token}`;
 
     const deep = makeDeepClient(token);
     const linkId = req.query.linkId;
