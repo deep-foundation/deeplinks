@@ -68,21 +68,36 @@ app.use('/gql', createProxyMiddleware({
   },
 }));
 
+// const getQueryStringParam = (req, paramName) => {
+//   // protocol and hostname here are mean nothing, these are only required to create URL
+//   const urlString = `${req.protocol}://${req.hostname}${req.url}`;
+//   console.log('getQueryStringParam', 'urlString', urlString);
+//   const url = new URL(urlString);
+//   console.log('getQueryStringParam', 'url', url);
+//   console.log('getQueryStringParam', 'url.searchParams', url.searchParams);
+//   const paramValue = url.searchParams.get(paramName);
+//   console.log('getQueryStringParam', paramName, paramValue);
+//   return paramValue;
+// }
+
 app.get(['/file'], createProxyMiddleware({
   target: DEEPLINKS_HASURA_STORAGE_URL,
   changeOrigin: true,
   logLevel: 'debug',
   pathRewrite: async (path, req) => {
     console.log('/file get proxy', 'path', path);
+    console.log('/file get proxy', 'req.baseUrl', req.baseUrl);
+    console.log('/file get proxy', 'req.originalUrl', req.originalUrl);
+    console.log('/file get proxy', 'req.protocol', req.protocol);
+    console.log('/file get proxy', 'req.hostname', req.hostname);
+    console.log('/file get proxy', 'req.url', req.url);
+    console.log('/file get proxy', 'req.query.linkId', req.query.linkId)
+    req.params
     const headers = req.headers;
     console.log('/file get proxy', 'headers', headers);
     const cookies = req.cookies;
     console.log('/file get proxy', 'cookies', JSON.stringify(cookies, null, 2));
-    const newurl = new URL(`${headers['x-forwarded-proto']}://${headers['host']}${path}`);
-    console.log('/file get proxy', 'newurl', newurl);
-    const linkId = newurl.searchParams.get('linkId');
-    console.log('/file get proxy', 'newurl.searchParams', newurl.searchParams);
-    console.log('/file get proxy', 'linkId', linkId);
+    const linkId = req.query.linkId;
 
     const result = await deep.apolloClient.query({
       query: gql`{
@@ -94,6 +109,7 @@ app.get(['/file'], createProxyMiddleware({
     console.log('/file get proxy', 'result', result)
     console.log('/file get proxy', 'result.data.files[0].id', result.data.files[0].id)
     const fileId = result.data.files[0].id;
+    // TODO: 404 instead of TypeError: Cannot read properties of undefined (reading 'id')
 
     return `/v1/files/${fileId}`;
   }
