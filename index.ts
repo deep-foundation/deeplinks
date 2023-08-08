@@ -112,17 +112,20 @@ app.get(['/file'], createProxyMiddleware({
     let authorizationHeader = headers['authorization'];
     if (authorizationHeader) {
       token = authorizationHeader.split(' ')[1];
+      console.log('/file get proxy', 'header token', token);
     } else {
       const tokenCookie = cookies?.['dc-dg-token'];
       if (tokenCookie) {
         token = JSON.parse(tokenCookie)?.value;
+        console.log('/file get proxy', 'cookie token', token);
       }
     }
+    console.log('/file get proxy', 'result token', token);
+
+    req.headers.authorization = `Bearer ${token}`;
 
     const deep = makeDeepClient(token);
-
     const linkId = req.query.linkId;
-
     const result = await deep.apolloClient.query({
       query: gql`{
         files(where: {link_id: {_eq: ${linkId}}}) {
@@ -131,9 +134,10 @@ app.get(['/file'], createProxyMiddleware({
       }`
     })
     console.log('/file get proxy', 'result', result)
-    console.log('/file get proxy', 'result.data.files[0].id', result.data.files[0].id)
-    const fileId = result.data.files[0].id;
-    // TODO: 404 instead of TypeError: Cannot read properties of undefined (reading 'id')
+    const fileId = result?.data?.files?.[0]?.id;
+    console.log('/file get proxy', 'fileId', fileId)
+
+    // TODO: Handle 404 or 403?
 
     return `/v1/files/${fileId}`;
   }
