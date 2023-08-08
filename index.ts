@@ -40,6 +40,16 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
 
+const makeDeepClient = (token: string) => {
+  return new DeepClient({
+    apolloClient: generateApolloClient({
+      path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+      ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+      token
+    }),
+  });
+}
+
 const app = express();
 app.use(cookieParser());
 const httpServer = http.createServer(app);
@@ -97,6 +107,20 @@ app.get(['/file'], createProxyMiddleware({
     console.log('/file get proxy', 'headers', headers);
     const cookies = req.cookies;
     console.log('/file get proxy', 'cookies', JSON.stringify(cookies, null, 2));
+
+    let token = '';
+    let authorizationHeader = headers['authorization'];
+    if (authorizationHeader) {
+      token = authorizationHeader.split(' ')[1];
+    } else {
+      const tokenCookie = cookies?.['dc-dg-token'];
+      if (tokenCookie) {
+        token = JSON.parse(tokenCookie)?.value;
+      }
+    }
+
+    const deep = makeDeepClient(token);
+
     const linkId = req.query.linkId;
 
     const result = await deep.apolloClient.query({
