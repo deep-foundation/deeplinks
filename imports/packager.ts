@@ -648,17 +648,21 @@ export class Packager<L extends Link<any>> {
     const names = {};
     for (let l = 0; l < globalLinks.links.length; l++) {
       const globalLink = globalLinks.links[l];
-      if (globalLink?.contains?.length > 1) pckg.errors.push(`link ${globalLink.id} have more then 1 Contain from package ${JSON.stringify(globalLink?.contains)}`);
+      if (globalLink?.contains?.length > 1) pckg.errors.push(`Link ${globalLink.id} have more then 1 Contain from package ${JSON.stringify(globalLink?.contains)}.`);
       if (
         // NOT contain in ( package |- contain -> * )
         !(globalLink?.type_id === Contain && globalLink?.from?.id === options.packageLinkId)
         // NOT package
         && globalLink?.id !== options.packageLinkId
       ) {
+        // for (const contain of (globalLink?.contains || [])) {
+        //   const name = contain?.value?.value;
         const name = globalLink?.contains?.[0]?.value?.value;
-        if (!name) pckg.errors.push(`link ${globalLink.id} have invalid name: ${name}`);
-        if (names[name]) pckg.errors.push(`link ${globalLink.id} have duplicated in package name ${name}, duplicate link ${names[name]}`);
+        if (!name) pckg.errors.push(`Link ${globalLink.id} has empty or invalid name: '${name}'.`);
+        if (name === "this") pckg.errors.push(`Link ${globalLink.id} has invalid name: '${name}'. '${name}' is reserved for package itself, so it cannot be used as a name for link that is contained by package.`);
+        if (names[name]) pckg.errors.push(`Link ${globalLink.id} has name '${name}' that is already used by ${names[name]} link.`);
         names[name] = globalLink.id;
+        // }
       }
     }
 
@@ -683,10 +687,14 @@ export class Packager<L extends Link<any>> {
         // NOT package
         && link?.id !== options.packageLinkId
       ) {
+        // for (const contain of (link?.contains || [])) {
+        //   const name = contain?.value?.value;
         const name = link?.contains?.[0]?.value?.value;
         addLocalLink(link.id, { id: name });
+        // }
       }
     }
+    addLocalLink(options.packageLinkId, { id: 'this' });
 
     // convert global from_id to_id type_id to local from_id to_id type_id
     // generate dependencies
