@@ -139,9 +139,11 @@ app.get(['/file'], createProxyMiddleware({
     const fileId = result?.data?.files?.[0]?.id;
     console.log('/file get proxy', 'fileId', fileId)
 
-    // TODO: Handle 404 or 403?
-
-    return `/v1/files/${fileId}`;
+    if (fileId) {
+      return `/v1/files/${fileId}`;
+    } else {
+      return `/v1/files/00000000-0000-0000-0000-000000000000`; // This should generate 404 error
+    }
   }
 }));
 
