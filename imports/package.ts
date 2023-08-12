@@ -41,12 +41,35 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
    */
   public createEntity(name: string) {
     return {
+      /**
+       * Gets id of the link
+       * 
+       * @example
+       * #### Get id of the link
+```ts
+const myPackage = new MyPackage({deep});
+const myLinkId = await myPackage.yourLinkName.id();
+```
+       */
       id: async () => {
         return await this.id(name);
       },
+      /**
+       * Gets id of the link from minilinks
+       * 
+       * @example
+       * #### Get id of the link from minilinks
+```ts
+const myPackage = new MyPackage({deep});
+const myLinkLocalId = await myPackage.yourLinkName.idLocal();
+```
+       */
       idLocal: () => {
         return this.idLocal(name);
       },
+      /**
+       * Name of the link
+       */
       name: name
     };
   }
