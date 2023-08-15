@@ -694,7 +694,7 @@ export class Packager<L extends Link<any>> {
         // }
       }
     }
-    addLocalLink(options.packageLinkId, { id: 'this' });
+    // addLocalLink(options.packageLinkId, { id: 'this' });
 
     // convert global from_id to_id type_id to local from_id to_id type_id
     // generate dependencies
