@@ -708,11 +708,14 @@ export class Packager<L extends Link<any>> {
         return dependencies.length - 1;
       }
     };
-    const getDependencedId = (link) => {
+    const getDependencyId = (link) => {
+      if (!link?.id) {
+        return link?.id;
+      }
       const dependencyId = getDependencyIndex(link);
       const containValue = link?.contains?.[0]?.value?.value;
       const exists = Object.values(localLinks).find((l:any) => l?.package?.dependencyId === dependencyId && l?.package?.containValue === containValue);
-      const result = exists || addLocalLink(link.id, {
+      const result = exists || addLocalLink(link?.id, {
         package: { dependencyId, containValue }
       });
       return result;
@@ -731,22 +734,46 @@ export class Packager<L extends Link<any>> {
           if (globalLink.type_id) {
             if (globalLink.type) {
               localLink.type_id = localLinks[lbyg[globalLink.type_id]]?.id;
+              if (!Number.isInteger(localLink.type_id) || localLink.type_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'type_id' has invalid value '${localLink.type_id}' converted from '${globalLink.type_id}'.`);
+              }
+            } else if (globalLink._type) {
+              localLink.type_id = getDependencyId(globalLink._type)?.id;
+              if (!Number.isInteger(localLink.type_id) || localLink.type_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'type_id' has invalid value '${localLink.type_id}' converted from '${globalLink._type}'.`);
+              }
             } else {
-              localLink.type_id = getDependencedId(globalLink._type)?.id;
+              pckg.errors.push(`Unable to determine 'type_id' for link '${globalLink.id}' that is serialized as '${localLink.id}'.`);
             }
           }
           if (globalLink.from_id) {
             if (globalLink.from) {
               localLink.from_id = localLinks[lbyg[globalLink.from_id]]?.id;
+              if (!Number.isInteger(localLink.from_id) || localLink.from_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.from_id}' converted from '${globalLink.from_id}'.`);
+              }
+            } else if (globalLink._from) {
+              localLink.from_id = getDependencyId(globalLink._from)?.id;
+              if (!Number.isInteger(localLink.from_id) || localLink.from_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.from_id}' converted from '${globalLink._from}'.`);
+              }
             } else {
-              localLink.from_id = getDependencedId(globalLink._from)?.id;
+              pckg.errors.push(`Unable to determine 'from_id' for link '${globalLink.id}' that is serialized as '${localLink.id}'.`);
             }
           }
           if (globalLink.to_id) {
             if (globalLink.to) {
               localLink.to_id = localLinks[lbyg[globalLink.to_id]]?.id;
+              if (!Number.isInteger(localLink.to_id) || localLink.to_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.to_id}' converted from '${globalLink.to_id}'.`);
+              }
+            } else if (globalLink._to) {
+              localLink.to_id = getDependencyId(globalLink._to)?.id;
+              if (!Number.isInteger(localLink.to_id) || localLink.to_id < 0) {
+                pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.to_id}' converted from '${globalLink._to}'.`);
+              }
             } else {
-              localLink.to_id = getDependencedId(globalLink._to)?.id;
+              pckg.errors.push(`Unable to determine 'to_id' for link '${globalLink.id}' that is serialized as '${localLink.id}'.`);
             }
           }
           if (globalLink.value) {
