@@ -734,12 +734,12 @@ export class Packager<L extends Link<any>> {
           if (globalLink.type_id) {
             if (globalLink.type) {
               localLink.type_id = localLinks[lbyg[globalLink.type_id]]?.id;
-              if (!Number.isInteger(localLink.type_id) || localLink.type_id < 0) {
+              if (typeof localLink.type_id !== 'string') {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'type_id' has invalid value '${localLink.type_id}' converted from '${globalLink.type_id}'.`);
               }
             } else if (globalLink._type) {
               localLink.type_id = getDependencyId(globalLink._type)?.id;
-              if (!Number.isInteger(localLink.type_id) || localLink.type_id < 0) {
+              if (!Number.isInteger(localLink.type_id)) {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'type_id' has invalid value '${localLink.type_id}' converted from '${globalLink._type}'.`);
               }
             } else {
@@ -749,12 +749,12 @@ export class Packager<L extends Link<any>> {
           if (globalLink.from_id) {
             if (globalLink.from) {
               localLink.from_id = localLinks[lbyg[globalLink.from_id]]?.id;
-              if (!Number.isInteger(localLink.from_id) || localLink.from_id < 0) {
+              if (typeof localLink.from_id !== 'string') {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.from_id}' converted from '${globalLink.from_id}'.`);
               }
             } else if (globalLink._from) {
               localLink.from_id = getDependencyId(globalLink._from)?.id;
-              if (!Number.isInteger(localLink.from_id) || localLink.from_id < 0) {
+              if (!Number.isInteger(localLink.from_id)) {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.from_id}' converted from '${globalLink._from}'.`);
               }
             } else {
@@ -764,12 +764,12 @@ export class Packager<L extends Link<any>> {
           if (globalLink.to_id) {
             if (globalLink.to) {
               localLink.to_id = localLinks[lbyg[globalLink.to_id]]?.id;
-              if (!Number.isInteger(localLink.to_id) || localLink.to_id < 0) {
+              if (typeof localLink.to_id !== 'string') {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.to_id}' converted from '${globalLink.to_id}'.`);
               }
             } else if (globalLink._to) {
               localLink.to_id = getDependencyId(globalLink._to)?.id;
-              if (!Number.isInteger(localLink.to_id) || localLink.to_id < 0) {
+              if (!Number.isInteger(localLink.to_id)) {
                 pckg.errors.push(`Link '${globalLink.id}' is serialized as '${localLink.id}': its 'from_id' has invalid value '${localLink.to_id}' converted from '${globalLink._to}'.`);
               }
             } else {
