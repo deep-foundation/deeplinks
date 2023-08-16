@@ -12,7 +12,7 @@ export class SerialTransitionsBuilder {
     constructor(options: SerialTransitionsBuilderOptions) {
         this.deep = options.deep;
         this.serialActions = new Array<IGenerateMutationBuilder>();
-        this.defaultTable = options.defaultTable;
+        this.defaultTable = options.defaultTable ?? 'links';
         this.executeOptions = options.executeOptions ?? {};
     }
 
@@ -115,6 +115,6 @@ export type ExecuteOptions = Omit<ISerialOptions,'actions'>
 
 export type SerialTransitionsBuilderOptions = {
   deep: DeepClient;
-  defaultTable?: Table<'insert'|'update'|'delete'>;
-  executeOptions?: ExecuteOptions;
+  defaultTable?: Table<'insert'|'update'|'delete'>|undefined;
+  executeOptions?: ExecuteOptions|undefined;
 }
