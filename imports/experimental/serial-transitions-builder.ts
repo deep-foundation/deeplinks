@@ -49,7 +49,7 @@ export class SerialTransitionsBuilder {
     }
 
     public actions() {
-      return this.actions;
+      return this.serialActions;
     }
 
     public getTransitionType(transition: Transition): TransitionType {
