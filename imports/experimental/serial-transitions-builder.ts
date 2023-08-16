@@ -1,5 +1,5 @@
-import { AsyncSerialParams, DeepClient, InsertTable, OperationType, SerialOperation, Table } from "../client";
-import { createSerialOperation, deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
+import { DeepClient, Table } from "../client";
+import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
 import { Link } from "../minilinks";
 
 export class SerialTransitionsBuilder {
