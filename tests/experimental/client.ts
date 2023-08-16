@@ -43,7 +43,7 @@ describe('SerialTransitionsBuilder', () => {
 
   it('should append insert transition', async () => {
     const builder = new SerialTransitionsBuilder({ deep: deepClient });
-    const table = 'links' as Table<'insert'>;
+    const table = 'links';
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
@@ -53,7 +53,7 @@ describe('SerialTransitionsBuilder', () => {
 
   it('should clear transitions', () => {
     const builder = new SerialTransitionsBuilder({ deep: deepClient });
-    const table = 'links' as Table<'insert'>;
+    const table = 'links';
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
