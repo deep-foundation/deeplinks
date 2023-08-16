@@ -1,7 +1,6 @@
 import { DeepClient, Table } from "../client";
 import { MutationInputLink } from "../client_types";
 import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
-import { Link } from "../minilinks";
 
 export class SerialTransitionsBuilder {
   private deep: DeepClient;
