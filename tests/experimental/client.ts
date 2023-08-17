@@ -3,6 +3,7 @@ import { ApolloClient} from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 import { SerialTransitionsBuilder, Transition } from '../../imports/experimental/serial-transitions-builder';
 import { DeepClient, Table } from '../../imports/client';
+import assert from 'assert';
 
 
 const graphQlPath = `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`;
@@ -43,7 +44,7 @@ describe('SerialTransitionsBuilder', () => {
 
   it('should append insert transition', async () => {
     const builder = new SerialTransitionsBuilder({ deep: deepClient });
-    const table = 'links' as Table<'insert'>;
+    const table = 'links';
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
@@ -53,7 +54,7 @@ describe('SerialTransitionsBuilder', () => {
 
   it('should clear transitions', () => {
     const builder = new SerialTransitionsBuilder({ deep: deepClient });
-    const table = 'links' as Table<'insert'>;
+    const table = 'links';
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
@@ -102,9 +103,11 @@ describe('SerialTransitionsBuilder', () => {
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
-    await builder
+    const result = await builder
     .append({ transition })
     .execute();
+
+    assert.equal(result.data.length, 1)
   });
 
   it('should execute transitions', async () => {
@@ -112,10 +115,11 @@ describe('SerialTransitionsBuilder', () => {
     const transition = [null, {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
-    await builder
+    const result = await builder
     .append({ transition })
     .append({ transition })
     .execute();
+    assert.equal(result.data.length, 2)
   });
 
   it('should execute transition and result link be accessible by both alias and index', async () => {

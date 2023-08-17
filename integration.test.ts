@@ -18,6 +18,7 @@ import './tests/demo';
 import './tests/packager';
 // import './tests/messanger';
 import './tests/tree';
+import './tests/experimental/client'
 
 // Slow tests here:
 import './tests/sync-handlers';

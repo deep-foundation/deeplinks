@@ -29,7 +29,7 @@ export class SerialTransitionsBuilder {
     constructor(options: SerialTransitionsBuilderOptions) {
         this.deep = options.deep;
         this.serialActions = [];
-        this.defaultTable = options.defaultTable;
+        this.defaultTable = options.defaultTable ?? 'links';
         this.executeOptions = options.executeOptions ?? {};
     }
 
@@ -100,7 +100,7 @@ export class SerialTransitionsBuilder {
     }
 
     public actions() {
-      return this.actions;
+      return this.serialActions;
     }
 
     public getTransitionType(transition: Transition): TransitionType {
