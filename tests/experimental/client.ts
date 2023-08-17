@@ -117,4 +117,34 @@ describe('SerialTransitionsBuilder', () => {
     .append({ transition })
     .execute();
   });
+
+  it('should execute transition and result link be accessible by both alias and index', async () => {
+    const builder = new SerialTransitionsBuilder({ deep: deepClient });
+    const transition = [null, {
+      type_id: deepClient.idLocal("@deep-foundation/core", "Type")
+    }];
+    const alias = 'link';
+    const {data} = await builder
+    .append({ transition, alias })
+    .execute();
+    expect(data[alias]).toBeDefined();
+    expect(data[0]).toBeDefined();
+  });
+
+  it('should execute transitions and result links be accessible by both alias and index', async () => {
+    const builder = new SerialTransitionsBuilder({ deep: deepClient });
+    const transition = [null, {
+      type_id: deepClient.idLocal("@deep-foundation/core", "Type")
+    }];
+    const firstLinkAlias = 'link0';
+    const secondLinkAlias = 'link1';
+    const {data} = await builder
+    .append({ transition, alias: firstLinkAlias })
+    .append({ transition, alias: secondLinkAlias })
+    .execute();
+    expect(data[firstLinkAlias]).toBeDefined();
+    expect(data[0]).toBeDefined();
+    expect(data[secondLinkAlias]).toBeDefined();
+    expect(data[1]).toBeDefined();
+  });
 });
