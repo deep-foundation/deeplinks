@@ -73,9 +73,8 @@ export class SerialTransitionsBuilder {
       }
       serialAction.alias = optionsItem.alias ?? `${transitionType}_${table}_${index}`;
       this.serialActions.push(serialAction)
-      return this;
-
     }
+    return this;
   }
 
   public clear() {
