@@ -77,7 +77,7 @@ export class SerialTransitionsBuilder {
 
     public async execute(options: ExecuteOptions = this.executeOptions): Promise<Record<string, DeepClientResult<{ id: number }>>> {
       const result = await this.deep.apolloClient.mutate(generateSerial({
-        actions: this.serialActions,
+        actions: this.serialActions.map(serialAction => serialAction.mutation),
         ...options
       }))
       const data = result.data;
