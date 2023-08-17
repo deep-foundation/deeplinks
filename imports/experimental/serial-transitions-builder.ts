@@ -153,7 +153,7 @@ export interface AppendTransitionOptions {
    * @defaultValue 'links'
    */
   table?: Table<Transition[0] extends null ? 'insert' : Transition[1] extends null ? 'delete' : 'update'>;
-  alias: string;
+  alias?: string;
 }
 
 export type TransitionType = 'insert'|'update'|'delete';
