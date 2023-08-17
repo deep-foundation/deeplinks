@@ -1,4 +1,4 @@
-import { DeepClient, Table } from "../client";
+import { DeepClient, DeepClientResult, Table } from "../client";
 import { MutationInputLink } from "../client_types";
 import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
 import { Link } from "../minilinks";
@@ -61,7 +61,7 @@ export class SerialTransitionsBuilder {
       return this;
     }
 
-    public async execute(options: ExecuteOptions = this.executeOptions) {
+    public async execute(options: ExecuteOptions = this.executeOptions): Promise<DeepClientResult<{ id: number }[]> | Record<string, DeepClientResult<{ id: number }>>> {
       const result = await this.deep.apolloClient.mutate(generateSerial({
         actions: this.serialActions,
         ...options
@@ -69,19 +69,17 @@ export class SerialTransitionsBuilder {
       if(this.resultType === 'alias') {
         const data = result.data;
         for (const serialAction of this.serialActions) {
-          const oldKey = data[`m${serialAction.index}`];
-          data[serialAction.alias] = oldKey;
-          delete data[`m${serialAction.index}`]
+          const oldKey = `m${serialAction.index}`;
+          data[serialAction.alias] = data[oldKey].returning;
+          delete data[oldKey]
         }
         return {
           ...result,
           data
-        }
+        } as DeepClientResult<{ id: number }[]>
       } else {
-        return {
-          ...result,
-          data: this.serialActions.map((serialAction) => result.data[`m${serialAction.index}`])
-        };
+        // @ts-ignore
+        return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
       }
     }
 
