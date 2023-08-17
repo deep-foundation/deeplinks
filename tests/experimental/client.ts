@@ -107,7 +107,7 @@ describe('SerialTransitionsBuilder', () => {
     .append({ transition })
     .execute();
 
-    assert.equal(Object.keys(result).length, 1)
+    assert.equal(Object.keys(result.data).length, 1)
   });
 
   it('should execute transitions', async () => {
@@ -119,7 +119,7 @@ describe('SerialTransitionsBuilder', () => {
     .append({ transition })
     .append({ transition })
     .execute();
-    assert.equal(Object.keys(result).length, 2)
+    assert.equal(Object.keys(result.data).length, 2)
   });
 
   it('should execute transition and result link be accessible by both alias and index', async () => {
