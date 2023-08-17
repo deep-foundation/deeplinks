@@ -1,21 +1,18 @@
 import { DeepClient, DeepClientResult, Table } from "../client";
 import { MutationInputLink } from "../client_types";
 import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
-import { Link } from "../minilinks";
 
 export class SerialTransitionsBuilder {
   private deep: DeepClient;
   private serialActions: Array<SerialAction>;
   private defaultTable: Table<'insert'|'update'|'delete'>;
   private executeOptions: ExecuteOptions;
-  private resultType: ResultType;
 
     constructor(options: SerialTransitionsBuilderOptions) {
         this.deep = options.deep;
         this.serialActions = [];
         this.defaultTable = options.defaultTable;
         this.executeOptions = options.executeOptions ?? {};
-        this.resultType = options.returnType ?? 'alias';
     }
 
     public append(options: AppendTransitionOptions) {
@@ -28,30 +25,29 @@ export class SerialTransitionsBuilder {
           serialAction = {
             mutation: insertMutation(table, {objects: transition[1]}),
             index,
-            transitionType
+            transitionType,
+            table
           }
           break;
         case 'update':
           serialAction = {
             mutation: updateMutation(table, {exp: transition[0], value: transition[1]}),
             index,
-            transitionType
+            transitionType,
+            table
           }
           break;
         case 'delete':
           serialAction = {
             mutation: deleteMutation(table, {exp: transition[0]}),
             index,
-            transitionType
+            transitionType,
+            table
           }
         default:
             throw new Error('Invalid transition type. If you want to insert link - the first element must be null and the second must be link. If you want to update link - the first and second elements must be links. If you want to delete link - the first element must be link and second must be null')
       }
-      if(this.resultType === 'array' && options.alias) {
-        throw new Error('You cannot set alias if result type is array')
-      } else if (this.resultType === 'alias') {
-        serialAction.alias = options.alias ?? `${transitionType}_${table}_${index}`;
-      }
+      serialAction.alias = options.alias ?? `${transitionType}_${table}_${index}`;
       this.serialActions.push(serialAction)
       return this;
     }
@@ -61,26 +57,28 @@ export class SerialTransitionsBuilder {
       return this;
     }
 
-    public async execute(options: ExecuteOptions = this.executeOptions): Promise<DeepClientResult<{ id: number }[]> | Record<string, DeepClientResult<{ id: number }>>> {
+    public async execute(options: ExecuteOptions = this.executeOptions): Promise<Record<string, DeepClientResult<{ id: number }>>> {
       const result = await this.deep.apolloClient.mutate(generateSerial({
         actions: this.serialActions,
         ...options
       }))
-      if(this.resultType === 'alias') {
-        const data = result.data;
-        for (const serialAction of this.serialActions) {
-          const oldKey = `m${serialAction.index}`;
-          data[serialAction.alias] = data[oldKey].returning;
-          delete data[oldKey]
-        }
-        return {
-          ...result,
-          data
-        } as DeepClientResult<{ id: number }[]>
-      } else {
-        // @ts-ignore
-        return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
+      const data = result.data;
+      for (const serialAction of this.serialActions) {
+        const oldKey = `m${serialAction.index}`;
+        const newValue = {
+          ...data[oldKey].returning,
+          index: serialAction.index
+        };
+        data[serialAction.alias] = newValue;
+        data[serialAction.index] = newValue;
+        delete data[oldKey]
       }
+      // @ts-ignore
+      return {
+        ...result,
+        data,
+      } as Record<string, DeepClientResult<{ id: number }>>
+
     }
 
     public actions() {
@@ -125,17 +123,6 @@ export class SerialTransitionsBuilder {
     public getExecuteOptions() {
       return this.executeOptions;
     }
-
-    public getResultType() {
-      return this.resultType
-    }
-
-    public setResultType(resultType: ResultType) {
-      if(this.serialActions.length > 0) {
-        throw new Error(`You cannot change result type because there are ${this.serialActions.length} actions added. You can change result type before first append or after clear()`)
-      }
-      this.resultType = resultType;
-    }
 }
 
 export interface AppendTransitionOptions {
@@ -164,14 +151,12 @@ export type SerialTransitionsBuilderOptions = {
   deep: DeepClient;
   defaultTable?: Table<'insert'|'update'|'delete'>;
   executeOptions?: ExecuteOptions;
-  returnType?: ResultType;
 }
 
 type SerialAction = {
   mutation: IGenerateMutationBuilder,
   alias?: string;
   index: number;
-  transitionType: TransitionType
+  transitionType: TransitionType,
+  table: Table<'insert'|'update'|'delete'>;
 }
-
-type ResultType = 'alias' | 'array'
