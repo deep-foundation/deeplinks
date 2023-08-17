@@ -122,6 +122,20 @@ describe('SerialTransitionsBuilder', () => {
     assert.equal(Object.keys(result.data).length, 4)
   });
 
+  it('should execute multiple transitions', async () => {
+    const builder = new SerialTransitionsBuilder({ deep: deepClient });
+    const transition = [null, {
+      type_id: deepClient.idLocal("@deep-foundation/core", "Type")
+    }];
+    const result = await builder
+    .appendMultiple([
+      { transition },
+      { transition }
+    ])
+    .execute();
+    assert.equal(Object.keys(result.data).length, 4)
+  });
+
   it('should execute transition and result link be accessible by both alias and index', async () => {
     const builder = new SerialTransitionsBuilder({ deep: deepClient });
     const transition = [null, {
