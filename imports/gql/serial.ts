@@ -11,7 +11,7 @@ Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export interface ISerialOptions {
   actions: any[];
-  name: string;
+  name?: string;
   alias?: string;
   [key: string]: any;
 };
