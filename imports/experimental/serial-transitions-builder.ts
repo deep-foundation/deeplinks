@@ -2,6 +2,24 @@ import { DeepClient, DeepClientResult, Table } from "../client";
 import { MutationInputLink } from "../client_types";
 import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
 
+/**
+ * A class for building serial transitions
+ * 
+ * @example
+```ts
+const builder = new SerialTransitionsBuilder({ deep });
+const table = 'links';
+const transition = [null, {
+  type_id: deep.id("@deep-foundation/core", "Type")
+}];
+const {data} = 
+  builder
+  .append({ table, transition, alias: firstLinkAlias })
+  .append({ table, transition, alias: secondLinkAlias })
+  .execute()
+const firstLink = data[firstLinkAlias] // or data[0]
+```
+ */
 export class SerialTransitionsBuilder {
   private deep: DeepClient;
   private serialActions: Array<SerialAction>;
