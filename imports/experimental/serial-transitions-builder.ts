@@ -34,7 +34,13 @@ export class SerialTransitionsBuilder {
     }
 
     public append(options: AppendTransitionOptions) {
-      const {table = this.defaultTable,transition} = options;
+      this.appendMultiple([options])
+      return this;
+    }
+
+    public appendMultiple(options: AppendTransitionOptions[]) {
+      for (const optionsItem of options) {
+      const {table = this.defaultTable,transition} = optionsItem;
       const transitionType = this.getTransitionType(transition)
       const index = this.serialActions.length
       let serialAction: SerialAction;
@@ -65,9 +71,11 @@ export class SerialTransitionsBuilder {
         default:
             throw new Error('Invalid transition type. If you want to insert link - the first element must be null and the second must be link. If you want to update link - the first and second elements must be links. If you want to delete link - the first element must be link and second must be null')
       }
-      serialAction.alias = options.alias ?? `${transitionType}_${table}_${index}`;
+      serialAction.alias = optionsItem.alias ?? `${transitionType}_${table}_${index}`;
       this.serialActions.push(serialAction)
       return this;
+    
+      }
     }
 
     public clear() {
