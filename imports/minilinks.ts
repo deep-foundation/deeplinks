@@ -565,7 +565,7 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
   const [iteration, setIteration] = useState(0);
   useEffect(() => {
     const iterationsInterval = setInterval(() => {
-      setIteration(iteration === Number.MAX_SAFE_INTEGER ? 0 : iteration+1)
+      setIteration((i: number) => i === Number.MAX_SAFE_INTEGER ? 0 : i+1)
     }, 1000);
     return () => clearInterval(iterationsInterval);
   }, []);
