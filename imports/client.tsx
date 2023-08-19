@@ -341,9 +341,9 @@ export interface DeepClientInstance<L = Link<number>> {
 
   insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable> , options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
+  update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
+  delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
   reserve<LL = L>(count: number): Promise<number[]>;
 
@@ -610,12 +610,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
-
+  
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
+   
     try {
       q = await this.apolloClient.mutate(generateSerial({
         actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
@@ -624,14 +625,18 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e });
+      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }
+    }   
+  
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
-  };
+  }; 
 
-  async update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+  async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+    if (exp === null) return this.insert( [value], options);
+    if (value === null) return this.delete( exp, options );
+  
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
@@ -653,7 +658,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+  async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
