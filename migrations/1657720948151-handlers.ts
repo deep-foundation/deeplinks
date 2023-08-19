@@ -26,42 +26,24 @@ const deep = new DeepClient({
 export const up = async () => {
   log('up');
   log('view');
+  
   await api.sql(sql`
     CREATE VIEW ${HANDLERS_TABLE_NAME} AS
-    SELECT
-      DISTINCT dist_link."id" as "dist_id",
-      src_link."id" as "src_id",
-      handler_link."id" as "handler_id",
-      isolation_provider_link."id" as "isolation_provider_id",
-      execution_provider_link."id" as "execution_provider_id"
-    from
-      ${TABLE_NAME} as src_link,
-      ${TABLE_NAME} as dist_link,
-      ${TABLE_NAME} as generated_from_link,
-      ${TABLE_NAME} as handler_link,
-      ${TABLE_NAME} as supports_link,
-      ${TABLE_NAME} as isolation_provider_link,
-      ${TABLE_NAME} as execution_provider_link
-    WHERE
-      handler_link."type_id" = ${await deep.id('@deep-foundation/core', 'Handler')} AND
-      handler_link."from_id" = supports_link."id" AND
-      supports_link."type_id" = ${await deep.id('@deep-foundation/core', 'Supports')} AND
-      (
-        (
-          generated_from_link."type_id" = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')} AND
-          generated_from_link."from_id" = dist_link."id" AND
-          generated_from_link."to_id" = src_link."id"
-        ) OR (
-          src_link."id" = dist_link."id" AND
-          NOT EXISTS (SELECT * FROM ${TABLE_NAME} as checked WHERE (
-            checked."type_id" = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')} AND
-            (checked."to_id" IN (src_link."id", dist_link."id") OR checked."from_id" IN (src_link."id", dist_link."id"))
-          ))
-        )
-      ) AND
-      supports_link."from_id" = isolation_provider_link."id" AND
-      supports_link."to_id" = execution_provider_link."id" AND
-      (handler_link."to_id" = dist_link."id" OR handler_link."to_id" = src_link."id");
+    SELECT DISTINCT
+      coalesce((SELECT gl.from_id as id FROM links gl WHERE (gl.type_id = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS dist_id,
+      coalesce((SELECT gl.to_id as id FROM links gl WHERE (gl.type_id = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS src_id,
+      handler_link.id AS handler_id,
+      supports_link.from_id AS isolation_provider_id,
+      supports_link.to_id AS execution_provider_id
+    FROM links handling_link,
+      links handler_link,
+      links supports_link
+    WHERE (
+      (handler_link.type_id = ${await deep.id('@deep-foundation/core', 'Handler')})
+      AND (handler_link.from_id = supports_link.id)
+      AND (supports_link.type_id = ${await deep.id('@deep-foundation/core', 'Supports')})
+      AND (handler_link.to_id = handling_link.id)
+    );
   `);
   await api.query({
     type: 'track_table',
