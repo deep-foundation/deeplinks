@@ -41,6 +41,13 @@ beforeAll(async () => {
 })
 
 describe('client', () => {
+  it(`throw right stack`, async () => {
+    try {
+      await deepClient.insert({})
+    } catch (error) {
+      console.log(error)
+    }
+  })
   it(`deep.linkId guest and login`, async () => {
     assert.equal(deepClient.linkId, undefined);
     assert.notEqual(deepClient.linkId, 0);
