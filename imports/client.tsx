@@ -616,9 +616,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
-  
-    const originalStack = new Error().stack; // Capture the original stack trace
-  
+   
     try {
       q = await this.apolloClient.mutate(generateSerial({
         actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
@@ -627,8 +625,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      e.stack += '\n' + originalStack; // Append original stack trace to the error
-      if (!this._silent(options)) throw e;
+      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }   
   
