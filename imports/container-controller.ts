@@ -128,7 +128,7 @@ export class ContainerController {
     log('newContainer container', { container });
     if (container) return container;
     let dockerPort = forcePort || await getPort();
-    if (runContainerHash[containerName] === undefined) 
+    if (await runContainerHash[containerName] === undefined) 
     {
       runContainerHash[containerName] = new Promise(async (resolve)=> {
         let done = false;
