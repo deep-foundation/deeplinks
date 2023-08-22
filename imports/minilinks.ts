@@ -69,18 +69,47 @@ export interface MinilinksResult<Link> {
 }
 
 export class MinilinksLink<Ref extends number> {
+  ml?: MinilinkCollection<any, any>;
   id: Ref;
   type_id: Ref;
   from_id?: Ref;
   to_id?: Ref;
-  typed: MinilinksLink<Ref>[];
-  type: MinilinksLink<Ref>;
-  in: MinilinksLink<Ref>[];
-  inByType: { [id: number]: MinilinksLink<Ref>[] };
-  out: MinilinksLink<Ref>[];
-  outByType: { [id: number]: MinilinksLink<Ref>[] };
-  from: MinilinksLink<Ref>;
-  to: MinilinksLink<Ref>;
+  get typed(): MinilinksLink<Ref>[] {
+    return this.ml?.byType?.[this.id] || [];
+  }
+  get type(): MinilinksLink<Ref>[] {
+    return this.ml?.byId?.[this.type_id];
+  }
+  get in(): MinilinksLink<Ref>[] {
+    return this.ml?.byTo?.[this.id] || [];
+  }
+  get inByType(): MinilinksLink<Ref>[] {
+    const hash: any = {};
+    for (let i = 0; i < (this.ml?.byTo?.[this.id]?.length || 0); i++) {
+      const element = this.ml?.byTo?.[this.id][i];
+      hash[element.type_id] = hash[element.type_id] || [];
+      hash[element.type_id].push(element);
+    }
+    return hash;
+  }
+  get out(): MinilinksLink<Ref>[] {
+    return this.ml?.byFrom?.[this.id];
+  }
+  get outByType(): MinilinksLink<Ref>[] {
+    const hash: any = {};
+    for (let i = 0; i < (this.ml?.byFrom?.[this.id]?.length || 0); i++) {
+      const element = this.ml?.byFrom?.[this.id]?.[i];
+      hash[element.type_id] = hash[element.type_id] || [];
+      hash[element.type_id].push(element);
+    }
+    return hash;
+  }
+  get from(): MinilinksLink<Ref>[] {
+    return this.ml?.byId?.[this.from_id];
+  }
+  get to(): MinilinksLink<Ref>[] {
+    return this.ml?.byId?.[this.to_id];
+  }
   value?: any;
   string?: any;
   number?: any;
@@ -104,6 +133,7 @@ export class MinilinksLink<Ref extends number> {
     };
   }
   is(query: QueryLink): boolean {
+    // @ts-ignore
     return minilinksQueryIs(query, this);
   }
 }
@@ -195,11 +225,6 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
           ml: this,
           _applies: [],
           ...linksArray[l],
-          [options.typed]: [],
-          [options.in]: [],
-          [options.out]: [],
-          [options.inByType]: {},
-          [options.outByType]: {},
         });
         byId[link[options.id]] = link;
 
@@ -222,35 +247,35 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
         }
 
         // link.typed += byType[link.id]
-        if (byType[link[options.id]]?.length) {
-          for (let i = 0; i < byType[link[options.id]]?.length; i++) {
-            const dep = byType[link[options.id]][i];
-            dep.type = link;
-            link[options.typed].push(dep);
-          }
-        }
+        // if (byType[link[options.id]]?.length) {
+        //   for (let i = 0; i < byType[link[options.id]]?.length; i++) {
+        //     const dep = byType[link[options.id]][i];
+        //     dep.type = link;
+        //     link[options.typed].push(dep);
+        //   }
+        // }
         // link.out += byFrom[link.id] // XXX
-        if (byFrom[link[options.id]]?.length) {
-          for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
-            const dep = byFrom[link[options.id]][i];
-            dep[options.from] = link;
-            link[options.out].push(dep);
-            // link.outByType[dep.type_id] += dep; // XXX
-            link[options.outByType][dep[options.type_id]] = link[options.outByType][dep[options.type_id]] || [];
-            link[options.outByType][dep[options.type_id]].push(dep);
-          }
-        }
+        // if (byFrom[link[options.id]]?.length) {
+        //   for (let i = 0; i < byFrom[link[options.id]]?.length; i++) {
+        //     const dep = byFrom[link[options.id]][i];
+        //     dep[options.from] = link;
+        //     link[options.out].push(dep);
+        //     // link.outByType[dep.type_id] += dep; // XXX
+        //     link[options.outByType][dep[options.type_id]] = link[options.outByType][dep[options.type_id]] || [];
+        //     link[options.outByType][dep[options.type_id]].push(dep);
+        //   }
+        // }
         // link.in += byTo[link.id] // XXX
-        if (byTo[link[options.id]]?.length) {
-          for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
-            const dep = byTo[link[options.id]][i];
-            dep[options.to] = link;
-            link[options.in].push(dep);
-            // link.inByType[dep.type_id] += dep; // XXX
-            link[options.inByType][dep[options.type_id]] = link[options.inByType][dep[options.type_id]] || [];
-            link[options.inByType][dep[options.type_id]].push(dep);
-          }
-        }
+        // if (byTo[link[options.id]]?.length) {
+        //   for (let i = 0; i < byTo[link[options.id]]?.length; i++) {
+        //     const dep = byTo[link[options.id]][i];
+        //     dep[options.to] = link;
+        //     link[options.in].push(dep);
+        //     // link.inByType[dep.type_id] += dep; // XXX
+        //     link[options.inByType][dep[options.type_id]] = link[options.inByType][dep[options.type_id]] || [];
+        //     link[options.inByType][dep[options.type_id]].push(dep);
+        //   }
+        // }
         links.push(link);
         newLinks.push(link);
       }
@@ -261,28 +286,28 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       const from = byId[link[options.from_id]];
       const to = byId[link[options.to_id]];
       if (type) {
-        // link.type = byId[link.type_id] // XXX
-        link[options.type] = type;
-        // type.typed += link;
-        if (!type[options.typed].find(l => l.id === link.id)) type[options.typed].push(link);
+        // // link.type = byId[link.type_id] // XXX
+        // link[options.type] = type;
+        // // type.typed += link;
+        // if (!type[options.typed].find(l => l.id === link.id)) type[options.typed].push(link);
       } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not founded`));
       if (from) {
-        // link.from = byId[link.from_id] // XXX
-        link[options.from] = from;
-        // from.out += link;
-        if (!from[options.out].find(l => l.id === link.id)) from[options.out].push(link);
-        // from.outByType[link.type_id] += link; // XXX
-        from[options.outByType][link[options.type_id]] = from[options.outByType][link[options.type_id]] || [];
-        if (!from?.[options.outByType]?.[link[options.type_id]].find(l => l.id === link.id)) from[options.outByType][link[options.type_id]].push(link);
+      //   // link.from = byId[link.from_id] // XXX
+      //   link[options.from] = from;
+      //   // from.out += link;
+      //   if (!from[options.out].find(l => l.id === link.id)) from[options.out].push(link);
+      //   // from.outByType[link.type_id] += link; // XXX
+      //   from[options.outByType][link[options.type_id]] = from[options.outByType][link[options.type_id]] || [];
+      //   if (!from?.[options.outByType]?.[link[options.type_id]].find(l => l.id === link.id)) from[options.outByType][link[options.type_id]].push(link);
       } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not founded`));
       if (to) {
-        // link.to = byId[link.to_id] // XXX
-        link[options.to] = to;
-        // to.in += link;
-        if (!to[options.in].find(l => l.id === link.id)) to[options.in].push(link);
-        // to.inByType[link.type_id] += link;
-        to[options.inByType][link[options.type_id]] = to[options.inByType][link[options.type_id]] || [];
-        if (!to[options.inByType][link[options.type_id]].find(l => l.id === link.id)) to[options.inByType][link[options.type_id]].push(link);
+      //   // link.to = byId[link.to_id] // XXX
+      //   link[options.to] = to;
+      //   // to.in += link;
+      //   if (!to[options.in].find(l => l.id === link.id)) to[options.in].push(link);
+      //   // to.inByType[link.type_id] += link;
+      //   to[options.inByType][link[options.type_id]] = to[options.inByType][link[options.type_id]] || [];
+      //   if (!to[options.inByType][link[options.type_id]].find(l => l.id === link.id)) to[options.inByType][link[options.type_id]].push(link);
       } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not founded`));
       if (options.handler) options.handler(link, this);
     }
@@ -320,9 +345,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
 
       // link.in += byTo[link.id] // XXX
-      _remove(link?.[options.to]?.[options.in], (r: { id?: number }) => r.id === id);
+      // _remove(link?.[options.to]?.[options.in], (r: { id?: number }) => r.id === id);
       // link.out += byFrom[link.id] // XXX
-      _remove(link?.[options.from]?.[options.out], (r: { id?: number }) => r.id === id);
+      // _remove(link?.[options.from]?.[options.out], (r: { id?: number }) => r.id === id);
 
       // byFrom[link.from_id]: link[]; // XXX
       _remove(byFrom?.[link?.[options.from_id]] || [], (r: { id?: number }) => r.id === id);
@@ -334,28 +359,28 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends
       _remove(byType?.[link?.[options.type_id]] || [], (r: { id?: number }) => r.id === id);
 
       // from.outByType[link.type_id] += link; // XXX
-      _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
+      // _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
       // to.inByType[link.type_id] += link; // XXX
-      _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
+      // _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
 
-      for (let i = 0; i < byFrom?.[id]?.length; i++) {
-        const dep = byFrom?.[id]?.[i];
-        // link.from = byId[link.from_id] // XXX
-        dep[options.from] = undefined;
-      }
+      // for (let i = 0; i < byFrom?.[id]?.length; i++) {
+      //   const dep = byFrom?.[id]?.[i];
+      //   // link.from = byId[link.from_id] // XXX
+      //   dep[options.from] = undefined;
+      // }
 
-      for (let i = 0; i < byTo?.[id]?.length; i++) {
-        const dep = byTo?.[id]?.[i];
-        // link.to = byId[link.to_id] // XXX
-        dep[options.to] = undefined;
-      }
+      // for (let i = 0; i < byTo?.[id]?.length; i++) {
+      //   const dep = byTo?.[id]?.[i];
+      //   // link.to = byId[link.to_id] // XXX
+      //   dep[options.to] = undefined;
+      // }
 
-      for (let i = 0; i < byType?.[id]?.length; i++) {
-        const dep = byType?.[id]?.[i];
-        // link.type = byId[link.type_id] // XXX
-        dep[options.type] = undefined;
-      }
+      // for (let i = 0; i < byType?.[id]?.length; i++) {
+      //   const dep = byType?.[id]?.[i];
+      //   // link.type = byId[link.type_id] // XXX
+      //   dep[options.type] = undefined;
+      // }
 
       delete byId?.[id];
     }
@@ -562,13 +587,25 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  */
 export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
   // console.log('54353246234562346435')
-  const [iteration, setIteration] = useState(0);
+  const listenerRef = useRef<any>();
+  const dRef = useRef<any>();
+  const [d, setD] = useState();
   useEffect(() => {
-    const iterationsInterval = setInterval(() => {
-      setIteration((i: number) => i === Number.MAX_SAFE_INTEGER ? 0 : i+1)
-    }, 1000);
-    return () => clearInterval(iterationsInterval);
+    if (listenerRef.current) ml.emitter.removeListener('added removed updated', listenerRef.current);
+    listenerRef.current = (oldL, newL) => {
+      const prev = d || dRef.current;
+      const data = ml.query(query);
+      if (!_isEqual(prev, data)) {
+        setD(data);
+      }
+    };
+    ml.emitter.on('added removed updated', listenerRef.current);
+    return () => ml.emitter.removeListener('added removed updated', listenerRef.current);
   }, []);
-  const data = ml.query(query);
+    // const iterationsInterval = setInterval(() => {
+      //   setIteration((i: number) => i === Number.MAX_SAFE_INTEGER ? 0 : i+1)
+      // }, 1000);
+      // return () => clearInterval(iterationsInterval);
+  const data = dRef.current = d ? d : ml.query(query);
   return data;
 };
