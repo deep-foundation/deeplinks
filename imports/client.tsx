@@ -763,7 +763,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   /**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
-   * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
+   * @description Thows error if id is not found. You can set last argument true, for disable throwing error.
    * @returns number
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
@@ -784,6 +784,56 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
     return result;
   };
+
+  /**
+   * This function fetches the corresponding IDs from the Deep for each specified path.
+   *
+   * @async
+   * @function ids
+   * @param {Array<[DeepClientStartItem, ...DeepClientPathItem[]]>} paths - An array of [start, ...path] tuples.
+   *     Each tuple specifies a path to a link, where 'start' is the package name or id 
+   *     and ...path further specifies the path to the id using Contain link values (names).
+   *
+   * @returns {Promise<any>} - Returns a Promise that resolves to an object.
+   *    The object has keys corresponding to the package name or id of each path.
+   *    The value for each package key is an object where keys are the items in the corresponding path,
+   *    and the values are the IDs retrieved from the Deep.
+   * 
+   * @throws Will throw an error if the id retrieval fails in `this.id()` function.
+   * 
+   * @example
+   * ```ts
+   *   const ids = await deep.ids([
+   *     ['@deep-foundation/core', 'Package'], 
+   *     ['@deep-foundation/core', 'PackageVersion']
+   *   ]);
+   * 
+   *   // Outputs
+   *   // {
+   *   //   "@deep-foundation/core": {
+   *   //     "Package": 2,
+   *   //     "PackageVersion": 46
+   *   //   }
+   *   // }
+   * ```
+   */
+  async ids(paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]>): Promise<any> {
+    // TODO: it can be faster using a combiniation of simple select of packages and contains with specified names and recombination of these links in minilinks
+    
+    // At the moment it may be slow, but it demonstrates desired API.
+
+    const appendPath = (accumulator, keys, value) => {
+      const lastKey = keys.pop();
+      const lastObject = keys.reduce((obj, key) => obj[key] = obj[key] || {}, accumulator);
+      lastObject[lastKey] = value;
+    };
+    const result = {};
+    await Promise.all(paths.map(async ([start, ...path]) => {
+      const id = await this.id(start, ...path);
+      appendPath(result, [start, ...path], id);
+    }));
+    return result;
+  }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     if (_ids?.[start]?.[path[0]]) {
