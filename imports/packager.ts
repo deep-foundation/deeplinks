@@ -800,10 +800,10 @@ export class Packager<L extends Link<any>> {
     const globalLinks = await this.selectLinks(options);
     const Package = await this.client.id('@deep-foundation/core', 'Package');
     const PackageVersion = await this.client.id('@deep-foundation/core', 'PackageVersion');
-    const version: any = globalLinks.types[PackageVersion]?.[0] || '0.0.0';
-    const pack: any = globalLinks.types[Package]?.[0];
+    const versionLink: any = globalLinks.types[PackageVersion]?.[0];
+    const packageLink: any = globalLinks.types[Package]?.[0];
     const pckg: Package = {
-      package: { name: pack?.value?.value, version: version?.value?.value },
+      package: { name: packageLink?.value?.value, version: versionLink?.value?.value },
       data: [],
       errors: []
     };
@@ -811,13 +811,13 @@ export class Packager<L extends Link<any>> {
       pckg.strict = true;
     }
 
-    if (!pack) pckg.errors.push('!package');
-    if (!pckg?.package.name) pckg.errors.push('!pckg?.package.name');
-    if (!pckg?.package.version) pckg.errors.push('!pckg?.package.version');
-    if (!version) pckg.errors.push('!version');
+    if (!packageLink) pckg.errors.push(`Failed to fetch Package link for package with id ${options.packageLinkId}.`);
+    if (!versionLink) pckg.errors.push(`Failed to fetch PackageVersion link for package with id ${options.packageLinkId}.`);
+    if (!pckg?.package?.name) pckg.errors.push(`Package name ('${pckg?.package?.name}') is missing or invalid in Package link with id ${packageLink?.id}.`);
+    if (!pckg?.package?.version) pckg.errors.push(`Package version ('${pckg?.package?.version}') is missing or invalid in PackageVersion link with id ${versionLink?.id}.`);
     if (pckg?.errors?.length) return pckg;
 
-    const ml = minilinks(globalLinks.links.filter(l => l.id !== version?.id));
+    const ml = minilinks(globalLinks.links.filter(l => l.id !== versionLink?.id));
     const { sorted } = sort(pckg, ml.links, pckg.errors, {
       id: 'id',
       from: 'from_id',
