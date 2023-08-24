@@ -33,49 +33,86 @@ export class SerialTransitionsBuilder {
     this.executeOptions = options.executeOptions ?? {};
   }
 
-  public append(options: AppendTransitionOptions) {
-    this.appendMultiple([options])
-    return this;
+  append(param: AppendParam): any {
+    if (Array.isArray(param) && param.length === 2 && this.isTransition(param[0]) && this.isAppendOptions(param[1])) {
+      const [transitions, options] = param;
+      return this.handleTransitions(transitions, options);
+    } else if (Array.isArray(param) && Array.isArray(param[0])) {
+      return param.map((tuple) => this.append(tuple as AppendParam));
+    } else if (this.isTransition(param)) {
+      return this.handleTransitions(param);
+    } else {
+      throw new Error("Invalid parameter type.");
+    }
   }
 
-  public appendMultiple(options: AppendTransitionOptions[]) {
-    for (const optionsItem of options) {
-      const { table = this.defaultTable, transition } = optionsItem;
-      const transitionType = this.getTransitionType(transition)
-      const index = this.serialActions.length
-      let serialAction: SerialAction;
-      switch (transitionType) {
-        case 'insert':
-          serialAction = {
-            mutation: insertMutation(table, { objects: transition[1] }),
-            index,
-            transitionType,
-            table
-          }
-          break;
-        case 'update':
-          serialAction = {
-            mutation: updateMutation(table, { exp: transition[0], value: transition[1] }),
-            index,
-            transitionType,
-            table
-          }
-          break;
-        case 'delete':
-          serialAction = {
-            mutation: deleteMutation(table, { exp: transition[0] }),
-            index,
-            transitionType,
-            table
-          }
-        default:
-          throw new Error('Invalid transition type. If you want to insert link - the first element must be null and the second must be link. If you want to update link - the first and second elements must be links. If you want to delete link - the first element must be link and second must be null')
+  private isTransition(value: any): value is Transition | Array<Transition> {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (!this.isSingleTransition(item)) {
+          return false;
+        }
       }
-      serialAction.alias = optionsItem.alias ?? `${transitionType}_${table}_${index}`;
-      this.serialActions.push(serialAction)
+      return true;
     }
-    return this;
+    return this.isSingleTransition(value);
   }
+
+  private isSingleTransition(value: any): value is Transition {
+    return Array.isArray(value) && (value[0] === null || typeof value[0] === 'object') && (value[1] === null || typeof value[1] === 'object');
+  }
+
+  private isAppendOptions(value: any): value is AppendOptions {
+    return typeof value === 'object' && !Array.isArray(value);
+  }
+
+  private handleTransitions(transitions: Transition | Array<Transition>, options?: AppendOptions): any {
+    // Implementation of how you want to handle transitions goes here.
+    return Array.isArray(transitions)
+      ? transitions.map((transition) => transition)
+      : transitions;
+  }
+  
+
+  // public append(param: AppendParam) {
+  //   if(param)
+  //   // for (const optionsItem of options) {
+  //   //   const { table = this.defaultTable, transition } = optionsItem;
+  //   //   const transitionType = this.getTransitionType(transition)
+  //   //   const index = this.serialActions.length
+  //   //   let serialAction: SerialAction;
+  //   //   switch (transitionType) {
+  //   //     case 'insert':
+  //   //       serialAction = {
+  //   //         mutation: insertMutation(table, { objects: transition[1] }),
+  //   //         index,
+  //   //         transitionType,
+  //   //         table
+  //   //       }
+  //   //       break;
+  //   //     case 'update':
+  //   //       serialAction = {
+  //   //         mutation: updateMutation(table, { exp: transition[0], value: transition[1] }),
+  //   //         index,
+  //   //         transitionType,
+  //   //         table
+  //   //       }
+  //   //       break;
+  //   //     case 'delete':
+  //   //       serialAction = {
+  //   //         mutation: deleteMutation(table, { exp: transition[0] }),
+  //   //         index,
+  //   //         transitionType,
+  //   //         table
+  //   //       }
+  //   //     default:
+  //   //       throw new Error('Invalid transition type. If you want to insert link - the first element must be null and the second must be link. If you want to update link - the first and second elements must be links. If you want to delete link - the first element must be link and second must be null')
+  //   //   }
+  //   //   serialAction.alias = optionsItem.alias ?? `${transitionType}_${table}_${index}`;
+  //   //   this.serialActions.push(serialAction)
+  //   // }
+  //   // return this;
+  // }
 
   public clear() {
     this.serialActions = [];
@@ -166,10 +203,6 @@ export interface AppendTransitionOptions {
   alias?: string;
 }
 
-export type TransitionType = 'insert' | 'update' | 'delete';
-export type TransitionItem = MutationInputLink | null;
-export type Transition = Array<TransitionItem>;
-
 export type ExecuteOptions = Omit<ISerialOptions, 'actions'>
 
 export type SerialTransitionsBuilderOptions = {
@@ -185,3 +218,20 @@ type SerialAction = {
   transitionType: TransitionType,
   table: Table<'insert' | 'update' | 'delete'>;
 }
+
+type AppendOptions = {
+   /**
+   * A table name where operation must be executed
+   * 
+   * @defaultValue 'links'
+   */
+   table?: Table<Transition[0] extends null ? 'insert' : Transition[1] extends null ? 'delete' : 'update'>;
+   /**
+    * An alias for result
+    */
+   alias?: string;
+};
+
+export type TransitionType = 'insert' | 'update' | 'delete';
+export type Transition = [null, MutationInputLink] | [MutationInputLink, null] | [MutationInputLink, MutationInputLink];
+export type AppendParam = Transition | Array<Transition> | [Transition|Array<Transition>, AppendOptions] | Array<[Transition|Array<Transition>, AppendOptions]>;

@@ -128,7 +128,7 @@ describe('SerialTransitionsBuilder', () => {
       type_id: deepClient.idLocal("@deep-foundation/core", "Type")
     }];
     const result = await builder
-    .appendMultiple([
+    .append([
       { transition },
       { transition }
     ])
