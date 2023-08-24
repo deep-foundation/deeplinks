@@ -949,6 +949,19 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     // @ts-ignore
     return this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id)?.value?.value;
   }
+
+  async import(path: string) : Promise<any> {
+    if (typeof require !== 'undefined') {
+      try {
+        return require(path);
+      } catch (e) {
+        if (e.code !== 'ERR_REQUIRE_ESM') {
+          throw e;
+        }
+      }
+    }
+    return await import(path);
+  }
 }
 
 export const JWT = gql`query JWT($linkId: Int) {
