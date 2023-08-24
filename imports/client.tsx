@@ -341,9 +341,9 @@ export interface DeepClientInstance<L = Link<number>> {
 
   insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable> , options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
+  update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
-  delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
+  delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
   reserve<LL = L>(count: number): Promise<number[]>;
 
@@ -610,12 +610,13 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
-
+  
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
+   
     try {
       q = await this.apolloClient.mutate(generateSerial({
         actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
@@ -624,14 +625,18 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e });
+      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }
+    }   
+  
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
-  };
+  }; 
 
-  async update<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+  async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+    if (exp === null) return this.insert( [value], options);
+    if (value === null) return this.delete( exp, options );
+  
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
     const returning = options?.returning || this.updateReturning;
@@ -653,7 +658,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async delete<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
+  async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
     const table = options?.table || this.table;
@@ -758,7 +763,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
   /**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
-   * @description Thows error if id not founded. You can set last argument true, for disable throwing error.
+   * @description Thows error if id is not found. You can set last argument true, for disable throwing error.
    * @returns number
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
@@ -779,6 +784,56 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
     return result;
   };
+
+  /**
+   * This function fetches the corresponding IDs from the Deep for each specified path.
+   *
+   * @async
+   * @function ids
+   * @param {Array<[DeepClientStartItem, ...DeepClientPathItem[]]>} paths - An array of [start, ...path] tuples.
+   *     Each tuple specifies a path to a link, where 'start' is the package name or id 
+   *     and ...path further specifies the path to the id using Contain link values (names).
+   *
+   * @returns {Promise<any>} - Returns a Promise that resolves to an object.
+   *    The object has keys corresponding to the package name or id of each path.
+   *    The value for each package key is an object where keys are the items in the corresponding path,
+   *    and the values are the IDs retrieved from the Deep.
+   * 
+   * @throws Will throw an error if the id retrieval fails in `this.id()` function.
+   * 
+   * @example
+   * ```ts
+   *   const ids = await deep.ids([
+   *     ['@deep-foundation/core', 'Package'], 
+   *     ['@deep-foundation/core', 'PackageVersion']
+   *   ]);
+   * 
+   *   // Outputs
+   *   // {
+   *   //   "@deep-foundation/core": {
+   *   //     "Package": 2,
+   *   //     "PackageVersion": 46
+   *   //   }
+   *   // }
+   * ```
+   */
+  async ids(paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]>): Promise<any> {
+    // TODO: it can be faster using a combiniation of simple select of packages and contains with specified names and recombination of these links in minilinks
+    
+    // At the moment it may be slow, but it demonstrates desired API.
+
+    const appendPath = (accumulator, keys, value) => {
+      const lastKey = keys.pop();
+      const lastObject = keys.reduce((obj, key) => obj[key] = obj[key] || {}, accumulator);
+      lastObject[lastKey] = value;
+    };
+    const result = {};
+    await Promise.all(paths.map(async ([start, ...path]) => {
+      const id = await this.id(start, ...path);
+      appendPath(result, [start, ...path], id);
+    }));
+    return result;
+  }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     if (_ids?.[start]?.[path[0]]) {
