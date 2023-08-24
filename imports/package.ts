@@ -1,4 +1,4 @@
-import { DeepClient } from './client';
+import { DeepClient, DeepClientInstance } from './client';
 
 /**
  * Represents a deep package
@@ -14,7 +14,7 @@ const batteryLevelValueLinkId = await package.batteryLevelValue.id();
 ```
   */
 export class Package {
-  public deep: DeepClient;
+  public deep: DeepClientInstance;
   /**
    * Name of the package
    */
@@ -134,5 +134,5 @@ const deviceLinkId = await package.Device.idLocal();
 
 export interface PackageOptions {
   name: string;
-  deep: DeepClient;
+  deep: DeepClientInstance;
 }
