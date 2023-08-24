@@ -817,7 +817,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    *   // }
    * ```
    */
-  async ids(paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]>): Promise<any> {
+  async ids(...paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]>): Promise<any> {
     // TODO: it can be faster using a combiniation of simple select of packages and contains with specified names and recombination of these links in minilinks
     
     // At the moment it may be slow, but it demonstrates desired API.
