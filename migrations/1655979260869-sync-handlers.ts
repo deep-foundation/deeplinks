@@ -318,20 +318,10 @@ const generateSelectWhereCode = /*javascript*/`({ string, object, number, value,
   const keys = Object.keys(_where);
   for (let i = 0; i < keys.length; i++ ){
     if (_where[keys[i]]) {
-      if ( _where[keys[i]] !== 'object') {
-        where.push('"main".'.concat(keys[i], ' = ', _where[keys[i]]));
+      if (_where[keys[i]]['in']){
+        where.push('"main".'.concat(keys[i], ' IN (', _where[keys[i]]['in'].join(', '), ')'));
       } else {
-        if (_where[keys[i]]['in']){
-          if(typeof _where[keys[i]]['in'][0] === 'number'){
-            where.push('"main".'.concat(keys[i], ' IN (', _where[keys[i]]['in'].join(', '), ')'));
-          } else if(typeof _where[keys[i]]['in'][0] === 'string'){
-            where.push('"main".'.concat(keys[i], " IN ('", _where[keys[i]]['in'].join("', '"), "')"));
-          } else {
-            where.push('"main".'.concat(keys[i], " IN ('", _where[keys[i]]['in'].map((key)=>JSON.stringify(key)).join("'::jsonb, '"), "'::jsonb)"));
-          }
-        } else {
-          where.push('"main".'.concat(keys[i], " = '", JSON.stringify(_where[keys[i]]), "'::jsonb"));
-        }
+        where.push('"main".'.concat(keys[i], ' = ', _where[keys[i]]));
       }
     }
   }
@@ -354,6 +344,124 @@ const fillValueByLinksCode = /*javascript*/`(links) => {
     if (value) links[i].value = { id: Number(value?.id), link_id: Number(value?.link_id), value: numberValue ? Number(value.value) : value.value};
   }
 }`;
+
+const filterLinksByValueCode = /*javascript*/`(links, _where) => {
+  let table;
+  let linkId;
+  if (!links.length) return links;
+  linksLoop: for (let i = 0; i < links.length; i++){
+    if (_where.string){
+      const stringKeys = _where?.string ? Object.keys(_where.string) : undefined;
+      for (let j = 0; j < stringKeys.length; j++ ){
+        if (_where.string[stringKeys[j]]['in']){
+          if (!_where.string[stringKeys[j]]['in'].includes(links[i].value[stringKeys[j]])){
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        } else {
+          if (stringValue[stringKeys[j]] != _where.strings[stringKeys[j]]) {
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        }
+      }
+    }
+    if (_where.number){
+      const numberKeys = _where?.number ? Object.keys(_where.number) : undefined;
+      for (let j = 0; j < numberKeys.length; j++ ){
+        if (_where.number[numberKeys[j]]['in']){
+          if (!_where.number[numberKeys[j]]['in'].includes(links[i].value[numberKeys[j]])){
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        } else {
+          if (numberValue[numberKeys[j]] != _where.numbers[numberKeys[j]]) {
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        }
+      }
+    }
+    if (_where.object){
+      const objectKeys = _where?.object ? Object.keys(_where.object) : undefined;
+      for (let j = 0; j < objectKeys.length; j++ ){
+        if (_where.object[objectKeys[j]]['in']){
+          if (objectKeys[j] === 'value'){
+            let founded = false;
+            for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
+              if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i].value[objectKeys[j]])) founded = true;
+            }
+            if (!founded){
+              links[i] = undefined;
+              continue linksLoop;
+            }
+          } else {
+            if (!_where.number[numberKeys[j]]['in'].includes(links[i].value[numberKeys[j]])){
+              links[i] = undefined;
+              continue linksLoop;
+            }
+          }
+        } else {
+          if (objectValue[objectKeys[j]] != _where.objects[objectKeys[j]]) {
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        }
+      }
+    }
+    if (_where.value){
+      const valueKeys = _where?.value ? Object.keys(_where.value) : undefined;
+      for (let j = 0; j < valueKeys.length; j++ ){
+        if (_where.value[valueKeys[j]]['in']){
+          if (valueKeys[j] === 'value'){
+            let founded = false;
+            for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
+              if (typeof _where.object[objectKeys[j]]['in'][l] === 'object'){
+                if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i].value[objectKeys[j]])) founded = true;
+              } else {
+                if (_where.object[objectKeys[j]]['in'][l] === links[i].value[objectKeys[j]]) founded = true;
+              }
+            }
+            if (!founded){
+              links[i] = undefined;
+              continue linksLoop;
+            }
+          } else if (!_where.value[valueKeys[j]]['in'].includes(links[i].value[valueKeys[j]])){
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        } else {
+          if (valueValue[valueKeys[j]] != _where.values[valueKeys[j]]) {
+            links[i] = undefined;
+            continue linksLoop;
+          }
+        }
+      }
+    }
+  }
+}`;
+
+const isDeepEqualCode = /*javascript*/`(object1, object2) => {
+  const objKeys1 = Object.keys(object1);
+  const objKeys2 = Object.keys(object2);
+
+  if (objKeys1.length !== objKeys2.length) return false;
+
+  for (var key of objKeys1) {
+    const value1 = object1[key];
+    const value2 = object2[key];
+
+    const isObjects = value1 != null && typeof value1 === "object" && value2 != null && typeof value2 === "object"
+
+    if ((isObjects && !isDeepEqual(value1, value2)) ||
+      (!isObjects && value1 !== value2)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}`;
+
 
 const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value }) => {
   let table;
@@ -428,7 +536,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
-      if (_where?.object) plv8.elog(ERROR, 'link.object relation is not supported in deep.client mini');
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
       if (!options?.table || options?.table === 'links'){
@@ -436,10 +543,15 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const generateSelectWhere = ${generateSelectWhereCode};
         const findLinkIdByValue = ${findLinkIdByValueCode};
         const fillValueByLinks = ${fillValueByLinksCode};
+        const isDeepEqual = ${isDeepEqualCode};
+        const filterLinksByValue = ${filterLinksByValueCode};
         let where = generateSelectWhere(_where);
         let links = [];
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId ]);
         fillValueByLinks(links);
+        if (_where.string || _where.object || _where.number || _where.value){
+          filterLinksByValue(links, _where);
+        }
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
