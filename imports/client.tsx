@@ -953,21 +953,18 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   async import(path: string) : Promise<any> {
-    try {
-      if (typeof DeepClient.resolveDependency !== 'undefined') {
+    if (typeof DeepClient.resolveDependency !== 'undefined') {
+      try {
         return await DeepClient.resolveDependency(path);
+      } catch (e) {
+        console.log(`Call to DeepClient.resolveDependency is failed with`, e);
       }
-    } catch (e) {
-      console.log(`Call to DeepClient.resolveDependency is failed with`, e);
     }
     if (typeof require !== 'undefined') {
       try {
         return await require(path);
       } catch (e) {
         console.log(`Call to require is failed with`, e);
-        if (e.code !== 'ERR_REQUIRE_ESM') {
-          throw e;
-        }
       }
     }
     return await import(path);
