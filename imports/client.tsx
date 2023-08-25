@@ -473,6 +473,8 @@ export function checkAndFillShorts(obj) {
 }
 
 export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
+  static resolveDependency?: (path: string) => Promise<any>
+
   useDeepSubscription = useDeepSubscription;
   useDeepQuery = useDeepQuery;
   useMinilinksQuery = (query: QueryLink) => useMinilinksQuery(this.minilinks, query);
@@ -951,10 +953,18 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   async import(path: string) : Promise<any> {
+    try {
+      if (typeof DeepClient.resolveDependency !== 'undefined') {
+        return await DeepClient.resolveDependency(path);
+      }
+    } catch (e) {
+      console.log(`Call to DeepClient.resolveDependency is failed with`, e);
+    }
     if (typeof require !== 'undefined') {
       try {
-        return require(path);
+        return await require(path);
       } catch (e) {
+        console.log(`Call to require is failed with`, e);
         if (e.code !== 'ERR_REQUIRE_ESM') {
           throw e;
         }
