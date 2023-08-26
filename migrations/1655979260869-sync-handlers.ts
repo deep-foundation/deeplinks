@@ -354,12 +354,12 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
       const stringKeys = _where?.string ? Object.keys(_where.string) : undefined;
       for (let j = 0; j < stringKeys.length; j++ ){
         if (_where.string[stringKeys[j]]['in']){
-          if (!_where.string[stringKeys[j]]['in'].includes(links[i].value[stringKeys[j]])){
+          if (!_where.string[stringKeys[j]]['in'].includes(links[i]?.value?.[stringKeys[j]])){
             links[i] = undefined;
             continue linksLoop;
           }
         } else {
-          if (stringValue[stringKeys[j]] != _where.strings[stringKeys[j]]) {
+          if (links[i]?.value?.[stringKeys[j]] != _where.string[stringKeys[j]]) {
             links[i] = undefined;
             continue linksLoop;
           }
@@ -370,12 +370,12 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
       const numberKeys = _where?.number ? Object.keys(_where.number) : undefined;
       for (let j = 0; j < numberKeys.length; j++ ){
         if (_where.number[numberKeys[j]]['in']){
-          if (!_where.number[numberKeys[j]]['in'].includes(links[i].value[numberKeys[j]])){
+          if (!_where.number[numberKeys[j]]['in'].includes(links[i]?.value?.[numberKeys[j]])){
             links[i] = undefined;
             continue linksLoop;
           }
         } else {
-          if (numberValue[numberKeys[j]] != _where.numbers[numberKeys[j]]) {
+          if (links[i]?.value?.[numberKeys[j]] != _where.number[numberKeys[j]]) {
             links[i] = undefined;
             continue linksLoop;
           }
@@ -389,49 +389,53 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
           if (objectKeys[j] === 'value'){
             let founded = false;
             for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
-              if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i].value[objectKeys[j]])) founded = true;
+              if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
             }
             if (!founded){
               links[i] = undefined;
               continue linksLoop;
             }
           } else {
-            if (!_where.number[numberKeys[j]]['in'].includes(links[i].value[numberKeys[j]])){
+            if (!_where.number[numberKeys[j]]['in'].includes(links[i]?.value?.[numberKeys[j]])){
               links[i] = undefined;
               continue linksLoop;
             }
           }
         } else {
-          if (objectValue[objectKeys[j]] != _where.objects[objectKeys[j]]) {
+          if (objectKeys[j] === 'value' && isDeepEqual(_where.object[objectKeys[j]], links[i]?.value?.[objectKeys[j]])) {
+            founded = true;
+          } else if (links[i]?.value?.[objectKeys[j]] != _where.object[objectKeys[j]]) {
             links[i] = undefined;
             continue linksLoop;
           }
+
+          plv8.elog(ERROR, 'AZAZA'.concat('aaa') );
         }
       }
     }
     if (_where.value){
       const valueKeys = _where?.value ? Object.keys(_where.value) : undefined;
       for (let j = 0; j < valueKeys.length; j++ ){
-        if (_where.value[valueKeys[j]]['in']){
+        if (_where.value?.[valueKeys[j]]['in']){
           if (valueKeys[j] === 'value'){
             let founded = false;
             for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
               if (typeof _where.object[objectKeys[j]]['in'][l] === 'object'){
-                if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i].value[objectKeys[j]])) founded = true;
+                if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
               } else {
-                if (_where.object[objectKeys[j]]['in'][l] === links[i].value[objectKeys[j]]) founded = true;
+                if (_where.object[objectKeys[j]]['in'][l] === links[i]?.value?.[objectKeys[j]]) founded = true;
               }
             }
             if (!founded){
               links[i] = undefined;
               continue linksLoop;
             }
-          } else if (!_where.value[valueKeys[j]]['in'].includes(links[i].value[valueKeys[j]])){
+          } else if (!_where.value?.[valueKeys[j]]['in'].includes(links[i]?.value?.[valueKeys[j]])){
             links[i] = undefined;
             continue linksLoop;
           }
         } else {
-          if (valueValue[valueKeys[j]] != _where.values[valueKeys[j]]) {
+          if (links[i]?.value?.[valueKeys[j]] != _where?.values[valueKeys[j]]) {
             links[i] = undefined;
             continue linksLoop;
           }
@@ -611,7 +615,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     update: function(criteria, _set, options) {
       const exp = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
       const { id, link_id, value } = criteria || {};
-      if (options?.table && !['strings', 'numbers'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
+      if (options?.table && !['strings', 'numbers', 'objects'].includes(options?.table)) plv8.elog(ERROR, 'update '.concat(options?.table, ' not permitted'));
       const { table } = options || {};
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
