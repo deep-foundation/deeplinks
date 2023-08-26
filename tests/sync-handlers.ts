@@ -1413,7 +1413,7 @@ describe('sync handlers', () => {
     });
   });
 
-  describe.skip('require package', () => {
+  describe('require package', () => {
     it(`require mathjs`, async () => {
       const debug = log.extend('HandleInsert');
 
@@ -1487,7 +1487,7 @@ describe('sync handlers', () => {
       assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
     });
   });
-  describe.skip('Handle operations', () => {
+  describe('Handle operations', () => {
     describe('Handle insert', () => {
       it(`Handle insert on type`, async () => {
         const debug = log.extend('HandleInsert');
