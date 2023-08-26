@@ -408,8 +408,6 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
             links[i] = undefined;
             continue linksLoop;
           }
-
-          plv8.elog(ERROR, 'AZAZA'.concat('aaa') );
         }
       }
     }
@@ -505,8 +503,8 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const wherePush =  `\`\${whereFileds[i]} = '\${exp[whereFileds[i]]}'::\${(typeof exp[whereFileds[i]]) == 'string' ? 'text' : 'bigint'}\``;
-const setPush =  `\`\${setFileds[i]} = '\${_set[setFileds[i]]}'::\${table === 'strings' ? 'text' : 'bigint'}\``;
+const wherePush =  `\`\${whereFileds[i]} = '\${ (typeof exp[whereFileds[i]]) == 'object' ? JSON.stringify(exp[whereFileds[i]]) : exp[whereFileds[i]]}'::\${(typeof exp[whereFileds[i]]) == 'string' ? 'text' : (typeof exp[whereFileds[i]]) == 'object' ? 'jsonb' : 'bigint'}\``;
+const setPush =  `\`\${setFileds[i]} = '\${ table === 'objects' ? JSON.stringify(_set[setFileds[i]]) : _set[setFileds[i]]}'::\${table === 'strings' ? 'text' : table === 'objects' ? 'jsonb' : 'bigint'}\``;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
