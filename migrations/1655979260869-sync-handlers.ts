@@ -389,7 +389,7 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
           if (objectKeys[j] === 'value'){
             let founded = false;
             for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
-              if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
+              if (typeof links[i]?.value?.[objectKeys[j]] === 'object' && isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
             }
             if (!founded){
               links[i] = undefined;
@@ -402,7 +402,7 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
             }
           }
         } else {
-          if (objectKeys[j] === 'value' && isDeepEqual(_where.object[objectKeys[j]], links[i]?.value?.[objectKeys[j]])) {
+          if (objectKeys[j] === 'value' && typeof links[i]?.value?.value === 'object' && isDeepEqual(_where.object[objectKeys[j]], links[i]?.value?.[objectKeys[j]])) {
             founded = true;
           } else if (links[i]?.value?.[objectKeys[j]] != _where.object[objectKeys[j]]) {
             links[i] = undefined;
@@ -419,7 +419,7 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
             let founded = false;
             for (let l = 0; l < _where.object[objectKeys[j]]['in'].length; l++ ){
               if (typeof _where.object[objectKeys[j]]['in'][l] === 'object'){
-                if (isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
+                if (typeof links[i]?.value?.[objectKeys[j]] === 'object' && isDeepEqual(_where.object[objectKeys[j]]['in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
               } else {
                 if (_where.object[objectKeys[j]]['in'][l] === links[i]?.value?.[objectKeys[j]]) founded = true;
               }
@@ -433,7 +433,7 @@ const filterLinksByValueCode = /*javascript*/`(links, _where) => {
             continue linksLoop;
           }
         } else {
-          if (links[i]?.value?.[valueKeys[j]] != _where?.values[valueKeys[j]]) {
+          if (links[i]?.value?.[valueKeys[j]] != _where?.value[valueKeys[j]]) {
             links[i] = undefined;
             continue linksLoop;
           }
