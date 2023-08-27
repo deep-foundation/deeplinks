@@ -51,9 +51,9 @@ const parseJwtCode = `
 DECLARE parts varchar array := string_to_array($1, '.'); BEGIN RETURN concat('{ "headers":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[1]), 'utf-8'),', "payload":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[2]), 'utf-8'),'}'); END;`;
 
 const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
-const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) VALUES (\${type_id}\${id ? \`, \${id}\` : ''}\${from_id ? \`, \${from_id}\` : ''}\${to_id ? \`, \${to_id}\` : ''}) RETURNING id\``;
+const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) \``;
 
-const insertValueStringCode = `\`INSERT INTO \${checkedNumber ? 'number' : checkedString ? 'string' : checkedObject ? 'object' : ''}s ( link_id, value ) VALUES (\${linkid} , '\${value}') RETURNING ID\``;
+const insertValueStringCode = `\`INSERT INTO \${checkedNumber ? 'number' : checkedString ? 'string' : checkedObject ? 'object' : ''}s ( link_id, value ) VALUES (\$1 , \$2) RETURNING ID\``;
 const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RETURNING id;\``;
 
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
@@ -645,14 +645,21 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const checkedNumber = number?.data?.value ? number?.data?.value : number;
       const checkedString = string?.data?.value ? string?.data?.value : string;
       const checkedObject = object?.data?.value ? object?.data?.value : object;
+      let valueIterator = 2;
       let insertLinkString = ${insertLinkStringCode};
-      const linkid = plv8.execute(insertLinkString)[0]?.id;
+      let keysValue = 'VALUES ($1';
+      const keys = [type_id];
+      if (id) { keysValue = keysValue.concat(', $', valueIterator++); keys.push(id); }
+      if (from_id) { keysValue = keysValue.concat(', $', valueIterator++); keys.push(from_id); }
+      if (to_id) { keysValue = keysValue.concat(', $', valueIterator++); keys.push(to_id); }
+      keysValue = keysValue.concat(') RETURNING id');
+      const linkid = plv8.execute(insertLinkString.concat(keysValue), keys)[0]?.id;
       const linkCheck = checkInsertPermission(linkid, this.linkId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
       const value = checkedNumber || checkedString || JSON.stringify(checkedObject);
       if (!value) return { data: [{ id: linkid }]};
       const insertValueString = ${insertValueStringCode};
-      const valueId = plv8.execute(insertValueString)[0]?.id;
+      const valueId = plv8.execute(insertValueString, [ linkId, value ])[0]?.id;
       return { data: [{ id: linkid }]};
     },
     update: function(criteria, _set, options) {
