@@ -2,6 +2,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
 import { installPackage } from './1678940577209-deepcase.js';
+import { packageExists } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:deepcase-opened');
 const log = debug.extend('log');
@@ -19,12 +20,14 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  
-  const adminId = await root.id('deep', 'admin');
-  const admin = await root.login({ linkId: adminId });
-  const deep = new DeepClient({ deep: root, ...admin });
+  const packageName = '@deep-foundation/deepcase-opened';
+  if (!packageExists(packageName)) {
+    const adminId = await root.id('deep', 'admin');
+    const admin = await root.login({ linkId: adminId });
+    const deep = new DeepClient({ deep: root, ...admin });
 
-  const packageId = await installPackage(deep, '@deep-foundation/deepcase-opened');
+    const packageId = await installPackage(deep, '@deep-foundation/deepcase-opened');
+  }
 };
 
 export const down = async () => {

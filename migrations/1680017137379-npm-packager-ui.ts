@@ -2,7 +2,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
 import { installPackage } from './1678940577209-deepcase.js';
-import { sharePermissions } from './1664940577200-tsx.js';
+import { packageExists, sharePermissions } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:npm-packager-ui');
 const log = debug.extend('log');
@@ -20,13 +20,15 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
+  const packageName = '@deep-foundation/npm-packager-ui';
+  if (!packageExists(packageName)) {
+    const adminId = await root.id('deep', 'admin');
+    const admin = await root.login({ linkId: adminId });
+    const deep = new DeepClient({ deep: root, ...admin });
 
-  const adminId = await root.id('deep', 'admin');
-  const admin = await root.login({ linkId: adminId });
-  const deep = new DeepClient({ deep: root, ...admin });
-
-  const packageId = await installPackage(deep, '@deep-foundation/npm-packager-ui');
-  await sharePermissions(adminId, packageId);
+    const packageId = await installPackage(deep, packageName);
+    await sharePermissions(adminId, packageId);
+  }
 };
 
 export const down = async () => {

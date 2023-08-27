@@ -30,6 +30,14 @@ export const importPackage = async (pckg) => {
   return importResult;
 }
 
+export const packageExists = async (name) => {
+  try {
+    return await root.id(name) > 0;
+  } catch {
+    return false;
+  }
+}
+
 export const sharePermissions = async (userId, packageId) => {
   return await root.insert({
     type_id: await root.id('@deep-foundation/core', 'Join'),
@@ -48,12 +56,14 @@ export const containWithin = async (containerId, containedId) => {
 
 export const up = async () => {
   log('up');
-  const importResult = await importPackage(tsxPckg);
-  log(importResult);
-  const packageId = importResult.packageId;
-  const adminId = await root.id('deep', 'admin');
-  await sharePermissions(adminId, packageId);
-  await containWithin(adminId, packageId);
+  if (!packageExists('@deep-foundation/tsx')) {
+    const importResult = await importPackage(tsxPckg);
+    log(importResult);
+    const packageId = importResult.packageId;
+    const adminId = await root.id('deep', 'admin');
+    await sharePermissions(adminId, packageId);
+    await containWithin(adminId, packageId);
+  }
 };
 
 export const down = async () => {
