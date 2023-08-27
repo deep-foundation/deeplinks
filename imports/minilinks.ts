@@ -40,9 +40,14 @@ export interface LinkHashFields {
   [key: string|number]: any;
 }
 
-export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>>, LinkHashFields {}
+export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>>, LinkHashFields {
+  _id?: number;
+  displayId: number;
+}
 
 export interface MinilinksResult<Link> {
+  virtual: { [id: number]: number };
+  virtualCounter: number;
   links: Link[];
   types: { [id: number]: Link[] };
   byId: { [id: number]: Link };
@@ -65,10 +70,15 @@ export interface MinilinksResult<Link> {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
+  update(linksArray: any[]): {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+  }
 }
 
 export class MinilinksLink<Ref extends number> {
   ml?: MinilinkCollection<any, any>;
+  _id: Ref;
   id: Ref;
   type_id: Ref;
   from_id?: Ref;
@@ -109,6 +119,9 @@ export class MinilinksLink<Ref extends number> {
   get to(): MinilinksLink<Ref>[] {
     return this.ml?.byId?.[this.to_id];
   }
+  get displayId(): number {
+    return this._id || this.id;
+  }
   value?: any;
   string?: any;
   number?: any;
@@ -124,7 +137,7 @@ export class MinilinksLink<Ref extends number> {
   }
   toPlain(): LinkPlain<Ref> {
     return {
-      id: this.id,
+      id: this._id || this.id,
       type_id: this.type_id,
       from_id: this.from_id,
       to_id: this.to_id,
@@ -195,6 +208,8 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   useMinilinksSubscription = useMinilinksSubscription;
   useMinilinksHandle = useMinilinksHandle;
 
+  virtual: { [id: number]: number } = {};
+  virtualCounter = -1;
   types: { [id: number]: L[] } = {};
   byId: { [id: number]: L } = {};
   byFrom: { [id: number]: L[] } = {};
@@ -220,8 +235,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       if (byId[linksArray[l][options.id]]) {
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
+        const isVirtual = linksArray[l].id < 0;
+        if (isVirtual) this.virtual[linksArray[l].id] = undefined;
         const link = new this.options.Link({
           ml: this,
+          _id: isVirtual ? undefined : linksArray[l].id,
           _applies: [],
           ...linksArray[l],
         });
@@ -407,8 +425,26 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const toRemove = [];
     const _byId: any = {};
     for (let l = 0; l < linksArray.length; l++) {
-      const link = linksArray[l];
-      const old = byId[link.id];
+      let link = linksArray[l];
+
+      // find virtual
+      let old = byId[link.id];
+      const virtualIds = Object.keys(this.virtual);
+      const [virtual] = this.query({
+        id: { _in: virtualIds.map(i => Number(i)) },
+        ...(link.type_id ? { type_id: link.type_id } : {}),
+        ...(link.from_id ? { from_id: link.from_id } : {}),
+        ...(link.to_id ? { to_id: link.to_id } : {}),
+        ...(link.value ? { value: link.value } : {}),
+      });
+      if (virtual) {
+        if (old) throw new Error(`somehow we have oldLink.id ${old.id} and virtualLink.id ${virtual.id} virtualLink._id = ${virtual._id}`);
+        old = virtual;
+        this.virtual[virtual.id] = link.id;
+        virtual._id = link.id;
+        link = { ...link, _id: link.id, id: virtual.id };
+      }
+
       if (!old) {
         link._applies = [applyName];
         this.emitter.emit('apply', old, link);
@@ -454,6 +490,53 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }
     this._updating = false;
     return { errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors], anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies] };
+  }
+  update(linksArray: any[]): {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+  } {
+    log('update', linksArray, this);
+    const { byId, byFrom, byTo, byType, types, links, options } = this;
+    const toUpdate = [];
+    const beforeUpdate = {};
+    const _byId: any = {};
+    for (let l = 0; l < linksArray.length; l++) {
+      let link = linksArray[l];
+
+      // find virtual
+      let old = byId[link.id];
+      const virtualIds = Object.keys(this.virtual);
+      const [virtual] = this.query({
+        id: { _in: virtualIds.map(i => Number(i)) },
+        ...(link.type_id ? { type_id: link.type_id } : {}),
+        ...(link.from_id ? { from_id: link.from_id } : {}),
+        ...(link.to_id ? { to_id: link.to_id } : {}),
+        ...(link.value ? { value: link.value } : {}),
+      });
+      if (virtual) {
+        if (old) throw new Error(`somehow we have oldLink.id ${old.id} and virtualLink.id ${virtual.id} virtualLink._id = ${virtual._id}`);
+        old = virtual;
+        virtual._id = link.id;
+        link = { ...link, _id: link.id, id: virtual.id };
+      }
+
+      if (old) {
+        if (!options.equal(old, link)) {
+          toUpdate.push(link);
+          beforeUpdate[link.id] = old;
+        }
+      }
+      _byId[link.id] = link;
+    }
+    this._updating = true;
+    const r2 = this.remove(toUpdate.map(l => l[options.id]));
+    const a2 = this.add(toUpdate);
+    for (let i = 0; i < toUpdate.length; i++) {
+      const l = toUpdate[i];
+      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
+    }
+    this._updating = false;
+    return { errors: [...r2.errors, ...a2.errors], anomalies: [...r2.anomalies, ...a2.anomalies] };
   }
   constructor(options?: MGO, memory?: any) {
     const _options = options || MinilinksGeneratorOptionsDefault;
