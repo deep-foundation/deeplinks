@@ -27,7 +27,7 @@ const client = generateApolloClient({
 export default async (req, res) => {
   try {
     const count = req?.body?.input?.count;
-    if (!count) res.status(500).json({ error: 'no count' });
+    if (!count) return res.status(500).json({ error: 'no count' });
     // const token = req?.body?.session_variables;
     const links = [];
     for (let i = 0; i < count; i++) links[i] = { type_id: 0 };
