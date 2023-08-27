@@ -8,7 +8,7 @@ const error = debug.extend('error');
 
 export const up = async () => {
   log('up');
-  if (!packageExists('@deep-foundation/core-symbols')) {
+  if (!await packageExists('@deep-foundation/core-symbols')) {
     const importResult = await importPackage(coreSymbolsPckg);
     log(importResult);
   }

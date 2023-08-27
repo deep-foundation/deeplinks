@@ -47,7 +47,7 @@ export const installPackage = async (deep, packageName) => {
 export const up = async () => {
   log('up');
   const packageName = '@deep-foundation/deepcase';
-  if (!packageExists(packageName)) {
+  if (!await packageExists(packageName)) {
     const adminId = await root.id('deep', 'admin');
 
     const admin = await root.login({ linkId: adminId });

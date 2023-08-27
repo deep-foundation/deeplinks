@@ -21,7 +21,7 @@ const root = new DeepClient({
 export const up = async () => {
   log('up');
   const packageName = '@deep-foundation/npm-packager-ui';
-  if (!packageExists(packageName)) {
+  if (!await packageExists(packageName)) {
     const adminId = await root.id('deep', 'admin');
     const admin = await root.login({ linkId: adminId });
     const deep = new DeepClient({ deep: root, ...admin });

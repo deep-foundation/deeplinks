@@ -20,7 +20,7 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  if (!packageExists('@deep-foundation/npm-packager')) {
+  if (!await packageExists('@deep-foundation/npm-packager')) {
     const importResult = await importPackage(npmPackagerPckg);
     log(importResult);
     const packageId = importResult.packageId;

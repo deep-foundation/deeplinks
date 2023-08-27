@@ -32,8 +32,11 @@ export const importPackage = async (pckg) => {
 
 export const packageExists = async (name) => {
   try {
-    return await root.id(name) > 0;
+    const result = (await root.id(name)) > 0;
+    // console.log('packageExists', 'result', result);
+    return result;
   } catch {
+    // console.log('packageExists', 'result', false);
     return false;
   }
 }
@@ -56,7 +59,7 @@ export const containWithin = async (containerId, containedId) => {
 
 export const up = async () => {
   log('up');
-  if (!packageExists('@deep-foundation/tsx')) {
+  if (!await packageExists('@deep-foundation/tsx')) {
     const importResult = await importPackage(tsxPckg);
     log(importResult);
     const packageId = importResult.packageId;
