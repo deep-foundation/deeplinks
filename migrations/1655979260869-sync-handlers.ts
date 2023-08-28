@@ -548,8 +548,8 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const wherePush =  `\`\${whereFileds[i]} = '\${ (typeof exp[whereFileds[i]]) == 'object' ? JSON.stringify(exp[whereFileds[i]]) : exp[whereFileds[i]]}'::\${(typeof exp[whereFileds[i]]) == 'string' ? 'text' : (typeof exp[whereFileds[i]]) == 'object' ? 'jsonb' : 'bigint'}\``;
-const setPush =  `\`\${setFileds[i]} = '\${ table === 'objects' ? JSON.stringify(_set[setFileds[i]]) : _set[setFileds[i]]}'::\${table === 'strings' ? 'text' : table === 'objects' ? 'jsonb' : 'bigint'}\``;
+const wherePush =  `\`\${whereFileds[counter]} = $\${counter}\``;
+const setPush =  `\`\${setFileds[counter]} = $\${counter}\``;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
@@ -656,11 +656,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const linkid = plv8.execute(insertLinkString.concat(keysValue), keys)[0]?.id;
       const linkCheck = checkInsertPermission(linkid, this.linkId);
       if (!linkCheck) plv8.elog(ERROR, 'Insert not permitted');
-      const value = checkedNumber || checkedString || JSON.stringify(checkedObject);
-      if (!value) return { data: [{ id: linkid }]};
+      const value = checkedNumber || checkedString || checkedObject;
+      if (!value) return { data: [{ id: Number(linkid) }]};
       const insertValueString = ${insertValueStringCode};
-      const valueId = plv8.execute(insertValueString, [ linkId, value ])[0]?.id;
-      return { data: [{ id: linkid }]};
+      const valueId = plv8.execute(insertValueString, [ linkid, value ])[0]?.id;
+      return { data: [{ id: Number(linkid) }]};
     },
     update: function(criteria, _set, options) {
       const exp = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
@@ -675,17 +675,21 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const whereArr = [];
       const setArr = [];
       const whereFileds = Object.keys(exp).filter(key=>exp[key]);
-      for (let i = 0; i < whereFileds.length; i++ ){
-        whereArr.push(${wherePush});
+      const variables = [];
+      let counter = 1;
+      for (let i = 0; i < whereFileds.length; i++, counter++ ){
+        whereArr.push(whereFileds[i].concat(' = $', counter));
+        variables.push(exp[whereFileds[i]]);
       }
       const setFileds = Object.keys(_set).filter(key=>_set[key]);
-      for (let i = 0; i < setFileds.length; i++ ){
-        setArr.push(${setPush});
+      for (let i = 0; i < setFileds.length; i++, counter++ ){
+        setArr.push(setFileds[i].concat(' = $', counter));
+        variables.push(_set[setFileds[i]]);
       }
       const where = whereArr.join(', ');
       const set = setArr.join(', ');
       const updateValueString = ${updateValueStringCode};
-      const links = plv8.execute(updateValueString);
+      const links = plv8.execute(updateValueString, variables);
 
       return { data: links};
     },
