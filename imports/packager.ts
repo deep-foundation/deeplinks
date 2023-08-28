@@ -280,7 +280,7 @@ export class Packager<L extends Link<any>> {
       let newId;
       if (item.package) {
         newId = await this.client.id(pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue, true);
-        if (!newId) pckg.errors.push(`dependency [${pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue}], not founded`);
+        if (!newId) pckg.errors.push(`dependency [${pckg?.dependencies?.[item?.package?.dependencyId]?.name} ${item.package.containValue}], not found`);
       } else if (item.type) {
         newId = ids[idsIndex++];
       }
@@ -373,7 +373,7 @@ export class Packager<L extends Link<any>> {
       const ids = await this.client.reserve(counter);
       const { global, difference } = await this.globalizeIds(pckg, ids, sorted);
       if (pckg.errors?.length) {
-        return { errors };
+        return { errors: pckg.errors };
       }
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
