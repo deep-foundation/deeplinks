@@ -605,9 +605,10 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (options?.table === 'tree'){
         const { id, link_id, parent_id, depth, root_id, position_id, tree_id } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
-        let where = generateSelectWhere(_where);
+        let generated = generateSelectWhere(_where);
+        const where = generated.where;
         let links = [];
-        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId ]);
+        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId, ...generated.values ]);
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
@@ -615,18 +616,20 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const { rule_id, subject_id, object_id, action_id } = _where;
         
         const generateSelectWhere = ${generateSelectWhereCode};
-        let where = generateSelectWhere(_where);
+        let generated = generateSelectWhere(_where);
+        const where = generated.where;
         let links = [];
-        if (where) links = plv8.execute(${selectCan});
+        if (where) links = plv8.execute(${selectCan}, generated.values);
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
       if (options?.table === 'selectors'){
         const { item_id, selector_id, selector_include_id, query_id } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
-        let where = generateSelectWhere(_where);
+        let generated = generateSelectWhere(_where);
+        const where = generated.where;
         let links = [];
-        if (where) links = plv8.execute(${selectSelectors});
+        if (where) links = plv8.execute(${selectSelectors}, generated.values);
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
