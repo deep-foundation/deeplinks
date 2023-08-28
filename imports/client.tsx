@@ -957,14 +957,14 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       try {
         return await DeepClient.resolveDependency(path);
       } catch (e) {
-        console.log(`Call to DeepClient.resolveDependency is failed with`, e);
+        console.log(`IGNORED ERROR: Call to DeepClient.resolveDependency is failed with`, e);
       }
     }
     if (typeof require !== 'undefined') {
       try {
         return await require(path);
       } catch (e) {
-        console.log(`Call to require is failed with`, e);
+        console.log(`IGNORED ERROR: Call to require is failed with`, e);
       }
     }
     return await import(path);
