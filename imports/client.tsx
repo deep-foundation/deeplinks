@@ -367,6 +367,8 @@ export interface DeepClientInstance<L = Link<number>> {
   logout(): Promise<DeepClientAuthResult>;
 
   can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
+
+  useDeepSubscription: typeof useDeepSubscription
 }
 
 export interface DeepClientAuthResult {
