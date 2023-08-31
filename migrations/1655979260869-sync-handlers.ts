@@ -583,8 +583,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     objectSet: (link_id, path, value) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
-      const linkCheck = checkUpdatePermission(link_id, this.linkId);
-      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
       plv8.execute(${objectSet}, [path, value, link_id]);
     },
     select: function(_where, options) {
