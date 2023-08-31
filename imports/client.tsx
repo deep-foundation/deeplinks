@@ -345,6 +345,8 @@ export interface DeepClientInstance<L = Link<number>> {
 
   delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
+  serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id }[]>>;
+
   reserve<LL = L>(count: number): Promise<number[]>;
 
   await(id: number): Promise<boolean>;
@@ -683,9 +685,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async serial<
-    LL = L
-  >({
+  async serial({
     name, operations, returning, silent
   }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
     // @ts-ignore
