@@ -548,7 +548,7 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const objectSet = `\`update objects set value = jsonb_set(value, $1, $2, true) where link_id = $3\``;
+const objectSet = `\`update objects set value = jsonb_set(value, '\${path}', $2, true) where link_id = $1\``;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
@@ -583,7 +583,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     objectSet: (link_id, path, value) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
-      plv8.execute(${objectSet}, [path, value, link_id]);
+      plv8.execute(${objectSet}, [link_id, value]);
     },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
