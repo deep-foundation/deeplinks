@@ -313,7 +313,7 @@ const prepareFunction = /*javascript*/`
 const selectValueTable = `\`SELECT * FROM \${table} WHERE link_id = \${linkId}\``;
 const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = '\${value}'::\${table==='strings' ? 'text' : table==='objects' ? 'jsonb' : 'bigint'}\``;
 
-const generateSelectWhereCode = /*javascript*/`(_where) => {
+const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   const where = [];
   let values = [];
   let valueTable;
@@ -322,7 +322,7 @@ const generateSelectWhereCode = /*javascript*/`(_where) => {
     if (_where[keys[i]]) {
       if ( !_where[keys[i]]['_in'] ) {
         if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number') {
-          where.push('"main".'.concat(keys[i], ' = $',values.length+2));
+          where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
           values.push(_where[keys[i]]);
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
@@ -330,12 +330,12 @@ const generateSelectWhereCode = /*javascript*/`(_where) => {
           valueTable = keys[i].concat('s');
           for (let j = 0; j < valueKeys.length; j++ ){
             if ( !_where[keys[i]][valueKeys[j]]['_in'] ) {
-              where.push('"'.concat(keys[i].concat('s".'), valueKeys[j], ' = $', values.length+2));
+              where.push('"'.concat(keys[i].concat('s".'), valueKeys[j], ' = $', values.length+1+shift));
               values.push(_where[keys[i]][valueKeys[j]]);
             } else {
               const inLength = _where[keys[i]][valueKeys[j]]['_in'].length;
-              let inValues = '$'.concat(values.length+2);
-              for (let l = values.length+3; l < inLength+values.length+2; l++ ) {
+              let inValues = '$'.concat(values.length+1+shift);
+              for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
                 inValues = inValues.concat(',$',l);
               }
               if(typeof _where[keys[i]][valueKeys[j]]['_in'][0] === 'number'){
@@ -352,8 +352,8 @@ const generateSelectWhereCode = /*javascript*/`(_where) => {
         }
       } else {
         const inLength = _where[keys[i]]['_in'].length;
-        let inValues = '$'.concat(values.length+2);
-        for (let l = values.length+3; l < inLength+where.length+2; l++ ) {
+        let inValues = '$'.concat(values.length+1+shift);
+        for (let l = values.length+2+shift; l < inLength+where.length+1+shift; l++ ) {
           inValues = inValues.concat(',$',l);
         }
         if(typeof _where[keys[i]]['_in'][0] === 'number'){
@@ -548,8 +548,7 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const wherePush =  `\`\${whereFileds[counter]} = $\${counter}\``;
-const setPush =  `\`\${setFileds[counter]} = $\${counter}\``;
+const objectSet = `\`update objects set value = jsonb_set(value, $1, $2, true) where link_id = $3\``;
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
@@ -581,6 +580,13 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
     },
+    objectSet: (link_id, path, value) => {
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkUpdatePermission(link_id, this.linkId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
+      plv8.execute(${objectSet}, [path, value, link_id]);
+    },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
@@ -592,7 +598,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const findLinkIdByValue = ${findLinkIdByValueCode};
         const fillValueByLinks = ${fillValueByLinksCode};
         const isDeepEqual = ${isDeepEqualCode};
-        let generated = generateSelectWhere(_where);
+        let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
         const valueTableString = generated.valueTable ? ', "'.concat(generated.valueTable, '"') : '';
@@ -605,7 +611,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (options?.table === 'tree'){
         const { id, link_id, parent_id, depth, root_id, position_id, tree_id } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
-        let generated = generateSelectWhere(_where);
+        let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
         if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId, ...generated.values ]);
