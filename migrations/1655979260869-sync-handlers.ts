@@ -838,6 +838,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
 `;
 
 const deepClientFunction = /*javascript*/`
+
 const checkInsertPermission = ${checkInsertPermissionCode};
 const checkUpdatePermission = ${checkUpdatePermissionCode};
 const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode}; 
@@ -845,7 +846,7 @@ const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.u
 const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
-const result = operation === 'id' || operation === 'update' ? deep[operation](...args) : deep[operation](args, options);
+const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
   if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
