@@ -580,9 +580,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
     },
-    objectSet: (link_id, path, value) => {
+    objectSet: function(link_id, path, value) {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkUpdatePermission(link_id, this.linkId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
       plv8.execute(${objectSet}, [link_id, path, value]);
     },
     select: function(_where, options) {
@@ -843,6 +845,7 @@ const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode};
 const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
 const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
+
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
 const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
