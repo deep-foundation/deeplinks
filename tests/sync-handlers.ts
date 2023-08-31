@@ -362,6 +362,21 @@ describe('sync handlers', () => {
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canAdmin, true);
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canGuest, false);
     });
+    it(`objectMerge`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        object: { data: { value: { a: 3 }}},
+        in: { data: {
+          type_id: await deep.id('@deep-foundation/core', 'Contain'),
+          from_id: await deep.id('deep', 'admin')
+        } }
+      });
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'objectSet', '[{"link_id":${id}},{"path": "{a}"}, { "value": { "b": 3 }}]'::jsonb, '{}'::jsonb)`);
+      log('objectSet result', result?.data?.result?.[1]?.[0]);
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal('HelloBugFixers2', selected?.data?.[0]?.value?.value?.a?.b === 3);
+    });
     describe('select', () => {
       it(`select should return value`, async () => {
         const { data: [{ id }] } = await deep.insert({
