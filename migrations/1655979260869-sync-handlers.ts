@@ -548,12 +548,11 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
-const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
-
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
   return {
     linkId: Number(ownerId),
+    unsafe: { plv8 },
     id: (start, ...path) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
@@ -579,11 +578,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       } catch (error) {
         plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
-    },
-    objectSet: function(link_id, path, value) {
-      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
-      hasura_session['x-hasura-user-id'] = this.linkId;
-      plv8.execute(${objectSet}, [link_id, path, value]);
     },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
@@ -845,7 +839,7 @@ const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
 
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
-const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : deep[operation](args, options);
+const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : operation === 'unsafe' ? deep[operation].plv8.execute(...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
   if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
