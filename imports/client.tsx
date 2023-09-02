@@ -345,6 +345,8 @@ export interface DeepClientInstance<L = Link<number>> {
 
   delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
+  serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id }[]>>;
+
   reserve<LL = L>(count: number): Promise<number[]>;
 
   await(id: number): Promise<boolean>;
@@ -365,6 +367,8 @@ export interface DeepClientInstance<L = Link<number>> {
   logout(): Promise<DeepClientAuthResult>;
 
   can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
+
+  useDeepSubscription: typeof useDeepSubscription
 }
 
 export interface DeepClientAuthResult {
@@ -683,9 +687,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async serial<
-    LL = L
-  >({
+  async serial({
     name, operations, returning, silent
   }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
     // @ts-ignore
@@ -957,14 +959,14 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       try {
         return await DeepClient.resolveDependency(path);
       } catch (e) {
-        console.log(`Call to DeepClient.resolveDependency is failed with`, e);
+        console.log(`IGNORED ERROR: Call to DeepClient.resolveDependency is failed with`, e);
       }
     }
     if (typeof require !== 'undefined') {
       try {
         return await require(path);
       } catch (e) {
-        console.log(`Call to require is failed with`, e);
+        console.log(`IGNORED ERROR: Call to require is failed with`, e);
       }
     }
     return await import(path);
