@@ -17,6 +17,11 @@ services:
       - 'PGGSSENCMODE=disable'
       - 'PGSSLMODE=disable'
       - 'PGREQUIRESSL=0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   hasura:
     container_name: deep-hasura
     image: hasura/graphql-engine:v2.3.1
@@ -40,6 +45,11 @@ services:
       - 'HASURA_GRAPHQL_JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
       - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true'
       - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=undefined'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   storage:
     container_name: deep-hasura-storage
     image: nhost/hasura-storage:0.2.3
