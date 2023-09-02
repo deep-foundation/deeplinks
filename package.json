@@ -89,7 +89,7 @@
     "react": "*"
   },
   "engines": {
-    "node": "^18.16.1"
+    "node": "^18"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
