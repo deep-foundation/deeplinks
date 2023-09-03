@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.291",
+  "version": "0.0.294",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -20,8 +20,9 @@
     "benchmark": "export DEEPLINKS_HASURA_PATH=localhost:8080; export DEEPLINKS_HASURA_SSL=0; export DEEPLINKS_HASURA_SECRET=myadminsecretkey; ts-node benchmarks/index.ts",
     "migrate": "npm run package:build && npx migrate@latest up --matches '*.js'",
     "unmigrate": "npm run package:build && npx migrate@latest down --matches '*.js'",
-    "migrate-s-h": "npm run package:build && npx migrate@latest up 1655979260869-sync-handlers --matches '*.js'",
-    "unmigrate-s-h": "npm run package:build && npx migrate@latest down 1655979260869-sync-handlers --matches '*.js'",
+    "migrate-s-h": "npm run package:build && npx migrate@latest up 1693460330175-sync-handlers-update --matches '*.js'",
+    "unmigrate-s-h": "npm run package:build && npx migrate@latest down 1693460330175-sync-handlers-update --matches '*.js'",
+    "remigrate-s-h": "npm run unmigrate-s-h && npm run migrate",
     "start-engine-docker": "npm run start-engine-docker-core",
     "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura && npm run docker",
     "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep down",
@@ -88,7 +89,7 @@
     "react": "*"
   },
   "engines": {
-    "node": "^18.16.1"
+    "node": "^18"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
