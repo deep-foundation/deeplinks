@@ -318,6 +318,28 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   let values = [];
   let valueTable;
   const keys = Object.keys(_where);
+  const pushToWhere = (checking, content, where, values, key) => {
+    if ( !checking['_in'] ) {
+      where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
+      values.push(checking);
+    } else {
+      const inLength = checking['_in'].length;
+      let inValues = '$'.concat(values.length+1+shift);
+      for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
+        inValues = inValues.concat(',$',l);
+      }
+      if(typeof checking['_in'][0] === 'number'){
+        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
+        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
+      } else if(typeof checking['_in'][0] === 'string'){
+        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
+        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
+      } else {
+        let placeForValueCodeHere;
+      }
+    }
+    
+  }
   for (let i = 0; i < keys.length; i++ ){
     if (_where[keys[i]]) {
       if ( !_where[keys[i]]['_in'] ) {
@@ -328,24 +350,22 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
           const valueKeys = Object.keys(_where[keys[i]]);
           where.push(keys[i].concat('s.link_id = "main".id'));
           valueTable = keys[i].concat('s');
-          for (let j = 0; j < valueKeys.length; j++ ){
-            if ( !_where[keys[i]][valueKeys[j]]['_in'] ) {
-              where.push('"'.concat(keys[i].concat('s".'), valueKeys[j], ' = $', values.length+1+shift));
-              values.push(_where[keys[i]][valueKeys[j]]);
-            } else {
-              const inLength = _where[keys[i]][valueKeys[j]]['_in'].length;
-              let inValues = '$'.concat(values.length+1+shift);
-              for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
-                inValues = inValues.concat(',$',l);
+          if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
+            const content = 'value';
+            const checking = _where[keys[i]];
+            pushToWhere(checking, content, where, values, keys[i]);
+          } else {
+            if (!_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'] ){
+              for (let j = 0; j < valueKeys.length; j++ ){
+                const content = 'value';
+                const checking = _where[keys[i]];
+                pushToWhere(checking, content, where, values, keys[i]);
               }
-              if(typeof _where[keys[i]][valueKeys[j]]['_in'][0] === 'number'){
-                where.push('"'.concat(keys[i].concat('s".')).concat(valueKeys[j], ' IN ( ', inValues ,' )'));
-                values = values.concat(_where[keys[i]][valueKeys[j]]['_in']);
-              } else if(typeof _where[keys[i]][valueKeys[j]]['_in'][0] === 'string'){
-                where.push('"'.concat(keys[i].concat('s".')).concat(valueKeys[j], ' IN ( ', inValues ,' )'));
-                values = values.concat(_where[keys[i]][valueKeys[j]]['_in']);
-              } else {
-                let placeForValueCodeHere;
+            } else {
+              for (let j = 0; j < valueKeys.length; j++ ){
+                const content = valueKeys[j];
+                const checking = _where[keys[i]][content];
+                pushToWhere(checking, content, where, values, keys[i]);
               }
             }
           }
@@ -386,104 +406,6 @@ const fillValueByLinksCode = /*javascript*/`(links) => {
       let numberValue = plv8.execute(${selectValueTable})?.[0];
       const value = stringValue || objectValue || numberValue;
       if (value) links[i].value = { id: Number(value?.id), link_id: Number(value?.link_id), value: numberValue ? Number(value.value) : value.value};
-    }
-  }
-}`;
-
-const filterLinksByValueCode = /*javascript*/`(links, _where) => {
-  let table;
-  let linkId;
-  if (!links.length) return links;
-  linksLoop: for (let i = 0; i < links.length; i++){
-    if (_where.string){
-      const stringKeys = _where?.string ? Object.keys(_where.string) : undefined;
-      for (let j = 0; j < stringKeys.length; j++ ){
-        if (_where.string[stringKeys[j]]['_in']){
-          if (!_where.string[stringKeys[j]]['_in'].includes(links[i]?.value?.[stringKeys[j]])){
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        } else {
-          if (links[i]?.value?.[stringKeys[j]] != _where.string[stringKeys[j]]) {
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        }
-      }
-    }
-    if (_where.number){
-      const numberKeys = _where?.number ? Object.keys(_where.number) : undefined;
-      for (let j = 0; j < numberKeys.length; j++ ){
-        if (_where.number[numberKeys[j]]['_in']){
-          if (!_where.number[numberKeys[j]]['_in'].includes(links[i]?.value?.[numberKeys[j]])){
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        } else {
-          if (links[i]?.value?.[numberKeys[j]] != _where.number[numberKeys[j]]) {
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        }
-      }
-    }
-    if (_where.object){
-      const objectKeys = _where?.object ? Object.keys(_where.object) : undefined;
-      for (let j = 0; j < objectKeys.length; j++ ){
-        if (_where.object[objectKeys[j]]['_in']){
-          if (objectKeys[j] === 'value'){
-            let founded = false;
-            for (let l = 0; l < _where.object[objectKeys[j]]['_in'].length; l++ ){
-              if (typeof links[i]?.value?.[objectKeys[j]] === 'object' && isDeepEqual(_where.object[objectKeys[j]]['_in'][l], links[i]?.value?.[objectKeys[j]])) founded = true;
-            }
-            if (!founded){
-              links[i] = undefined;
-              continue linksLoop;
-            }
-          } else {
-            if (!_where.number[numberKeys[j]]['_in'].includes(links[i]?.value?.[numberKeys[j]])){
-              links[i] = undefined;
-              continue linksLoop;
-            }
-          }
-        } else {
-          if (objectKeys[j] === 'value' && typeof links[i]?.value?.value === 'object' && isDeepEqual(_where.object[objectKeys[j]], links[i]?.value?.[objectKeys[j]])) {
-            founded = true;
-          } else if (links[i]?.value?.[objectKeys[j]] != _where.object[objectKeys[j]]) {
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        }
-      }
-    }
-    if (_where.value){
-      const valueKeys = _where?.value ? Object.keys(_where.value) : undefined;
-      for (let j = 0; j < valueKeys.length; j++ ){
-        if (_where.value?.[valueKeys[j]]['_in']){
-          if (valueKeys[j] === 'value'){
-            let founded = false;
-            for (let l = 0; l < _where.value[valueKeys[j]]['_in'].length; l++ ){
-              if (typeof _where.value[valueKeys[j]]['_in'][l] === 'object'){
-                if (typeof links[i]?.value?.[valueKeys[j]] === 'object' && isDeepEqual(_where.value[valueKeys[j]]['_in'][l], links[i]?.value?.[valueKeys[j]])) founded = true;
-              } else {
-                if (_where.value[valueKeys[j]]['_in'][l] === links[i]?.value?.[valueKeys[j]]) founded = true;
-              }
-            }
-            if (!founded){
-              links[i] = undefined;
-              continue linksLoop;
-            }
-          } else if (!_where.value?.[valueKeys[j]]['_in'].includes(links[i]?.value?.[valueKeys[j]])){
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        } else {
-          if (links[i]?.value?.[valueKeys[j]] != _where?.value[valueKeys[j]]) {
-            links[i] = undefined;
-            continue linksLoop;
-          }
-        }
-      }
     }
   }
 }`;
@@ -602,6 +524,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const valueTableString = generated.valueTable ? ', "'.concat(generated.valueTable, '"') : '';
         const valueTableSelect = generated.valueTable ? ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
+        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
         return { data: links };
