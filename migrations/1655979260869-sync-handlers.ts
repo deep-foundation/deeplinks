@@ -524,7 +524,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const valueTableString = generated.valueTable ? ', "'.concat(generated.valueTable, '"') : '';
         const valueTableSelect = generated.valueTable ? ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
-        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
         return { data: links };
