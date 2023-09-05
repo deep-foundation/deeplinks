@@ -318,7 +318,7 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   let values = [];
   let valueTable;
   const keys = Object.keys(_where);
-  const pushToWhere = (checking, content, where, values, key) => {
+  const pushToWhere = (checking, content, where, values, key, valueTable) => {
     if ( !checking['_in'] ) {
       where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
       values.push(checking);
@@ -328,38 +328,41 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
       for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
         inValues = inValues.concat(',$',l);
       }
-      if(typeof checking['_in'][0] === 'number'){
+      if (valueTable !== 'values'){
         where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
-        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
-      } else if(typeof checking['_in'][0] === 'string'){
-        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
-        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
       } else {
-        let placeForValueCodeHere;
+        const valuesPart = key.concat('s".', content, ' IN ( ', inValues ,' )');
+        where.push('("string'.concat(valuesPart, ' OR "object',valuesPart,' OR "number',valuesPart,')'));
       }
+      for (let i = 0; i<checking['_in'].length; i++){ values.push(checking['_in'][i]); }
     }
     
   }
   for (let i = 0; i < keys.length; i++ ){
     if (_where[keys[i]]) {
       if ( !_where[keys[i]]['_in'] ) {
-        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number') {
-          where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
+        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value' ) {
+          if (valueTable !== 'values') where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
           values.push(_where[keys[i]]);
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
-          where.push(keys[i].concat('s.link_id = "main".id'));
           valueTable = keys[i].concat('s');
+          if (valueTable === 'values'){
+            where.push('strings.link_id = "main".id AND objects.link_id = "main".id AND numbers.link_id = "main".id ');
+          } else {
+            where.push(keys[i].concat('s.link_id = "main".id'));
+          }
+          
           if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
             const content = 'value';
             const checking = _where[keys[i]];
-            pushToWhere(checking, content, where, values, keys[i]);
+            pushToWhere(checking, content, where, values, keys[i], valueTable);
           } else {
             if (!_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'] ){
               for (let j = 0; j < valueKeys.length; j++ ){
                 const content = 'value';
                 const checking = _where[keys[i]];
-                pushToWhere(checking, content, where, values, keys[i]);
+                pushToWhere(checking, content, where, values, keys[i], valueTable);
               }
             } else {
               for (let j = 0; j < valueKeys.length; j++ ){
@@ -511,7 +514,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
-      if (_where.value) plv8.elog(ERROR, 'value is not supported yet');
       if (!options?.table || options?.table === 'links'){
         const { id, type_id, from_id, to_id, number, string, object, value } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
@@ -521,9 +523,10 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
-        const valueTableString = generated.valueTable ? ', "'.concat(generated.valueTable, '"') : '';
-        const valueTableSelect = generated.valueTable ? ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
+        const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ', "strings", "objects", "numbers"' : ', "'.concat(generated.valueTable, '"') : '';
+        const valueTableSelect = generated.valueTable ? generated.valueTable === 'values' ? ', row_to_json("strings".*) as valueStrings, row_to_json("objects".*) as valueObjects , row_to_json("numbers".*) as valueNumbers'  : ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
+        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
         return { data: links };
