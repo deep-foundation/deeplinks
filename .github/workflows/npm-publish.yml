@@ -11,7 +11,7 @@ on:
 
 jobs:
   main:
-    uses: deep-foundation/workflows/.github/workflows/npm-publish.yml@npm-publish-4.0.0
+    uses: deep-foundation/workflows/.github/workflows/npm-publish.yml@npm-publish-4.0.1
     secrets:
       npm-token: ${{ secrets.NPM_TOKEN }}
     with:
