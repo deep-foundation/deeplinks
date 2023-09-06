@@ -359,7 +359,7 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
           valueTable = keys[i].concat('s');
-          if (!valueTable === 'values'){
+          if (valueTable !== 'values'){
             where.push(keys[i].concat('s.link_id = "main".id'));
           }
           if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
@@ -546,7 +546,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
-        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId, ...generated.values ]);
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
