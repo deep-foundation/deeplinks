@@ -40,7 +40,7 @@
     "@deep-foundation/hasura": "^0.0.50",
     "@deep-foundation/materialized-path": "^0.0.25",
     "@deep-foundation/npm-packager": "^0.0.38",
-    "@deep-foundation/react-hasura": "^0.0.16",
+    "@deep-foundation/react-hasura": "^0.0.21",
     "@deep-foundation/store": "^0.0.25",
     "@deep-foundation/tsx": "^0.0.4",
     "@types/jest": "^29.5.1",
