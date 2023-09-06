@@ -34,6 +34,11 @@ services:
       MIGRATIONS_DATE_TYPE_SQL: '${MIGRATIONS_DATE_TYPE_SQL}'
       DEFAULT_RL_CRON_SCHEDULE: '${DEFAULT_RL_CRON_SCHEDULE}'
       PORT: '${DEEPLINKS_PORT}'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
 networks:
   network:
     name: deep-network

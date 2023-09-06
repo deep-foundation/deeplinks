@@ -24,6 +24,11 @@ services:
       NEXT_PUBLIC_DEEPLINKS_URL: '${NEXT_PUBLIC_DEEPLINKS_URL}'
       DOCKER: 1
       PORT: '${DEEPCASE_PORT}'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
 networks:
   network:
     name: deep-network
