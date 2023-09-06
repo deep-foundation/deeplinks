@@ -224,7 +224,7 @@ const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root"
 
 const pckgCode = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=${packageTypeId} AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const selectWithPermissions = `\`SELECT "main".*\${valueTableSelect} FROM "public"."links" as "main"\${valueTableString}\ WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
+const selectWithPermissions = `\`SELECT distinct "main".* FROM "public"."links" as "main"\${valueTableString}\ WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
 
 const selectTreeWithPermissions = `\`SELECT "main".* FROM tree AS "main" WHERE \${where} AND exists( SELECT 1 FROM "public"."links" AS "main_1" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main_1"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main_1"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_1" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_1".id = "main".parent_id) AND exists( SELECT 1 FROM "public"."links" AS "main_2" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."id") = ("main_2"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_3__be_3_can" WHERE ( ( ( ("_3__be_3_can"."object_id") = ("_1__be_1_links"."id") ) ) AND ( ( ( ( (("_3__be_3_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_3__be_3_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_4__be_4_can" WHERE ( ( ( ("_4__be_4_can"."object_id") = ("main_2"."id") ) ) AND ( ( ( ( (("_4__be_4_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_4__be_4_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_2" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_2".id = "main".link_id)\``;
 
@@ -320,8 +320,20 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   const keys = Object.keys(_where);
   const pushToWhere = (checking, content, where, values, key, valueTable) => {
     if ( !checking['_in'] ) {
-      where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
-      values.push(checking);
+      if (valueTable !== 'values'){
+        where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
+        values.push(checking);
+      } else {
+        const valuesPart = 's".'.concat(content, ' = $', values.length+1+shift);
+        let checkJson;
+        try {
+          JSON.parse(str); checkJson = true;
+        } catch (e) { 
+          checkJson = false;
+        }
+        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(checking) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart, '::int') : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::jsonb') : '',' )' ));
+        values.push(checking);
+      }
     } else {
       const inLength = checking['_in'].length;
       let inValues = '$'.concat(values.length+1+shift);
@@ -331,7 +343,7 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
       if (valueTable !== 'values'){
         where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
       } else {
-        const valuesPart = key.concat('s".', content, ' IN ( ', inValues ,' )');
+        const valuesPart = 's".'.concat(content, ' = $', values.length+1+shift);
         where.push('("string'.concat(valuesPart, ' OR "object',valuesPart,' OR "number',valuesPart,')'));
       }
       for (let i = 0; i<checking['_in'].length; i++){ values.push(checking['_in'][i]); }
@@ -342,17 +354,14 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
     if (_where[keys[i]]) {
       if ( !_where[keys[i]]['_in'] ) {
         if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value' ) {
-          if (valueTable !== 'values') where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
+          where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
           values.push(_where[keys[i]]);
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
           valueTable = keys[i].concat('s');
-          if (valueTable === 'values'){
-            where.push('strings.link_id = "main".id AND objects.link_id = "main".id AND numbers.link_id = "main".id ');
-          } else {
+          if (!valueTable === 'values'){
             where.push(keys[i].concat('s.link_id = "main".id'));
           }
-          
           if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
             const content = 'value';
             const checking = _where[keys[i]];
@@ -368,7 +377,7 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
               for (let j = 0; j < valueKeys.length; j++ ){
                 const content = valueKeys[j];
                 const checking = _where[keys[i]][content];
-                pushToWhere(checking, content, where, values, keys[i]);
+                pushToWhere(checking, content, where, values, keys[i], valueTable);
               }
             }
           }
@@ -475,6 +484,8 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
 
 const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
 
+// plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
+
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
   return {
@@ -524,9 +535,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const where = generated.where;
         let links = [];
         const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ', "strings", "objects", "numbers"' : ', "'.concat(generated.valueTable, '"') : '';
-        const valueTableSelect = generated.valueTable ? generated.valueTable === 'values' ? ', row_to_json("strings".*) as valueStrings, row_to_json("objects".*) as valueObjects , row_to_json("numbers".*) as valueNumbers'  : ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
-        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
         return { data: links };
