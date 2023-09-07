@@ -13,6 +13,7 @@ import { reserve } from './reserve.js';
 import Debug from 'debug';
 import { corePckg } from './core.js';
 import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
+import get from 'get-value';
 
 const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
@@ -840,37 +841,33 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
-    if (_ids?.[start]?.[path[0]]) {
-      return _ids[start][path[0]];
+    const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
+    if (get(_ids, paths.join('.'))) {
+      return get(_ids, paths.join('.'));
     }
-    const containTypeLinkId = _ids['@deep-foundation/core'].Contain;
-    const result = this.minilinks.query({
-      in: {
-        type_id: containTypeLinkId,
-        from: {
-          ...(typeof start === 'number' && {id: start}),
-          ...(typeof start === 'string' && {
-            string: {
-              value: {
-                _eq: start
-              }
-            }
-          }),
-        },
-        ...(typeof path[0] === 'string' && {
-          string: {
-            value: {
-              _eq: path[0]
-            }
-          }
-        }),
-        ...(typeof path[0] === 'boolean' && {}), // TODO What should we do?
+
+    // let result: number;
+    // if(paths.length === 1) {
+      
+    // } else {
+    //   result = paths[0] as number;
+    //   for (let i = 1; i < paths.length; i++) {
+    //     result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
+    // }
+    // }
+    
+    const [link] = this.minilinks.query({
+      id: {
+        _id: paths
       }
-    })
-    if(result.length > 0) {
-      return ((result[0] as unknown) as Link<number>).id;
+    }) 
+    const result = (link as Link<number>).id;
+    
+    if(!result) {
+      throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
+    } else {
+      return result as number
     }
-    throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
   };
 
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {

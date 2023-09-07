@@ -266,8 +266,9 @@ describe('client', () => {
     }, {returning: deepClient.selectReturning});
     deepClient.minilinks.apply([packageLink,containLink,newTypeTypeLink]);
     try {
+      const packageLinkId = deepClient.idLocal(packageName);
+      assert.equal(packageLinkId, packageLink.id)
       const newTypeTypeLinkId = deepClient.idLocal(packageName, "Type");
-      assert.notEqual(newTypeTypeLinkId, 0);
       assert.equal(newTypeTypeLinkId, newTypeTypeLink.id);
     } finally {
       await deepClient.delete([packageLink.id, newTypeTypeLink.id, containLink.id])
