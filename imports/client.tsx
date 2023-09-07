@@ -841,31 +841,21 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
-    // TODO: Remove "as any" everywhere here when it will be understandable why DeepClientPathItem can be boolean
-    let paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]> = [[start, ...path]];
-    if (get(_ids, paths as any)) {
-      return get(_ids, paths as any);
+    const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
+    if (get(_ids, paths.join('.'))) {
+      return get(_ids, paths.join('.'));
     }
-    paths.forEach(path => {
-      if(typeof path === 'boolean') {
-        throw new Error('boolean path is not supported')
-      }
-    })
 
-    let result = {};
+    let result = paths[0];
+    for (let i = 1; i < paths.length; i++) {
+        result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
+    }
 
-    const appendPath = (accumulator, keys, value) => {
-      const lastKey = keys.pop();
-      const lastObject = keys.reduce((obj, key) => obj[key] = obj[key] || {}, accumulator);
-      lastObject[lastKey] = value;
-    };
-    paths.map(([start, ...path]) => {
-      const id = this.idLocal(start, ...path);
-      appendPath(result, [start, ...path], id);
-    });
-
-    return result as number;
-
+    if(!result) {
+      throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
+    } else {
+      return result as number
+    }
   };
 
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
