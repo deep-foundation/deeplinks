@@ -855,7 +855,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     let result = {};
 
     for (const [start, ...path] of paths) {
-        this.id(start, ...path).then(id => {
+        this.idLocal(start, ...path).then(id => {
             const fullPath = [start, ...path];
             result = fullPath.reduce((acc, key, index, arr) => {
                 if (index === arr.length - 1) {
