@@ -841,7 +841,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
-    // TODO: Remove as any everywhere here when it will be understandable why DeepClientPathItem can be boolean
+    // TODO: Remove "as any" everywhere here when it will be understandable why DeepClientPathItem can be boolean
     let paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]> = [[start, ...path]];
     if (get(_ids, paths as any)) {
       return get(_ids, paths as any);
