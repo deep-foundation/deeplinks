@@ -846,11 +846,23 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       return get(_ids, paths.join('.'));
     }
 
-    let result = paths[0];
-    for (let i = 1; i < paths.length; i++) {
-        result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
-    }
-
+    // let result: number;
+    // if(paths.length === 1) {
+      
+    // } else {
+    //   result = paths[0] as number;
+    //   for (let i = 1; i < paths.length; i++) {
+    //     result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
+    // }
+    // }
+    
+    const [link] = this.minilinks.query({
+      id: {
+        _id: paths
+      }
+    }) 
+    const result = (link as Link<number>).id;
+    
     if(!result) {
       throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
     } else {
