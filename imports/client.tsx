@@ -861,7 +861,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         _id: paths
       }
     }) 
-    const result = (link as Link<number>).id;
+    const result = (link as Link<number>)?.id;
     
     if(!result) {
       throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
