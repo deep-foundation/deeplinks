@@ -854,17 +854,15 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
 
     let result = {};
 
-    for (const [start, ...path] of paths) {
-        const id = this.idLocal(start, ...path)
-        const fullPath = [start, ...path];
-            result = fullPath.reduce((acc, key, index, arr) => {
-                if (index === arr.length - 1) {
-                    acc[key as any] = id;
-                    return acc[key as any];
-                }
-                return acc[key as any] = acc[key as any] || {};
-            }, result);
-    }
+    const appendPath = (accumulator, keys, value) => {
+      const lastKey = keys.pop();
+      const lastObject = keys.reduce((obj, key) => obj[key] = obj[key] || {}, accumulator);
+      lastObject[lastKey] = value;
+    };
+    paths.map(([start, ...path]) => {
+      const id = this.idLocal(start, ...path);
+      appendPath(result, [start, ...path], id);
+    });
 
     return result as number;
 
