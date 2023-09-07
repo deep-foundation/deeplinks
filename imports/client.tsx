@@ -13,6 +13,7 @@ import { reserve } from './reserve.js';
 import Debug from 'debug';
 import { corePckg } from './core.js';
 import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
+import get from 'get-value';
 
 const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
@@ -840,37 +841,34 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
-    if (_ids?.[start]?.[path[0]]) {
-      return _ids[start][path[0]];
+    // TODO: Remove as any everywhere here when it will be understandable why DeepClientPathItem can be boolean
+    let paths: Array<[DeepClientStartItem, ...DeepClientPathItem[]]> = [[start, ...path]];
+    if (get(_ids, paths as any)) {
+      return get(_ids, paths as any);
     }
-    const containTypeLinkId = _ids['@deep-foundation/core'].Contain;
-    const result = this.minilinks.query({
-      in: {
-        type_id: containTypeLinkId,
-        from: {
-          ...(typeof start === 'number' && {id: start}),
-          ...(typeof start === 'string' && {
-            string: {
-              value: {
-                _eq: start
-              }
-            }
-          }),
-        },
-        ...(typeof path[0] === 'string' && {
-          string: {
-            value: {
-              _eq: path[0]
-            }
-          }
-        }),
-        ...(typeof path[0] === 'boolean' && {}), // TODO What should we do?
+    paths.forEach(path => {
+      if(typeof path === 'boolean') {
+        throw new Error('boolean path is not supported')
       }
     })
-    if(result.length > 0) {
-      return ((result[0] as unknown) as Link<number>).id;
+
+    let result = {};
+
+    for (const [start, ...path] of paths) {
+        this.id(start, ...path).then(id => {
+            const fullPath = [start, ...path];
+            result = fullPath.reduce((acc, key, index, arr) => {
+                if (index === arr.length - 1) {
+                    acc[key as any] = id;
+                    return acc[key as any];
+                }
+                return acc[key as any] = acc[key as any] || {};
+            }, result);
+        });
     }
-    throw new Error(`Id not found by [${JSON.stringify([start, ...path])}]`);
+
+    return result as number;
+
   };
 
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
