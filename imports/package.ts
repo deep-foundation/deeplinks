@@ -44,6 +44,7 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
    */
   public createEntity(name: string) {
     const log = debug(this.createEntity.name)
+    log({name})
     const result = {
       /**
        * Gets id of the link
@@ -95,7 +96,10 @@ const myLinkId = await package.id("MyLinkName");
    */
   async id(...names: string[]) {
     const log = debug(this.id.name)
-    const result = await this.deep.id(this.name, ...names);
+    log({names})
+    const deepIdArgs: Parameters<DeepClient['id']> = [this.name, ...names]
+    log({deepIdArgs})
+    const result = await this.deep.id(...deepIdArgs);
     log({result})
     return result;
   }
@@ -113,7 +117,10 @@ const myLinkId = await package.idLocal("MyLinkName");
    */
   idLocal(...names: string[]) {
     const log = debug(this.idLocal.name)
-    const result = this.deep.idLocal(this.name, ...names)
+    log({names})
+    const deepIdLocalArgs: Parameters<DeepClient['idLocal']> = [this.name, ...names]
+    log({deepIdLocalArgs})
+    const result = this.deep.idLocal(...deepIdLocalArgs)
     log({result})
     return result;
   }
