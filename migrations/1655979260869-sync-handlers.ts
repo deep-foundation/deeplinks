@@ -318,85 +318,59 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   let values = [];
   let valueTable;
   const keys = Object.keys(_where);
-  const pushToWhere = (checking, content, where, values, key, valueTable) => {
-    if ( !checking['_in'] ) {
-      if (valueTable !== 'values'){
-        where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
-        values.push(checking);
+  const pushToWhere = (value, tableKey, where, values, whereKey) => {
+    if ( !value['_in'] ) {
+      if (whereKey !== 'value'){
+        where.push(whereKey.concat('s.link_id = "main".id'));
+        where.push('"'.concat(whereKey.concat('s".'), tableKey, ' = $', values.length+1+shift));
+        values.push(value);
       } else {
-        const valuesPart = 's".'.concat(content, ' = $', values.length+1+shift);
+        const valuesPart = 's".'.concat(tableKey, ' = $', values.length+1+shift);
         let checkJson;
         try {
           JSON.parse(str); checkJson = true;
         } catch (e) { 
           checkJson = false;
         }
-        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(checking) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart, '::int') : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::jsonb') : '',' )' ));
-        values.push(checking);
+        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(value) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart, '::int') : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::jsonb') : '',' )' ));
+        values.push(value);
       }
     } else {
-      const inLength = checking['_in'].length;
+      const inLength = value['_in'].length;
       let inValues = '$'.concat(values.length+1+shift);
       for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
         inValues = inValues.concat(',$',l);
       }
-      if (valueTable !== 'values'){
-        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
+      if (whereKey !== 'value'){
+        where.push(whereKey.concat('s.link_id = "main".id'));
+        where.push('"'.concat(whereKey.concat('s".')).concat(tableKey, ' IN ( ', inValues ,' )'));
       } else {
-        const valuesPart = 's".'.concat(content, ' = $', values.length+1+shift);
+        const valuesPart = 's".'.concat(tableKey, ' = $', values.length+1+shift);
         where.push('("string'.concat(valuesPart, ' OR "object',valuesPart,' OR "number',valuesPart,')'));
       }
-      for (let i = 0; i<checking['_in'].length; i++){ values.push(checking['_in'][i]); }
+      for (let i = 0; i<value['_in'].length; i++){ values.push(value['_in'][i]); }
     }
-    
   }
   for (let i = 0; i < keys.length; i++ ){
+    if ( keys[i] === 'object' || keys[i] === 'string' || keys[i] === 'number' || keys[i] === 'value' ) valueTable = keys[i].concat('s');
     if (_where[keys[i]]) {
       if ( !_where[keys[i]]['_in'] ) {
-        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value' ) {
+        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value') {
           where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
           values.push(_where[keys[i]]);
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
-          valueTable = keys[i].concat('s');
-          if (valueTable !== 'values'){
-            where.push(keys[i].concat('s.link_id = "main".id'));
-          }
           if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
-            const content = 'value';
-            const checking = _where[keys[i]];
-            pushToWhere(checking, content, where, values, keys[i], valueTable);
+            pushToWhere(_where[keys[i]], 'value', where, values, keys[i]);
           } else {
-            if (!_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'] ){
-              for (let j = 0; j < valueKeys.length; j++ ){
-                const content = 'value';
-                const checking = _where[keys[i]];
-                pushToWhere(checking, content, where, values, keys[i], valueTable);
-              }
-            } else {
-              for (let j = 0; j < valueKeys.length; j++ ){
-                const content = valueKeys[j];
-                const checking = _where[keys[i]][content];
-                pushToWhere(checking, content, where, values, keys[i], valueTable);
-              }
+            const simpleSyntax = !_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'];
+            for (let j = 0; j < valueKeys.length; j++ ){
+              pushToWhere(simpleSyntax ? _where[keys[i]] : _where[keys[i]][valueKeys[j]], simpleSyntax ? 'value' : valueKeys[j], where, values, keys[i]);
             }
           }
         }
       } else {
-        const inLength = _where[keys[i]]['_in'].length;
-        let inValues = '$'.concat(values.length+1+shift);
-        for (let l = values.length+2+shift; l < inLength+where.length+1+shift; l++ ) {
-          inValues = inValues.concat(',$',l);
-        }
-        if(typeof _where[keys[i]]['_in'][0] === 'number'){
-          where.push('"main".'.concat(keys[i], ' IN ( ', inValues ,' )'));
-          values = values.concat(_where[keys[i]]['_in']);
-        } else if(typeof _where[keys[i]]['_in'][0] === 'string'){
-          where.push('"main".'.concat(keys[i], ' IN ( ', inValues ,' )'));
-          values = values.concat(_where[keys[i]]['_in']);
-        } else {
-          let placeForValueCodeHere;
-        }
+        pushToWhere(_where[keys[i]], 'value', where, values, keys[i]);
       }
     }
   }
@@ -567,6 +541,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const where = generated.where;
         let links = [];
         if (where) links = plv8.execute(${selectSelectors}, generated.values);
+        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
