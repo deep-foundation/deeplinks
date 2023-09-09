@@ -328,27 +328,47 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
         const valuesPart = 's".'.concat(tableKey, ' = $', values.length+1+shift);
         let checkJson;
         try {
-          JSON.parse(str); checkJson = true;
+          typeof value === 'object' || JSON.parse(value) ? checkJson = true : null;
         } catch (e) { 
           checkJson = false;
         }
-        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(value) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart, '::int') : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::jsonb') : '',' )' ));
-        values.push(value);
+        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(value) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart) : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::text::jsonb') : '',' )' ));
+        values.push(typeof value === 'object' ? JSON.stringify(value) : value);
       }
     } else {
       const inLength = value['_in'].length;
-      let inValues = '$'.concat(values.length+1+shift);
-      for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
-        inValues = inValues.concat(',$',l);
-      }
+      const valuesLength = values.length;
       if (whereKey !== 'value'){
+        let inValues = '$'.concat(values.length+1+shift);
+        for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
+          inValues = inValues.concat(',$',l);
+        }
         where.push(whereKey.concat('s.link_id = "main".id'));
         where.push('"'.concat(whereKey.concat('s".')).concat(tableKey, ' IN ( ', inValues ,' )'));
+        for (let i = 0; i<value['_in'].length; i++){ values.push(value['_in'][i]); }
       } else {
-        const valuesPart = 's".'.concat(tableKey, ' = $', values.length+1+shift);
-        where.push('("string'.concat(valuesPart, ' OR "object',valuesPart,' OR "number',valuesPart,')'));
+        const tables = {numbers: ['"strings".link_id = "main".id'], objects: [], strings: []};
+        for (let i = valuesLength+1+shift; i<inLength+valuesLength+1+shift; i++){ 
+          const valuesPart = 's".'.concat(tableKey, '=' );
+          tables.strings.push('"string'.concat(valuesPart, '$',i, '::text'));
+          if (!isNaN(value['_in'][i-(valuesLength+1+shift)])) {
+            if (!tables.numbers.length) tables.numbers.push('"numbers".link_id = "main".id');
+            tables.numbers.push('"number', valuesPart, '$',i,'::int');
+          }
+          let checkJson;
+          try {
+            typeof value['_in'][i-(valuesLength+1+shift)] === 'object' || JSON.parse(value['_in'][i-(valuesLength+1+shift)]) ? checkJson = true : null;
+            if (!tables.objects.length) tables.objects.push('"objects".link_id = "main".id');
+            tables.objects.push('"object', valuesPart, '$',i, '::text::jsonb');
+          } catch (e) { 
+            checkJson = false;
+          }
+          values.push(typeof value['_in'][i-(valuesLength+1+shift)] === 'object' ? JSON.stringify(value['_in'][i-(valuesLength+1+shift)]) : value['_in'][i-(valuesLength+1+shift)]);
+        }
+        plv8.elog(ERROR,'( ('.concat(tables.strings.join(' AND '),' )', tables.numbers.length ? ' OR ( '.concat(tables.numbers.join(' AND '),')') : '', tables.objects.length ? ' OR ( '.concat(tables.objects.join(' AND '),')') : '' ')'));
+        where.push('( ('.concat(tables.strings.join(' AND '),' )', tables.numbers.length ? ' OR ( '.concat(tables.numbers.join(' AND '),')') : '', tables.objects.length ? ' OR ( '.concat(tables.objects.join(' AND '),')') : '' ')'));
+        
       }
-      for (let i = 0; i<value['_in'].length; i++){ values.push(value['_in'][i]); }
     }
   }
   for (let i = 0; i < keys.length; i++ ){
