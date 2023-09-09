@@ -347,33 +347,30 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
         where.push('"'.concat(whereKey.concat('s".')).concat(tableKey, ' IN ( ', inValues ,' )'));
         for (let i = 0; i<value['_in'].length; i++){ values.push(value['_in'][i]); }
       } else {
-        const tables = {numbers: ['"strings".link_id = "main".id'], objects: [], strings: []};
+        const tables = {numbers: [], objects: [], strings: []};
         for (let i = valuesLength+1+shift; i<inLength+valuesLength+1+shift; i++){ 
           const valuesPart = 's".'.concat(tableKey, '=' );
           tables.strings.push('"string'.concat(valuesPart, '$',i, '::text'));
           if (!isNaN(value['_in'][i-(valuesLength+1+shift)])) {
-            if (!tables.numbers.length) tables.numbers.push('"numbers".link_id = "main".id');
-            tables.numbers.push('"number', valuesPart, '$',i,'::int');
+            tables.numbers.push('"number'.concat(valuesPart, '$',i,'::int'));
           }
           let checkJson;
           try {
             typeof value['_in'][i-(valuesLength+1+shift)] === 'object' || JSON.parse(value['_in'][i-(valuesLength+1+shift)]) ? checkJson = true : null;
-            if (!tables.objects.length) tables.objects.push('"objects".link_id = "main".id');
-            tables.objects.push('"object', valuesPart, '$',i, '::text::jsonb');
+            tables.objects.push('"object'.concat(valuesPart, '$',i, '::text::jsonb'));
           } catch (e) { 
             checkJson = false;
           }
           values.push(typeof value['_in'][i-(valuesLength+1+shift)] === 'object' ? JSON.stringify(value['_in'][i-(valuesLength+1+shift)]) : value['_in'][i-(valuesLength+1+shift)]);
         }
-        plv8.elog(ERROR,'( ('.concat(tables.strings.join(' AND '),' )', tables.numbers.length ? ' OR ( '.concat(tables.numbers.join(' AND '),')') : '', tables.objects.length ? ' OR ( '.concat(tables.objects.join(' AND '),')') : '' ')'));
-        where.push('( ('.concat(tables.strings.join(' AND '),' )', tables.numbers.length ? ' OR ( '.concat(tables.numbers.join(' AND '),')') : '', tables.objects.length ? ' OR ( '.concat(tables.objects.join(' AND '),')') : '' ')'));
+        where.push('( '.concat(tables.strings.join(' OR '), tables.numbers.length ? ' OR '.concat(tables.numbers.join(' OR ')) : '', tables.objects.length ? ' OR '.concat(tables.objects.join(' OR ')) : '', ')'));
         
       }
     }
   }
   for (let i = 0; i < keys.length; i++ ){
     if ( keys[i] === 'object' || keys[i] === 'string' || keys[i] === 'number' || keys[i] === 'value' ) valueTable = keys[i].concat('s');
-    if (_where[keys[i]]) {
+    if (_where[keys[i]] !== undefined) {
       if ( !_where[keys[i]]['_in'] ) {
         if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value') {
           where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
@@ -528,7 +525,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
-        const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ', "strings", "objects", "numbers"' : ', "'.concat(generated.valueTable, '"') : '';
+        const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ' left join "strings" on "strings".link_id = "main".id left join "objects" on "objects".link_id = "main".id left join "numbers" on "numbers".link_id = "main".id' : ' left join "'.concat(generated.valueTable, '" on "',generated.valueTable,'".link_id = "main".id') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
@@ -540,12 +537,12 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
+        if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId, ...generated.values ]);
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
       if (options?.table === 'can'){
         const { rule_id, subject_id, object_id, action_id } = _where;
-        
         const generateSelectWhere = ${generateSelectWhereCode};
         let generated = generateSelectWhere(_where);
         const where = generated.where;
@@ -561,7 +558,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const where = generated.where;
         let links = [];
         if (where) links = plv8.execute(${selectSelectors}, generated.values);
-        plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         return { data: links };
       }
@@ -670,8 +666,8 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     can: function(objectIds, subjectIds, actionIds, userIds = this.linkId) {
       const where = {};
       if (objectIds) where.object_id = typeof(objectIds) === 'number' ? +objectIds : { in: objectIds };
-      if (subjectIds) where.subject_id = typeof(subjectIds) === 'number' ? +objectIds : { in: subjectIds };
-      if (actionIds) where.action_id = typeof(actionIds) === 'number' ? +objectIds : { in: actionIds };
+      if (subjectIds) where.subject_id = typeof(subjectIds) === 'number' ? +subjectIds : { in: subjectIds };
+      if (actionIds) where.action_id = typeof(actionIds) === 'number' ? +actionIds : { in: actionIds };
       const result = this.select(where, { table: 'can', returning: 'rule_id' });
       return !!result?.data?.length;
     }
