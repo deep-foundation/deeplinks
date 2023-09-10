@@ -44,7 +44,6 @@ const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // aw
 const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
 const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
-
 const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
 
 const parseJwtCode = `
@@ -59,166 +58,18 @@ const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RE
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
 
-const typeHandlersCode = `\`SELECT 
-  coalesce(
-    json_agg("root"), 
-    '[]'
-  ) AS "root" 
-FROM 
-  (
-    SELECT 
-      row_to_json(
-        (
-          SELECT 
-            "_5_e" 
-          FROM 
-            (
-              SELECT 
-                "_4_root.base"."id" AS "id", 
-                "public"."links__value__function"("link" => "_4_root.base") AS "valuseResult", 
-                "handler"."id" as "handler"
-            ) AS "_5_e"
-        )
-      ) AS "root" 
-    FROM 
-      (
-        SELECT 
-          * 
-        FROM 
-          "public"."links" AS "codeLink" 
-        WHERE 
-          (
-            (
-              EXISTS (
-                SELECT 
-                  1 
-                FROM 
-                  "public"."links" AS "handler" 
-                WHERE 
-                  (
-                    (
-                      (
-                        ("handler"."to_id") = ("codeLink"."id")
-                      )
-                    ) 
-                    AND (
-                      (
-                        (
-                          (
-                            EXISTS (
-                              SELECT 
-                                1 
-                              FROM 
-                                "public"."links" AS "supports" 
-                              WHERE 
-                                (
-                                  (
-                                    (
-                                      ("supports"."id") = ("handler"."from_id")
-                                    )
-                                  ) 
-                                  AND (
-                                    (
-                                      (
-                                        (
-                                          (
-                                            (
-                                              ("supports"."id") = (
-                                                ${plv8SupportsJsTypeId} :: bigint
-                                              )
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                                )
-                            )
-                          ) 
-                          AND (
-                            (
-                              EXISTS (
-                                SELECT 
-                                  1 
-                                FROM 
-                                  "public"."links" AS "HandlerOperation" 
-                                WHERE 
-                                  (
-                                    (
-                                      (
-                                        ("HandlerOperation"."to_id") = ("handler"."id")
-                                      )
-                                    ) 
-                                    AND (
-                                      (
-                                        (
-                                          (
-                                            EXISTS (
-                                              SELECT 
-                                                1 
-                                              FROM 
-                                                "public"."links" AS "HandleTypeLink" 
-                                              WHERE 
-                                                (
-                                                  (
-                                                    (
-                                                      ("HandleTypeLink"."id") = ("HandlerOperation"."from_id")
-                                                    )
-                                                    OR
-                                                    (
-                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
-                                                    )
-                                                  ) 
-                                                  AND (
-                                                    (
-                                                      (
-                                                        (
-                                                          (
-                                                            ("HandleTypeLink"."id") = ($1 :: bigint)
-                                                          )
-                                                        )
-                                                      )
-                                                    )
-                                                  )
-                                                )
-                                            )
-                                          ) 
-                                          AND (
-                                            (
-                                              (
-                                                ("HandlerOperation"."type_id") = ($2 :: bigint)
-                                              ) 
-                                              AND ('true')
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                              )
-                            ) 
-                            AND (
-                              (
-                                (
-                                  ("handler"."type_id") = (${HandlerTypeId} :: bigint)
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-              )
-            )
-          )
-      ) AS "_4_root.base", 
-      "public"."links" AS "handler" 
-    WHERE 
-      "handler"."to_id" = "_4_root.base"."id" 
-      AND "handler"."type_id" = ${HandlerTypeId} :: bigint
-  ) AS "_6_root
-"\``;
+const typeHandlersCode = `\`select strings.value as value, handler.id::int as id from links as codeLinks left join strings on strings.link_id = codeLinks.id left join links AS handler on handler.to_id = codeLinks.id where EXISTS (
+  SELECT  1 FROM public.links AS handlers WHERE handlers.to_id = codeLinks.id AND handlers.type_id = ${HandlerTypeId} AND EXISTS (
+    SELECT  1 FROM public.links AS supports WHERE handlers.from_id = supports.id AND supports.id = ${plv8SupportsJsTypeId}
+  ) AND EXISTS (
+    SELECT  1 FROM public.links AS HandlerOperation WHERE HandlerOperation.to_id = handlers.id AND EXISTS (
+      SELECT  1 FROM public.links AS HandleTypeLink WHERE 
+        HandlerOperation.from_id = HandleTypeLink.id 
+        AND HandlerOperation.type_id = $2::bigint
+        AND ( HandleTypeLink.id = $1::bigint OR HandleTypeLink.id = ${anyTypeId} )
+    )
+  )
+) AND handler.type_id = ${HandlerTypeId}\``;
 
 const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" AS "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "selector" WHERE ( ( ( ("selector"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("selector"."type_id") = (${SelectorTypeId} :: bigint)) ) AND ( ( ( ("selector"."id") = ANY($1 :: bigint array) ) ) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
 
@@ -264,6 +115,8 @@ const checkDeleteLinkPermissionCode = /*javascript*/`(linkid, userId) => {
   return !!result[0]?.exists;
 }`;
 
+//[0].root.map((textFile)=>{return {value: textFile?.valuseResult?.value, id: textFile?.handler}} )
+
 const prepareFunction = /*javascript*/`
 
   const getOwner = (handlerId) => {
@@ -285,7 +138,7 @@ const prepareFunction = /*javascript*/`
     return ownerId;
   };
 
-  const typeHandlers = plv8.execute(${typeHandlersCode}, [ link.type_id, handletypeid ])[0].root.map((textFile)=>{return {value: textFile?.valuseResult?.value, id: textFile?.handler}} );
+  const typeHandlers = plv8.execute(${typeHandlersCode}, [ link.type_id, handletypeid ]);
   for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = Number(getOwner(typeHandlers[i].id)); }
 
   const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.query_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
@@ -496,13 +349,13 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
               if (!query_id) return undefined;
             }
           }
-          return query_id;
+          return Number(query_id);
         }
         const result = pathToWhere(start, path);
         if (!result && path[path.length - 1] !== true) {
           plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
         }
-        return result;
+        return Number(result);
       } catch (error) {
         plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
@@ -622,7 +475,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const updateValueString = ${updateValueStringCode};
       const links = plv8.execute(updateValueString, variables);
 
-      return { data: links};
+      return { data: links.map(id => Number(id))};
     },
     delete: function(criteria, options) {
       const _where = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
@@ -642,7 +495,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       } else {
         linkid = plv8.execute(deleteString, [ id ])[0].id;
       }
-      return { data: [{ id: linkid }]};
+      return { data: [{ id: Number(linkid) }]};
     },
     login: function(options) {
       let { token, linkId } = options;
@@ -650,7 +503,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
       if (token && !linkId) linkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
       if (linkId) {
-        this.linkId = linkId;
+        this.linkId = Number(linkId);
         hasura_session['x-hasura-user-id'] = linkId;
         return ({ linkId, token })
       }
@@ -693,7 +546,6 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
     const link = plv8.execute("select * from links where id = $1", [ linkId ])[0];
     prepared = link ? prepare(link, ${handleOperationTypeId}) : [];
     data = {
-      triggeredByLinkId: Number(default_user_id),
       oldLink: { 
         id: Number(link?.id),
         from_id: Number(link?.from_id),
@@ -709,12 +561,12 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined
       }, 
     };
+    if (default_user_id) data.triggeredByLinkId = Number(default_user_id);
   } else {
     const link = { id: NEW?.id || OLD?.id };
     fillValueByLinks([link]);
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
-      triggeredByLinkId: Number(default_user_id),
       oldLink: OLD ? {
         id: Number(OLD?.id),
         from_id: Number(OLD?.from_id),
@@ -729,6 +581,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         value: link?.value
       } : undefined,
     };
+    if (default_user_id) data.triggeredByLinkId = Number(default_user_id);
   }
 
   const require = (package) => {
