@@ -217,7 +217,6 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
           values.push(typeof value['_in'][i-(valuesLength+1+shift)] === 'object' ? JSON.stringify(value['_in'][i-(valuesLength+1+shift)]) : value['_in'][i-(valuesLength+1+shift)]);
         }
         where.push('( '.concat(tables.strings.join(' OR '), tables.numbers.length ? ' OR '.concat(tables.numbers.join(' OR ')) : '', tables.objects.length ? ' OR '.concat(tables.objects.join(' OR ')) : '', ')'));
-        
       }
     }
   }
@@ -327,6 +326,7 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
 }`;
 
 const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
+const objectGet = `\`select value\${pathStr} as value from objects where link_id = $1\``;
 
 // plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
 
@@ -363,7 +363,20 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     objectSet: function(link_id, path, value) {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkUpdatePermission(link_id, this.linkId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
       plv8.execute(${objectSet}, [link_id, path, value]);
+    },
+    objectGet: function(link_id, path) {
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const where = '"main".id = '.concat(link_id);
+      const pathStr = path.length ? "->'".concat(path.join("'->'"),"'") : '';
+      valueTableString = '';
+      const link = plv8.execute(${selectWithPermissions}, [ this.linkId ]);
+      let returning;
+      if (link[0]) returning = plv8.execute(${objectGet}, [link_id])?.[0]?.value;
+      return { data: returning[0] };
     },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
@@ -622,7 +635,7 @@ const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
 
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
-const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : deep[operation](args, options);
+const result = operation === 'id' || operation === 'update' || operation === 'objectSet' || operation === 'objectGet' ? deep[operation](...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
   if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
