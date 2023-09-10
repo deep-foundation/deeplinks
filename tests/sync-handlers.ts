@@ -372,6 +372,17 @@ describe('sync handlers', () => {
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canAdmin, true);
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canGuest, false);
     });
+    it(`objectGet`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        object: { data: { value: { a: 3 }}}
+      });
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'objectGet','[${id},["a"]]'::jsonb, '{}'::jsonb)`);
+      log('objectGet result', result?.data?.result?.[1]?.[0]);
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal(3, JSON.parse(result?.data?.result?.[1]?.[0])['data']);
+    });
     it(`objectSet`, async () => {
       const { data: [{ id }] } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'Operation'),
