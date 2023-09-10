@@ -22,7 +22,6 @@ const delay = time => new Promise(res => setTimeout(res, time));
 const HASURA_PATH='localhost:8080'
 const HASURA_SSL=0
 const HASURA_SECRET='myadminsecretkey'
-
 export const api = new HasuraApi({
   path: HASURA_PATH,
   ssl: !!+HASURA_SSL,
@@ -326,7 +325,17 @@ describe('sync handlers', () => {
       const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
-      debug('admin Token', (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token);
+      const admin_token = (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token;
+      debug('admin Token', admin_token);
+      
+
+      const apolloClientAdmin = generateApolloClient({
+        path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+        ssl: !!+process.env.DEEPLINKS_HASURA_SSL,
+        token: admin_token,
+      });
+      
+      const deepAdmin = new DeepClient({ apolloClient: apolloClientAdmin });
 
       const handler = await insertHandler(
         handleInsertTypeId,
@@ -335,6 +344,7 @@ describe('sync handlers', () => {
           deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}, object: {
             canAdmin: deep.can(null, deep.linkId, ${await deep.id('@deep-foundation/core', 'AllowAdmin')}),
             canGuest: deep.can(null, ${guest.linkId}, ${await deep.id('@deep-foundation/core', 'AllowAdmin')}),
+            linkId: String(deep.linkId),
           }});
         }`,
         undefined,
@@ -343,7 +353,7 @@ describe('sync handlers', () => {
       debug('handler', handler);
       
       try {
-        const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
+        const linkId = (await deepAdmin.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
       } catch (e){
@@ -361,6 +371,29 @@ describe('sync handlers', () => {
       assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canAdmin, true);
       assert.equal(insertedByHandler?.data?.[0]?.value?.value?.canGuest, false);
+    });
+    it(`objectGet`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        object: { data: { value: { a: 3 }}}
+      });
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'objectGet','[${id},["a"]]'::jsonb, '{}'::jsonb)`);
+      log('objectGet result', result?.data?.result?.[1]?.[0]);
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal(3, JSON.parse(result?.data?.result?.[1]?.[0])['data']);
+    });
+    it(`objectSet`, async () => {
+      const { data: [{ id }] } = await deep.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        object: { data: { value: { a: 3 }}}
+      });
+      
+      const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'objectSet','[${id},["a"], { "b": 3 }]'::jsonb, '{}'::jsonb)`);
+      log('objectSet result', result?.data?.result?.[1]?.[0]);
+      const selected = await deep.select(id);
+      log('selected', selected?.data?.[0]);
+      assert.equal(3, selected?.data?.[0]?.value?.value?.a?.b);
     });
     describe('unsafe', () => {
       it(`objectSet`, async () => {
@@ -420,114 +453,78 @@ describe('sync handlers', () => {
         assert.equal(value?.value, 'HelloBugFixers');
         assert.equal(value?.id, selected?.data?.[0]?.value?.id);
       });
-      it(`select { type_id: type_id, number: { value: number}}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          number: { data: { value: 1515}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
+      describe('number', () => {
+        it(`number: { value: number }}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            number: { data: { value: 1515}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": 1515}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 1515);
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": 1515}}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        assert.equal(value?.value, 1515);
+        it(`number: { value: { "_in": [ number, number ] }}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            number: { data: { value: 1515}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": { "_in": [ 1515, 12 ]}}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 1515);
+        });
+        it(`number: number`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            number: { data: { value: 1515}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": 1515}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 1515);
+        });
+        it(`number: { "_in": [ number, number ]}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            number: { data: { value: 1515}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": { "_in": [ 1515, 9999 ]}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 1515);
+        });
       });
-      it(`select { type_id: type_id, number: number}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          number: { data: { value: 1515}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": 1515}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        assert.equal(value?.value, 1515);
-      });
-      it(`select { type_id: type_id, string: { value: "String" }}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'HelloBugFixersTest'}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const { data: [{ id : id2 }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'hellobugfixerstest'}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": {"value": "hellobugfixerstest"}}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result);
-        log('select result?.[1]', result?.data?.result?.[1]);
-        log('select result?.[1]?.[0]', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id2);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        await deep.delete(id2);
-        assert.equal(value?.value, 'hellobugfixerstest');
-      });
-      it(`select { type_id: type_id, string: 'String" }`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'HelloBugFixersTest'}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const { data: [{ id : id2 }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'hellobugfixerstest'}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": "hellobugfixerstest"}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result);
-        log('select result?.[1]', result?.data?.result?.[1]);
-        log('select result?.[1]?.[0]', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id2);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        await deep.delete(id2);
-        assert.equal(value?.value, 'hellobugfixerstest');
-      });
-      it(`select { type_id: type_id, number: { value: { _in: [ number, number ] }}}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          number: { data: { value: 1515}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
-        });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": { "_in": [ 1515, 12 ]}}}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        assert.equal(value?.value, 1515);
-      });
-      it(`select { type_id: type_id, string: { value: string}}`, async () => {
+      describe('string', () => {
+        it(`string: { value: string }`, async () => {
         const { data: [{ id }] } = await deep.insert({
           type_id: await deep.id('@deep-foundation/core', 'Operation'),
           string: { data: { value: 'HelloBugFixers'}},
@@ -543,89 +540,243 @@ describe('sync handlers', () => {
         log('selected', selected?.data?.[0]);
         await deep.delete(id);
         assert.equal(value?.value, 'HelloBugFixers');
+        });
+        it(`string: { value: { "_in": [ string, string ] }}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixers2'}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": {"value": { "_in": [ "HelloBugFixers2", "noNoNO" ]}}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'HelloBugFixers2');
+        });
+        it(`string: 'string'`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixersTest'}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const { data: [{ id : id2 }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'hellobugfixerstest'}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": "hellobugfixerstest"}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result);
+          log('select result?.[1]', result?.data?.result?.[1]);
+          log('select result?.[1]?.[0]', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id2);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          await deep.delete(id2);
+          assert.equal(value?.value, 'hellobugfixerstest');
+        });
+        it(`string: { "_in": ['string', 'string'] }`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixersTest'}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": { "_in": ["hellobugfixerstest", "goodbyebugfixerstest"]}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'hellobugfixerstest');
+        });
       });
-      it(`select { type_id: type_id, string: { value: { _in: [ string, string ] }}}`, async () => {
+      describe('object', () => {
+        it(`object: { value: object }`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            object: { data: { value: { key: 'HelloBugFixers' }}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": {"value": { "key": "HelloBugFixers" }}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value?.key, 'HelloBugFixers');
+        });
+        it(`object: { value: { "_in": [ object, object ] }}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            object: { data: { value: { key: 'HelloBugFixersObject' }}},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "value": { "_in": [ { "key": "HelloBugFixersObject" }, { "key": "asdasd" }]}}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          await deep.delete(id);
+          assert.equal(value?.value?.key, 'HelloBugFixersObject');
+        });
+        it(`object: object`, async () => {
         const { data: [{ id }] } = await deep.insert({
           type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'HelloBugFixers2'}},
+          object: { data: { value: { key: 'HelloBugFixersTestObject123' }}},
           in: { data: {
             type_id: await deep.id('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": {"value": { "_in": [ "HelloBugFixers2", "noNoNO" ]}}}'::jsonb, '{}'::jsonb)`);
+        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "key": "HelloBugFixersTestObject123" }}'::jsonb, '{}'::jsonb)`);
         log('select result', result?.data?.result?.[1]?.[0]);
         const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
         const selected = await deep.select(id);
         log('selected', selected?.data?.[0]);
         await deep.delete(id);
-        assert.equal(value?.value, 'HelloBugFixers2');
-      });
-      it(`select { type_id: type_id, object: { value: object}}`, async () => {
+        assert.equal(value?.value?.key, 'HelloBugFixersTestObject123');
+        });
+        it(`object: { "_in": [object, object] }`, async () => {
         const { data: [{ id }] } = await deep.insert({
           type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          object: { data: { value: { key: 'HelloBugFixers' }}},
+          object: { data: { value: { key: 'HelloBugFixersTestObject123' }}},
           in: { data: {
             type_id: await deep.id('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": {"value": { "key": "HelloBugFixers" }}}'::jsonb, '{}'::jsonb)`);
+        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "_in": [{ "key": "HelloBugFixersTestObject123" }, { "key": "HelloBugFixersTestObject124" }] }}'::jsonb, '{}'::jsonb)`);
         log('select result', result?.data?.result?.[1]?.[0]);
         const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
         const selected = await deep.select(id);
         log('selected', selected?.data?.[0]);
         await deep.delete(id);
-        assert.equal(value?.value?.key, 'HelloBugFixers');
-      });
-      it(`select { type_id: type_id, object: { value: { _in: [ object, object ] }}}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          object: { data: { value: { key: 'HelloBugFixersObject' }}},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
+        assert.equal(value?.value?.key, 'HelloBugFixersTestObject123');
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "value": { "_in": [ { "key": "HelloBugFixersObject" }, { "key": "asdasd" }]}}}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        await deep.delete(id);
-        assert.equal(value?.value?.key, 'HelloBugFixers');
       });
-      it(`select { type_id: type_id, value: { value: string }}}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'HelloBugFixers' }},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
+      describe('value', () => {
+        it(`value: { value: string }`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixersValue2' }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": "HelloBugFixersValue2" }}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'HelloBugFixersValue2');
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": "HelloBugFixers" }}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        assert.equal(value?.value, 'HelloBugFixers');
-      });
-      it(`select { type_id: type_id, value: { value: { _in: [ string, number, object ] } }}}`, async () => {
-        const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
-          string: { data: { value: 'HelloBugFixers' }},
-          in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
-            from_id: await deep.id('deep', 'admin')
-          } }
+        it(`value: string`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixersValue2' }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text,'{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": "HelloBugFixersValue2"}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'HelloBugFixersValue2');
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1515, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
-        log('select result', result?.data?.result?.[1]?.[0]);
-        const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
-        const selected = await deep.select(id);
-        log('selected', selected?.data?.[0]);
-        await deep.delete(id);
-        assert.equal(value?.value, 'HelloBugFixers');
+        it(`value: { value: object }`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            object: { data: { value: { key: 'HelloBugFixersValue2' } }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "key": "HelloBugFixersValue2" } }}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value?.key, 'HelloBugFixersValue2');
+        });
+        it(`value: object`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            object: { data: { value: { key: 'HelloBugFixersValue2' } }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "key": "HelloBugFixersValue2" } }'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value?.key, 'HelloBugFixersValue2');
+        });
+        it(`value: { value: { _in: [ string, number, object ] } }}`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixers' }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1515, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'HelloBugFixers');
+        });
+        it(`value: {"_in":[ string, number, object ]} }`, async () => {
+          const { data: [{ id }] } = await deep.insert({
+            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            string: { data: { value: 'HelloBugFixers' }},
+            in: { data: {
+              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              from_id: await deep.id('deep', 'admin')
+            } }
+          });
+          console.log(11);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "_in": ["HelloBugFixers", 1515, { "key": "HelloBugFixers"} ] }}'::jsonb, '{}'::jsonb)`);
+          console.log(123);
+          log('select result', result?.data?.result?.[1]?.[0]);
+          const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
+          const selected = await deep.select(id);
+          log('selected', selected?.data?.[0]);
+          await deep.delete(id);
+          assert.equal(value?.value, 'HelloBugFixers');
+        });
       });
     });
     describe('update', () => {
@@ -1847,33 +1998,47 @@ describe('sync handlers', () => {
         assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
       it(`Handle insert on type any`, async () => {
-        let linkIdsToDelete = [];
-        const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-        const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
+        const debug = log.extend('HandleInsert');
+
+        const typeId = await deep.id('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
         const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
-        const expectedErrorMessage = "Success! Handler is called. This test throw this error because there is a bug with plv8 handler which does not let to catch this error";
-        let actualErrorMessage: string;
+        
+        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+        const inserted2 = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
+        const customLinkId = inserted?.data?.[0]?.id;
+        debug('customLinkId', customLinkId);
+        const customLinkId2 = inserted2?.data?.[0]?.id;
+        debug('customLinkId2', customLinkId2);
+
         const handler = await insertHandler(
-          handleInsertTypeLinkId,
-          anyTypeLinkId,
-          `() => {
-            throw new Error("${expectedErrorMessage}");
+          handleInsertTypeId,
+          anyTypeLinkId, 
+          `({deep, data}) => { 
+            if (data?.newLink?.type_id !== ${customLinkId}) deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}});
           }`,
           undefined,
-          supportsLinkId);
-          try {
-            const {data: [newLink]} = await deep.insert({
-              type_id: typeTypeLinkId
-            });
-            linkIdsToDelete.push(newLink.id);
-          } catch (error) {
-            actualErrorMessage = error.message;
-          } finally {
-            await deleteHandler(handler);
-            await deep.delete(linkIdsToDelete)
-            assert.strictEqual(actualErrorMessage, expectedErrorMessage)
-          }
+          supportsId
+        );
+        debug('handler', handler);
+        
+        try {
+          const linkId = (await deep.insert({ type_id: customLinkId2 }))?.data?.[0].id;
+          debug('linkId', linkId);
+          debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
+        } catch (e){
+          debug('insert error: ', e);
+        }
+
+        const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
+        debug('insertedByHandler', insertedByHandler?.data?.[0]?.id);
+        if (insertedByHandler?.data?.[0]?.id) await deep.delete(insertedByHandler?.data?.[0]?.id);
+        await deep.delete(customLinkId);
+        await deep.delete(customLinkId2);
+        debug('delete handler', await deleteHandler(handler));
+        assert.equal(!!insertedByHandler?.data?.[0]?.id, true);
       });
     });
     describe('Handle delete', () => {
@@ -2769,7 +2934,7 @@ describe('sync handlers', () => {
         debug('delete update handler', await deleteHandler(onUpdateHandler));
       });
     });
-    describe('Check value in data', () => {
+    describe('Check data for not bigint', () => {
       it(`Check in delete link`, async () => {
         const debug = log.extend('HandleDelete');
 

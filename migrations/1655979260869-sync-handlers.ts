@@ -44,7 +44,6 @@ const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // aw
 const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
 const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
-
 const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
 
 const parseJwtCode = `
@@ -59,172 +58,24 @@ const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RE
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
 
-const typeHandlersCode = `\`SELECT 
-  coalesce(
-    json_agg("root"), 
-    '[]'
-  ) AS "root" 
-FROM 
-  (
-    SELECT 
-      row_to_json(
-        (
-          SELECT 
-            "_5_e" 
-          FROM 
-            (
-              SELECT 
-                "_4_root.base"."id" AS "id", 
-                "public"."links__value__function"("link" => "_4_root.base") AS "valuseResult", 
-                "handler"."id" as "handler"
-            ) AS "_5_e"
-        )
-      ) AS "root" 
-    FROM 
-      (
-        SELECT 
-          * 
-        FROM 
-          "public"."links" AS "codeLink" 
-        WHERE 
-          (
-            (
-              EXISTS (
-                SELECT 
-                  1 
-                FROM 
-                  "public"."links" AS "handler" 
-                WHERE 
-                  (
-                    (
-                      (
-                        ("handler"."to_id") = ("codeLink"."id")
-                      )
-                    ) 
-                    AND (
-                      (
-                        (
-                          (
-                            EXISTS (
-                              SELECT 
-                                1 
-                              FROM 
-                                "public"."links" AS "supports" 
-                              WHERE 
-                                (
-                                  (
-                                    (
-                                      ("supports"."id") = ("handler"."from_id")
-                                    )
-                                  ) 
-                                  AND (
-                                    (
-                                      (
-                                        (
-                                          (
-                                            (
-                                              ("supports"."id") = (
-                                                ${plv8SupportsJsTypeId} :: bigint
-                                              )
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                                )
-                            )
-                          ) 
-                          AND (
-                            (
-                              EXISTS (
-                                SELECT 
-                                  1 
-                                FROM 
-                                  "public"."links" AS "HandlerOperation" 
-                                WHERE 
-                                  (
-                                    (
-                                      (
-                                        ("HandlerOperation"."to_id") = ("handler"."id")
-                                      )
-                                    ) 
-                                    AND (
-                                      (
-                                        (
-                                          (
-                                            EXISTS (
-                                              SELECT 
-                                                1 
-                                              FROM 
-                                                "public"."links" AS "HandleTypeLink" 
-                                              WHERE 
-                                                (
-                                                  (
-                                                    (
-                                                      ("HandleTypeLink"."id") = ("HandlerOperation"."from_id")
-                                                    )
-                                                    OR
-                                                    (
-                                                      ${anyTypeId} = ("HandlerOperation"."from_id")
-                                                    )
-                                                  ) 
-                                                  AND (
-                                                    (
-                                                      (
-                                                        (
-                                                          (
-                                                            ("HandleTypeLink"."id") = ($1 :: bigint)
-                                                          )
-                                                        )
-                                                      )
-                                                    )
-                                                  )
-                                                )
-                                            )
-                                          ) 
-                                          AND (
-                                            (
-                                              (
-                                                ("HandlerOperation"."type_id") = ($2 :: bigint)
-                                              ) 
-                                              AND ('true')
-                                            )
-                                          )
-                                        )
-                                      )
-                                    )
-                                  )
-                              )
-                            ) 
-                            AND (
-                              (
-                                (
-                                  ("handler"."type_id") = (${HandlerTypeId} :: bigint)
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-              )
-            )
-          )
-      ) AS "_4_root.base", 
-      "public"."links" AS "handler" 
-    WHERE 
-      "handler"."to_id" = "_4_root.base"."id" 
-      AND "handler"."type_id" = ${HandlerTypeId} :: bigint
-  ) AS "_6_root
-"\``;
+const typeHandlersCode = `\`select strings.value as value, handler.id::int as id from links as codeLinks left join strings on strings.link_id = codeLinks.id left join links AS handler on handler.to_id = codeLinks.id where EXISTS (
+  SELECT  1 FROM public.links AS handlers WHERE handlers.to_id = codeLinks.id AND handlers.type_id = ${HandlerTypeId} AND EXISTS (
+    SELECT  1 FROM public.links AS supports WHERE handlers.from_id = supports.id AND supports.id = ${plv8SupportsJsTypeId}
+  ) AND EXISTS (
+    SELECT  1 FROM public.links AS HandlerOperation WHERE HandlerOperation.to_id = handlers.id AND EXISTS (
+      SELECT  1 FROM public.links AS HandleTypeLink WHERE 
+        HandlerOperation.from_id = HandleTypeLink.id 
+        AND HandlerOperation.type_id = $2::bigint
+        AND ( HandleTypeLink.id = $1::bigint OR HandleTypeLink.id = ${anyTypeId} )
+    )
+  )
+) AND handler.type_id = ${HandlerTypeId}\``;
 
 const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" AS "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "selector" WHERE ( ( ( ("selector"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("selector"."type_id") = (${SelectorTypeId} :: bigint)) ) AND ( ( ( ("selector"."id") = ANY($1 :: bigint array) ) ) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
 
 const pckgCode = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=${packageTypeId} AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const selectWithPermissions = `\`SELECT "main".*\${valueTableSelect} FROM "public"."links" as "main"\${valueTableString}\ WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
+const selectWithPermissions = `\`SELECT distinct "main".* FROM "public"."links" as "main"\${valueTableString}\ WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
 
 const selectTreeWithPermissions = `\`SELECT "main".* FROM tree AS "main" WHERE \${where} AND exists( SELECT 1 FROM "public"."links" AS "main_1" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main_1"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main_1"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_1" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_1".id = "main".parent_id) AND exists( SELECT 1 FROM "public"."links" AS "main_2" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."id") = ("main_2"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_3__be_3_can" WHERE ( ( ( ("_3__be_3_can"."object_id") = ("_1__be_1_links"."id") ) ) AND ( ( ( ( (("_3__be_3_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_3__be_3_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_4__be_4_can" WHERE ( ( ( ("_4__be_4_can"."object_id") = ("main_2"."id") ) ) AND ( ( ( ( (("_4__be_4_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_4__be_4_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_2" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_2".id = "main".link_id)\``;
 
@@ -264,6 +115,8 @@ const checkDeleteLinkPermissionCode = /*javascript*/`(linkid, userId) => {
   return !!result[0]?.exists;
 }`;
 
+//[0].root.map((textFile)=>{return {value: textFile?.valuseResult?.value, id: textFile?.handler}} )
+
 const prepareFunction = /*javascript*/`
 
   const getOwner = (handlerId) => {
@@ -285,7 +138,7 @@ const prepareFunction = /*javascript*/`
     return ownerId;
   };
 
-  const typeHandlers = plv8.execute(${typeHandlersCode}, [ link.type_id, handletypeid ])[0].root.map((textFile)=>{return {value: textFile?.valuseResult?.value, id: textFile?.handler}} );
+  const typeHandlers = plv8.execute(${typeHandlersCode}, [ link.type_id, handletypeid ]);
   for (let i = 0; i < typeHandlers.length; i++){ typeHandlers[i].owner = Number(getOwner(typeHandlers[i].id)); }
 
   const selectors = plv8.execute( 'SELECT s.selector_id, h.id as handle_operation_id, s.query_id FROM selectors s, links h WHERE s.item_id = $1 AND s.selector_id = h.from_id AND h.type_id = $2', [ link.id, handletypeid ] );
@@ -318,73 +171,75 @@ const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
   let values = [];
   let valueTable;
   const keys = Object.keys(_where);
-  const pushToWhere = (checking, content, where, values, key) => {
-    if ( !checking['_in'] ) {
-      where.push('"'.concat(key.concat('s".'), content, ' = $', values.length+1+shift));
-      values.push(checking);
-    } else {
-      const inLength = checking['_in'].length;
-      let inValues = '$'.concat(values.length+1+shift);
-      for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
-        inValues = inValues.concat(',$',l);
-      }
-      if(typeof checking['_in'][0] === 'number'){
-        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
-        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
-      } else if(typeof checking['_in'][0] === 'string'){
-        where.push('"'.concat(key.concat('s".')).concat(content, ' IN ( ', inValues ,' )'));
-        for (let i = 0; i<checking['_in'].length; i++){  values.push(checking['_in'][i]); }
+  const pushToWhere = (value, tableKey, where, values, whereKey) => {
+    if ( !value['_in'] ) {
+      if (whereKey !== 'value'){
+        where.push(whereKey.concat('s.link_id = "main".id'));
+        where.push('"'.concat(whereKey.concat('s".'), tableKey, ' = $', values.length+1+shift));
+        values.push(value);
       } else {
-        let placeForValueCodeHere;
+        const valuesPart = 's".'.concat(tableKey, ' = $', values.length+1+shift);
+        let checkJson;
+        try {
+          typeof value === 'object' || JSON.parse(value) ? checkJson = true : null;
+        } catch (e) { 
+          checkJson = false;
+        }
+        where.push('(strings.link_id = "main".id AND "string'.concat(valuesPart, '::text',  !isNaN(value) ? ' OR numbers.link_id = "main".id'.concat(' AND "number', valuesPart) : '',  checkJson ? ' OR objects.link_id = "main".id'.concat(' AND "object', valuesPart, '::text::jsonb') : '',' )' ));
+        values.push(typeof value === 'object' ? JSON.stringify(value) : value);
+      }
+    } else {
+      const inLength = value['_in'].length;
+      const valuesLength = values.length;
+      if (whereKey !== 'value'){
+        let inValues = '$'.concat(values.length+1+shift);
+        for (let l = values.length+2+shift; l < inLength+values.length+1+shift; l++ ) {
+          inValues = inValues.concat(',$',l);
+        }
+        where.push(whereKey.concat('s.link_id = "main".id'));
+        where.push('"'.concat(whereKey.concat('s".')).concat(tableKey, ' IN ( ', inValues ,' )'));
+        for (let i = 0; i<value['_in'].length; i++){ values.push(value['_in'][i]); }
+      } else {
+        const tables = {numbers: [], objects: [], strings: []};
+        for (let i = valuesLength+1+shift; i<inLength+valuesLength+1+shift; i++){ 
+          const valuesPart = 's".'.concat(tableKey, '=' );
+          tables.strings.push('"string'.concat(valuesPart, '$',i, '::text'));
+          if (!isNaN(value['_in'][i-(valuesLength+1+shift)])) {
+            tables.numbers.push('"number'.concat(valuesPart, '$',i,'::int'));
+          }
+          let checkJson;
+          try {
+            typeof value['_in'][i-(valuesLength+1+shift)] === 'object' || JSON.parse(value['_in'][i-(valuesLength+1+shift)]) ? checkJson = true : null;
+            tables.objects.push('"object'.concat(valuesPart, '$',i, '::text::jsonb'));
+          } catch (e) { 
+            checkJson = false;
+          }
+          values.push(typeof value['_in'][i-(valuesLength+1+shift)] === 'object' ? JSON.stringify(value['_in'][i-(valuesLength+1+shift)]) : value['_in'][i-(valuesLength+1+shift)]);
+        }
+        where.push('( '.concat(tables.strings.join(' OR '), tables.numbers.length ? ' OR '.concat(tables.numbers.join(' OR ')) : '', tables.objects.length ? ' OR '.concat(tables.objects.join(' OR ')) : '', ')'));
       }
     }
-    
   }
   for (let i = 0; i < keys.length; i++ ){
-    if (_where[keys[i]]) {
+    if ( keys[i] === 'object' || keys[i] === 'string' || keys[i] === 'number' || keys[i] === 'value' ) valueTable = keys[i].concat('s');
+    if (_where[keys[i]] !== undefined) {
       if ( !_where[keys[i]]['_in'] ) {
-        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number') {
+        if (keys[i] !== 'object' && keys[i] !== 'string' && keys[i] !== 'number' && keys[i] !== 'value') {
           where.push('"main".'.concat(keys[i], ' = $',values.length+1+shift));
           values.push(_where[keys[i]]);
         } else {
           const valueKeys = Object.keys(_where[keys[i]]);
-          where.push(keys[i].concat('s.link_id = "main".id'));
-          valueTable = keys[i].concat('s');
           if (typeof _where[keys[i]] !== 'object' && keys[i] !== 'object') {
-            const content = 'value';
-            const checking = _where[keys[i]];
-            pushToWhere(checking, content, where, values, keys[i]);
+            pushToWhere(_where[keys[i]], 'value', where, values, keys[i]);
           } else {
-            if (!_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'] ){
-              for (let j = 0; j < valueKeys.length; j++ ){
-                const content = 'value';
-                const checking = _where[keys[i]];
-                pushToWhere(checking, content, where, values, keys[i]);
-              }
-            } else {
-              for (let j = 0; j < valueKeys.length; j++ ){
-                const content = valueKeys[j];
-                const checking = _where[keys[i]][content];
-                pushToWhere(checking, content, where, values, keys[i]);
-              }
+            const simpleSyntax = !_where[keys[i]]['value'] && !_where[keys[i]]['link_id'] && !_where[keys[i]]['id'];
+            for (let j = 0; j < valueKeys.length; j++ ){
+              pushToWhere(simpleSyntax ? _where[keys[i]] : _where[keys[i]][valueKeys[j]], simpleSyntax ? 'value' : valueKeys[j], where, values, keys[i]);
             }
           }
         }
       } else {
-        const inLength = _where[keys[i]]['_in'].length;
-        let inValues = '$'.concat(values.length+1+shift);
-        for (let l = values.length+2+shift; l < inLength+where.length+1+shift; l++ ) {
-          inValues = inValues.concat(',$',l);
-        }
-        if(typeof _where[keys[i]]['_in'][0] === 'number'){
-          where.push('"main".'.concat(keys[i], ' IN ( ', inValues ,' )'));
-          values = values.concat(_where[keys[i]]['_in']);
-        } else if(typeof _where[keys[i]]['_in'][0] === 'string'){
-          where.push('"main".'.concat(keys[i], ' IN ( ', inValues ,' )'));
-          values = values.concat(_where[keys[i]]['_in']);
-        } else {
-          let placeForValueCodeHere;
-        }
+        pushToWhere(_where[keys[i]], 'value', where, values, keys[i]);
       }
     }
   }
@@ -470,6 +325,11 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
   }
 }`;
 
+const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
+const objectGet = `\`select value\${pathStr} as value from objects where link_id = $1\``;
+
+// plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
+
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
   return {
@@ -490,22 +350,39 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
               if (!query_id) return undefined;
             }
           }
-          return query_id;
+          return Number(query_id);
         }
         const result = pathToWhere(start, path);
         if (!result && path[path.length - 1] !== true) {
           plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
         }
-        return result;
+        return Number(result);
       } catch (error) {
         plv8.elog(ERROR, 'Id not found by '.concat(start, ' -> ', path.join(' -> ')));
       }
+    },
+    objectSet: function(link_id, path, value) {
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const linkCheck = checkUpdatePermission(link_id, this.linkId);
+      if (!linkCheck) plv8.elog(ERROR, 'Update not permitted');
+      plv8.execute(${objectSet}, [link_id, path, value]);
+    },
+    objectGet: function(link_id, path) {
+      plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
+      hasura_session['x-hasura-user-id'] = this.linkId;
+      const where = '"main".id = '.concat(link_id);
+      const pathStr = path.length ? "->'".concat(path.join("'->'"),"'") : '';
+      valueTableString = '';
+      const link = plv8.execute(${selectWithPermissions}, [ this.linkId ]);
+      let returning;
+      if (link[0]) returning = plv8.execute(${objectGet}, [link_id])?.[0]?.value;
+      return { data: returning[0] };
     },
     select: function(_where, options) {
       if (options?.table && !['links', 'tree', 'can', 'selectors'].includes(options?.table)) plv8.elog(ERROR, 'select not from "links" not permitted');
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
-      if (_where.value) plv8.elog(ERROR, 'value is not supported yet');
       if (!options?.table || options?.table === 'links'){
         const { id, type_id, from_id, to_id, number, string, object, value } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
@@ -515,8 +392,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         let generated = generateSelectWhere(_where, 1);
         const where = generated.where;
         let links = [];
-        const valueTableString = generated.valueTable ? ', "'.concat(generated.valueTable, '"') : '';
-        const valueTableSelect = generated.valueTable ? ', row_to_json("'.concat(generated.valueTable,'".*) as value') : '';
+        const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ' left join "strings" on "strings".link_id = "main".id left join "objects" on "objects".link_id = "main".id left join "numbers" on "numbers".link_id = "main".id' : ' left join "'.concat(generated.valueTable, '" on "',generated.valueTable,'".link_id = "main".id') : '';
         if (options?.returning) return { data: links.map(link=>link[options?.returning]) };
         if (where) links = plv8.execute(${selectWithPermissions}, [ this.linkId, ...generated.values ]);
         fillValueByLinks(links);
@@ -534,7 +410,6 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       }
       if (options?.table === 'can'){
         const { rule_id, subject_id, object_id, action_id } = _where;
-        
         const generateSelectWhere = ${generateSelectWhereCode};
         let generated = generateSelectWhere(_where);
         const where = generated.where;
@@ -614,7 +489,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const updateValueString = ${updateValueStringCode};
       const links = plv8.execute(updateValueString, variables);
 
-      return { data: links};
+      return { data: links.map(id => Number(id))};
     },
     delete: function(criteria, options) {
       const _where = typeof criteria === 'object' ? criteria : typeof criteria === 'number' || typeof criteria ===  'bigint' ? { id: criteria } : null;
@@ -634,7 +509,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       } else {
         linkid = plv8.execute(deleteString, [ id ])[0].id;
       }
-      return { data: [{ id: linkid }]};
+      return { data: [{ id: Number(linkid) }]};
     },
     login: function(options) {
       let { token, linkId } = options;
@@ -642,7 +517,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
       if (token && !linkId) linkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
       if (linkId) {
-        this.linkId = linkId;
+        this.linkId = Number(linkId);
         hasura_session['x-hasura-user-id'] = linkId;
         return ({ linkId, token })
       }
@@ -658,8 +533,8 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
     can: function(objectIds, subjectIds, actionIds, userIds = this.linkId) {
       const where = {};
       if (objectIds) where.object_id = typeof(objectIds) === 'number' ? +objectIds : { in: objectIds };
-      if (subjectIds) where.subject_id = typeof(subjectIds) === 'number' ? +objectIds : { in: subjectIds };
-      if (actionIds) where.action_id = typeof(actionIds) === 'number' ? +objectIds : { in: actionIds };
+      if (subjectIds) where.subject_id = typeof(subjectIds) === 'number' ? +subjectIds : { in: subjectIds };
+      if (actionIds) where.action_id = typeof(actionIds) === 'number' ? +actionIds : { in: actionIds };
       const result = this.select(where, { table: 'can', returning: 'rule_id' });
       return !!result?.data?.length;
     }
@@ -685,7 +560,6 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
     const link = plv8.execute("select * from links where id = $1", [ linkId ])[0];
     prepared = link ? prepare(link, ${handleOperationTypeId}) : [];
     data = {
-      triggeredByLinkId: Number(default_user_id),
       oldLink: { 
         id: Number(link?.id),
         from_id: Number(link?.from_id),
@@ -701,12 +575,12 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         value: NEW ? { id: Number(NEW.id), link_id: Number(NEW.link_id), value: typeof NEW.value === 'number' ? Number(NEW.value) : NEW.value } : undefined
       }, 
     };
+    if (default_user_id) data.triggeredByLinkId = Number(default_user_id);
   } else {
     const link = { id: NEW?.id || OLD?.id };
     fillValueByLinks([link]);
     prepared = prepare(${handleOperationTypeId === handleDeleteId ? 'OLD' : 'NEW'}, ${handleOperationTypeId});
     data = {
-      triggeredByLinkId: Number(default_user_id),
       oldLink: OLD ? {
         id: Number(OLD?.id),
         from_id: Number(OLD?.from_id),
@@ -721,6 +595,7 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
         value: link?.value
       } : undefined,
     };
+    if (default_user_id) data.triggeredByLinkId = Number(default_user_id);
   }
 
   const require = (package) => {
@@ -761,7 +636,7 @@ const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
 
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
-const result = operation === 'id' || operation === 'update' || operation === 'objectSet' ? deep[operation](...args) : operation === 'unsafe' ? deep[operation].plv8.execute(...args) : deep[operation](args, options);
+const result = operation === 'id' || operation === 'update' || operation === 'objectSet' || operation === 'objectGet' ? deep[operation](...args) : operation === 'unsafe' ? deep[operation].plv8.execute(...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
   if (default_role) hasura_session['x-hasura-role'] = default_role; 
   if (default_user_id) hasura_session['x-hasura-user-id'] = default_user_id;
