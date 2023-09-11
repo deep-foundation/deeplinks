@@ -46,53 +46,195 @@ const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep
 const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
 const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
 
-const parseJwtCode = `
-DECLARE parts varchar array := string_to_array($1, '.'); BEGIN RETURN concat('{ "headers":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[1]), 'utf-8'),', "payload":',convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[2]), 'utf-8'),'}'); END;`;
+const parseJwtCode = sql`
+DECLARE parts varchar array := string_to_array($1, '.');
+BEGIN 
+  RETURN concat(
+    '{ "headers":',
+    convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[1]), 'utf-8'),
+    ', "payload":',
+    convert_from(${LINKS_TABLE_NAME}__decode__base64url(parts[2]), 'utf-8'),
+    '}'
+  ); 
+END;`.replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const newSelectCode = `\`SELECT links.id as id, links.to_id as to_id FROM links, strings WHERE links.type_id=${containTypeId} AND strings.link_id=links.id AND strings.value='\${item}' AND links.from_id=\${query_id}\``;
+const newSelectCode = '`'.concat(sql`
+  SELECT links.id as id, links.to_id as to_id
+  FROM links, strings
+  WHERE 
+    links.type_id=${containTypeId} AND
+    strings.link_id=links.id AND
+    strings.value='\${item}' AND
+    links.from_id=\${query_id}
+`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
+
 const insertLinkStringCode = `\`INSERT INTO links (type_id\${id ? ', id' : ''}\${from_id ? ', from_id' : ''}\${to_id ? ', to_id' : ''}) \``;
-
 const insertValueStringCode = `\`INSERT INTO \${checkedNumber ? 'number' : checkedString ? 'string' : checkedObject ? 'object' : ''}s ( link_id, value ) VALUES (\$1 , \$2) RETURNING ID\``;
 const updateValueStringCode = `\`UPDATE \${table} SET \${set} WHERE \${where} RETURNING id;\``;
-
 const deleteStringCode = `\`DELETE FROM links WHERE id=$1::bigint RETURNING ID\``;
 const deleteStringTableCode = `\`DELETE FROM \${table} WHERE link_id=$1::bigint RETURNING ID\``;
 
-const typeHandlersCode = `\`select strings.value as value, handler.id::int as id from links as codeLinks left join strings on strings.link_id = codeLinks.id left join links AS handler on handler.to_id = codeLinks.id where EXISTS (
-  SELECT  1 FROM public.links AS handlers WHERE handlers.to_id = codeLinks.id AND handlers.type_id = ${HandlerTypeId} AND EXISTS (
-    SELECT  1 FROM public.links AS supports WHERE handlers.from_id = supports.id AND supports.id = ${plv8SupportsJsTypeId}
+const typeHandlersCode = '`'.concat(sql`
+SELECT strings.value AS value, handler.id::int AS id FROM links AS codeLinks left join strings ON strings.link_id = codeLinks.id left join links AS handler ON handler.to_id = codeLinks.id WHERE EXISTS (
+  SELECT 1 FROM public.links AS handlers WHERE handlers.to_id = codeLinks.id AND handlers.type_id = ${HandlerTypeId} AND EXISTS (
+    SELECT 1 FROM public.links AS supports WHERE handlers.from_id = supports.id AND supports.id = ${plv8SupportsJsTypeId}
   ) AND EXISTS (
-    SELECT  1 FROM public.links AS HandlerOperation WHERE HandlerOperation.to_id = handlers.id AND EXISTS (
-      SELECT  1 FROM public.links AS HandleTypeLink WHERE 
+    SELECT 1 FROM public.links AS HandlerOperation WHERE HandlerOperation.to_id = handlers.id AND EXISTS (
+      SELECT 1 FROM public.links AS HandleTypeLink WHERE 
         HandlerOperation.from_id = HandleTypeLink.id 
         AND HandlerOperation.type_id = $2::bigint
         AND ( HandleTypeLink.id = $1::bigint OR HandleTypeLink.id = ${anyTypeId} )
     )
   )
-) AND handler.type_id = ${HandlerTypeId}\``;
+) AND handler.type_id = ${HandlerTypeId}`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const selectorHandlersCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_4_root.base"."id" AS "id" ,"public"."links__value__function"("link" => "_4_root.base") AS "valuseResult" ,"handler"."id" AS "handler" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."links" AS "codeLink" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "handler" WHERE ( ( ( ("handler"."to_id") = ("codeLink"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "supports" WHERE ( ( ( ("supports"."id") = ("handler"."from_id") ) ) AND ( ( ( ( ( (("supports"."id") = (${plv8SupportsJsTypeId} :: bigint)) ) ) ) ) ) ) ) ) AND ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "HandlerOperation" WHERE ( ( ( ("HandlerOperation"."to_id") = ("handler"."id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "selector" WHERE ( ( ( ("selector"."id") = ("HandlerOperation"."from_id") ) ) AND ( ( ( ( (("selector"."type_id") = (${SelectorTypeId} :: bigint)) ) AND ( ( ( ("selector"."id") = ANY($1 :: bigint array) ) ) ) ) ) ) ) ) ) AND ( ( (("HandlerOperation"."type_id") = ($2 :: bigint)) ) ) ) ) ) ) ) ) AND ( ( (("handler"."type_id") = (${HandlerTypeId} :: bigint)) ) ) ) ) ) ) ) ) ) ) ) AS "_4_root.base", "public"."links" AS "handler" WHERE "handler"."to_id" = "_4_root.base"."id" AND "handler"."type_id" = ${HandlerTypeId} :: bigint ) AS "_6_root"\``;
+const selectorHandlersCode = '`'.concat(sql`
+SELECT strings.value AS value, handler.id::int AS id FROM links AS codeLinks left join strings ON strings.link_id = codeLinks.id left join links AS handler ON handler.to_id = codeLinks.id WHERE EXISTS (
+  SELECT 1 FROM public.links AS handlers WHERE handlers.to_id = codeLinks.id AND handlers.type_id = ${HandlerTypeId} AND EXISTS (
+    SELECT 1 FROM public.links AS supports WHERE handlers.from_id = supports.id AND supports.id = ${plv8SupportsJsTypeId}
+  ) AND EXISTS (
+    SELECT 1 FROM public.links AS HandlerOperation WHERE HandlerOperation.to_id = handlers.id AND EXISTS (
+      SELECT 1 FROM public.links AS selector WHERE 
+        HandlerOperation.from_id = selector.id 
+        AND HandlerOperation.type_id = $2::bigint
+        AND selector.type_id = ${SelectorTypeId}::bigint
+        AND selector.id = ANY($1 :: bigint array)
+    )
+  )
+) AND handler.type_id = ${HandlerTypeId}`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
 const pckgCode = `typeof(start) === 'string' ? \`SELECT links.id as id FROM links, strings WHERE links.type_id=${packageTypeId} AND strings.link_id=links.id AND strings.value='\${start}'\` : \`SELECT links.id as id FROM WHERE links.id=\${start}\``;
 
-const selectWithPermissions = `\`SELECT distinct "main".* FROM "public"."links" as "main"\${valueTableString}\ WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND (\${where})\``;
+const selectWithPermissions = '`'.concat(sql`
+SELECT main.*
+FROM links AS main\${valueTableString}
+WHERE (
+  EXISTS (
+    SELECT  1
+    FROM links AS type
+    WHERE 
+    type.id = main.type_id AND 
+    EXISTS (
+      SELECT  1
+      FROM can AS canAllowSelectType
+      WHERE
+        canAllowSelectType.object_id = type.id AND
+        canAllowSelectType.action_id = ${AllowSelectTypeId} AND
+        canAllowSelectType.subject_id = $1 :: bigint
+    )
+  ) OR 
+  EXISTS (
+    SELECT  1
+    FROM can AS canAllowSelect
+    WHERE
+      canAllowSelect.object_id = main.id AND
+      canAllowSelect.action_id = ${AllowSelectId} AND
+      canAllowSelect.subject_id = $1 :: bigint
+  ) OR
+  EXISTS (
+    SELECT  1
+    FROM can AS canAllowAdmin
+    WHERE 
+      canAllowAdmin.object_id = $1 :: bigint AND
+      canAllowAdmin.action_id = ${AllowAdminId} AND
+      canAllowAdmin.subject_id = $1 :: bigint
+  )
+) AND (\${where})`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const selectTreeWithPermissions = `\`SELECT "main".* FROM tree AS "main" WHERE \${where} AND exists( SELECT 1 FROM "public"."links" AS "main_1" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("main_1"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_1__be_1_can" WHERE ( ( ( ("_1__be_1_can"."object_id") = ("_0__be_0_links"."id") ) ) AND ( ( ( ( (("_1__be_1_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_1__be_1_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_2__be_2_can" WHERE ( ( ( ("_2__be_2_can"."object_id") = ("main_1"."id") ) ) AND ( ( ( ( (("_2__be_2_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_2__be_2_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_1" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_1".id = "main".parent_id) AND exists( SELECT 1 FROM "public"."links" AS "main_2" WHERE ( ( EXISTS ( SELECT 1 FROM "public"."links" AS "_1__be_1_links" WHERE ( ( ( ("_1__be_1_links"."id") = ("main_2"."type_id") ) ) AND ( ( ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_3__be_3_can" WHERE ( ( ( ("_3__be_3_can"."object_id") = ("_1__be_1_links"."id") ) ) AND ( ( ( ( (("_3__be_3_can"."action_id") = (${AllowSelectTypeId} :: bigint)) ) AND ( ( ( ("_3__be_3_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) OR ( ( EXISTS ( SELECT 1 FROM "public"."can" AS "_4__be_4_can" WHERE ( ( ( ("_4__be_4_can"."object_id") = ("main_2"."id") ) ) AND ( ( ( ( (("_4__be_4_can"."action_id") = (${AllowSelectId} :: bigint)) ) AND ( ( ( ("_4__be_4_can"."subject_id") = ($1 :: bigint) ) ) ) ) ) ) ) ) ) ) OR ( EXISTS ( SELECT 1 FROM "public"."can" AS "can_2" WHERE "object_id" = $1 :: bigint AND "action_id" = ${AllowAdminId} :: bigint AND "subject_id" = $1 :: bigint ) ) ) AND "main_2".id = "main".link_id)\``;
+const selectTreeWithPermissions = '`'.concat(sql`
+SELECT main.*
+FROM tree AS main
+WHERE ( 
+  EXISTS(
+    SELECT  1
+    FROM links AS main1
+    WHERE (
+      main1.id = main.parent_id AND
+      EXISTS(
+        SELECT  1
+        FROM links AS type
+        WHERE
+          type.id = main1.type_id AND
+          EXISTS (
+            SELECT  1
+            FROM can AS canAllowSelectType
+            WHERE
+              canAllowSelectType.object_id = type.id AND
+              canAllowSelectType.action_id = ${AllowSelectTypeId} AND
+              canAllowSelectType.subject_id = $1 :: bigint
+          )
+      ) OR 
+      EXISTS (
+        SELECT  1
+        FROM can AS canAllowSelect
+        WHERE 
+        canAllowSelect.object_id = main1.id AND
+        canAllowSelect.action_id = ${AllowSelectId} AND
+        canAllowSelect.subject_id = $1 :: bigint
+      ) OR
+      EXISTS (
+        SELECT  1
+        FROM can AS canAllowAdmin
+        WHERE 
+          canAllowAdmin.object_id = $1 :: bigint AND
+          canAllowAdmin.action_id = ${AllowAdminId} AND
+          canAllowAdmin.subject_id = $1 :: bigint
+      )
+    )
+  ) AND
+  EXISTS (
+    SELECT  1
+    FROM links AS main2
+    WHERE
+      main2.id = main.link_id AND
+      EXISTS(
+        SELECT  1
+        FROM links AS type2
+        WHERE
+          type2.id = main2.type_id AND
+          EXISTS (
+            SELECT  1
+            FROM can AS canAllowSelectType2
+            WHERE
+              canAllowSelectType2.object_id = type2.id AND
+              canAllowSelectType2.action_id = ${AllowSelectTypeId} AND
+              canAllowSelectType2.subject_id = $1 :: bigint
+          )
+      ) OR 
+      EXISTS (
+        SELECT  1
+        FROM can AS canAllowSelect2
+        WHERE 
+        canAllowSelect2.object_id = main2.id AND
+        canAllowSelect2.action_id = ${AllowSelectId} AND
+        canAllowSelect2.subject_id = $1 :: bigint
+      ) OR
+      EXISTS (
+        SELECT  1
+        FROM can AS canAllowAdmin2
+        WHERE 
+          canAllowAdmin2.object_id = $1 :: bigint AND
+          canAllowAdmin2.action_id = ${AllowAdminId} AND
+          canAllowAdmin2.subject_id = $1 :: bigint
+      )
+  )
+) AND \${where}`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const selectCan = `\`SELECT * FROM can AS "main" WHERE \${where} \``;
-const selectSelectors = `\`SELECT * FROM selectors AS "main" WHERE \${where} \``;
+const selectCan = sql`\`SELECT * FROM can AS "main" WHERE \${where} \``;
+const selectSelectors = sql`\`SELECT * FROM selectors AS "main" WHERE \${where} \``;
 
-const mpUpCode = `\`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id" ,"_4_root.or.path_item"."path_item" AS "path_item" ,"_1_root.base"."path_item_depth" AS "path_item_depth" ,"_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."mp"."path_item_id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) AND ('true') ) AND ('true') ) AND ('true') ) ) ) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id" ,"_2_root.or.path_item.base"."type_id" AS "type_id" ,"public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"\``;
+const mpUpCode = '`'.concat(sql`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id" ,"_4_root.or.path_item"."path_item" AS "path_item" ,"_1_root.base"."path_item_depth" AS "path_item_depth" ,"_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."mp"."path_item_id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) AND ('true') ) AND ('true') ) AND ('true') ) ) ) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id" ,"_2_root.or.path_item.base"."type_id" AS "type_id" ,"public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const mpMeCode = `\`SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"\``;
+const mpMeCode = '`'.concat(sql`
+SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
-const checkAdmin = `\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_id" = ${AllowAdminId}::bigint AND "subject_id" = $1::bigint )\``;
+const checkAdmin = sql`\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_id" = ${AllowAdminId}::bigint AND "subject_id" = $1::bigint )\``;
 
-const checkInsert = `\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkInsert = sql`\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
-const checkUpdate = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateTypeId} :: bigint) OR ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkUpdate = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateTypeId} :: bigint) OR ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
-const checkDelete = `\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkDelete = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
 const checkInserted = `\`SELECT id from links where id = \${linkid}\``
 
@@ -145,7 +287,7 @@ const prepareFunction = /*javascript*/`
   const testedSelectors = [];
   for (let i = 0; i < selectors.length; i++){ if (!selectors[i].query_id || plv8.execute('bool_exp_execute($1,$2,$3)', [link.id, selectors[i].query_id, user_id])) testedSelectors.push(selectors[i].selector_id); }
   
-  const selectorHandlers = plv8.execute(${selectorHandlersCode}, [ testedSelectors, handletypeid ])[0].root.map((textFile)=>{return{value: textFile?.valuseResult?.value, id: textFile?.handler}});
+  const selectorHandlers = plv8.execute(${selectorHandlersCode}, [ testedSelectors, handletypeid ]);
   for (let i = 0; i < selectorHandlers.length; i++){ selectorHandlers[i].owner = Number(getOwner(selectorHandlers[i].id)); }
 
   const handlers = typeHandlers.concat(selectorHandlers);
