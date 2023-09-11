@@ -218,15 +218,41 @@ WHERE (
           canAllowAdmin2.subject_id = $1 :: bigint
       )
   )
-) AND \${where}`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
+) AND \${where}
+`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
 const selectCan = sql`\`SELECT * FROM can AS "main" WHERE \${where} \``;
 const selectSelectors = sql`\`SELECT * FROM selectors AS "main" WHERE \${where} \``;
 
-const mpUpCode = '`'.concat(sql`SELECT coalesce(json_agg("root"),'[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_5_e" FROM ( SELECT "_1_root.base"."id" AS "id" ,"_4_root.or.path_item"."path_item" AS "path_item" ,"_1_root.base"."path_item_depth" AS "path_item_depth" ,"_1_root.base"."position_id" AS "position_id" ) AS "_5_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( EXISTS ( SELECT 1 FROM "public"."links" AS "_0__be_0_links" WHERE ( ( ( ("_0__be_0_links"."id") = ("public"."mp"."path_item_id") ) AND ('true') ) AND ( ('true') AND ( ( ( ( ("_0__be_0_links"."type_id") = ANY((ARRAY [$2, $3]) :: bigint array) ) AND ('true') ) AND ('true') ) AND ('true') ) ) ) ) ) ) ) AS "_1_root.base" LEFT OUTER JOIN LATERAL ( SELECT row_to_json( ( SELECT "_3_e" FROM ( SELECT "_2_root.or.path_item.base"."id" AS "id" ,"_2_root.or.path_item.base"."type_id" AS "type_id" ,"public"."links__value__function"("link" => "_2_root.or.path_item.base") AS "value" ) AS "_3_e" ) ) AS "path_item" FROM ( SELECT * FROM "public"."links" WHERE (("_1_root.base"."path_item_id") = ("id")) LIMIT 1 ) AS "_2_root.or.path_item.base" ) AS "_4_root.or.path_item" ON ('true') ) AS "_6_root"`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
+const mpUpCode = '`'.concat(sql`
+  SELECT 
+    json_agg(
+        jsonb_build_object(
+            'position_id', mp.position_id,
+            'id', mp.id, 'path_item',
+            jsonb_build_object('id', links1.id, 'type_id', links1.type_id, 'value', strings.value)
+        )
+    ) as root
+  FROM mp LEFT OUTER JOIN links AS links1 ON mp.path_item_id = links1.id LEFT JOIN strings ON links1.id = strings.link_id
+  WHERE (
+    mp.item_id = $1 :: bigint AND
+    EXISTS (
+      SELECT 1
+      FROM links
+      WHERE 
+        links.id = mp.path_item_id AND
+        links.type_id = ANY((ARRAY [$2, $3]):: bigint array)
+    )
+  )
+`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
 const mpMeCode = '`'.concat(sql`
-SELECT coalesce(json_agg("root"), '[]') AS "root" FROM ( SELECT row_to_json( ( SELECT "_1_e" FROM ( SELECT "_0_root.base"."id" AS "id", "_0_root.base"."path_item_depth" AS "path_item_depth", "_0_root.base"."position_id" AS "position_id" ) AS "_1_e" ) ) AS "root" FROM ( SELECT * FROM "public"."mp" WHERE ( (("public"."mp"."item_id") = ($1 :: bigint)) AND ( ("public"."mp"."path_item_id") = ($1 :: bigint) ) ) ) AS "_0_root.base" ) AS "_2_root"`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
+  SELECT json_agg(row_to_json(mp.*)) as "root"
+  FROM mp
+  WHERE 
+    mp.item_id = $1 :: bigint AND
+    mp.path_item_id = $1 :: bigint
+`,'`').replace(/[\r\n]+/gm, " ").replace(/\s\s+/g, ' ');
 
 const checkAdmin = sql`\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_id" = ${AllowAdminId}::bigint AND "subject_id" = $1::bigint )\``;
 

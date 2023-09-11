@@ -750,7 +750,7 @@ describe('sync handlers', () => {
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1515, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -768,7 +768,7 @@ describe('sync handlers', () => {
             } }
           });
           console.log(11);
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "_in": ["HelloBugFixers", 1515, { "key": "HelloBugFixers"} ] }}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}'::jsonb, '{}'::jsonb)`);
           console.log(123);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
