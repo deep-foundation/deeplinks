@@ -1,4 +1,5 @@
 import { DeepClient, DeepClientInstance } from './client';
+import {debug as innerDebug} from './debug.js'
 
 /**
  * Represents a deep package
@@ -20,9 +21,11 @@ export class Package {
    */
   public name: string;
 
-  constructor(param: PackageOptions) {
-    this.deep = param.deep;
-    this.name = param.name;
+  constructor(options: PackageOptions) {
+    const log = debug(this.name)
+    log({options})
+    this.deep = options.deep;
+    this.name = options.name;
   }
 
   /**
@@ -40,7 +43,9 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
 ```
    */
   public createEntity(name: string) {
-    return {
+    const log = debug(this.createEntity.name)
+    log({name})
+    const result = {
       /**
        * Gets id of the link
        * 
@@ -52,7 +57,10 @@ const myLinkId = await myPackage.yourLinkName.id();
 ```
        */
       id: async () => {
-        return await this.id(name);
+        const log = debug(this.id.name)
+        const result = await this.id(name);
+        log({result})
+        return result;
       },
       /**
        * Gets id of the link from minilinks
@@ -72,6 +80,8 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
        */
       name: name
     };
+    log({result})
+    return result;
   }
 
   /**
@@ -85,7 +95,13 @@ const myLinkId = await package.id("MyLinkName");
 ```
    */
   async id(...names: string[]) {
-    return await this.deep.id(this.name, ...names);
+    const log = debug(this.id.name)
+    log({names})
+    const deepIdArgs: Parameters<DeepClient['id']> = [this.name, ...names]
+    log({deepIdArgs})
+    const result = await this.deep.id(...deepIdArgs);
+    log({result})
+    return result;
   }
 
     /**
@@ -100,7 +116,13 @@ const myLinkId = await package.idLocal("MyLinkName");
 ```
    */
   idLocal(...names: string[]) {
-    return this.deep.idLocal(this.name, ...names);
+    const log = debug(this.idLocal.name)
+    log({names})
+    const deepIdLocalArgs: Parameters<DeepClient['idLocal']> = [this.name, ...names]
+    log({deepIdLocalArgs})
+    const result = this.deep.idLocal(...deepIdLocalArgs)
+    log({result})
+    return result;
   }
 
   /**
@@ -115,6 +137,7 @@ const deviceLinkId = await package.Device.idLocal();
 ```
    */
   async applyMiniLinks() {
+    const log = debug(this.applyMiniLinks.name)
     const {data: packageLinks} = await this.deep.select({
       up: {
         tree_id: {
@@ -125,14 +148,24 @@ const deviceLinkId = await package.Device.idLocal();
         }
       }
     })
+    log({packageLinks})
+
     if(!packageLinks) {
       throw new Error(`Package with name ${this.name} is not found`)
     }
-    this.deep.minilinks.apply(packageLinks)
+
+    const result = this.deep.minilinks.apply(packageLinks)
+    log({result})
+
+    return result
   }
 }
 
 export interface PackageOptions {
   name: string;
   deep: DeepClientInstance;
+}
+
+function debug(namespace: string) {
+  return innerDebug(`${Package.name}:${namespace}`)
 }

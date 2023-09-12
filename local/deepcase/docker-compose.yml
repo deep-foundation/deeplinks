@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.7'
 services:
   case:
     container_name: deep-case
@@ -17,11 +17,18 @@ services:
       DEEPLINKS_HASURA_SECRET: '${DEEPLINKS_HASURA_SECRET}'
       NEXT_PUBLIC_DEEPLINKS_SERVER: '${NEXT_PUBLIC_DEEPLINKS_SERVER}'
       NEXT_PUBLIC_ENGINES: '${NEXT_PUBLIC_ENGINES}'
+      NEXT_PUBLIC_ENGINES_ROUTE: '${NEXT_PUBLIC_ENGINES_ROUTE}'
+      NEXT_PUBLIC_DISABLE_CONNECTOR: '${NEXT_PUBLIC_DISABLE_CONNECTOR}'
       NEXT_PUBLIC_GQL_PATH: '${NEXT_PUBLIC_GQL_PATH}'
       NEXT_PUBLIC_GQL_SSL: '${NEXT_PUBLIC_GQL_SSL}'
       NEXT_PUBLIC_DEEPLINKS_URL: '${NEXT_PUBLIC_DEEPLINKS_URL}'
       DOCKER: 1
       PORT: '${DEEPCASE_PORT}'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
 networks:
   network:
     name: deep-network

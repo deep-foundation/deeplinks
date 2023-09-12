@@ -189,7 +189,7 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 
 export interface MinilinkError extends Error {}
 
-export class MinilinkCollection<MGO extends MinilinksGeneratorOptions, L extends Link<number>> {
+export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<number> = Link<number>> {
   useMinilinksQuery = useMinilinksQuery;
   useMinilinksFilter = useMinilinksFilter;
   useMinilinksApply = useMinilinksApply;

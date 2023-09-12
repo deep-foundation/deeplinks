@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.7'
 services:
   postgres:
     container_name: deep-postgres
@@ -17,6 +17,11 @@ services:
       - 'PGGSSENCMODE=disable'
       - 'PGSSLMODE=disable'
       - 'PGREQUIRESSL=0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   hasura:
     container_name: deep-hasura
     image: hasura/graphql-engine:v2.3.1
@@ -40,6 +45,11 @@ services:
       - 'HASURA_GRAPHQL_JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
       - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true'
       - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=undefined'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   storage:
     container_name: deep-hasura-storage
     image: nhost/hasura-storage:0.2.3
@@ -61,6 +71,11 @@ services:
       - 'POSTGRES_MIGRATIONS=0'
       - 'POSTGRES_MIGRATIONS_SOURCE=postgres://postgres:postgrespassword@host.docker.internal:5432/postgres?sslmode=disable'
     command: serve
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   minio:
     container_name: deep-minio
     image: minio/minio
@@ -76,6 +91,11 @@ services:
       - 'MINIO_ROOT_PASSWORD=miniosecretkey'
     entrypoint: sh
     command: '-c ''mkdir -p /export/default && /opt/bin/minio server --address 0.0.0.0:9000 --console-address 0.0.0.0:32765 /export'''
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   case:
     container_name: deep-case
     image: deepf/deepcase:main
@@ -88,6 +108,11 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
   links:
     container_name: deep-links
     image: deepf/deeplinks:main
@@ -105,6 +130,11 @@ services:
       - 'DEEPLINKS_HASURA_SSL=0'
       - 'DEEPLINKS_HASURA_SECRET=myadminsecretkey'
       - 'JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
 volumes:
   db-data:
     name: deep-db-data
