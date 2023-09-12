@@ -495,10 +495,35 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
 
 const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
 const objectGet = `\`select value\${pathStr} as value from objects where link_id = $1\``;
+const token = 
 
 // plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
 
-const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
+const deepFabric = /*javascript*/`(ownerId, hasura_session) => {
+  class DeepClient {
+    constructor(options){
+      let { linkId, token, deepClient } = options;
+      if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
+      if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
+      if (token) {
+        const tokenLinkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
+        if (tokenLinkId) this.linkId = Number(tokenLinkId);
+      } else if (linkId) {
+        const selected = deepClient.select(linkId)[0];
+        if (selected) {
+          this.linkId = Number(linkId);
+          hasura_session['x-hasura-user-id'] = linkId;
+        }
+      }
+      if (!this.linkId) plv8.elog(ERROR, 'Error while login');
+      this.unsafe = { plv8 };
+    }
+    get linkId() {
+      return this._linkId;
+    }
+  }
+  const token = ${admin_token};
+  return new DeepClient({linkId: ownerId, token, deepClient})
   hasura_session['x-hasura-role'] = 'link';
   return {
     linkId: Number(ownerId),
@@ -552,12 +577,12 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
       if (!options?.table || options?.table === 'links'){
-        const { id, type_id, from_id, to_id, number, string, object, value } = _where;
+        if (typeof _where === 'number') id = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
         const findLinkIdByValue = ${findLinkIdByValueCode};
         const fillValueByLinks = ${fillValueByLinksCode};
         const isDeepEqual = ${isDeepEqualCode};
-        let generated = generateSelectWhere(_where, 1);
+        let generated = generateSelectWhere(typeof _where === 'number' ? { id: _where } : _where, 1);
         const where = generated.where;
         let links = [];
         const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ' left join "strings" on "strings".link_id = "main".id left join "objects" on "objects".link_id = "main".id left join "numbers" on "numbers".link_id = "main".id' : ' left join "'.concat(generated.valueTable, '" on "',generated.valueTable,'".link_id = "main".id') : '';
@@ -684,7 +709,9 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
       if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
       if (token && !linkId) linkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
+      if (token && linkId) return ({ linkId, token })
       if (linkId) {
+        const selected = this.select(linkId);
         this.linkId = Number(linkId);
         hasura_session['x-hasura-user-id'] = linkId;
         return ({ linkId, token })
@@ -903,6 +930,8 @@ export const up = async () => {
   log('up');
 
   await api.sql(sql`CREATE EXTENSION IF NOT EXISTS plv8;`);
+
+  const admin_token = (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token;
 
   await api.sql(createPrepareFunction);
   await api.sql(createDecodeBase64urlFunction);
