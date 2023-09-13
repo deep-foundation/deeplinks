@@ -4,6 +4,7 @@ import { DeepClient } from '../imports/client.js';;
 import { api, TABLE_NAME as LINKS_TABLE_NAME } from '../migrations/1616701513782-links.js';
 import { sql } from '@deep-foundation/hasura/sql.js';
 import { _ids } from '../imports/client.js';
+import crypto from 'crypto';
 
 const debug = Debug('deeplinks:migrations:plv8');
 const log = debug.extend('log');
@@ -495,35 +496,54 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
 
 const objectSet = `\`update objects set value = jsonb_set(value, $2, $3, true) where link_id = $1\``;
 const objectGet = `\`select value\${pathStr} as value from objects where link_id = $1\``;
-const token = 
+const token = crypto.randomBytes(20).toString('hex');
 
 // plv8.elog(ERROR, ${selectWithPermissions}.concat(JSON.stringify([ this.linkId, ...generated.values ])));
 
 const deepFabric = /*javascript*/`(ownerId, hasura_session) => {
+
+  class ProtoDeepClient {
+    constrinctor(a){
+      this.a = ${token};
+    }
+  }
   class DeepClient {
     constructor(options){
       let { linkId, token, deepClient } = options;
-      if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
-      if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
-      if (token) {
-        const tokenLinkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
-        if (tokenLinkId) this.linkId = Number(tokenLinkId);
-      } else if (linkId) {
-        const selected = deepClient.select(linkId)[0];
-        if (selected) {
-          this.linkId = Number(linkId);
-          hasura_session['x-hasura-user-id'] = linkId;
+      this.protoMainClass = DeepClient;
+      this.protoClass = ProtoDeepClient;
+      if (deepClient && !(deepClient instanceof this.protoClass) || deepClient && !(deepClient instanceof ProtoDeepClient)) plv8.elog(ERROR, 'deepClient instanceof incorrect class');
+      if (deepClient instanceof protoDeepClient){
+        this.unsafe = { plv8 };
+        this.linkId = Number(linkId);
+      } else {
+        if (!token && !linkId) plv8.elog(ERROR, 'No token and no linkId provided');
+        if (token && typeof token !== 'string' || linkId && typeof linkId !== 'number') plv8.elog(ERROR, 'Options validation failed');
+        if (token) {
+          const tokenLinkId = plv8.execute('SELECT ${LINKS_TABLE_NAME}__parse__jwt($1)', [token])[0]?.links__parse__jwt?.payload?.['https://hasura.io/jwt/claims']?.['x-hasura-user-id'];
+          if (tokenLinkId) this.linkId = Number(tokenLinkId);
+        } else if (linkId) {
+          const selected = deepClient.select(linkId)[0];
+          if (selected) {
+            this.linkId = Number(linkId);
+            hasura_session['x-hasura-user-id'] = linkId;
+          }
         }
+        if (!this.linkId) plv8.elog(ERROR, 'Error while login');
+        this.unsafe = { plv8 };
       }
-      if (!this.linkId) plv8.elog(ERROR, 'Error while login');
-      this.unsafe = { plv8 };
     }
     get linkId() {
       return this._linkId;
     }
+    get protoClass() {
+      return 0;
+    }
+    get protoMainClass() {
+      return 0;
+    }
   }
-  const token = ${admin_token};
-  return new DeepClient({linkId: ownerId, token, deepClient})
+  return new DeepClient({linkId: ownerId, token, ProtoDeepClient})
   hasura_session['x-hasura-role'] = 'link';
   return {
     linkId: Number(ownerId),
@@ -930,8 +950,6 @@ export const up = async () => {
   log('up');
 
   await api.sql(sql`CREATE EXTENSION IF NOT EXISTS plv8;`);
-
-  const admin_token = (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token;
 
   await api.sql(createPrepareFunction);
   await api.sql(createDecodeBase64urlFunction);
