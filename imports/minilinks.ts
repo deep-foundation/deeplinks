@@ -7,6 +7,7 @@ import Debug from 'debug';
 import { inherits } from 'util';
 import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
 import { QueryLink } from './client_types.js';
+import { useDebounceCallback } from '@react-hook/debounce';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -493,33 +494,40 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
   interval?: number,
 ): R {
   const [state, setState] = useState<R>();
+  const action = useDebounceCallback(
+    (l?, ml?, ol?, nl?) => {
+      setState(results(l, ml, ol, nl));
+    },
+    500,
+    true
+  );
   useEffect(() => {
     const addedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
-        setState(results(nl, ml, ol, nl));
+        action(nl, ml, ol, nl);
       }
     };
     ml.emitter.on('added', addedListener);
     const updatedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
-        setState(results(nl, ml, ol, nl));
+        action(nl, ml, ol, nl);
       }
     };
     ml.emitter.on('updated', updatedListener);
     const removedListener = (ol, nl) => {
       if (filter(ol, ol, nl)) {
-        setState(results(ol, ml, ol, nl));
+        action(ol, ml, ol, nl);
       }
     };
     ml.emitter.on('removed', removedListener);
     const applyListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
-        setState(results(nl, ml, ol, nl));
+        action(nl, ml, ol, nl);
       }
     };
     let timeout;
     if (interval) timeout = setTimeout(() => {
-      results(undefined, ml);
+      action(undefined, ml);
     }, interval);
     ml.emitter.on('apply', applyListener);
     return () => {
