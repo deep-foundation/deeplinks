@@ -16,7 +16,6 @@ export function useTokenController(defaultValue: string = '') : [string, (string
 
 export function TokenProvider({ children }: { children?: any }) {
   const [token, setToken] = useTokenController();
-  console.log('TokenProvider', { token });
   // @ts-ignore
   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>;
 }
