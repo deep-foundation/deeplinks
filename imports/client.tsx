@@ -10,16 +10,14 @@ import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
-import Debug from 'debug';
 import { corePckg } from './core.js';
 import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
 import get from 'get-value';
+import {debug} from './debug.js'
+const moduleLog = debug.extend('client');
 
-const debug = Debug('deeplinks:client');
 const log = debug.extend('log');
 const error = debug.extend('error');
-// Force enable this file errors output
-const namespaces = Debug.disable();
 
 const corePckgIds: { [key: string]: number; } = {};
 corePckg.data.filter(l => !!l.type).forEach((l, i) => {
@@ -996,11 +994,16 @@ export function useAuthNode() {
 export const DeepContext = createContext<DeepClient>(undefined);
 
 export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
+  const log = debug.extend(useDeepGenerator.name)
   const apolloClientHook = useApolloClient();
+  log({apolloClientHook})
   const apolloClient: IApolloClient<any> = apolloClientProps || apolloClientHook;
+  log({apolloClient})
 
   const [linkId, setLinkId] = useAuthNode();
+  log({linkId, setLinkId})
   const [token, setToken] = useTokenController();
+  log({token, setToken})
 
   const deep = useMemo(() => {
     if (!apolloClient?.jwt_token) {
@@ -1014,6 +1017,7 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
       },
     });
   }, [apolloClient]);
+  log({deep})
   return deep;
 }
 
