@@ -14,10 +14,8 @@ const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
-// Debug.enable(`${namespaces ? `${namespaces},` : ``}*:error`); // Force enable all errors output
-
+// 
 import waitOn from 'wait-on';
 import getPort from 'get-port';
 

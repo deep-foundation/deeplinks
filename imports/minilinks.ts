@@ -14,7 +14,6 @@ const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 export interface LinkPlain<Ref extends number> {
   id: Ref;

@@ -18,7 +18,6 @@ const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
 const platform = process?.platform;
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 

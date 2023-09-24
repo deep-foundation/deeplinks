@@ -5,7 +5,6 @@ const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const fieldsInputs = (tableName): IGenerateMutationFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,

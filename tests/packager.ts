@@ -13,7 +13,6 @@ const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
 const namespaces = Debug.disable();
-Debug.enable(`${namespaces ? `${namespaces},` : ``}${error.namespace}`);
 
 const GIST_URL = process.env.GIST_URL;
 
