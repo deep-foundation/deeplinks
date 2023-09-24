@@ -2,16 +2,16 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client";
 import { assert } from 'chai';
 import { BoolExpLink, MutationInputLink } from "../imports/client_types";
-import { inspect} from 'util'
+import { inspect } from 'util'
 import { createSerialOperation } from "../imports/gql";
-import {render, screen, waitFor} from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
-import { ApolloClient, ApolloProvider} from '@apollo/client/index.js';
+import { ApolloClient, ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
 import { useDeep } from '../imports/client';
 import { IApolloClientGeneratorOptions } from '@deep-foundation/hasura/client';
-import {ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
+import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
 import { TokenProvider } from '../imports/react-token';
 import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
@@ -19,7 +19,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
 import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
 
-function Main ({options}: {options: IApolloClientGeneratorOptions}): JSX.Element {
+function Main({ options }: { options: IApolloClientGeneratorOptions }): JSX.Element {
   return <ApolloClientTokenizedProvider options={options}>
     <div></div>
   </ApolloClientTokenizedProvider>
@@ -65,7 +65,7 @@ describe('client', () => {
     const typeName = "MyTypeName"
     const reservedLinkIds = await deepClient.reserve(2);
     const newTypeLinkId = reservedLinkIds.pop()!;
-    const containLinkId = reservedLinkIds.pop()!;  
+    const containLinkId = reservedLinkIds.pop()!;
     await deepClient.serial({
       operations: [
         {
@@ -202,7 +202,7 @@ describe('client', () => {
               type_id: { _eq: 3 },
             },
           },
-        },{
+        }, {
           type: {
             in: {
               from: {
@@ -246,18 +246,18 @@ describe('client', () => {
     const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
     const packageTypeLinkId = await deepClient.id("@deep-foundation/core", "Package");
     const packageName = "idLocal get from minilinks package";
-    const {data: [packageLink]} = await deepClient.insert({
+    const { data: [packageLink] } = await deepClient.insert({
       type_id: packageTypeLinkId,
       string: {
         data: {
           value: packageName
         }
       }
-    }, {returning: deepClient.selectReturning});
-    const {data: [newTypeTypeLink]} = await deepClient.insert({
+    }, { returning: deepClient.selectReturning });
+    const { data: [newTypeTypeLink] } = await deepClient.insert({
       type_id: typeTypeLinkId,
-    }, {returning: deepClient.selectReturning});
-    const {data: [containLink]} = await deepClient.insert({
+    }, { returning: deepClient.selectReturning });
+    const { data: [containLink] } = await deepClient.insert({
       type_id: containTypeLinkId,
       from_id: packageLink.id,
       to_id: newTypeTypeLink.id,
@@ -266,8 +266,8 @@ describe('client', () => {
           value: "Type"
         }
       }
-    }, {returning: deepClient.selectReturning});
-    deepClient.minilinks.apply([packageLink,containLink,newTypeTypeLink]);
+    }, { returning: deepClient.selectReturning });
+    deepClient.minilinks.apply([packageLink, containLink, newTypeTypeLink]);
     try {
       const packageLinkId = deepClient.idLocal(packageName);
       assert.equal(packageLinkId, packageLink.id)
@@ -394,12 +394,12 @@ describe('client', () => {
           const operation = createSerialOperation({
             table: 'strings',
             type: 'update',
-              exp: {
-                link_id: newLinkId,
-              },
-              value: {
-                value: expectedValue
-              }
+            exp: {
+              link_id: newLinkId,
+            },
+            value: {
+              value: expectedValue
+            }
           });
           const updateResult = await deepClient.serial({
             operations: [
@@ -438,12 +438,12 @@ describe('client', () => {
           const operation = createSerialOperation({
             table: 'strings',
             type: 'update',
-              exp: {
-                link_id: newLinkId,
-              },
-              value: {
-                value: expectedValue
-              }
+            exp: {
+              link_id: newLinkId,
+            },
+            value: {
+              value: expectedValue
+            }
           });
           const updateResult = await deepClient.serial({
             operations: [
@@ -483,12 +483,12 @@ describe('client', () => {
           const operation = createSerialOperation({
             table: 'strings',
             type: 'update',
-              exp: {
-                link_id: newLinkId,
-              },
-              value: {
-                value: expectedValue
-              }
+            exp: {
+              link_id: newLinkId,
+            },
+            value: {
+              value: expectedValue
+            }
           });
           const updateResult = await deepClient.serial({
             operations: [
@@ -611,7 +611,7 @@ describe('client', () => {
   })
   it('select string table', async () => {
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-    const {data: [newLink]} = await deepClient.insert({
+    const { data: [newLink] } = await deepClient.insert({
       type_id: typeTypeLinkId,
       string: {
         data: {
@@ -620,11 +620,11 @@ describe('client', () => {
       }
     })
     await deepClient.select({
-      link_id: {_eq: newLink.id}
+      link_id: { _eq: newLink.id }
     },
-    {
-      table: 'strings'
-    })
+      {
+        table: 'strings'
+      })
   })
   it('deepClient token must not be undefined when secret is passed to apolloClient', async () => {
     const apolloClient = generateApolloClient({
@@ -640,27 +640,27 @@ describe('client', () => {
     describe(`useDeepSubscription`, () => {
       it(`type`, async () => {
         await setup();
-    
+
         expect(screen.getByText('Loading...')).toBeInTheDocument();
-    
+
         await waitFor(() => {
           expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
         });
-    
+
         expect(screen.queryByText(/^Error:/)).not.toBeInTheDocument();
-  
+
         await waitFor(() => {
           const dataLengthText = screen.getByText(/items loaded$/);
           expect(dataLengthText).toBeInTheDocument();
           const dataLength = parseInt(dataLengthText.textContent);
-           expect(dataLength).toBeGreaterThan(0);
-        }, {timeout: 10000});
-  
-        
-  
+          expect(dataLength).toBeGreaterThan(0);
+        }, { timeout: 10000 });
+
+
+
         async function setup() {
           const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-        
+
           function TestHookComponent() {
             const { loading, data, error } = useDeepSubscription({
               type_id: typeTypeLinkId,
@@ -668,14 +668,14 @@ describe('client', () => {
             if (loading) {
               return <div>Loading...</div>;
             }
-  
-            if(error) {
+
+            if (error) {
               return <div>Error: {error.message}</div>
             }
-        
+
             return <div>{data.length} items loaded</div>;
           }
-        
+
           render(
             <ApolloProvider client={deepClient.apolloClient}>
               <DeepProvider>
@@ -688,23 +688,23 @@ describe('client', () => {
       it('rerender with loading:true must occur only once', async () => {
         let renderCount = 0;
         let loadingCount = 0;
-      
+
         function TestComponent() {
           const deepSubscriptionResult = useDeepSubscription({
             id: {
               _id: ['@deep-foundation/core']
             }
           });
-      
+
           renderCount += 1;
-          
+
           if (deepSubscriptionResult.loading) {
             loadingCount += 1;
           }
-      
+
           return null;
         }
-      
+
         render(
           <ApolloProvider client={deepClient.apolloClient}>
             <DeepProvider>
@@ -712,7 +712,7 @@ describe('client', () => {
             </DeepProvider>
           </ApolloProvider>
         );
-      
+
         await waitFor(() => {
           assert(renderCount > 1, 'TestComponent must be rerendered more than once');
           assert(loadingCount === 1, 'loading:true must occur only once');
@@ -721,23 +721,23 @@ describe('client', () => {
       it('rerender with loading:false must occur only once', async () => {
         let renderCount = 0;
         let loadingCount = 0;
-      
+
         function TestComponent() {
           const deepSubscriptionResult = useDeepSubscription({
             id: {
               _id: ['@deep-foundation/core']
             }
           });
-      
+
           renderCount += 1;
-          
+
           if (!deepSubscriptionResult.loading) {
             loadingCount += 1;
           }
-      
+
           return null;
         }
-      
+
         render(
           <ApolloProvider client={deepClient.apolloClient}>
             <DeepProvider>
@@ -745,7 +745,7 @@ describe('client', () => {
             </DeepProvider>
           </ApolloProvider>
         );
-      
+
         await waitFor(() => {
           assert(renderCount > 1, 'TestComponent must be rerendered more than once');
           assert(loadingCount === 1, 'loading:false must occur only once');
@@ -767,42 +767,42 @@ describe('client', () => {
         const adminToken = admin.token;
         const deep = new DeepClient({ deep: guestDeep, ...admin });
         let deepInComponent: DeepClient;
-        
-          function DeepConsumerComponent() {
-            deepInComponent = useDeep();
-       
-            return null;
-          }
-        
-          render(
-            <ChakraProvider>
+
+        function DeepConsumerComponent() {
+          deepInComponent = useDeep();
+
+          return null;
+        }
+
+        render(
+          <ChakraProvider>
             <CapacitorStoreProvider>
-      <QueryStoreProvider>
-        <CookiesStoreProvider>
-          <LocalStoreProvider>
-              <TokenProvider>
-              <ApolloClientTokenizedProvider
-                    options={{
-                      client: "@deep-foundation/sdk",
-                      path: graphQlPath,
-                      ws: !!process?.browser,
-                    }}
-                  >
-                    <DeepProvider>
-                      <DeepConsumerComponent />
-              </DeepProvider>
-                  </ApolloClientTokenizedProvider>
-              </TokenProvider>
-              </LocalStoreProvider>
-        </CookiesStoreProvider>
-      </QueryStoreProvider>
-    </CapacitorStoreProvider>
+              <QueryStoreProvider>
+                <CookiesStoreProvider>
+                  <LocalStoreProvider>
+                    <TokenProvider>
+                      <ApolloClientTokenizedProvider
+                        options={{
+                          client: "@deep-foundation/sdk",
+                          path: graphQlPath,
+                          ws: !!process?.browser,
+                        }}
+                      >
+                        <DeepProvider>
+                          <DeepConsumerComponent />
+                        </DeepProvider>
+                      </ApolloClientTokenizedProvider>
+                    </TokenProvider>
+                  </LocalStoreProvider>
+                </CookiesStoreProvider>
+              </QueryStoreProvider>
+            </CapacitorStoreProvider>
           </ChakraProvider>
-          );
-        
-          await waitFor(() => {
-            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
-          });
+        );
+
+        await waitFor(() => {
+          assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+        });
       })
       it('login with token in apollo client', async () => {
         // await deepClient.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
@@ -815,13 +815,13 @@ describe('client', () => {
         const deepClient = new DeepClient({ deep: guestDeep, ...admin });
         assert.isTrue(!!deepClient.token)
         let deepInComponent: DeepClient;
-        
-          function TestComponent() {
-            deepInComponent = useDeep();
-       
-            return null;
-          }
-        
+
+        function TestComponent() {
+          deepInComponent = useDeep();
+
+          return null;
+        }
+
         render(
           <QueryStoreProvider>
             <LocalStoreProvider>
@@ -839,58 +839,58 @@ describe('client', () => {
             </LocalStoreProvider>
           </QueryStoreProvider>
         );
-        
-          await waitFor(() => {
-            assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
-          });
+
+        await waitFor(() => {
+          assert(deepInComponent.linkId !== 0, 'deep.linkId is 0. Failed to login');
+        });
       })
     })
   });
   describe('short value insert', () => {
     it('insert string', async () => {
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      const {data: [newLink]} = await deepClient.insert({
+      const { data: [newLink] } = await deepClient.insert({
         type_id: typeTypeLinkId,
         string: 'helloBugFixers'
       });
       const stringRow = await deepClient.select({
-        link_id: {_eq: newLink.id}
+        link_id: { _eq: newLink.id }
       }, { table: 'strings' });
       if (newLink?.id) deepClient.delete(newLink.id);
-      assert.equal(stringRow?.data?.[0]?.value , 'helloBugFixers');
+      assert.equal(stringRow?.data?.[0]?.value, 'helloBugFixers');
     });
     it('insert number', async () => {
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      const {data: [newLink]} = await deepClient.insert({
+      const { data: [newLink] } = await deepClient.insert({
         type_id: typeTypeLinkId,
         number: 0
       });
       const numberRow = await deepClient.select({
-        link_id: {_eq: newLink.id}
+        link_id: { _eq: newLink.id }
       }, { table: 'numbers' });
       if (newLink?.id) deepClient.delete(newLink.id);
-      assert.equal(numberRow?.data?.[0]?.value , 0);
+      assert.equal(numberRow?.data?.[0]?.value, 0);
     });
     it('insert object', async () => {
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      const {data: [newLink]} = await deepClient.insert({
+      const { data: [newLink] } = await deepClient.insert({
         type_id: typeTypeLinkId,
-        object: { message: 'helloBugFixers'}
+        object: { message: 'helloBugFixers' }
       });
       const objectRow = await deepClient.select({
-        link_id: {_eq: newLink.id}
+        link_id: { _eq: newLink.id }
       }, { table: 'objects' });
       if (newLink?.id) deepClient.delete(newLink.id);
-      assert.deepEqual(objectRow?.data?.[0]?.value , { message: 'helloBugFixers'});
+      assert.deepEqual(objectRow?.data?.[0]?.value, { message: 'helloBugFixers' });
     });
     it('insert inherited links with values', async () => {
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      const {data: [typeLink]} = await deepClient.insert({ type_id: typeTypeLinkId });
-      
-      const {data: [newLink]} = await deepClient.insert({
+      const { data: [typeLink] } = await deepClient.insert({ type_id: typeTypeLinkId });
+
+      const { data: [newLink] } = await deepClient.insert({
         type_id: typeTypeLinkId,
         string: 'helloBugFixers',
-        from: { 
+        from: {
           type_id: typeTypeLinkId,
           number: 0,
           in: {
@@ -899,9 +899,9 @@ describe('client', () => {
             number: 1
           }
         },
-        to: { 
+        to: {
           type_id: typeTypeLinkId,
-          object: { string: 'goodbyeBugFixers'},
+          object: { string: 'goodbyeBugFixers' },
           out: {
             type_id: typeTypeLinkId,
             to_id: typeLink.id,
@@ -909,21 +909,21 @@ describe('client', () => {
           }
         }
       });
-      const {data: [selected]} = await deepClient.select(newLink.id);
-      const {data: [selectedFrom]} = await deepClient.select(selected.from_id);
-      const {data: [selectedTo]} = await deepClient.select(selected.to_id);
-      const {data: [selectedIn]} = await deepClient.select({to_id: selected.from_id });
-      const {data: [selectedOut]} = await deepClient.select({from_id: selected.to_id });
+      const { data: [selected] } = await deepClient.select(newLink.id);
+      const { data: [selectedFrom] } = await deepClient.select(selected.from_id);
+      const { data: [selectedTo] } = await deepClient.select(selected.to_id);
+      const { data: [selectedIn] } = await deepClient.select({ to_id: selected.from_id });
+      const { data: [selectedOut] } = await deepClient.select({ from_id: selected.to_id });
       if (selected?.id) deepClient.delete(selected.id);
       if (selected?.from_id) deepClient.delete(selected.from_id);
       if (selectedIn?.id) deepClient.delete(selectedIn.id);
       if (selectedOut?.id) deepClient.delete(selectedOut.id);
       if (selectedOut?.id) deepClient.delete(typeLink.id);
-      assert.equal(selected?.value?.value , 'helloBugFixers');
-      assert.equal(selectedFrom?.value?.value , 0);
-      assert.equal(selectedTo?.value?.value?.string , 'goodbyeBugFixers');
-      assert.equal(selectedIn?.value?.value , 1);
-      assert.equal(selectedOut?.value?.value , 2);
+      assert.equal(selected?.value?.value, 'helloBugFixers');
+      assert.equal(selectedFrom?.value?.value, 0);
+      assert.equal(selectedTo?.value?.value?.string, 'goodbyeBugFixers');
+      assert.equal(selectedIn?.value?.value, 1);
+      assert.equal(selectedOut?.value?.value, 2);
     });
   });
 });
