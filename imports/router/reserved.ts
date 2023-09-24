@@ -7,7 +7,6 @@ const debug = Debug('deeplinks:eh:reserved');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 const SCHEMA = 'public';
 

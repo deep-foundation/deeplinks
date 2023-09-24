@@ -13,7 +13,6 @@ const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 export interface LinkPlain<Ref extends number> {
   id: Ref;

@@ -24,7 +24,6 @@ const debug = Debug('deeplinks:eh:values');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,

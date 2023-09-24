@@ -14,7 +14,6 @@ const debug = Debug('deeplinks:tests:sync-handlers');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 const delay = time => new Promise(res => setTimeout(res, time));
 

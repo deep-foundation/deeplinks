@@ -20,7 +20,6 @@ const debug = Debug('deeplinks:eh:links');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 

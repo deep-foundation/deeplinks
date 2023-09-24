@@ -4,7 +4,6 @@ const debug = Debug('deeplinks:gql:mutation');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 const fieldsInputs = (tableName): IGenerateMutationFieldTypes => ({
   'distinct_on': `[${tableName}_select_column!]`,

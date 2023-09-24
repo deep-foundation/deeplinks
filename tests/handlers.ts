@@ -13,7 +13,6 @@ const debug = Debug('deeplinks:tests:handlers');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 // 
 import waitOn from 'wait-on';

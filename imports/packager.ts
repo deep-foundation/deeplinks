@@ -7,7 +7,6 @@ const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 
 export interface PackageIdentifier {
   name: string; // name in deep instance packages namespace

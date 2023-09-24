@@ -16,7 +16,6 @@ const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
-const namespaces = Debug.disable();
 const platform = process?.platform;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
