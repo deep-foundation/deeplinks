@@ -559,6 +559,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
     
     this.silent = options.silent || false;
+
   }
 
   stringify(any?: any): string {
@@ -570,6 +571,34 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
       return JSON.stringify(any, null, 2);
     }
     return any;
+  }
+
+  static async new(newOptions: {
+    token: string;
+    ssl?: boolean;
+    graphQlPath: string;
+  }) {
+    const { token, ssl, graphQlPath } = newOptions;
+    const apolloClient = generateApolloClient({
+      path: graphQlPath, 
+      ssl: ssl,
+      token: token
+    });
+    
+    const deep = new DeepClient({
+      apolloClient
+    })
+  
+    const deepLoginResult = await deep.login({
+      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2hhc3VyYS5pby9qd3QvY2xhaW1zIjp7IngtaGFzdXJhLWFsbG93ZWQtcm9sZXMiOlsiYWRtaW4iXSwieC1oYXN1cmEtZGVmYXVsdC1yb2xlIjoiYWRtaW4iLCJ4LWhhc3VyYS11c2VyLWlkIjoiMzgwIn0sImlhdCI6MTY5NDg3NDQyNH0.56QIQ4i5ZGetRzFfJ5ec_8SP0KM5ANdf86Zyh4U7PBs"
+    })
+
+    const loginedDeep = new DeepClient({
+      deep: deep,
+      ...deepLoginResult
+    })
+
+    return loginedDeep
   }
 
   serializeQuery = serializeQuery;
@@ -912,7 +941,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   }
 
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
-    return await this.jwt({ ...options, relogin: true });
+    const jwtResult = await this.jwt({ ...options, relogin: true });
+    this.token = jwtResult.token;
+    this.linkId = jwtResult.linkId;
+    return jwtResult
   };
 
   async logout(): Promise<DeepClientAuthResult> {
