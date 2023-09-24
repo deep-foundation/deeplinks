@@ -36,19 +36,12 @@
     "deeplinks": "./call.cjs"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.14",
-    "@deep-foundation/hasura": "^0.0.51",
-    "@deep-foundation/materialized-path": "^0.0.29",
     "@deep-foundation/npm-packager": "^0.0.38",
-    "@deep-foundation/react-hasura": "^0.0.22",
     "@deep-foundation/tsx": "^0.0.4",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
     "@types/node": "^20.2.4",
     "@types/react": "^18.2.15",
-    "apollo-server": "^2.26.1",
-    "apollo-server-core": "^3.12.0",
-    "apollo-server-express": "^3.12.0",
     "atob": "^2.1.2",
     "axios": "^1.4.0",
     "body-parser": "^1.20.2",
@@ -63,10 +56,6 @@
     "get-port": "^5.1.1",
     "get-value": "^3.0.1",
     "gists": "^2.0.0",
-    "graphql": "^15.8.0",
-    "graphql-playground-middleware-express": "^1.7.23",
-    "graphql-tag": "^2.12.6",
-    "http-proxy-middleware": "^2.0.6",
     "internal-ip": "^6.2.0",
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.0",
@@ -87,8 +76,19 @@
     "wait-on": "^7.0.1"
   },
   "peerDependencies": {
-    "react": "*",
-    "@deep-foundation/store": "~0.0.25"
+    "react": "^18.0.0",
+    "@deep-foundation/store": "^0.0.25",
+    "@apollo/client": "^3.7.14",
+    "@deep-foundation/hasura": "^0.0.53",
+    "@deep-foundation/react-hasura": "^0.0.23",
+    "@deep-foundation/materialized-path": "^0.0.29",
+    "graphql": "^15.8.0",
+    "graphql-playground-middleware-express": "^1.7.23",
+    "graphql-tag": "^2.12.6",
+    "http-proxy-middleware": "^2.0.6",
+    "apollo-server": "^2.26.1",
+    "apollo-server-core": "^3.12.0",
+    "apollo-server-express": "^3.12.0"
   },
   "engines": {
     "node": "^18"
