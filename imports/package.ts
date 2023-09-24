@@ -1,5 +1,6 @@
 import { DeepClient, DeepClientInstance } from './client';
-import {debug as innerDebug} from './debug.js'
+import {debug} from './debug.js'
+const moduleLog = debug.extend('package')
 
 /**
  * Represents a deep package
@@ -22,7 +23,7 @@ export class Package {
   public name: string;
 
   constructor(options: PackageOptions) {
-    const log = debug(this.name)
+    const log = moduleLog.extend(this.name)
     log({options})
     this.deep = options.deep;
     this.name = options.name;
@@ -43,7 +44,7 @@ const myLinkLocalId = await myPackage.yourLinkName.idLocal();
 ```
    */
   public createEntity(name: string) {
-    const log = debug(this.createEntity.name)
+    const log = moduleLog.extend(this.createEntity.name)
     log({name})
     const result = {
       /**
@@ -57,7 +58,7 @@ const myLinkId = await myPackage.yourLinkName.id();
 ```
        */
       id: async () => {
-        const log = debug(this.id.name)
+        const log = moduleLog.extend(this.id.name)
         const result = await this.id(name);
         log({result})
         return result;
@@ -95,7 +96,7 @@ const myLinkId = await package.id("MyLinkName");
 ```
    */
   async id(...names: string[]) {
-    const log = debug(this.id.name)
+    const log = moduleLog.extend(this.id.name)
     log({names})
     const deepIdArgs: Parameters<DeepClient['id']> = [this.name, ...names]
     log({deepIdArgs})
@@ -116,7 +117,7 @@ const myLinkId = await package.idLocal("MyLinkName");
 ```
    */
   idLocal(...names: string[]) {
-    const log = debug(this.idLocal.name)
+    const log = moduleLog.extend(this.idLocal.name)
     log({names})
     const deepIdLocalArgs: Parameters<DeepClient['idLocal']> = [this.name, ...names]
     log({deepIdLocalArgs})
@@ -137,7 +138,7 @@ const deviceLinkId = await package.Device.idLocal();
 ```
    */
   async applyMiniLinks() {
-    const log = debug(this.applyMiniLinks.name)
+    const log = moduleLog.extend(this.applyMiniLinks.name)
     const {data: packageLinks} = await this.deep.select({
       up: {
         tree_id: {
@@ -164,8 +165,4 @@ const deviceLinkId = await package.Device.idLocal();
 export interface PackageOptions {
   name: string;
   deep: DeepClientInstance;
-}
-
-function debug(namespace: string) {
-  return innerDebug(`${Package.name}:${namespace}`)
 }
