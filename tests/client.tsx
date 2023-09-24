@@ -15,6 +15,9 @@ import {ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apol
 import { TokenProvider } from '../imports/react-token';
 import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
+import { ChakraProvider } from "@chakra-ui/react";
+import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
+import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
 
 function Main ({options}: {options: IApolloClientGeneratorOptions}): JSX.Element {
   return <ApolloClientTokenizedProvider options={options}>
@@ -761,27 +764,40 @@ describe('client', () => {
         const admin = await guestDeep.login({
           linkId: await guestDeep.id('deep', 'admin'),
         });
+        const adminToken = admin.token;
         const deep = new DeepClient({ deep: guestDeep, ...admin });
         let deepInComponent: DeepClient;
         
-          function TestComponent() {
+          function DeepConsumerComponent() {
             deepInComponent = useDeep();
-            useEffect(() => {
-              deepInComponent.login({
-                token: deep.token
-              })
-              // deepInComponent.whoami(); // ApolloError: Int cannot represent non-integer value: NaN
-            }, [])
-        
+       
             return null;
           }
         
           render(
-            <ApolloProvider client={deepClient.apolloClient}>
-              <DeepProvider>
-                <TestComponent />
+            <ChakraProvider>
+            <CapacitorStoreProvider>
+      <QueryStoreProvider>
+        <CookiesStoreProvider>
+          <LocalStoreProvider>
+              <TokenProvider>
+              <ApolloClientTokenizedProvider
+                    options={{
+                      client: "@deep-foundation/sdk",
+                      path: graphQlPath,
+                      ws: !!process?.browser,
+                    }}
+                  >
+                    <DeepProvider>
+                      <DeepConsumerComponent />
               </DeepProvider>
-            </ApolloProvider>
+                  </ApolloClientTokenizedProvider>
+              </TokenProvider>
+              </LocalStoreProvider>
+        </CookiesStoreProvider>
+      </QueryStoreProvider>
+    </CapacitorStoreProvider>
+          </ChakraProvider>
           );
         
           await waitFor(() => {
