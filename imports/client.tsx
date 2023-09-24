@@ -540,8 +540,22 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     this.minilinks = options.minilinks || new MinilinkCollection();
     this.table = options.table || 'links';
 
-    this.linkId = options.linkId;
     this.token = options.token;
+    
+    if (this.token) {
+      const decoded = parseJwt(this.token);
+      const linkId = decoded?.userId;
+      if (!linkId){
+        throw new Error(`Unable to parse linkId from jwt token.`);
+      }
+      if (options.linkId && options.linkId !== linkId){
+        throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
+      }
+      this.linkId = linkId;
+    } else {
+      this.linkId = options.linkId;
+    }
+
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
 
     this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
