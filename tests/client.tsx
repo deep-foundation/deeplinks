@@ -15,7 +15,6 @@ import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apo
 import { TokenProvider } from '../imports/react-token';
 import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
-import { ChakraProvider } from "@chakra-ui/react";
 import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
 import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
 
@@ -775,7 +774,6 @@ describe('client', () => {
         }
 
         render(
-          <ChakraProvider>
             <CapacitorStoreProvider>
               <QueryStoreProvider>
                 <CookiesStoreProvider>
@@ -797,7 +795,6 @@ describe('client', () => {
                 </CookiesStoreProvider>
               </QueryStoreProvider>
             </CapacitorStoreProvider>
-          </ChakraProvider>
         );
 
         await waitFor(() => {
