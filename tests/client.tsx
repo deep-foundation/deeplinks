@@ -783,7 +783,7 @@ describe('client', () => {
                         options={{
                           client: "@deep-foundation/sdk",
                           path: graphQlPath,
-                          ws: !!process?.browser,
+                          ws: true,
                         }}
                       >
                         <DeepProvider>
