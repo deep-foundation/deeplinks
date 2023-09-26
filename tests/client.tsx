@@ -782,6 +782,7 @@ describe('client', () => {
                       <ApolloClientTokenizedProvider
                         options={{
                           client: "@deep-foundation/sdk",
+                          token: adminToken,
                           path: graphQlPath,
                           ws: true,
                         }}
