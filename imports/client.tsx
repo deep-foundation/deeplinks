@@ -785,12 +785,12 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
-      return ((await this.select(start)) as any)?.data?.[0]?.id;
+      return ((await this.select({ id: { _id: start } })) as any)?.data?.[0]?.id;
     }
     if (_ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }
-    const q = await this.select(pathToWhere(start, ...path));
+    const q = await this.select({ id: { _id: pathToWhere(start, ...path) } });
     if (q.error) {
       throw q.error;
     }
@@ -846,7 +846,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     };
     const result = {};
     await Promise.all(paths.map(async ([start, ...path]) => {
-      const id = await this.id(start, ...path);
+      const id = await this.id({ id: { _id: [start, ...path] } });
       appendPath(result, [start, ...path], id);
     }));
     return result;
