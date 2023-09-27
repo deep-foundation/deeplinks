@@ -591,13 +591,18 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   serializeWhere = serializeWhere;
 
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
-    if (!exp) {
-      return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
-    }
-    const query = serializeQuery(exp, options?.table || 'links');
-    const table = options?.table || this.table;
-    const returning = options?.returning ?? 
-    (table === 'links' ? this.linksSelectReturning :
+      if (!exp) {
+        return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
+      }
+      let query;
+      if (Array.isArray(exp)) {
+        query = { id: { _in: exp } };
+      } else {
+        query = serializeQuery(exp, options?.table || 'links');
+      }
+      const table = options?.table || this.table;
+      const returning = options?.returning ?? 
+      (table === 'links' ? this.linksSelectReturning :
     ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
     table === 'selectors' ? this.selectorsSelectReturning :
     table === 'files' ? this.filesSelectReturning : `id`);
