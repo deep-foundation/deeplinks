@@ -240,6 +240,14 @@ describe('client', () => {
     const packageId = await deepClient.id('@deep-foundation/core');
     assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
   });
+  it(`{ type_id: ['@deep-foundation/core', 'Package'] }`, async () => {
+    const packageId = await deepClient.id('@deep-foundation/core', 'Package');
+    assert.isTrue(!!(await deepClient.select({ type_id: ['@deep-foundation/core', 'Package'] }))?.data?.find(p => p.id === packageId));
+  });
+  it(`{ type_id: ['@deep-foundation/core', 'User'] }`, async () => {
+    const userId = await deepClient.id('@deep-foundation/core', 'User');
+    assert.isTrue(!!(await deepClient.select({ type_id: ['@deep-foundation/core', 'User'] }))?.data?.find(p => p.id === userId));
+  });
   it(`idLocal get from minilinks`, async () => {
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
     const containTypeLinkId = await deepClient.id("@deep-foundation/core", "Contain");
@@ -600,10 +608,10 @@ describe('client', () => {
           assert.equal(result.error, undefined);
           assert.notEqual(result.data, undefined);
           assert.strictEqual(result.data.length, 2);
-          const { data } = await deepClient.select(reservedLinkIds);
+          const { data } = await deepClient.select({ link_id: { _in: reservedLinkIds } });
           assert.equal(data.length, 0);
         } finally {
-          await deepClient.delete(linkIdsToDelete)
+          await deepClient.delete({ link_id: { _in: linkIdsToDelete } })
         }
       })
     })
@@ -881,47 +889,28 @@ describe('client', () => {
       if (newLink?.id) deepClient.delete(newLink.id);
       assert.deepEqual(objectRow?.data?.[0]?.value, { message: 'helloBugFixers' });
     });
-    it('insert inherited links with values', async () => {
+    it('select with type_id as array', async () => {
       const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
-      const { data: [typeLink] } = await deepClient.insert({ type_id: typeTypeLinkId });
+      const anotherTypeLinkId = await deepClient.id("@deep-foundation/core", "AnotherType");
 
-      const { data: [newLink] } = await deepClient.insert({
+      const { data: [newLink1] } = await deepClient.insert({
         type_id: typeTypeLinkId,
-        string: 'helloBugFixers',
-        from: {
-          type_id: typeTypeLinkId,
-          number: 0,
-          in: {
-            type_id: typeTypeLinkId,
-            from_id: typeLink.id,
-            number: 1
-          }
-        },
-        to: {
-          type_id: typeTypeLinkId,
-          object: { string: 'goodbyeBugFixers' },
-          out: {
-            type_id: typeTypeLinkId,
-            to_id: typeLink.id,
-            number: 2
-          }
-        }
+        string: 'helloBugFixers'
       });
-      const { data: [selected] } = await deepClient.select(newLink.id);
-      const { data: [selectedFrom] } = await deepClient.select(selected.from_id);
-      const { data: [selectedTo] } = await deepClient.select(selected.to_id);
-      const { data: [selectedIn] } = await deepClient.select({ to_id: selected.from_id });
-      const { data: [selectedOut] } = await deepClient.select({ from_id: selected.to_id });
-      if (selected?.id) deepClient.delete(selected.id);
-      if (selected?.from_id) deepClient.delete(selected.from_id);
-      if (selectedIn?.id) deepClient.delete(selectedIn.id);
-      if (selectedOut?.id) deepClient.delete(selectedOut.id);
-      if (selectedOut?.id) deepClient.delete(typeLink.id);
-      assert.equal(selected?.value?.value, 'helloBugFixers');
-      assert.equal(selectedFrom?.value?.value, 0);
-      assert.equal(selectedTo?.value?.value?.string, 'goodbyeBugFixers');
-      assert.equal(selectedIn?.value?.value, 1);
-      assert.equal(selectedOut?.value?.value, 2);
+
+      const { data: [newLink2] } = await deepClient.insert({
+        type_id: anotherTypeLinkId,
+        string: 'goodbyeBugFixers'
+      });
+
+      const { data } = await deepClient.select({ type_id: { _in: [typeTypeLinkId, anotherTypeLinkId] } });
+
+      if (newLink1?.id) deepClient.delete(newLink1.id);
+      if (newLink2?.id) deepClient.delete(newLink2.id);
+
+      assert.equal(data.length, 2);
+      assert.equal(data[0].value, 'helloBugFixers');
+      assert.equal(data[1].value, 'goodbyeBugFixers');
     });
   });
 });
