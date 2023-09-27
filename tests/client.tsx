@@ -230,23 +230,23 @@ describe('client', () => {
     assert.deepEqual(deepClient.serializeWhere({ to_id: { _type_of: 25 } }), { to: { _by_item: { path_item_id: { _eq: 25 }, group_id: { _eq: 0 } } } });
   });
   it(`{ id: { _id: ['@deep-foundation/core', 'Package'] } }`, async () => {
-    assert.deepEqual((await deepClient.select({ id: { _id: ['@deep-foundation/core', 'Package'] } }))?.data?.[0]?.id, 2);
+    assert.deepEqual((await deepClient.select({ where: { id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.[0]?.id, 2);
   });
   it(`{ type_id: { _id: ['@deep-foundation/core', 'Package'] } }`, async () => {
     const packageId = await deepClient.id('@deep-foundation/core');
-    assert.isTrue(!!(await deepClient.select({ type_id: { _id: ['@deep-foundation/core', 'Package'] } }))?.data?.find(p => p.id === packageId));
+    assert.isTrue(!!(await deepClient.select({ where: { type_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
   });
   it(`{ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }`, async () => {
     const packageId = await deepClient.id('@deep-foundation/core');
-    assert.isTrue(!!(await deepClient.select({ up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } }))?.data?.find(p => p.id === packageId));
+    assert.isTrue(!!(await deepClient.select({ where: { up: { parent_id: { _id: ['@deep-foundation/core', 'Package'] } } } }))?.data?.find(p => p.id === packageId));
   });
   it(`{ type_id: ['@deep-foundation/core', 'Package'] }`, async () => {
     const packageId = await deepClient.id('@deep-foundation/core', 'Package');
-    assert.isTrue(!!(await deepClient.select({ type_id: ['@deep-foundation/core', 'Package'] }))?.data?.find(p => p.id === packageId));
+    assert.isTrue(!!(await deepClient.select({ where: { type_id: ['@deep-foundation/core', 'Package'] } }))?.data?.find(p => p.id === packageId));
   });
   it(`{ type_id: ['@deep-foundation/core', 'User'] }`, async () => {
     const userId = await deepClient.id('@deep-foundation/core', 'User');
-    assert.isTrue(!!(await deepClient.select({ type_id: ['@deep-foundation/core', 'User'] }))?.data?.find(p => p.id === userId));
+    assert.isTrue(!!(await deepClient.select({ where: { type_id: ['@deep-foundation/core', 'User'] } }))?.data?.find(p => p.id === userId));
   });
   it(`idLocal get from minilinks`, async () => {
     const typeTypeLinkId = await deepClient.id("@deep-foundation/core", "Type");
@@ -859,9 +859,9 @@ describe('client', () => {
         type_id: typeTypeLinkId,
         string: 'helloBugFixers'
       });
-      const stringRow = await deepClient.select({
+      const stringRow = await deepClient.select('strings', {
         link_id: { _eq: newLink.id }
-      }, { table: 'strings' });
+      });
       if (newLink?.id) deepClient.delete(newLink.id);
       assert.equal(stringRow?.data?.[0]?.value, 'helloBugFixers');
     });
@@ -871,9 +871,9 @@ describe('client', () => {
         type_id: typeTypeLinkId,
         number: 0
       });
-      const numberRow = await deepClient.select({
+      const numberRow = await deepClient.select('numbers', {
         link_id: { _eq: newLink.id }
-      }, { table: 'numbers' });
+      });
       if (newLink?.id) deepClient.delete(newLink.id);
       assert.equal(numberRow?.data?.[0]?.value, 0);
     });
@@ -883,9 +883,9 @@ describe('client', () => {
         type_id: typeTypeLinkId,
         object: { message: 'helloBugFixers' }
       });
-      const objectRow = await deepClient.select({
+      const objectRow = await deepClient.select('objects', {
         link_id: { _eq: newLink.id }
-      }, { table: 'objects' });
+      });
       if (newLink?.id) deepClient.delete(newLink.id);
       assert.deepEqual(objectRow?.data?.[0]?.value, { message: 'helloBugFixers' });
     });
@@ -903,7 +903,7 @@ describe('client', () => {
         string: 'goodbyeBugFixers'
       });
 
-      const { data } = await deepClient.select({ type_id: { _in: [typeTypeLinkId, anotherTypeLinkId] } });
+      const { data } = await deepClient.select('links', { type_id: { _in: [typeTypeLinkId, anotherTypeLinkId] } });
 
       if (newLink1?.id) deepClient.delete(newLink1.id);
       if (newLink2?.id) deepClient.delete(newLink2.id);
