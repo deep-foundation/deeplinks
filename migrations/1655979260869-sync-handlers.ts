@@ -334,7 +334,7 @@ const prepareFunction = /*javascript*/`
 const selectValueTable = `\`SELECT * FROM \${table} WHERE link_id = \${linkId}\``;
 const selectLinkByValue = `\`SELECT link_id as id FROM \${table} WHERE value = '\${value}'::\${table==='strings' ? 'text' : table==='objects' ? 'jsonb' : 'bigint'}\``;
 
-const generateSelectWhereCode = /*javascript*/`(_where, shift = 0) => {
+const generateSelectWhereCode = /*javascript*/`(_where) => {
   const where = [];
   let values = [];
   let valueTable;
@@ -557,7 +557,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         const findLinkIdByValue = ${findLinkIdByValueCode};
         const fillValueByLinks = ${fillValueByLinksCode};
         const isDeepEqual = ${isDeepEqualCode};
-        let generated = generateSelectWhere(_where, 1);
+        let generated = generateSelectWhere(_where);
         const where = generated.where;
         let links = [];
         const valueTableString = generated.valueTable ? generated.valueTable === 'values' ? ' left join "strings" on "strings".link_id = "main".id left join "objects" on "objects".link_id = "main".id left join "numbers" on "numbers".link_id = "main".id' : ' left join "'.concat(generated.valueTable, '" on "',generated.valueTable,'".link_id = "main".id') : '';
@@ -569,7 +569,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       if (options?.table === 'tree'){
         const { id, link_id, parent_id, depth, root_id, position_id, tree_id } = _where;
         const generateSelectWhere = ${generateSelectWhereCode};
-        let generated = generateSelectWhere(_where, 1);
+        let generated = generateSelectWhere(_where);
         const where = generated.where;
         let links = [];
         if (where) links = plv8.execute(${selectTreeWithPermissions}, [ this.linkId, ...generated.values ]);
@@ -795,14 +795,12 @@ const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascr
 `;
 
 const deepClientFunction = /*javascript*/`
-
 const checkInsertPermission = ${checkInsertPermissionCode};
 const checkUpdatePermission = ${checkUpdatePermissionCode};
 const checkDeleteLinkPermission = ${checkDeleteLinkPermissionCode}; 
 const hasura_session = JSON.parse(plv8.execute("select current_setting('hasura.user', 't')")[0].current_setting);
 const default_role = hasura_session['x-hasura-role'];
 const default_user_id = hasura_session['x-hasura-user-id'];
-
 const deep = (${deepFabric})(Number(clientlinkid), hasura_session);
 const result = operation === 'id' || operation === 'update' || operation === 'objectSet' || operation === 'objectGet' ? deep[operation](...args) : operation === 'unsafe' ? deep[operation].plv8.execute(...args) : deep[operation](args, options);
 if (hasura_session['x-hasura-role'] !== default_role || hasura_session['x-hasura-user-id'] !== default_user_id){
