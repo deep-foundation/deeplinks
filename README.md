@@ -3,17 +3,18 @@
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.gg/deep-foundation)
 
 # Usage
-## restart deepcase-app
 
-On server:
+## Restart
+
+### Server
 
 ```
-docker restart deep-case
+docker restart deep-links
 ```
 
-In GitPod:
+### GitPod
 
-Deep.Case app is started together with Deep.Links and other services in GitPod. So to restart it from GitPod you should do the following:
+Deep.Links is started together with Deep.Case app and other services in GitPod. So to restart it from GitPod you should do the following:
 
 1. Find terminal there `npm run gitpod-start` command was executed.
 ![IMG_1490](https://github.com/deep-foundation/deepcase-app/assets/1431904/81ecd4d4-f4d2-4812-8948-0a155347218d)
@@ -25,7 +26,9 @@ Deep.Case app is started together with Deep.Links and other services in GitPod. 
 ![IMG_1492](https://github.com/deep-foundation/deepcase-app/assets/1431904/9ef60c58-ca70-43f3-be91-91966d85dddc)
 
 4. Press `Enter` to execute that command again, that will finish restart sequence.
-![IMG_1493](https://github.com/deep-foundation/deepcase-app/assets/1431904/56f48dad-d751-44c7-8871-164f824f122b)## Library
+![IMG_1493](https://github.com/deep-foundation/deepcase-app/assets/1431904/56f48dad-d751-44c7-8871-164f824f122b)
+
+## Library
 See [Documentation] for examples and API
 
 [Documentation]: https://deep-foundation.github.io/deeplinks/
