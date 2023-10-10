@@ -120,6 +120,7 @@ services:
       - network
     ports:
     - "3006:3006"
+    - "20000-29999:20000-29999"
     restart: always
     pull_policy: always
     volumes:
