@@ -1,9 +1,9 @@
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { assert, expect } from 'chai';
-import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp_to_sql";
-import { DeepClient } from "../imports/client";
-import { delay } from "../imports/promise";
+import { applyBoolExpToLink, userReplaceSymbol } from "../imports/bool_exp_to_sql.js";
+import { DeepClient } from "../imports/client.js";
+import { delay } from "../imports/promise.js";
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,

@@ -110,7 +110,7 @@ export const up = async () => {
     type: 'create_object_relationship',
     args: {
       table: TABLE_NAME,
-      name: 'from',
+      name: 'from ',
       using: {
         manual_configuration: {
           remote_table: {

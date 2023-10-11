@@ -64,7 +64,7 @@ export const coreSymbolsPckg: Package = {
     { id: 'RouterListening', package: { dependencyId: 1, containValue: 'RouterListening' } },
     { id: 'RouterStringUse', package: { dependencyId: 1, containValue: 'RouterStringUse' } },
     { id: 'Authorization', package: { dependencyId: 1, containValue: 'Authorization' } },
-    { id: 'GeneratedFrom', package: { dependencyId: 1, containValue: 'GeneratedFrom' } },
+    { id: 'Generatedfrom ', package: { dependencyId: 1, containValue: 'Generatedfrom ' } },
     { id: 'Symbol', package: { dependencyId: 1, containValue: 'Symbol' } },
 
     { id: 'TypeSymbol', type: 'Symbol', from: 'package', to: 'Type', value: { value: '⭐️' } },
@@ -117,7 +117,7 @@ export const coreSymbolsPckg: Package = {
     { id: 'RouterListeningSymbol', type: 'Symbol', from: 'package', to: 'RouterListening', value: { value: '🔗' } },
     { id: 'RouterStringUseSymbol', type: 'Symbol', from: 'package', to: 'RouterStringUse', value: { value: '🔗' } },
     { id: 'AuthorizationSymbol', type: 'Symbol', from: 'package', to: 'Authorization', value: { value: '🔑' } },
-    { id: 'GeneratedFromSymbol', type: 'Symbol', from: 'package', to: 'GeneratedFrom', value: { value: '🏗' } },
+    { id: 'GeneratedFromSymbol', type: 'Symbol', from: 'package', to: 'Generatedfrom ', value: { value: '🏗' } },
     { id: 'SymbolSymbol', type: 'Symbol', from: 'package', to: 'Symbol', value: { value: '🙂' } },
   ],
   errors: [],

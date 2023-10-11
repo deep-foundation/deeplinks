@@ -160,7 +160,7 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   type: 'type',
   typed: 'typed',
   from_id: 'from_id',
-  from: 'from',
+  from: 'from ',
   out: 'out',
   to_id: 'to_id',
   to: 'to',

@@ -1,10 +1,10 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
-import { DeepClient } from "../imports/client";
+import { DeepClient } from "../imports/client.js";
 import { assert } from 'chai';
-import { insertHandler, deleteHandler }  from "../imports/handlers";
+import { insertHandler, deleteHandler }  from "../imports/handlers.js";
 import { _ids } from '../imports/client.js';
-import { delay } from "../imports/promise";
+import { delay } from "../imports/promise.js";
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,

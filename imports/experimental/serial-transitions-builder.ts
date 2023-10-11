@@ -1,6 +1,6 @@
-import { DeepClient, DeepClientResult, Table } from "../client";
-import { MutationInputLink } from "../client_types";
-import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
+import { DeepClient, DeepClientResult, Table } from "../client.js";
+import { MutationInputLink } from "../client_types.js";
+import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql/index.js";
 
 /**
  * A class for building serial transitions

@@ -1,4 +1,4 @@
-import { DeepClient, DeepClientInstance } from './client';
+import { DeepClient, DeepClientInstance } from './client.js';
 import {debug} from './debug.js'
 const moduleLog = debug.extend('package')
 
