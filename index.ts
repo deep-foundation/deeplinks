@@ -49,6 +49,8 @@ const makeDeepClient = (token: string) => {
 const app = express();
 app.use(cookieParser());
 const httpServer = http.createServer(app);
+const cors = Cors({ origin: '*' });
+app.use(cors);
 
 app.get('/gql', expressPlayground({
   tabs: [{ 
@@ -142,9 +144,6 @@ app.get(['/file'], createProxyMiddleware({
     }
   }
 }));
-
-const cors = Cors({ methods: ['POST', 'OPTIONS'] });
-app.use(cors);
 
 app.post('/file', async (req, res, next) => {
   console.log('/file post proxy','DEEPLINKS_HASURA_STORAGE_URL', DEEPLINKS_HASURA_STORAGE_URL);

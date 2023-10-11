@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.312",
+  "version": "0.0.315",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@deep-foundation/npm-packager": "^0.0.38",
-    "@deep-foundation/tsx": "^0.0.4",
+    "@deep-foundation/tsx": "^0.0.5",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
     "@types/node": "^20.2.4",
