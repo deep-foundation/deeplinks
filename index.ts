@@ -9,6 +9,8 @@ import generateAuthorizationServer from './imports/router/authorization.js';
 import axios from 'axios';
 import http from 'http';
 import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 const expressPlayground = require('graphql-playground-middleware-express').default;
 import moesif from 'moesif-nodejs';
 import Debug from 'debug';

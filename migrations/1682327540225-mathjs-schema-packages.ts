@@ -2,6 +2,8 @@
 import Debug from 'debug';
 import { api, TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
 import { sql } from '@deep-foundation/hasura/sql.js';
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 const debug = Debug('deeplinks:migrations:plv8');
 const log = debug.extend('log');

@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
 import { DeepClient } from '../imports/client.js';
-import npmPackagerPckg from '@deep-foundation/npm-packager/deep.json';
+import npmPackagerPckg from '@deep-foundation/npm-packager/deep.json' assert { type: 'json'};
 import { importPackage, sharePermissions, containWithin, packageExists } from './1664940577200-tsx.js';
 
 const debug = Debug('deeplinks:migrations:npm-packager');

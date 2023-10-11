@@ -1,16 +1,24 @@
 {
-  "extends": "@tsconfig/recommended/tsconfig.json",
-  "exclude": [
-    "jest.config.ts",
-  ],
   "compilerOptions": {
-    "jsx": "react",
-    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
     "sourceMap": true,
     "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strict": false,
+    "removeComments": true,
+    "jsx": "react",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "es2015",
+    "skipLibCheck": true,
+    "lib": [
+      "dom",
+      "es6",
+      "es7",
+      "es2022.error"
+    ],
     "resolveJsonModule": true,
-    "target": "ES2022"
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
   }
 }
