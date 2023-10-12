@@ -17,7 +17,7 @@ import Debug from 'debug';
 import waitOn from 'wait-on';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from './imports/client.js';
-import {gql} from 'graphql-tag';
+import gql from 'graphql-tag';
 import { containerController, DOCKER, getJwt } from './imports/router/links.js';
 import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/minilinks.js';
 import _ from 'lodash';

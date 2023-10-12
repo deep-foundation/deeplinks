@@ -1,11 +1,11 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import { DeepClient } from "../imports/client.js";
+import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
 import { gql } from '@apollo/client/index.js';
-import { PackageItem, Packager, sort } from "../imports/packager.js";
-import type { Package } from "../imports/packager.js";
-import { minilinks } from "../imports/minilinks.js";
-import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager.js";
+import { PackageItem, Packager, sort } from "../imports/packager";
+import type { Package } from "../imports/packager";
+import { minilinks } from "../imports/minilinks";
+import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager";
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:tests:packager');
@@ -76,7 +76,7 @@ describe('packager', () => {
   describe('sorting', () => {
     const references = {
       id: 'id',
-      from: 'from ',
+      from: 'from',
       to: 'to',
       type: 'type',
     };
@@ -201,7 +201,7 @@ describe('packager', () => {
         {
           "package": {
             "dependencyId": 0,
-            "containValue": "Generatedfrom "
+            "containValue": "GeneratedFrom"
           },
           "id": 12
         },
@@ -335,7 +335,7 @@ describe('packager', () => {
           }
         },
         {
-          "id": "editorClientHandlerGeneratedfrom ",
+          "id": "editorClientHandlerGeneratedFrom",
           "type": 12,
           "from": "editorClientHandlerGenerated",
           "to": "editorClientHandler"
@@ -348,13 +348,13 @@ describe('packager', () => {
           }
         },
         {
-          "id": "queryClientHandlerGeneratedfrom ",
+          "id": "queryClientHandlerGeneratedFrom",
           "type": 12,
           "from": "queryClientHandlerGenerated",
           "to": "queryClientHandler"
         },
         {
-          "id": "stringClientHandlerGeneratedfrom ",
+          "id": "stringClientHandlerGeneratedFrom",
           "type": 12,
           "from": "stringClientHandlerGenerated",
           "to": "stringClientHandler"
@@ -451,7 +451,7 @@ describe('packager', () => {
         {
           "package": {
             "dependencyId": 0,
-            "containValue": "Generatedfrom "
+            "containValue": "GeneratedFrom"
           },
           "id": 12
         },
@@ -585,7 +585,7 @@ describe('packager', () => {
           }
         },
         {
-          "id": "editorClientHandlerGeneratedfrom ",
+          "id": "editorClientHandlerGeneratedFrom",
           "type": 12,
           "from": "editorClientHandlerGenerated",
           "to": "editorClientHandler"
@@ -598,13 +598,13 @@ describe('packager', () => {
           }
         },
         {
-          "id": "queryClientHandlerGeneratedfrom ",
+          "id": "queryClientHandlerGeneratedFrom",
           "type": 12,
           "from": "queryClientHandlerGenerated",
           "to": "queryClientHandler"
         },
         {
-          "id": "stringClientHandlerGeneratedfrom ",
+          "id": "stringClientHandlerGeneratedFrom",
           "type": 12,
           "from": "stringClientHandlerGenerated",
           "to": "stringClientHandler"

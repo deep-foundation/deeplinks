@@ -336,7 +336,7 @@ export class Packager<L extends Link<any>> {
             if (!pckg.dependencies?.[item.package.dependencyId]) errors.push(`!pckg.dependencies?.[pckg.data[${i}].package.dependencyId,(${item.package.dependencyId})]`);
           } else {
             if (typeof(item?.type) !== 'string' && typeof(item?.type) !== 'number') errors.push(`!item[${i}(id:${item?.id})].type`);
-            if (item.hasOwnProperty('from ') && typeof(item?.from) !== 'undefined') if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}(id:${item?.id})].from`);
+            if (item.hasOwnProperty('from') && typeof(item?.from) !== 'undefined') if (typeof(item?.from) !== 'string' && typeof(item?.from) !== 'number') errors.push(`!item[${i}(id:${item?.id})].from`);
             if (item.hasOwnProperty('to') && typeof(item?.to) !== 'undefined') if (typeof(item?.to) !== 'string' && typeof(item?.to) !== 'number') errors.push(`!item[${i}(id:${item?.id})].to`);
             if (item.value) {
               if (typeof(item?.value) !== 'object') errors.push(`!item[${i}].value`);
@@ -362,7 +362,7 @@ export class Packager<L extends Link<any>> {
       if (errors.length) return { errors };
       const { sorted } = sort(pckg, data, errors, {
         id: 'id',
-        from: 'from ',
+        from: 'from',
         to: 'to',
         type: 'type',
       });

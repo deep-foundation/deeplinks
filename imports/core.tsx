@@ -250,10 +250,10 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'TreeIncludeOut', type: 'TreeInclude', from: 'Tree', to: 'Any' },
     { id: 'TreeIncludeFromCurrent', type: 'TreeInclude', from: 'Tree', to: 'Any' },
     { id: 'TreeIncludeToCurrent', type: 'TreeInclude', from: 'Tree', to: 'Any' },
-    { id: 'TreeIncludeCurrentfrom ', type: 'TreeInclude', from: 'Tree', to: 'Any' },
+    { id: 'TreeIncludeCurrentFrom', type: 'TreeInclude', from: 'Tree', to: 'Any' },
     { id: 'TreeIncludeCurrentTo', type: 'TreeInclude', from: 'Tree', to: 'Any' },
     { id: 'TreeIncludeFromCurrentTo', type: 'TreeInclude', from: 'Tree', to: 'Any' },
-    { id: 'TreeIncludeToCurrentfrom ', type: 'TreeInclude', from: 'Tree', to: 'Any' },
+    { id: 'TreeIncludeToCurrentFrom', type: 'TreeInclude', from: 'Tree', to: 'Any' },
 
     { id: 'AllowInsertType', type: 'Operation' },
     { id: 'AllowUpdateType', type: 'Operation' },
@@ -276,7 +276,7 @@ async ({ deep, require, gql, data: { newLink } }) => {
     { id: 'plv8SupportsJs', type: 'Supports', from: 'Plv8IsolationProvider', to: 'JSminiExecutionProvider' },
 
     { id: 'Authorization', type: 'Type', from: 'Any', to: 'Any' },
-    { id: 'Generatedfrom ', type: 'Type', from: 'Any', to: 'Any' },
+    { id: 'GeneratedFrom', type: 'Type', from: 'Any', to: 'Any' },
 
     { id: 'ClientJSIsolationProvider', type: 'IsolationProvider' },
     { id: 'clientSupportsJs', type: 'Supports', from: 'ClientJSIsolationProvider', to: 'JSExecutionProvider' },

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "jsx": "react-jsx",
     "module": "NodeNext",
     "resolveJsonModule": true,
