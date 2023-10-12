@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import { DeepClient } from "../imports/client.js";
+import { DeepClient } from "../imports/client";
 import { assert } from 'chai';
-import { delay } from "../imports/promise.js";
+import { delay } from "../imports/promise";
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,

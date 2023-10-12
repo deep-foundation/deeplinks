@@ -1,18 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "jsx": "react-jsx",
-    "module": "NodeNext",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "NodeNext",
-    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
     "sourceMap": true,
-    // Only for hasura, react-hasura, materialized-path, deeplinks because they are bad typed
-    "strictNullChecks": false,
-    "strict": false,
-
-  },
+    "noImplicitAny": false,
+    "removeComments": true,
+    "jsx": "react",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "es2015",
+    "skipLibCheck": true,
+    "lib": [
+      "dom",
+      "es6",
+      "es7",
+      "es2022.error"
+    ],
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+  }
 }

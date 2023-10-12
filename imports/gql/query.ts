@@ -1,5 +1,5 @@
 import Debug from 'debug';
-import {gql} from 'graphql-tag';
+import gql from 'graphql-tag';
 
 const debug = Debug('deeplinks:gql:query');
 const log = debug.extend('log');

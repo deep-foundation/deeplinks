@@ -1,6 +1,6 @@
 import { jwt } from '../jwt.js';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import {gql} from 'graphql-tag';
+import gql from 'graphql-tag';
 import { generateSerial, insertMutation } from '../gql/index.js';
 import { ApolloServer } from 'apollo-server-express';
 import { DeepClient } from '../client.js';

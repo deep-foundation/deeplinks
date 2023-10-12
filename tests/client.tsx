@@ -1,22 +1,22 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client.js";
+import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client";
 import { assert } from 'chai';
-import { BoolExpLink, MutationInputLink } from "../imports/client_types.js";
+import { BoolExpLink, MutationInputLink } from "../imports/client_types";
 import { inspect } from 'util'
-import { createSerialOperation } from "../imports/gql/index.js";
+import { createSerialOperation } from "../imports/gql";
 import { render, screen, waitFor } from '@testing-library/react'
-import { DeepProvider } from '../imports/client.js';
+import { DeepProvider } from '../imports/client';
 import React, { useEffect } from "react";
 import { ApolloClient, ApolloProvider } from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
-import { useDeep } from '../imports/client.js';
-import { IApolloClientGeneratorOptions } from '@deep-foundation/hasura/client.js';
-import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider.js'
-import { TokenProvider } from '../imports/react-token.js';
-import { LocalStoreProvider } from '@deep-foundation/store/local.js';
-import { QueryStoreProvider } from '@deep-foundation/store/query.js';
-import { CookiesStoreProvider } from '@deep-foundation/store/cookies.js';
-import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor.js";
+import { useDeep } from '../imports/client';
+import { IApolloClientGeneratorOptions } from '@deep-foundation/hasura/client';
+import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider'
+import { TokenProvider } from '../imports/react-token';
+import { LocalStoreProvider } from '@deep-foundation/store/local';
+import { QueryStoreProvider } from '@deep-foundation/store/query';
+import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
+import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
 
 function Main({ options }: { options: IApolloClientGeneratorOptions }): JSX.Element {
   return <ApolloClientTokenizedProvider options={options}>
