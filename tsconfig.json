@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "NodeNext",
     "skipLibCheck": true,
+    "sourceMap": true,
     // Only for hasura, react-hasura, materialized-path, deeplinks because they are bad typed
     "strictNullChecks": false,
     "strict": false,
