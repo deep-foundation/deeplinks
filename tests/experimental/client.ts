@@ -1,8 +1,8 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { ApolloClient} from '@apollo/client/index.js';
 import '@testing-library/jest-dom';
-import { SerialTransitionsBuilder, Transition } from '../../imports/experimental/serial-transitions-builder';
-import { DeepClient, Table } from '../../imports/client';
+import { SerialTransitionsBuilder, Transition } from '../../imports/experimental/serial-transitions-builder.js';
+import { DeepClient, Table } from '../../imports/client.js';
 import assert from 'assert';
 
 

@@ -1,11 +1,11 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
-import { DeepClient } from "../imports/client";
+import { DeepClient } from "../imports/client.js";
 import { assert } from 'chai';
-import gql from "graphql-tag";
+import {gql} from 'graphql-tag';
 import Debug from 'debug';
 import fetch from 'node-fetch';
-import { insertHandler, insertSelector, insertSelectorItems, deleteHandler, deleteSelector }  from "../imports/handlers";
+import { insertHandler, insertSelector, insertSelectorItems, deleteHandler, deleteSelector }  from "../imports/handlers.js";
 import _ from 'lodash';
 import { _ids } from '../imports/client.js';
 

@@ -1,11 +1,11 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import { DeepClient } from "../imports/client";
+import { DeepClient } from "../imports/client.js";
 import { assert } from 'chai';
 import { gql } from '@apollo/client/index.js';
-import { PackageItem, Packager, sort } from "../imports/packager";
-import type { Package } from "../imports/packager";
-import { minilinks } from "../imports/minilinks";
-import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager";
+ import { PackageItem, Packager, sort } from "../imports/packager.js";
+import type { Package } from "../imports/packager.js";
+import { minilinks } from "../imports/minilinks.js";
+import { packagerInstallCore, packagerPublishCore } from "../imports/router/packager.js";
 import Debug from 'debug';
 
 const debug = Debug('deeplinks:tests:packager');
