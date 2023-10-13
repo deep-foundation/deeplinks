@@ -1,4 +1,4 @@
-import { _serialize, _boolExpFields, serializeWhere, serializeQuery } from './client.js';
+import { _serialize, _boolExpFields, serializeWhere, serializeQuery, useDeep } from './client.js';
 import { BoolExpLink, ComparasionType, QueryLink } from './client_types.js';
 import { MinilinkCollection, MinilinksGeneratorOptions, Link } from './minilinks.js';
 
@@ -12,7 +12,7 @@ export const minilinksQuery = <L extends Link<number>>(
 ): L[] => {
   if (typeof(query) === 'number') return [ml.byId[query]];
   else {
-    const q = serializeQuery(query);
+    const q = serializeQuery(query, 'links');
     const result = minilinksQueryHandle<L>(q.where, ml);
     return q.limit ? result.slice(q.offset || 0, (q.offset || 0) + (q.limit)) : result;
   }
@@ -24,7 +24,7 @@ export const minilinksQueryIs = <L extends Link<number>>(
 ): boolean => {
   if (typeof(query) === 'number') return link.id === query;
   else {
-    const q = serializeQuery(query);
+    const q = serializeQuery(query, 'links');
     return minilinksQueryLevel(
       q,
       link,
