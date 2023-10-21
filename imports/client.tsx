@@ -295,6 +295,8 @@ export interface DeepClientOptions<L = Link<number>> {
   defaultDeleteName?: string;
 
   silent?: boolean;
+
+  unsafe?: any;
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
@@ -332,6 +334,8 @@ export interface DeepClientInstance<L = Link<number>> {
   defaultInsertName?: string;
   defaultUpdateName?: string;
   defaultDeleteName?: string;
+
+  unsafe?: any;
 
   stringify(any?: any): string;
 
@@ -512,6 +516,9 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   defaultDeleteName?: string;
 
   silent: boolean;
+
+  unsafe?: any;
+
   _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
@@ -574,6 +581,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     
     this.silent = options.silent || false;
 
+    this.unsafe = options.unsafe || {};
   }
 
   stringify(any?: any): string {
