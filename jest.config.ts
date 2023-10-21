@@ -1,4 +1,4 @@
 export default {
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   verbose: true,
 };
