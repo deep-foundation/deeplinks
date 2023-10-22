@@ -370,7 +370,13 @@ export interface DeepClientInstance<L = Link<number>> {
 
   can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
 
-  useDeepSubscription: typeof useDeepSubscription
+  useDeepSubscription: typeof useDeepSubscription;
+  useDeepQuery: typeof useDeepQuery;
+  useMinilinksQuery: (query: QueryLink) => L[];
+  useMinilinksSubscription: (query: QueryLink) => L[];
+  useDeep: typeof useDeep;
+  DeepProvider: typeof DeepProvider;
+  DeepContext: typeof DeepContext;
 }
 
 export interface DeepClientAuthResult {
