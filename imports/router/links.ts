@@ -196,11 +196,12 @@ export const useRunner = async ({
   useRunnerDebug("handler4: ");
 
   const jwt = await getJwt(handlerId, useRunnerDebug);
-  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler: isolationProviderImageName, code, jwt, data});
+  const secret = process.env.DEEPLINKS_HASURA_SECRET; // TODO: check jwt's permissions (unsafe permission must be granted)
+  const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler: isolationProviderImageName});
   useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
-  const callResult = await containerController.callHandler({ code, container, jwt, data });
+  const callResult = await containerController.callHandler({ code, container, jwt, secret, data });
   useRunnerDebug('callResult', callResult);
   return callResult;
 }
@@ -628,7 +629,7 @@ export async function handlePort(handlePortLink: any, operation: 'INSERT' | 'DEL
     const containerName = `deep-handle-port-${portValue}`;
     handlePortDebug('INSERT containerName', containerName);
 
-    const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage, code: null, jwt: null, data: { }});
+    const container = await containerController.newContainer({ publish: true, forcePort: portValue, forceName: containerName, handler: dockerImage});
 
     handlePortDebug('INSERT newContainer result', container);
 
