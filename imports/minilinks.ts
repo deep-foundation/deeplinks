@@ -597,7 +597,9 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
   const dRef = useRef<any>();
   const [d, setD] = useState();
   useEffect(() => {
-    if (listenerRef.current) ml.emitter.removeListener('added removed updated', listenerRef.current);
+    if (listenerRef.current) ml.emitter.removeListener('added', listenerRef.current);
+    if (listenerRef.current) ml.emitter.removeListener('updated', listenerRef.current);
+    if (listenerRef.current) ml.emitter.removeListener('removed', listenerRef.current);
     listenerRef.current = (oldL, newL) => {
       const prev = d || dRef.current;
       const data = ml.query(query);
@@ -605,8 +607,14 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
         setD(data);
       }
     };
-    ml.emitter.on('added removed updated', listenerRef.current);
-    return () => ml.emitter.removeListener('added removed updated', listenerRef.current);
+    ml.emitter.on('added', listenerRef.current);
+    ml.emitter.on('updated', listenerRef.current);
+    ml.emitter.on('removed', listenerRef.current);
+    return () => {
+      ml.emitter.removeListener('added', listenerRef.current);
+      ml.emitter.removeListener('updated', listenerRef.current);
+      ml.emitter.removeListener('removed', listenerRef.current);
+    }
   }, []);
     // const iterationsInterval = setInterval(() => {
       //   setIteration((i: number) => i === Number.MAX_SAFE_INTEGER ? 0 : i+1)
