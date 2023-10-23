@@ -596,13 +596,15 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
   const listenerRef = useRef<any>();
   const dRef = useRef<any>();
   const [d, setD] = useState();
+  const qRef = useRef<any>(query);
+  qRef.current = query;
   useEffect(() => {
     if (listenerRef.current) ml.emitter.removeListener('added', listenerRef.current);
     if (listenerRef.current) ml.emitter.removeListener('updated', listenerRef.current);
     if (listenerRef.current) ml.emitter.removeListener('removed', listenerRef.current);
     listenerRef.current = (oldL, newL) => {
       const prev = d || dRef.current;
-      const data = ml.query(query);
+      const data = ml.query(qRef.current);
       if (!_isEqual(prev, data)) {
         setD(data);
       }
