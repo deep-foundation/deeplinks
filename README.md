@@ -28,6 +28,20 @@ Deep.Links is started together with Deep.Case app and other services in GitPod. 
 4. Press `Enter` to execute that command again, that will finish restart sequence.
 ![IMG_1493](https://github.com/deep-foundation/deepcase-app/assets/1431904/56f48dad-d751-44c7-8871-164f824f122b)
 
+## Dignostics
+
+### Get logs:
+
+```sh
+docker logs deep-links
+```
+
+### Enter the bash from inside the docker container:
+
+```sh
+docker exec -it deep-links bash
+```
+
 ## Library
 See [Documentation] for examples and API
 
