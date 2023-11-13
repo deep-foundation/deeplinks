@@ -30,10 +30,16 @@ Deep.Links is started together with Deep.Case app and other services in GitPod. 
 
 ## Dignostics
 
-### Get logs:
+### Get all logs:
 
 ```sh
 docker logs deep-links
+```
+
+### Get live logs:
+
+```sh
+docker logs -f deep-links
 ```
 
 ### Enter the bash from inside the docker container:
