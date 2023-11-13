@@ -42,10 +42,10 @@ docker logs deep-links
 docker logs -f deep-links
 ```
 
-### Enter the bash from inside the docker container:
+### Enter the sh from inside the docker container:
 
 ```sh
-docker exec -it deep-links bash
+docker exec -it deep-links sh
 ```
 
 ## Library
