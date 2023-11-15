@@ -1,6 +1,10 @@
 import _remove from 'lodash/remove.js';
 import _isEqual from 'lodash/isEqual.js';
 import _isEqualWith from 'lodash/isEqualWith.js';
+import _mean from 'lodash/mean.js';
+import _sum from 'lodash/sum.js';
+import _min from 'lodash/min.js';
+import _max from 'lodash/max.js';
 import EventEmitter from 'events';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
@@ -8,6 +12,7 @@ import { inherits } from 'util';
 import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
 import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
+import { Observable } from '@apollo/client';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -42,6 +47,11 @@ export interface LinkHashFields {
 
 export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>>, LinkHashFields {}
 
+export type MinilinksQueryOptionAggregate = 'count' | 'sum' | 'avg' | 'min' | 'max';
+export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
+  aggregate?: A;
+}
+
 export interface MinilinksResult<Link> {
   links: Link[];
   types: { [id: number]: Link[] };
@@ -51,7 +61,9 @@ export interface MinilinksResult<Link> {
   byType: { [id: number]: Link[] };
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
-  query(query: QueryLink | number): Link[];
+  query(query: QueryLink | number): Link[] | any;
+  select(query: QueryLink | number): Link[] | any;
+  subscribe(query: QueryLink | number): Observable<Link[] | any>;
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -203,8 +215,45 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   links: L[] = [];
   options: MGO;
   emitter: EventEmitter;
-  query(query: QueryLink | number): L[] {
-    return minilinksQuery<L>(query, this);
+
+  query<A>(query: QueryLink | number, options?: MinilinksQueryOptions<A>): A extends string ? any : L[] {
+    const result = minilinksQuery<L>(query, this);
+    if (options?.aggregate === 'count') return result?.length as any;
+    if (options?.aggregate === 'avg') return _mean(result?.map(l => l?.value?.value)) as any;
+    if (options?.aggregate === 'sum') return _sum(result?.map(l => l?.value?.value)) as any;
+    if (options?.aggregate === 'min') return _min(result?.map(l => l?.value?.value)) as any;
+    if (options?.aggregate === 'max') return _max(result?.map(l => l?.value?.value)) as any;
+    return result;
+  }
+  select(query: QueryLink | number, options?: MinilinksQueryOptions): L[] | any {
+    return this.query(query, options);
+  }
+
+  /**
+   * minilinks.subscribe
+   * @example
+   * minilinks.subscribe({ type_id: 2 }).subscribe({ next: (links) => {}, error: (err) => {} });
+   */
+  subscribe(query: QueryLink | number): Observable<L[] | any> {
+    const ml = this;
+    return new Observable((observer) => {
+      let prev = ml.query(query);
+      observer.next(prev);
+      let listener = (oldL, newL) => {
+        const data = ml.query(query);
+        if (!_isEqual(prev, data)) {
+          observer.next(data);
+        }
+      };
+      ml.emitter.on('added', listener);
+      ml.emitter.on('updated', listener);
+      ml.emitter.on('removed', listener);
+      return () => {
+        ml.emitter.removeListener('added', listener);
+        ml.emitter.removeListener('updated', listener);
+        ml.emitter.removeListener('removed', listener);
+      }
+    });
   }
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
@@ -592,36 +641,20 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
 export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
-  // console.log('54353246234562346435')
-  const listenerRef = useRef<any>();
-  const dRef = useRef<any>();
+  const observerRef = useRef<any>();
   const [d, setD] = useState();
   const qRef = useRef<any>(query);
   qRef.current = query;
   useEffect(() => {
-    if (listenerRef.current) ml.emitter.removeListener('added', listenerRef.current);
-    if (listenerRef.current) ml.emitter.removeListener('updated', listenerRef.current);
-    if (listenerRef.current) ml.emitter.removeListener('removed', listenerRef.current);
-    listenerRef.current = (oldL, newL) => {
-      const prev = d || dRef.current;
-      const data = ml.query(qRef.current);
-      if (!_isEqual(prev, data)) {
-        setD(data);
-      }
-    };
-    ml.emitter.on('added', listenerRef.current);
-    ml.emitter.on('updated', listenerRef.current);
-    ml.emitter.on('removed', listenerRef.current);
+    !!observerRef.current && observerRef.current.unsubscribe();
+    const obs = observerRef.current = ml.subscribe(qRef.current);
+    const sub = obs.subscribe({
+      next: (links) => setD(links),
+      error: (error) => { throw new Error(error) },
+    });
     return () => {
-      ml.emitter.removeListener('added', listenerRef.current);
-      ml.emitter.removeListener('updated', listenerRef.current);
-      ml.emitter.removeListener('removed', listenerRef.current);
+      sub.unsubscribe();
     }
   }, []);
-    // const iterationsInterval = setInterval(() => {
-      //   setIteration((i: number) => i === Number.MAX_SAFE_INTEGER ? 0 : i+1)
-      // }, 1000);
-      // return () => clearInterval(iterationsInterval);
-  const data = dRef.current = d ? d : ml.query(query);
-  return data;
+  return d || ml.query(query);
 };
