@@ -3037,7 +3037,7 @@ describe('sync handlers', () => {
     const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
     const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
     const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
-      `(arg) => {
+      `({deep}) => {
         const deepSelectResult = deep.select({
           id: ${customTypeLinkId}
         })
