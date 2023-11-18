@@ -1,5 +1,6 @@
 import { DeepClient, DeepClientInstance } from './client';
 import {debug} from './debug.js'
+import { Link } from './minilinks';
 const moduleLog = debug.extend('package')
 
 /**
@@ -155,7 +156,7 @@ const deviceLinkId = await package.Device.idLocal();
       throw new Error(`Package with name ${this.name} is not found`)
     }
 
-    const result = this.deep.minilinks.apply(packageLinks)
+    const result = this.deep.minilinks.apply(packageLinks as Link<number>[])
     log({result})
 
     return result

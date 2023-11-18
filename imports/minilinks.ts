@@ -12,7 +12,7 @@ import { inherits } from 'util';
 import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
 import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
-import { Observable } from '@apollo/client';
+import { Observable } from '@apollo/client/index.js';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -645,12 +645,20 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
   const [d, setD] = useState();
   const qRef = useRef<any>(query);
   qRef.current = query;
+  console.log('useMinilinksSubscription', 'render', d, query);
   useEffect(() => {
     !!observerRef.current && observerRef.current.unsubscribe();
     const obs = observerRef.current = ml.subscribe(qRef.current);
+    console.log('useMinilinksSubscription', 'useEffect', obs);
     const sub = obs.subscribe({
-      next: (links) => setD(links),
-      error: (error) => { throw new Error(error) },
+      next: (links) => {
+        console.log('useMinilinksSubscription', 'next', links);
+        setD(links);
+      },
+      error: (error) => {
+        console.log('useMinilinksSubscription', 'error', error);
+        throw new Error(error);
+      },
     });
     return () => {
       sub.unsubscribe();
