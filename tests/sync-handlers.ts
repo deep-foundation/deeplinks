@@ -3049,7 +3049,7 @@ describe('sync handlers', () => {
         type_id: customTypeLinkId
       })
   })
-  it('deep is available without using handler argument', async () => {
+  it('deep variable is available globally', async () => {
     const customTypeLinkId = await deep.insert({
       type_id: await deep.id("@deep-foundation/core", "Type")
     }).then(result => result.data[0].id);
@@ -3058,7 +3058,7 @@ describe('sync handlers', () => {
     const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
       `() => {
         if(deep) {
-          throw new Error("deep variable is available without using it from argument")
+          throw new Error("deep variable is available globally")
         }
       }`, undefined, supportsId);
       await deep.insert({
