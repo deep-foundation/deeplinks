@@ -3049,4 +3049,20 @@ describe('sync handlers', () => {
         type_id: customTypeLinkId
       })
   })
+  it('deep is available without using handler argument', async () => {
+    const customTypeLinkId = await deep.insert({
+      type_id: await deep.id("@deep-foundation/core", "Type")
+    }).then(result => result.data[0].id);
+    const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
+    const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
+      `() => {
+        if(deep) {
+          throw new Error("deep variable is available without using it from argument")
+        }
+      }`, undefined, supportsId);
+      await deep.insert({
+        type_id: customTypeLinkId
+      })
+  })
 });
