@@ -641,28 +641,25 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
 export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
-  const observerRef = useRef<any>();
   const [d, setD] = useState();
-  const qRef = useRef<any>(query);
-  qRef.current = query;
-  console.log('useMinilinksSubscription', 'render', d, query);
+  const sRef = useRef<any>();
+  const qPrevRef = useRef<any>(query);
+  const q = useMemo(() => _isEqual(query, qPrevRef.current) ? qPrevRef.current : query, [query]);
+  qPrevRef.current = q;
   useEffect(() => {
-    !!observerRef.current && observerRef.current.unsubscribe();
-    const obs = observerRef.current = ml.subscribe(qRef.current);
-    console.log('useMinilinksSubscription', 'useEffect', obs);
-    const sub = obs.subscribe({
+    if (sRef.current) sRef.current.unsubscribe();
+    const obs = ml.subscribe(q);
+    const sub = sRef.current = obs.subscribe({
       next: (links) => {
-        console.log('useMinilinksSubscription', 'next', links);
         setD(links);
       },
       error: (error) => {
-        console.log('useMinilinksSubscription', 'error', error);
         throw new Error(error);
       },
     });
     return () => {
       sub.unsubscribe();
     }
-  }, []);
+  }, [q]);
   return d || ml.query(query);
 };
