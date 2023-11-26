@@ -1054,11 +1054,15 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   async name(input: Link<number> | number): Promise<string | undefined> {
     const id = typeof(input) === 'number' ? input : input.id;
 
-    if ((this.minilinks.byId[id] as Link<number>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<number>)?.value?.value;
+    // if ((this.minilinks.byId[id] as Link<number>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<number>)?.value?.value;
     const {data: [containLink]} = await this.select({
       type_id: { _id: ['@deep-foundation/core', 'Contain'] },
       to_id: id,
     });
+    if (!containLink?.value?.value) {
+      const {data: [packageLink]} = await this.select(id);
+      if (packageLink?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return packageLink?.value?.value;
+    }
     // @ts-ignore
     return containLink?.value?.value;
   };
