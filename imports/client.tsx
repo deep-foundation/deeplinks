@@ -282,7 +282,7 @@ export interface Observer<T> {
   complete?(): void;
 };
 
-export interface DeepClientOptions<L = Link<number>> {
+export interface DeepClientOptions<L extends Link<number> = Link<number>> {
   linkId?: number;
   token?: string;
   handleAuth?: (linkId?: number, token?: string) => any;
@@ -324,7 +324,7 @@ export type DeepClientLinkId = number;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
-export interface DeepClientInstance<L = Link<number>> {
+export interface DeepClientInstance<L extends Link<number> = Link<number>> {
   linkId?: number;
   token?: string;
   handleAuth?: (linkId?: number, token?: string) => any;
@@ -502,7 +502,7 @@ export function checkAndFillShorts(obj) {
   }
 }
 
-export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
+export class DeepClient<L extends Link<number> = Link<number>> implements DeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
   useDeepSubscription = useDeepSubscription;
@@ -1054,6 +1054,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async name(input: Link<number> | number): Promise<string | undefined> {
     const id = typeof(input) === 'number' ? input : input.id;
 
+    if ((this.minilinks.byId[id] as Link<number>)?.type_id === this.idLocal('@deep-foundation/core', 'Pcakaged')) return (this.minilinks.byId[id] as Link<number>)?.value?.value;
     const {data: [containLink]} = await this.select({
       type_id: { _id: ['@deep-foundation/core', 'Contain'] },
       to_id: id,
@@ -1117,7 +1118,7 @@ export function useAuthNode() {
   return useLocalStore('use_auth_link_id', 0);
 }
 
-export const DeepContext = createContext<DeepClient>(undefined);
+export const DeepContext = createContext<DeepClient<Link<number>>>(undefined);
 
 export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
   const log = debug.extend(useDeepGenerator.name)

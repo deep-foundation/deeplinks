@@ -122,7 +122,7 @@ export class Packager<L extends Link<any>> {
    */
   async fetchPackageNamespaceId(
     name: string,
-    deep: DeepClient<number>,
+    deep: DeepClient<Link<number>>,
   ): Promise<{ error: any, namespaceId: number }> {
     try {
       const q = await this.client.select({

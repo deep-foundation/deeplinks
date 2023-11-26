@@ -52,18 +52,18 @@ export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
   aggregate?: A;
 }
 
-export interface MinilinksResult<Link> {
-  links: Link[];
-  types: { [id: number]: Link[] };
-  byId: { [id: number]: Link };
-  byFrom: { [id: number]: Link[] };
-  byTo: { [id: number]: Link[] };
-  byType: { [id: number]: Link[] };
+export interface MinilinksResult<L extends Link<number>> {
+  links: L[];
+  types: { [id: number]: L[] };
+  byId: { [id: number]: L };
+  byFrom: { [id: number]: L[] };
+  byTo: { [id: number]: L[] };
+  byType: { [id: number]: L[] };
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
-  query(query: QueryLink | number): Link[] | any;
-  select(query: QueryLink | number): Link[] | any;
-  subscribe(query: QueryLink | number): Observable<Link[] | any>;
+  query(query: QueryLink | number): L[] | any;
+  select(query: QueryLink | number): L[] | any;
+  subscribe(query: QueryLink | number): Observable<L[] | any>;
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -190,7 +190,7 @@ export interface MinilinksInstance<L extends Link<number>>{
 }
 
 export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<number>>(options: MGO): MinilinksInstance<L> {
-  return function minilinks<L>(linksArray = [], memory: any = {}): MinilinksResult<L> {
+  return function minilinks<L extends Link<number>>(linksArray = [], memory: any = {}): MinilinksResult<L> {
     // @ts-ignore
     const mc = new MinilinkCollection<MGO, L>(options, memory);
     mc.add(linksArray);
