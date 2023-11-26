@@ -15,6 +15,7 @@ const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
 });
 
 export interface IGenerateQueryDataOptions {
+  tableNamePostfix?: string;
   tableName: string;
   operation?: 'query' | 'subscription';
   queryName?: string;
@@ -44,17 +45,18 @@ export interface IGenerateQueryDataResult extends IGenerateQueryDataOptions {
 
 export const generateQueryData = ({
   tableName,
+  tableNamePostfix = '',
   operation = 'query',
   queryName = `${tableName}`,
   returning = `id`,
   variables,
 }: IGenerateQueryDataOptions): IGenerateQueryDataBuilder => {
-  log('generateQuery', { tableName, operation, queryName, returning, variables });
+  log('generateQuery', { tableName, tableNamePostfix, operation, queryName, returning, variables });
   const fields = ['distinct_on', 'limit', 'offset', 'order_by', 'where'];
   const fieldTypes = fieldsInputs(tableName);
 
   return (alias: string, index: number): IGenerateQueryDataResult => {
-    log('generateQueryBuilder', { tableName, operation, queryName, returning, variables, alias, index });
+    log('generateQueryBuilder', { tableName, tableNamePostfix, operation, queryName, returning, variables, alias, index });
     const defs = [];
     const args = [];
     for (let f = 0; f < fields.length; f++) {
@@ -72,8 +74,9 @@ export const generateQueryData = ({
     }
     const result = {
       tableName,
+      tableNamePostfix,
       operation,
-      queryName,
+      queryName: queryName+tableNamePostfix,
       returning,
       variables,
       resultReturning: returning,
