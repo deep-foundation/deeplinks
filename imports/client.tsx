@@ -1,5 +1,5 @@
 import atob from 'atob';
-import { gql, useQuery, useSubscription, useApolloClient } from '@apollo/client/index.js';
+import { gql, useQuery, useSubscription, useApolloClient, Observable } from '@apollo/client/index.js';
 import type { ApolloQueryResult } from '@apollo/client/index.js';
 import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
@@ -14,6 +14,7 @@ import { corePckg } from './core.js';
 import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
 import get from 'get-value';
 import {debug} from './debug.js'
+import { Traveler as NativeTraveler } from './traveler.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -274,7 +275,20 @@ export function parseJwt (token): { userId: number; role: string; roles: string[
     ...other,
   };
 };
-export interface DeepClientOptions<L = Link<number>> {
+
+export interface Subscription {
+  closed: boolean;
+  unsubscribe(): void;
+}
+
+export interface Observer<T> {
+  start?(subscription: Subscription): any;
+  next?(value: T): void;
+  error?(errorValue: any): void;
+  complete?(): void;
+};
+
+export interface DeepClientOptions<L extends Link<number> = Link<number>> {
   linkId?: number;
   token?: string;
   handleAuth?: (linkId?: number, token?: string) => any;
@@ -301,10 +315,13 @@ export interface DeepClientOptions<L = Link<number>> {
   defaultDeleteName?: string;
 
   silent?: boolean;
+
+  unsafe?: any;
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
   error?: any;
+  subscribe?: (observer: Observer<any>) => Subscription;
 }
 
 export type DeepClientPackageSelector = string;
@@ -313,7 +330,7 @@ export type DeepClientLinkId = number;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
-export interface DeepClientInstance<L = Link<number>> {
+export interface DeepClientInstance<L extends Link<number> = Link<number>> {
   linkId?: number;
   token?: string;
   handleAuth?: (linkId?: number, token?: string) => any;
@@ -339,9 +356,12 @@ export interface DeepClientInstance<L = Link<number>> {
   defaultUpdateName?: string;
   defaultDeleteName?: string;
 
+  unsafe?: any;
+
   stringify(any?: any): string;
 
-  select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>>;
+  select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[] | number>>;
+  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[] | number>;
 
   insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable> , options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
@@ -373,7 +393,15 @@ export interface DeepClientInstance<L = Link<number>> {
 
   can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
 
-  useDeepSubscription: typeof useDeepSubscription
+  useDeepSubscription: typeof useDeepSubscription;
+  useDeepQuery: typeof useDeepQuery;
+  useMinilinksQuery: (query: QueryLink) => L[];
+  useMinilinksSubscription: (query: QueryLink) => L[];
+  useDeep: typeof useDeep;
+  DeepProvider: typeof DeepProvider;
+  DeepContext: typeof DeepContext;
+
+  Traveler(links: Link<number>[]): NativeTraveler;
 }
 
 export interface DeepClientAuthResult {
@@ -544,7 +572,7 @@ export function convertDeepDeleteToMinilinksApply(ml, _exp, table, toDelete: num
   }
 }
 
-export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
+export class DeepClient<L extends Link<number> = Link<number>> implements DeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
   useDeepSubscription = useDeepSubscription;
@@ -582,6 +610,9 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   defaultDeleteName?: string;
 
   silent: boolean;
+
+  unsafe?: any;
+
   _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
@@ -648,6 +679,7 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     
     this.silent = options.silent || false;
 
+    this.unsafe = options.unsafe || {};
   }
 
   stringify(any?: any): string {
@@ -676,6 +708,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
     table === 'selectors' ? this.selectorsSelectReturning :
     table === 'files' ? this.filesSelectReturning : `id`);
+    const tableNamePostfix = options?.tableNamePostfix;
+    const aggregate = options?.aggregate;
     
     // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
     const variables = options?.variables;
@@ -686,7 +720,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         queries: [
           generateQueryData({
             tableName: table,
-            returning,
+            tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
+            returning: aggregate ? `aggregate { ${aggregate} }` : returning,
             variables: {
               ...variables,
               ...query,
@@ -695,9 +730,77 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
         name: name,
       }));
 
-      return { ...q, data: (q)?.data?.q0 };
+      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
     } catch (e) {
+      console.log(generateQueryData({
+        tableName: table,
+        tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
+        returning: aggregate ? `aggregate { ${aggregate} }` : returning,
+        variables: {
+          ...variables,
+          ...query,
+        } })('a', 0));
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
+    }
+  };
+
+  /**
+   * deep.subscribe
+   * @example
+   * deep.subscribe({ up: { link_id: 380 } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   */
+  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
+    if (!exp) {
+      return new Observable((observer) => {
+        observer.error('!exp');
+      });
+    }
+    const query = serializeQuery(exp, options?.table || 'links');
+    const table = options?.table || this.table;
+    const returning = options?.returning ??
+    (table === 'links' ? this.linksSelectReturning :
+    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
+    table === 'selectors' ? this.selectorsSelectReturning :
+    table === 'files' ? this.filesSelectReturning : `id`);
+    const tableNamePostfix = options?.tableNamePostfix;
+    const aggregate = options?.aggregate;
+
+    // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
+    const variables = options?.variables;
+    const name = options?.name || this.defaultSelectName;
+
+    try {
+      const apolloObservable = this.apolloClient.subscribe({
+        ...generateQuery({
+          operation: 'subscription',
+          queries: [
+            generateQueryData({
+              tableName: table,
+              tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
+              returning: returning || aggregate ? `aggregate { ${aggregate} }` : returning,
+              variables: {
+                ...variables,
+                ...query,
+              } }),
+          ],
+          name: name,
+        }),
+      });
+
+      const observable = new Observable((observer) => {
+        const subscription = apolloObservable.subscribe({
+          next: (data: any) => {
+            observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : data?.q0);
+          },
+          error: (error) => observer.error(error),
+        });
+        return () => subscription.unsubscribe();
+      });
+
+    // @ts-ignore
+      return observable;
+    } catch (e) {
+      throw new Error(`DeepClient Subscription Error: ${e.message}`, { cause: e });
     }
   };
 
@@ -1050,10 +1153,15 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
   async name(input: Link<number> | number): Promise<string | undefined> {
     const id = typeof(input) === 'number' ? input : input.id;
 
+    // if ((this.minilinks.byId[id] as Link<number>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<number>)?.value?.value;
     const {data: [containLink]} = await this.select({
       type_id: { _id: ['@deep-foundation/core', 'Contain'] },
       to_id: id,
     });
+    if (!containLink?.value?.value) {
+      const {data: [packageLink]} = await this.select(id);
+      if (packageLink?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return packageLink?.value?.value;
+    }
     // @ts-ignore
     return containLink?.value?.value;
   };
@@ -1062,7 +1170,8 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     const id = typeof(input) === 'number' ? input : input?.id;
     if (!id) return;
     // @ts-ignore
-    return this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id)?.value?.value;
+    if (this.minilinks.byId[id]?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return this.minilinks.byId[id]?.value?.value;
+    return (this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
   }
 
   async import(path: string) : Promise<any> {
@@ -1082,6 +1191,10 @@ export class DeepClient<L = Link<number>> implements DeepClientInstance<L> {
     }
     return await import(path);
   }
+
+  Traveler(links: Link<number>[]) {
+    return new NativeTraveler(this, links);
+  };
 }
 
 export const JWT = gql`query JWT($linkId: Int) {
@@ -1108,7 +1221,7 @@ export function useAuthNode() {
   return useLocalStore('use_auth_link_id', 0);
 }
 
-export const DeepContext = createContext<DeepClient>(undefined);
+export const DeepContext = createContext<DeepClient<Link<number>>>(undefined);
 
 export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
   const log = debug.extend(useDeepGenerator.name)
@@ -1159,6 +1272,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   query: QueryLink,
   options?: {
     table?: Table;
+    tableNamePostfix?: string;
     returning?: string;
     variables?: any;
     name?: string;
@@ -1203,6 +1317,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   query: QueryLink,
   options?: {
     table?: Table;
+    tableNamePostfix?: string;
     returning?: string;
     variables?: any;
     name?: string;
@@ -1283,9 +1398,11 @@ export type InsertObjects<TTable extends Table> = (
 
 export type Options<TTable extends Table> = {
   table?: TTable;
+  tableNamePostfix?: string;
   returning?: string;
   variables?: any;
   name?: string;
+  aggregate?: 'count' | 'sum' | 'avg' | 'min' | 'max';
 };
 
 export type ReadOptions<TTable extends Table> = Options<TTable>;

@@ -21,9 +21,6 @@ export interface ContainerControllerOptions {
 
 export interface NewContainerOptions {
   handler: string,
-  code: string,
-  jwt: string,
-  data: any
   forceName?: string;
   forcePort?: number;
   forceRestart?: boolean;
@@ -42,6 +39,7 @@ export interface Container {
 export interface CallOptions {
   code: string;
   jwt: string,
+  secret?: string,
   data: any
   container: Container;
 }

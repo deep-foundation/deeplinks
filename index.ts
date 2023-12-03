@@ -496,9 +496,6 @@ const handleRoutes = async () => {
         handler: image,
         forceRestart: true,
         publish: +DOCKER ? false : true,
-        code: '', // TODO: Remove
-        jwt: '',
-        data: {}
       });
     }
 

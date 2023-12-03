@@ -3030,4 +3030,39 @@ describe('sync handlers', () => {
       });
     });
   });
+  it('select in handler', async () => {
+    const customTypeLinkId = await deep.insert({
+      type_id: await deep.id("@deep-foundation/core", "Type")
+    }).then(result => result.data[0].id);
+    const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
+    const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
+      `({deep}) => {
+        const deepSelectResult = deep.select({
+          id: ${customTypeLinkId}
+        })
+        if(deepSelectResult.data.length === 0) {
+          throw new Error('Select in handler returns empty array');
+        }
+      }`, undefined, supportsId);
+      await deep.insert({
+        type_id: customTypeLinkId
+      })
+  })
+  it('deep variable is available globally', async () => {
+    const customTypeLinkId = await deep.insert({
+      type_id: await deep.id("@deep-foundation/core", "Type")
+    }).then(result => result.data[0].id);
+    const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
+    const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
+      `() => {
+        if(deep) {
+          throw new Error("deep variable is available globally")
+        }
+      }`, undefined, supportsId);
+      await deep.insert({
+        type_id: customTypeLinkId
+      })
+  })
 });

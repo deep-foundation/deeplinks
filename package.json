@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.314",
+  "version": "0.0.322",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "bundle-jsonschema-test": "node ./bundles/jsonschema.js",
     "bundle-all": "npm run bundle-mathjs && npm run bundle-jsonschema && npm run bundle-jsonschema-test && npm run bundle-mathjs-test",
     "package:build": "tsc --project tsconfig.json",
+    "package:watch": "tsc -w --project tsconfig.json",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./benchmarks && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && cd ..) && (cd ./imports/router && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./tests && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
     "package:release": "npm run package:unbuild && npm version patch && git push && git push --tags",
@@ -24,8 +25,8 @@
     "unmigrate-s-h": "npm run package:build && npx migrate@latest down 1693460330175-sync-handlers-update --matches '*.js'",
     "remigrate-s-h": "npm run unmigrate-s-h && npm run migrate",
     "start-engine-docker": "npm run start-engine-docker-core",
-    "start-engine-docker-core": "cd ./node_modules/@deep-foundation/hasura && npm run docker",
-    "stop-engine-docker": "cd ./node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep down",
+    "start-engine-docker-core": "cd ./../../node_modules/@deep-foundation/hasura && npm run docker",
+    "stop-engine-docker": "cd ./../../node_modules/@deep-foundation/hasura/local && docker-compose --project-name deep down",
     "start-deeplinks-docker": "cd local && docker-compose pull && docker-compose -p deep up -d",
     "stop-deeplinks-docker": "cd local && docker-compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
@@ -36,7 +37,7 @@
     "deeplinks": "./call.cjs"
   },
   "dependencies": {
-    "@deep-foundation/npm-packager": "^0.0.38",
+    "@deep-foundation/npm-packager": "^0.0.39",
     "@deep-foundation/tsx": "^0.0.5",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
