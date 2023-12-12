@@ -15,7 +15,7 @@ export async function evalClientHandler({
 }> {
   try {
     console.log('evalClientHandler', 'value', value);
-    const evalResult = eval(value);
+    const evalResult = (new Function(`return ${value}`))();
     console.log('evalClientHandler', 'evalResult', evalResult);
     if (typeof evalResult === 'function') {
       return {
