@@ -336,6 +336,102 @@ describe('permissions', () => {
       expect(da3).to.be.undefined;
       expect(e3).to.not.be.undefined;
     });
+    it(`action AllowInsertType, object Type, subject guest, rule created by user with admin permissions`, async () => {
+      const userWithAdminPermissionsLoginResult = await deep.guest({})
+      const userWithAdminPermissions = new DeepClient({ deep, ...userWithAdminPermissionsLoginResult, silent: true })
+      await deep.insert({
+        type_id: await deep.id("@deep-foundation/core", "Join"),
+        from_id: userWithAdminPermissions.linkId,
+        to_id: await deep.id("deep", "users", "admin"),
+      })
+      const a1 = await userWithAdminPermissions.guest({});
+      const a2 = await userWithAdminPermissions.guest({});
+      const a3 = await userWithAdminPermissions.guest({});
+      await userWithAdminPermissions.insert({
+        type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'Rule'),
+        out: { data: [
+          {
+            type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'RuleSubject'),
+            to: { data: {
+              type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'Selector'),
+              out: { data: [
+                {
+                  type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a1.linkId,
+                  out: { data: {
+                    type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorInclude'),
+                  to_id: a2.linkId,
+                  out: { data: {
+                    type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+                {
+                  type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorExclude'),
+                  to_id: a3.linkId,
+                  out: { data: {
+                    type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorTree'),
+                    to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'containTree'),
+                  } },
+                },
+              ] }
+            } }
+          },
+          {
+            type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'RuleObject'),
+            to: { data: {
+              type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'Type'),
+                out: { data: {
+                  type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+          {
+            type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'RuleAction'),
+            to: { data: {
+              type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'Selector'),
+              out: { data: {
+                type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorInclude'),
+                to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'AllowInsertType'),
+                out: { data: {
+                  type_id: await userWithAdminPermissions.id('@deep-foundation/core', 'SelectorTree'),
+                  to_id: await userWithAdminPermissions.id('@deep-foundation/core', 'containTree'),
+                } },
+              } }
+            } }
+          },
+        ] },
+      });
+      const d1 = new DeepClient({ deep, ...a1, silent: true });
+      const { data: da1, error: e1 } = await d1.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Type'),
+      });
+      if (e1) console.log('error', e1);
+      expect(da1).to.not.be.undefined;
+      expect(e1).to.be.undefined;
+      const d2 = new DeepClient({ deep, ...a2, silent: true });
+      const { data: da2, error: e2 } = await d2.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Type'),
+      });
+      expect(da2).to.not.be.undefined;
+      expect(e2).to.be.undefined;
+      const d3 = new DeepClient({ deep, ...a3, silent: true });
+      const { data: da3, error: e3 } = await d3.insert({
+        type_id: await deep.id('@deep-foundation/core', 'Type'),
+      });
+      expect(da3).to.be.undefined;
+      expect(e3).to.not.be.undefined;
+    });
     it(`insert permission with SelectorFilter`, async () => {
       const a1 = await deep.guest({});
       const a2 = await deep.guest({});
