@@ -31,7 +31,8 @@
     "stop-deeplinks-docker": "cd local && docker-compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
     "snapshot:last": "node snapshots/last.js",
-    "snapshot:dump": "node snapshots/dump.js"
+    "snapshot:dump": "node snapshots/dump.js",
+    "warmup": "node warmup.js"
   },
   "bin": {
     "deeplinks": "./call.cjs"
