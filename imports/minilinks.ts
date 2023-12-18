@@ -548,26 +548,31 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
     500,
     true
   );
+  const refs = useRef<any>({});
   useEffect(() => {
-    const addedListener = (ol, nl) => {
+    if (refs.current.addedListener) ml.emitter.removeListener('added', refs.current.addedListener);
+    if (refs.current.updatedListener) ml.emitter.removeListener('updated', refs.current.updatedListener);
+    if (refs.current.removedListener) ml.emitter.removeListener('removed', refs.current.removedListener);
+    if (refs.current.applyListener) ml.emitter.removeListener('apply', refs.current.applyListener);
+    refs.current.addedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
     };
-    ml.emitter.on('added', addedListener);
-    const updatedListener = (ol, nl) => {
+    ml.emitter.on('added', refs.current.addedListener);
+    refs.current.updatedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
     };
-    ml.emitter.on('updated', updatedListener);
-    const removedListener = (ol, nl) => {
+    ml.emitter.on('updated', refs.current.updatedListener);
+    refs.current.removedListener = (ol, nl) => {
       if (filter(ol, ol, nl)) {
         action(ol, ml, ol, nl);
       }
     };
-    ml.emitter.on('removed', removedListener);
-    const applyListener = (ol, nl) => {
+    ml.emitter.on('removed', refs.current.removedListener);
+    refs.current.applyListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
@@ -576,18 +581,18 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
     if (interval) timeout = setTimeout(() => {
       action(undefined, ml);
     }, interval);
-    ml.emitter.on('apply', applyListener);
+    ml.emitter.on('apply', refs.current.applyListener);
     return () => {
       clearTimeout(timeout);
-      ml.emitter.removeListener('added', addedListener);
-      ml.emitter.removeListener('updated', updatedListener);
-      ml.emitter.removeListener('removed', removedListener);
-      ml.emitter.removeListener('apply', applyListener);
+      ml.emitter.removeListener('added', refs.current.addedListener);
+      ml.emitter.removeListener('updated', refs.current.updatedListener);
+      ml.emitter.removeListener('removed', refs.current.removedListener);
+      ml.emitter.removeListener('apply', refs.current.applyListener);
     };
-  }, []);
+  }, [ml]);
   useEffect(() => {
     setState(results(undefined, ml, undefined, undefined));
-  }, [filter, results]);
+  }, [ml, filter, results]);
   return state;
 };
 
