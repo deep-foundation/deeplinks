@@ -143,6 +143,14 @@ describe('permissions', () => {
     });
   });
   describe('insert', () => {
+    it('admin can insert Type', async () => {
+      const isAdminAbleToInsertTypeInstances = await deep.can(
+        await deep.id("@deep-foundation/core", "Type"),
+        await deep.id("@deep-foundation/core", "AllowInsertType"),
+        await deep.id("deep", "users", "admin")
+      )
+      assert.equal(isAdminAbleToInsertTypeInstances, true)
+    })
     it(`root can insert`, async () => {
       const { data: [{ id }], error } = await deep.insert({
         type_id: await deep.id('@deep-foundation/core', 'Operation'),
