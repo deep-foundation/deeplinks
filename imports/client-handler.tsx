@@ -15,8 +15,9 @@ export async function evalClientHandler({
 }> {
   try {
     console.log('evalClientHandler', 'value', value);
-    const evalResult = (new Function(`return ${value}`))();
-    console.log('evalClientHandler', 'evalResult', evalResult);
+    // const evalResult = (new Function(`return ${value}`))();
+    // console.log('evalClientHandler', 'evalResult', evalResult);
+    const evalResult = eval(value);
     if (typeof evalResult === 'function') {
       return {
         data: await evalResult({ deep, gql, ...input }),
