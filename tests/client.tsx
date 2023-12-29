@@ -51,8 +51,10 @@ describe('client', () => {
     assert.notEqual(guestDeep.linkId, undefined);
     assert.notEqual(guestDeep.linkId, 0);
     const guestId = guestDeep.linkId;
-    const adminId = await deepClient.id('deep', 'admin');
-    const admin = await deepClient.login({ linkId: adminId });
+    const adminId = await guestDeep.id('deep', 'admin');
+    assert.notEqual(adminId, undefined)
+    const admin = await guestDeep.login({ linkId: adminId });
+    assert.equal(admin.error, undefined)
     const deep = new DeepClient({ deep: deepClient, ...admin });
     assert.notEqual(deep.linkId, undefined);
     assert.notEqual(deep.linkId, 0);
