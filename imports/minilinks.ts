@@ -242,6 +242,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       let listener = (oldL, newL) => {
         const data = ml.query(query);
         if (!_isEqual(prev, data)) {
+          prev = data;
           observer.next(data);
         }
       };
@@ -652,6 +653,7 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
   const q = useMemo(() => _isEqual(query, qPrevRef.current) ? qPrevRef.current : query, [query]);
   qPrevRef.current = q;
   useEffect(() => {
+    setD(ml.query(q));
     if (sRef.current) sRef.current.unsubscribe();
     const obs = ml.subscribe(q);
     const sub = sRef.current = obs.subscribe({
@@ -666,5 +668,5 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
       sub.unsubscribe();
     }
   }, [q]);
-  return d || ml.query(query);
+  return d || ml.query(q);
 };
