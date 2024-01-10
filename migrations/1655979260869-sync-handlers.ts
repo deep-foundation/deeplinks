@@ -689,7 +689,7 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
         hasura_session['x-hasura-user-id'] = linkId;
         return ({ linkId, token })
       }
-      return ({ error: 'no link founded'});
+      return ({ error: 'no link found'});
     },
     new: function(options) {
       let { token, linkId } = options;

@@ -339,7 +339,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         // link[options.type] = type;
         // // type.typed += link;
         // if (!type[options.typed].find(l => l.id === link.id)) type[options.typed].push(link);
-      } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not founded`));
+      } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not found`));
       if (from) {
       //   // link.from = byId[link.from_id] // XXX
       //   link[options.from] = from;
@@ -348,7 +348,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       //   // from.outByType[link.type_id] += link; // XXX
       //   from[options.outByType][link[options.type_id]] = from[options.outByType][link[options.type_id]] || [];
       //   if (!from?.[options.outByType]?.[link[options.type_id]].find(l => l.id === link.id)) from[options.outByType][link[options.type_id]].push(link);
-      } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not founded`));
+      } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not found`));
       if (to) {
       //   // link.to = byId[link.to_id] // XXX
       //   link[options.to] = to;
@@ -357,7 +357,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       //   // to.inByType[link.type_id] += link;
       //   to[options.inByType][link[options.type_id]] = to[options.inByType][link[options.type_id]] || [];
       //   if (!to[options.inByType][link[options.type_id]].find(l => l.id === link.id)) to[options.inByType][link[options.type_id]].push(link);
-      } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not founded`));
+      } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not found`));
       if (options.handler) options.handler(link, this);
     }
     for (let l = 0; l < newLinks.length; l++) {

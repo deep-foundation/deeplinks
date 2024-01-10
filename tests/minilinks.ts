@@ -16,8 +16,8 @@ describe('minilinks', () => {
     expect(mlc?.byId?.[3]?.to).to.be.undefined;
     expect(mlc?.byId?.[5]?.from).to.be.undefined;
     expect(anomalies).to.have.lengthOf(2);
-    expect(anomalies?.[0]?.message).to.be.equal(`3 link.to_id 2 not founded`);
-    expect(anomalies?.[1]?.message).to.be.equal(`5 link.from_id 7 not founded`);
+    expect(anomalies?.[0]?.message).to.be.equal(`3 link.to_id 2 not found`);
+    expect(anomalies?.[1]?.message).to.be.equal(`5 link.from_id 7 not found`);
     expect(errors).to.have.lengthOf(1);
     expect(errors?.[0]?.message).to.be.equal(`1 can't add because already exists in collection`);
   });
