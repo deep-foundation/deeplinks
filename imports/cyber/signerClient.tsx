@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { SigningCyberClient } from '@cybercongress/cyber-js';
-import { CYBER } from './config';
+// import { CYBER } from './config';
 import configKeplr, { getKeplr } from './keplrUtils';
 import { OfflineSigner } from '@cybercongress/cyber-js/build/signingcyberclient';
 import { Option } from './types';
@@ -19,9 +19,11 @@ type SignerClientContextType = {
 async function createClient(
   signer: OfflineSigner
 ): Promise<SigningCyberClient> {
-  const options = { prefix: CYBER.BECH32_PREFIX_ACC_ADDR_CYBER };
+  const cyber = (await import('./config')).CYBER
+
+  const options = { prefix: cyber.BECH32_PREFIX_ACC_ADDR_CYBER };
   const client = await SigningCyberClient.connectWithSigner(
-    CYBER.CYBER_NODE_URL_API,
+    cyber.CYBER_NODE_URL_API,
     signer,
     options
   );
@@ -42,19 +44,22 @@ export function useSigningClient() {
 }
 
 function SigningClientProvider({ children }: { children: React.ReactNode }) {
+
   const [signer, setSigner] = useState<SignerClientContextType['signer']>();
   const [signingClient, setSigningClient] =
     useState<SignerClientContextType['signingClient']>();
 
   async function initSigner() {
+    const cyber = (await import('./config')).CYBER
+
     const windowKeplr = await getKeplr();
     if (windowKeplr && windowKeplr.experimentalSuggestChain) {
       await windowKeplr.experimentalSuggestChain(
-        configKeplr(CYBER.BECH32_PREFIX_ACC_ADDR_CYBER)
+        await configKeplr(cyber.BECH32_PREFIX_ACC_ADDR_CYBER)
       );
-      await windowKeplr.enable(CYBER.CHAIN_ID);
+      await windowKeplr.enable(cyber.CHAIN_ID);
       const offlineSigner = await windowKeplr.getOfflineSignerAuto(
-        CYBER.CHAIN_ID
+        cyber.CHAIN_ID
       );
 
       console.log('offlineSigner', offlineSigner);

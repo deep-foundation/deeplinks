@@ -1,5 +1,5 @@
 import { Keplr } from '@keplr-wallet/types';
-import { CYBER } from './config';
+// import { CYBER } from './config';
 
 export const getKeplr = async (): Promise<Keplr | undefined> => {
   // @ts-ignore
@@ -29,18 +29,20 @@ export const getKeplr = async (): Promise<Keplr | undefined> => {
   });
 };
 
-const configKeplr = (prefix) => {
+const configKeplr = async (prefix) => {
+  const cyber = (await import('./config')).CYBER
   return {
+  
     // Chain-id of the Cosmos SDK chain.
-    chainId: CYBER.CHAIN_ID,
+    chainId: cyber.CHAIN_ID,
     // The name of the chain to be displayed to the user.
-    chainName: CYBER.CHAIN_ID,
+    chainName: cyber.CHAIN_ID,
     // RPC endpoint of the chain.
-    rpc: CYBER.CYBER_NODE_URL_API,
-    rest: CYBER.CYBER_NODE_URL_LCD,
+    rpc: cyber.CYBER_NODE_URL_API,
+    rest: cyber.CYBER_NODE_URL_LCD,
     stakeCurrency: {
-      coinDenom: CYBER.DENOM_CYBER.toUpperCase(),
-      coinMinimalDenom: CYBER.DENOM_CYBER,
+      coinDenom: cyber.DENOM_CYBER.toUpperCase(),
+      coinMinimalDenom: cyber.DENOM_CYBER,
       coinDecimals: 0,
     },
     bip44: {
@@ -58,8 +60,8 @@ const configKeplr = (prefix) => {
     },
     currencies: [
       {
-        coinDenom: CYBER.DENOM_CYBER.toUpperCase(),
-        coinMinimalDenom: CYBER.DENOM_CYBER,
+        coinDenom: cyber.DENOM_CYBER.toUpperCase(),
+        coinMinimalDenom: cyber.DENOM_CYBER,
         coinDecimals: 0,
       },
       {
@@ -82,9 +84,9 @@ const configKeplr = (prefix) => {
     feeCurrencies: [
       {
         // Coin denomination to be displayed to the user.
-        coinDenom: CYBER.DENOM_CYBER.toUpperCase(),
+        coinDenom: cyber.DENOM_CYBER.toUpperCase(),
         // Actual denom (i.e. uatom, uscrt) used by the blockchain.
-        coinMinimalDenom: CYBER.DENOM_CYBER,
+        coinMinimalDenom: cyber.DENOM_CYBER,
         // # of decimal points to convert minimal denomination to user-facing denomination.
         coinDecimals: 0,
       },
