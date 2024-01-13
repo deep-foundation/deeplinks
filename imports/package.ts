@@ -156,7 +156,7 @@ const deviceLinkId = await package.Device.idLocal();
       throw new Error(`Package with name ${this.name} is not found`)
     }
 
-    const result = this.deep.minilinks.apply(packageLinks as Link<number>[])
+    const result = this.deep.minilinks.apply(packageLinks as Link[])
     log({result})
 
     return result

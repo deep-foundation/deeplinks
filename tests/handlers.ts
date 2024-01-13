@@ -17,6 +17,7 @@ const error = debug.extend('error');
 // 
 import waitOn from 'wait-on';
 import getPort from 'get-port';
+import { Id } from '../imports/minilinks';
 
 export const api = new HasuraApi({
   path: process.env.DEEPLINKS_HASURA_PATH,
@@ -218,7 +219,7 @@ const deletePackageWithPermissions = async (deepPackage: any) => {
   await deep.delete(_.compact([deepPackage.containValueId, deepPackage.packageValueId]), { table: 'strings' });
 };
 
-const insertOperationHandlerForSchedule = async (schedule: string, code: string, forceOwnerId?: number) => {
+const insertOperationHandlerForSchedule = async (schedule: string, code: string, forceOwnerId?: Id) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
@@ -279,7 +280,7 @@ export const deleteScheduleHandler = async (handler) => {
 };
 
 
-export async function getPromiseResults(deep, resultTypeId: number, linkId: any) {
+export async function getPromiseResults(deep, resultTypeId: Id, linkId: any) {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');

@@ -12,6 +12,7 @@ import { findPromiseLink, reject, resolve } from '../promise.js';
 import { promisify } from 'util';
 import {exec} from 'child_process';
 import waitOn from 'wait-on';
+import { Id } from '../minilinks.js';
 const execAsync = promisify(exec);
 
 const SCHEMA = 'public';
@@ -47,8 +48,8 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-export function makePromiseResult(promiseId: number, resolvedTypeId: number, promiseResultTypeId: number, result: any, promiseReasonTypeId: number, handleInsertId: any): any {
-  if (typeof handleInsertId === 'number') {
+export function makePromiseResult(promiseId: Id, resolvedTypeId: Id, promiseResultTypeId: Id, result: any, promiseReasonTypeId: Id, handleInsertId: any): any {
+  if (typeof handleInsertId === 'number' || typeof handleInsertId === 'string') {
     return {
       from: {
         data: {
@@ -79,7 +80,7 @@ export function makePromiseResult(promiseId: number, resolvedTypeId: number, pro
   }
 };
 
-export async function processPromises(promises: any[], handleOperationsIds: any[], promiseId: number, promiseResultTypeId: number, promiseReasonTypeId: number, resolvedTypeId: number, rejectedTypeId: number, log: any) {
+export async function processPromises(promises: any[], handleOperationsIds: any[], promiseId: Id, promiseResultTypeId: Id, promiseReasonTypeId: Id, resolvedTypeId: Id, rejectedTypeId: Id, log: any) {
   log("promises.length: ", promises.length);
   await Promise.allSettled(promises.map((p) => p() as Promise<any>))
       .then(async (values) => {
@@ -119,7 +120,7 @@ export const containerController = new ContainerController({
   handlersHash: {}
 });
 
-export async function getJwt(handlerId: number, useRunnerDebug: any) {
+export async function getJwt(handlerId: Id, useRunnerDebug: any) {
   const getJwtDebug = Debug('deeplinks:eh:links:getJwt');
   const userTypeId = await deep.id('@deep-foundation/core', 'User');
   getJwtDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
@@ -190,7 +191,7 @@ export async function getJwt(handlerId: number, useRunnerDebug: any) {
 export const useRunner = async ({
   code, isolationProviderImageName, handlerId, data,
 } : {
-  code: string, handlerId: number, isolationProviderImageName: string, data: any;
+  code: string, handlerId: Id, isolationProviderImageName: string, data: any;
 }) => {
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
@@ -212,7 +213,7 @@ export const handlerOperations = {
   Delete: 'HandleDelete',
 };
 
-export async function handleOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: number, oldLink: any, newLink: any, valuesOperation?: string) {
+export async function handleOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: Id, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   handleOperationDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
@@ -276,7 +277,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
   }
 }
 
-export async function handleSelectorOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: number, oldLink: any, newLink: any, valuesOperation?: string) {
+export async function handleSelectorOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: Id, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   handleSelectorDebug('handleOperation', operation);
   const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);

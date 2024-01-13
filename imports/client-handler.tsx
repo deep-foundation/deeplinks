@@ -40,10 +40,10 @@ export async function evalClientHandler({
 //   isolation_provider_id,
 //   execution_provider_id,
 // }: {
-//   linkId: number;
+//   linkId: Id;
 //   deep: DeepClient;
-//   isolation_provider_id: number;
-//   execution_provider_id: number;
+//   isolation_provider_id: Id;
+//   execution_provider_id: Id;
 // }): Promise<{
 //   error?: any;
 //   data?: any;
