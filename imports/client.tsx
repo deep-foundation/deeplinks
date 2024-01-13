@@ -365,7 +365,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id }[]>>;
 
-  reserve<LL = L>(count: number): Promise<number[]>;
+  reserve<LL = L>(count: number): Promise<Id[]>;
 
   await(id: Id): Promise<boolean>;
 
@@ -866,7 +866,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
   };
 
-  reserve<LL = L>(count: number): Promise<number[]> {
+  reserve<LL = L>(count: number): Promise<Id[]> {
     return reserve({ count, client: this.apolloClient });
   };
 
@@ -1041,7 +1041,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return { linkId: 0, token: '' };
   };
 
-  async can(objectIds: null | Id | Id[], subjectIds: null | Id | Id[], actionIds: null | Id | Id[], userIds: Id | Id[] = this.linkId) {
+  async can(objectIds: null | Id | Id[], subjectIds: null | Id | Id[], actionIds: null | Id | Id[], userIds: Id | Id[] = this.linkId): Promise<boolean> {
     const where: any = {
     };
     if (objectIds) where.object_id = typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds };
