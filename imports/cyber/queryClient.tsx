@@ -39,7 +39,7 @@ function QueryClientProvider({ children }: { children: React.ReactNode }) {
   }
 
   if (error) {
-    return <span>Error queryClient connect: {error.message}</span>;
+    return <span>Error queryClient connect: {(error as any)?.message}</span>;
   }
 
   return (
