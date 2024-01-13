@@ -20,6 +20,7 @@ const moduleLog = debug.extend('client');
 import { 
   Subscription,
   Observer,
+  AsyncSerialParams, SerialOperation, SerialOperationType, Table,
   DeepClientOptions, DeepClientResult, DeepClientPackageSelector, DeepClientPackageContain, DeepClientLinkId, DeepClientStartItem, DeepClientPathItem,
   _serialize, _ids, _boolExpFields, pathToWhere, serializeWhere, serializeQuery, parseJwt
 } from './client.js';
@@ -32,14 +33,17 @@ corePckg.data.filter(l => !!l.type).forEach((l, i) => {
   corePckgIds[l.id] = i+1;
 });
 
-export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
+export async function generateCyberInDeepClient(options: any): Promise<CyberDeepClient<Link<Id>>> {
+  return new CyberDeepClient(options);
+}
+
+export interface CyberDeepClientInstance<L extends Link<Id> = Link<Id>> {
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
 
-  deep: DeepClientInstance<L>;
+  deep: CyberDeepClientInstance<L>;
 
-  apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
   table?: string;
   returning?: string;
@@ -121,83 +125,6 @@ export interface DeepClientJWTOptions {
   relogin?: boolean;
 }
 
-
-export type SelectTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
-export type InsertTable = 'links' | 'numbers' | 'strings' | 'objects';
-export type UpdateTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
-export type DeleteTable = 'links' | 'numbers' | 'strings' | 'objects' | 'can' | 'selectors' | 'tree' | 'handlers';
-
-export type OperationType = 'select' | 'insert' | 'update' | 'delete';
-export type SerialOperationType = 'insert' | 'update' | 'delete';
-export type Table<TOperationType extends OperationType = OperationType> = TOperationType extends 'select'
-  ? SelectTable
-  : TOperationType extends 'insert'
-  ? InsertTable
-  : TOperationType extends 'update'
-  ? UpdateTable
-  : TOperationType extends 'delete'
-  ? DeleteTable
-  : never;
-
-export type ValueForTable<TTable extends Table> = TTable extends 'numbers'
-  ? MutationInputValue<number>
-  : TTable extends 'strings'
-  ? MutationInputValue<string>
-  : TTable extends 'objects'
-  ? MutationInputValue<any>
-  : MutationInputLink;
-
-export type ExpForTable<TTable extends Table> = TTable extends 'numbers'
-  ? BoolExpValue<number>
-  : TTable extends 'strings'
-  ? BoolExpValue<string>
-  : TTable extends 'objects'
-  ? BoolExpValue<object>
-  : TTable extends 'can'
-  ? BoolExpCan
-  : TTable extends 'selectors'
-  ? BoolExpSelector
-  : TTable extends 'tree'
-  ? BoolExpTree
-  : TTable extends 'handlers'
-  ? BoolExpHandler
-  : QueryLink;
-
-export type SerialOperationDetails<
-  TSerialOperationType extends SerialOperationType,
-  TTable extends Table<TSerialOperationType>
-> = TSerialOperationType extends 'insert'
-  ? {
-      objects: ValueForTable<TTable> | ValueForTable<TTable>[];
-    }
-  : TSerialOperationType extends 'update'
-  ? {
-      exp: ExpForTable<TTable> | Id | Id[];
-      value: ValueForTable<TTable>;
-    }
-  : TSerialOperationType extends 'delete'
-  ? {
-      exp: ExpForTable<TTable> | Id | Id[];
-    }
-  : never;
-
-export type SerialOperation<
-  TSerialOperationType extends SerialOperationType = SerialOperationType,
-  TTable extends Table<TSerialOperationType> = Table<TSerialOperationType>,
-> = {
-  type: TSerialOperationType;
-  table: TTable;
-} & SerialOperationDetails<TSerialOperationType, TTable>;
-
-export type DeepSerialOperation = SerialOperation<SerialOperationType, Table<SerialOperationType>>
-
-export type AsyncSerialParams = {
-  operations: Array<DeepSerialOperation>;
-  name?: string;
-  returning?: string;
-  silent?: boolean;
-};
-
 export function checkAndFillShorts(obj) {
   for (var i in obj) {
       if (!obj.hasOwnProperty(i)) continue;
@@ -210,7 +137,7 @@ export function checkAndFillShorts(obj) {
   }
 }
 
-export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInstance<L> {
+export class CyberDeepClient<L extends Link<Id> = Link<Id>> implements CyberDeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
   useDeepSubscription = useDeepSubscription;
@@ -225,7 +152,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
 
-  deep: DeepClientInstance<L>;
+  deep: CyberDeepClientInstance<L>;
 
   client: IApolloClient<any>;
   apolloClient: IApolloClient<any>;
@@ -255,66 +182,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
 
-  constructor(options: DeepClientOptions<L>) {
-    // @ts-ignore
-    this.deep = options.deep;
-    if (!this.apolloClient) this.apolloClient = options.apolloClient;
-
-    if (!this.deep && !options.apolloClient) throw new Error('options.apolloClient or options.deep is required');
-
-    if (this.deep && !this.apolloClient && !options.apolloClient && options.token) {
-      this.apolloClient = generateApolloClient({
-        // @ts-ignore
-        path: this.deep.apolloClient?.path,
-        // @ts-ignore
-        ssl: this.deep.apolloClient?.ssl,
-        token: options.token,
-      });
-    }
-
-    if (!this.apolloClient) throw new Error('apolloClient is invalid');
-
-    this.client = this.apolloClient;
-
-    // @ts-ignore
-    this.minilinks = options.minilinks || new MinilinkCollection();
-    this.table = options.table || 'links';
-
-    this.token = options.token;
+  constructor(options: any) {
     
-    if (this.token) {
-      const decoded = parseJwt(this.token);
-      const linkId = decoded?.userId;
-      if (!linkId){
-        throw new Error(`Unable to parse linkId from jwt token.`);
-      }
-      if (options.linkId && options.linkId !== linkId){
-        throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
-      }
-      this.linkId = linkId;
-    } else {
-      this.linkId = options.linkId;
-    }
-
-    this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
-
-    this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
-    this.selectReturning = options.selectReturning || this.linksSelectReturning;
-    this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
-    this.selectorsSelectReturning = options.selectorsSelectReturning ||'item_id selector_id';
-    this.filesSelectReturning = options.filesSelectReturning ||'id link_id name mimeType';
-    this.insertReturning = options.insertReturning || 'id';
-    this.updateReturning = options.updateReturning || 'id';
-    this.deleteReturning = options.deleteReturning || 'id';
-
-    this.defaultSelectName = options.defaultSelectName || 'SELECT';
-    this.defaultInsertName = options.defaultInsertName || 'INSERT';
-    this.defaultUpdateName = options.defaultUpdateName || 'UPDATE';
-    this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
-    
-    this.silent = options.silent || false;
-
-    this.unsafe = options.unsafe || {};
   }
 
   stringify(any?: any): string {
@@ -374,7 +243,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
           ...variables,
           ...query,
         } })('a', 0));
-      throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
+      throw new Error(`CyberDeepClient Select Error: ${e.message}`, { cause: e });
     }
   };
 
@@ -434,7 +303,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     // @ts-ignore
       return observable;
     } catch (e) {
-      throw new Error(`DeepClient Subscription Error: ${e.message}`, { cause: e });
+      throw new Error(`CyberDeepClient Subscription Error: ${e.message}`, { cause: e });
     }
   };
 
@@ -456,7 +325,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
+      if (!this._silent(options)) throw new Error(`CyberDeepClient Insert Error: ${e.message}`, { cause: e })
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }   
   
@@ -482,7 +351,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
+      if (!this._silent(options)) throw new Error(`CyberDeepClient Update Error: ${e.message}`, { cause: e });
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     // @ts-ignore
@@ -506,7 +375,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     } catch(e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
+      if (!this._silent(options)) throw new Error(`CyberDeepClient Delete Error: ${e.message}`, { cause: e });
       return { ...q, data: (q)?.data?.m0?.returning, error: e };
     }
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -568,7 +437,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     } catch (e) {
       const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
       if (sqlError?.message) e.message = sqlError.message;
-      if (!silent) throw new Error(`DeepClient Serial Error: ${e.message}`, { cause: e });
+      if (!silent) throw new Error(`CyberDeepClient Serial Error: ${e.message}`, { cause: e });
       return { ...result, data: (result)?.data?.m0?.returning, error: e };
     }
     // @ts-ignore
@@ -785,11 +654,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   async import(path: string) : Promise<any> {
-    if (typeof DeepClient.resolveDependency !== 'undefined') {
+    if (typeof CyberDeepClient.resolveDependency !== 'undefined') {
       try {
-        return await DeepClient.resolveDependency(path);
+        return await CyberDeepClient.resolveDependency(path);
       } catch (e) {
-        console.log(`IGNORED ERROR: Call to DeepClient.resolveDependency is failed with`, e);
+        console.log(`IGNORED ERROR: Call to CyberDeepClient.resolveDependency is failed with`, e);
       }
     }
     if (typeof require !== 'undefined') {
@@ -831,7 +700,7 @@ export function useAuthNode() {
   return useLocalStore<Id>('use_auth_link_id', 0);
 }
 
-export const DeepContext = createContext<DeepClient<Link<Id>>>(undefined);
+export const DeepContext = createContext<CyberDeepClient<Link<Id>>>(undefined);
 
 export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
   const log = debug.extend(useDeepGenerator.name)
@@ -849,7 +718,7 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
-    return new DeepClient({
+    return new CyberDeepClient({
       apolloClient, linkId, token,
       handleAuth: (linkId, token) => {
         setToken(token);
