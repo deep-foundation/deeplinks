@@ -1051,8 +1051,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return !!result?.data?.length;
   }
 
-  async name(input: Link<Id> | number): Promise<string | undefined> {
-    const id = typeof(input) === 'number' ? input : input.id;
+  async name(input: Link<Id> | Id): Promise<string | undefined> {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input.id;
 
     // if ((this.minilinks.byId[id] as Link<Id>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<Id>)?.value?.value;
     const {data: [containLink]} = await this.select({
