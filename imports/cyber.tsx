@@ -201,50 +201,7 @@ export class CyberDeepClient<L extends Link<Id> = Link<Id>> implements CyberDeep
   serializeWhere = serializeWhere;
 
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
-    if (!exp) {
-      return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
-    }
-    const query = serializeQuery(exp, options?.table || 'links');
-    const table = options?.table || this.table;
-    const returning = options?.returning ?? 
-    (table === 'links' ? this.linksSelectReturning :
-    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
-    table === 'selectors' ? this.selectorsSelectReturning :
-    table === 'files' ? this.filesSelectReturning : `id`);
-    const tableNamePostfix = options?.tableNamePostfix;
-    const aggregate = options?.aggregate;
-    
-    // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
-    const variables = options?.variables;
-    const name = options?.name || this.defaultSelectName;
-
-    try {
-      const q = await this.apolloClient.query(generateQuery({
-        queries: [
-          generateQueryData({
-            tableName: table,
-            tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
-            returning: aggregate ? `aggregate { ${aggregate} }` : returning,
-            variables: {
-              ...variables,
-              ...query,
-            } }),
-        ],
-        name: name,
-      }));
-
-      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
-    } catch (e) {
-      console.log(generateQueryData({
-        tableName: table,
-        tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
-        returning: aggregate ? `aggregate { ${aggregate} }` : returning,
-        variables: {
-          ...variables,
-          ...query,
-        } })('a', 0));
-      throw new Error(`CyberDeepClient Select Error: ${e.message}`, { cause: e });
-    }
+    throw new Error('not implemented');
   };
 
   /**
@@ -308,155 +265,29 @@ export class CyberDeepClient<L extends Link<Id> = Link<Id>> implements CyberDeep
   };
 
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
-    checkAndFillShorts(_objects);
-  
-    const table = options?.table || this.table;
-    const returning = options?.returning || this.insertReturning;
-    const variables = options?.variables;
-    const name = options?.name || this.defaultInsertName;
-    let q: any = {};
-   
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`CyberDeepClient Insert Error: ${e.message}`, { cause: e })
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }   
-  
-    // @ts-ignore
-    return { ...q, data: (q)?.data?.m0?.returning };
+    throw new Error('not implemented');
   }; 
 
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    if (exp === null) return this.insert( [value], options);
-    if (value === null) return this.delete( exp, options );
-  
-    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
-    const table = options?.table || this.table;
-    const returning = options?.returning || this.updateReturning;
-    const variables = options?.variables;
-    const name = options?.name || this.defaultUpdateName;
-    let q;
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`CyberDeepClient Update Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }
-    // @ts-ignore
-    return { ...q, data: (q)?.data?.m0?.returning };
+    throw new Error('not implemented');
   };
 
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    if (!exp) throw new Error('!exp');
-    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
-    const table = options?.table || this.table;
-    const returning = options?.returning || this.deleteReturning;
-    const variables = options?.variables;
-    const name = options?.name || this.defaultDeleteName;
-    let q;
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
-        name: name,
-      }));
-      // @ts-ignore
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`CyberDeepClient Delete Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }
-    return { ...q, data: (q)?.data?.m0?.returning };
+    throw new Error('not implemented');
   };
 
   async serial({
     name, operations, returning, silent
   }: AsyncSerialParams): Promise<DeepClientResult<{ id: Id }[]>> {
-    // @ts-ignore
-    let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
-    operationsGroupedByTypeAndTable = operations.reduce((acc, operation) => {
-      if (!acc[operation.type]) {
-        // @ts-ignore
-        acc[operation.type] = {}
-      }
-      if (!acc[operation.type][operation.table]) {
-        acc[operation.type][operation.table] = []
-      }
-      acc[operation.type][operation.table].push(operation);
-      return acc
-    }, operationsGroupedByTypeAndTable);
-    let serialActions: Array<IGenerateMutationBuilder> = [];
-    Object.keys(operationsGroupedByTypeAndTable).map((operationType: SerialOperationType) => {
-      const operationsGroupedByTable = operationsGroupedByTypeAndTable[operationType];
-      Object.keys(operationsGroupedByTable).map((table: Table<typeof operationType>) => {
-        const operations = operationsGroupedByTable[table];
-        if (operationType === 'insert') {
-          const insertOperations = operations as Array<SerialOperation<'insert', Table<'insert'>>>;
-          const serialAction: IGenerateMutationBuilder = insertMutation(table, { objects: insertOperations.map(operation => Array.isArray(operation.objects) ? operation.objects : [operation.objects]).flat() }, { tableName: table, operation: operationType, returning })
-          serialActions.push(serialAction);
-        } else if (operationType === 'update') {
-          const updateOperations = operations as Array<SerialOperation<'update', Table<'update'>>>;
-          const newSerialActions: IGenerateMutationBuilder[] = updateOperations.map(operation => {
-            const exp = operation.exp;
-            const value = operation.value;
-            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
-            return updateMutation(table, {...query, _set: value }, { tableName: table, operation: operationType ,returning})
-          })
-          serialActions = [...serialActions, ...newSerialActions];
-        } else if (operationType === 'delete') {
-          const deleteOperations = operations as Array<SerialOperation<'delete', Table<'delete'>>>;;
-          const newSerialActions: IGenerateMutationBuilder[] = deleteOperations.map(operation => {
-            const exp = operation.exp;
-            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
-            return deleteMutation(table, { ...query }, { tableName: table, operation: operationType, returning })
-          })
-          serialActions = [...serialActions, ...newSerialActions];
-        }
-      })
-    })
-
-    let result;
-    try {
-      result = await this.apolloClient.mutate(generateSerial({
-        actions: serialActions,
-        name: name ?? 'Name',
-      }))
-      // @ts-ignore
-    } catch (e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!silent) throw new Error(`CyberDeepClient Serial Error: ${e.message}`, { cause: e });
-      return { ...result, data: (result)?.data?.m0?.returning, error: e };
-    }
-    // @ts-ignore
-    return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
+    throw new Error('not implemented');
   };
 
   reserve<LL = L>(count: number): Promise<Id[]> {
-    return reserve({ count, client: this.apolloClient });
+    throw new Error('not implemented');
   };
 
   async await(id: Id, options: { results: boolean } = { results: false } ): Promise<any> {
-    return awaitPromise({
-      id, client: this.apolloClient,
-      Then: await this.id('@deep-foundation/core', 'Then'),
-      Promise: await this.id('@deep-foundation/core', 'Promise'),
-      Resolved: await this.id('@deep-foundation/core', 'Resolved'),
-      Rejected: await this.id('@deep-foundation/core', 'Rejected'),
-      Results: options.results
-    });
+    throw new Error('not implemented');
   };
 
   /**
