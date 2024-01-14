@@ -1,12 +1,12 @@
 import { Dispatch } from 'redux';
-import { localStorageKeys } from 'src/constants/localStorageKeys';
+import { localStorageKeys } from '../../constants/localStorageKeys';
 
 import {
   Account,
   AccountValue,
   Accounts,
   DefaultAccount,
-} from 'src/types/defaultAccount';
+} from '../../types/defaultAccount';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { POCKET } from '../../utils/config';
 import { RootState } from '../store';
