@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import { proxy, Remote } from 'comlink';
-import { backgroundWorkerInstance } from './backend/workers/background/service';
-import { cozoDbWorkerInstance } from './backend/workers/db/service';
 import BroadcastChannelListener from './backend/channels/BroadcastChannelListener';
 
 import { CYBER } from './utils/config';
@@ -81,7 +79,12 @@ export function useBackend() {
 
 const dbApi = new DbApiWrapper();
 
-function BackendProvider({ children }: { children: React.ReactNode }) {
+function BackendProvider({
+  children, backgroundWorkerInstance, cozoDbWorkerInstance
+}: {
+  children: React.ReactNode, 
+  backgroundWorkerInstance: any, cozoDbWorkerInstance: any,
+}) {
   const dispatch = useAppDispatch();
   // const { defaultAccount } = useAppSelector((state) => state.pocket);
 

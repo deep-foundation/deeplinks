@@ -1,4 +1,4 @@
-import db from '../../utils/db';
+import db from '../../utils/db.js';
 
 const ipfsCacheDb = () => {
   const add = async (cid: string, raw: Uint8Array): Promise<void> => {
