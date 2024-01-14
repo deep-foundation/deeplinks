@@ -45,7 +45,8 @@ export class CyberDeepClient<L extends Link<Id> = Link<Id>> extends DeepClient<L
   static resolveDependency?: (path: string) => Promise<any>
 
   // @ts-ignore
-  constructor(options: any) {
+  constructor(options: DeepClientOptions<L>) {
+    super(options);
   }
 
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
