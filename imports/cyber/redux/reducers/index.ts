@@ -10,10 +10,10 @@ import backendReducer from './backend';
 
 const rootReducer = {
   // gol: golReducer,
-  // bandwidth: bandwidthReducer,
-  // pocket: pocketReducer,
+  bandwidth: bandwidthReducer,
+  pocket: pocketReducer,
   // passports: passportsReducer,
-  // currentAccount: currentAccountReducer,
+  currentAccount: currentAccountReducer,
   backend: backendReducer,
   // commander: commanderReducer,
 };
