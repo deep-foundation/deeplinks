@@ -9,11 +9,11 @@ import {
   share,
   EMPTY,
 } from 'rxjs';
-import BroadcastChannelSender from 'src/services/backend/channels/BroadcastChannelSender';
-import { broadcastStatus } from 'src/services/backend/channels/broadcastStatus';
-import { ParticleCid } from 'src/types/base';
-import { SyncQueueStatus } from 'src/services/CozoDb/types/entities';
-import { QueuePriority } from 'src/services/QueueManager/types';
+import BroadcastChannelSender from '../../../../../backend/channels/BroadcastChannelSender';
+import { broadcastStatus } from '../../../../../backend/channels/broadcastStatus';
+import { ParticleCid } from '../../../../types/base';
+import { SyncQueueStatus } from '../../../../../CozoDb/types/entities';
+import { QueuePriority } from '../../../../../QueueManager/types';
 
 import DbApi from '../../../dataSource/indexedDb/dbApiWrapper';
 

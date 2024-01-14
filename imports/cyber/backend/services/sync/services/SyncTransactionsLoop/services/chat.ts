@@ -1,6 +1,6 @@
-import { EntryType } from 'src/services/CozoDb/types/entities';
-import DbApiWrapper from 'src/services/backend/services/dataSource/indexedDb/dbApiWrapper';
-import { NeuronAddress } from 'src/types/base';
+import { EntryType } from '../../../../../../CozoDb/types/entities';
+import DbApiWrapper from '../../../../../services/dataSource/indexedDb/dbApiWrapper';
+import { NeuronAddress } from '../../../../../types/base';
 import { extractSenseChats } from '../../utils/sense';
 
 export const syncMyChats = async (

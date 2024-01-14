@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 
-import { EntryType } from 'src/services/CozoDb/types/entities';
-import { dateToNumber } from 'src/utils/date';
+import { EntryType } from '../../../../../../CozoDb/types/entities';
+import { dateToNumber } from '../../../../../../utils/date';
 import { ServiceDeps } from '../../types';
 import {
   MSG_MULTI_SEND_TRANSACTION_TYPE,

@@ -1,4 +1,4 @@
-import { DbEntity } from 'src/services/CozoDb/types/entities';
+import { DbEntity } from '../../../CozoDb/types/entities';
 
 export type DbStackItem = {
   tableName: string;

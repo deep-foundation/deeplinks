@@ -1,9 +1,9 @@
 import { of } from 'rxjs';
-import { CybIpfsNode } from 'src/services/ipfs/ipfs';
+import { CybIpfsNode } from '../../../../../ipfs/ipfs';
 
-import { fetchCyberlinksIterable } from 'src/services/backend/services/dataSource/blockchain/requests';
-import { numberToDate } from 'src/utils/date';
-import { createAsyncIterable } from 'src/utils/async/iterable';
+import { fetchCyberlinksIterable } from '../../../../../backend/services/dataSource/blockchain/requests';
+import { numberToDate } from '../../../../../utils/date';
+import { createAsyncIterable } from '../../../../../utils/async/iterable';
 
 import ParticlesResolverQueue from '../ParticlesResolverQueue/ParticlesResolverQueue';
 import { ServiceDeps } from '../types';

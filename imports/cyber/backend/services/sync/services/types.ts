@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { CybIpfsNode } from 'src/services/ipfs/ipfs';
+import { CybIpfsNode } from '../../../../ipfs/ipfs';
 import DbApi from '../../dataSource/indexedDb/dbApiWrapper';
 import { FetchIpfsFunc, SyncServiceParams } from '../types';
 

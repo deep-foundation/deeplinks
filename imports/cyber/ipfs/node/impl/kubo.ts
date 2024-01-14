@@ -45,8 +45,8 @@ class KuboNode implements IpfsNode {
     this._config = await this.initConfig();
 
     if (typeof window !== 'undefined') {
-      window.node = this.node;
-      window.toCid = stringToCid;
+      (window as any).node = this.node;
+      (window as any).toCid = stringToCid;
     }
     console.log(
       'IPFS - Kubo addrs',

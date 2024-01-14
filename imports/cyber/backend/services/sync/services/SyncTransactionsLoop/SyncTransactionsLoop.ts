@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
 import { Observable, defer, from, map, combineLatest } from 'rxjs';
-import BroadcastChannelSender from 'src/services/backend/channels/BroadcastChannelSender';
-import { broadcastStatus } from 'src/services/backend/channels/broadcastStatus';
-import { EntryType } from 'src/services/CozoDb/types/entities';
-import { mapTransactionToEntity } from 'src/services/CozoDb/mapping';
-import { dateToNumber } from 'src/utils/date';
-import { NeuronAddress } from 'src/types/base';
-import { QueuePriority } from 'src/services/QueueManager/types';
-import { SyncStatusDto } from 'src/services/CozoDb/types/dto';
+import BroadcastChannelSender from '../../../../../backend/channels/BroadcastChannelSender';
+import { broadcastStatus } from '../../../../../backend/channels/broadcastStatus';
+import { EntryType } from '../../../../../CozoDb/types/entities';
+import { mapTransactionToEntity } from '../../../../../CozoDb/mapping';
+import { dateToNumber } from '../../../../../utils/date';
+import { NeuronAddress } from '../../../../types/base';
+import { QueuePriority } from '../../../../../QueueManager/types';
+import { SyncStatusDto } from '../../../../../CozoDb/types/dto';
 
 import DbApi from '../../../dataSource/indexedDb/dbApiWrapper';
 

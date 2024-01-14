@@ -7,14 +7,14 @@ import {
   mergeMap,
   tap,
 } from 'rxjs';
-import { IDeferredDbSaver } from 'src/services/QueueManager/types';
-import { IPFSContent, IPFSContentMaybe } from 'src/services/ipfs/ipfs';
+import { IDeferredDbSaver } from '../../../QueueManager/types';
+import { IPFSContent, IPFSContentMaybe } from '../../../ipfs/ipfs';
 
 import { v4 as uuidv4 } from 'uuid';
-import { ParticleCid } from 'src/types/base';
-import { mapParticleToEntity } from 'src/services/CozoDb/mapping';
+import { ParticleCid } from '../../../types/base';
+import { mapParticleToEntity } from '../../../CozoDb/mapping';
 import DbApi from '../dataSource/indexedDb/dbApiWrapper';
-import { LinkDto } from 'src/services/CozoDb/types/dto';
+import { LinkDto } from '../../../CozoDb/types/dto';
 
 type QueueItem = {
   content?: IPFSContent;
@@ -85,16 +85,16 @@ class DeferredDbSaver implements IDeferredDbSaver {
   private async processQueueItem(queueItem: QueueItem) {
     const { content, links } = queueItem;
     // console.log(`PostProcessing queue item: ${cid}`, item);
-    if (content) {
-      // eslint-disable-next-line no-await-in-loop
-      const entity = mapParticleToEntity(content);
-      await this.dbApi!.putParticles(entity);
-    }
+    // if (content) {
+    //   // eslint-disable-next-line no-await-in-loop
+    //   const entity = mapParticleToEntity(content);
+    //   await this.dbApi!.putParticles(entity);
+    // }
 
-    if (links && links.length > 0) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.dbApi!.putCyberlinks(links);
-    }
+    // if (links && links.length > 0) {
+    //   // eslint-disable-next-line no-await-in-loop
+    //   await this.dbApi!.putCyberlinks(links);
+    // }
   }
 }
 

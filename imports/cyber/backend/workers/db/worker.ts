@@ -1,6 +1,6 @@
-import cozoDb from 'src/services/CozoDb/cozoDb';
-import { DbEntity } from 'src/services/CozoDb/types/entities';
-import { GetCommandOptions } from 'src/services/CozoDb/types/types';
+import cozoDb from '../../../CozoDb/cozoDb';
+import { DbEntity } from '../../../CozoDb/types/entities';
+import { GetCommandOptions } from '../../../CozoDb/types/types';
 
 import { exposeWorkerApi } from '../factoryMethods';
 import BroadcastChannelSender from '../../channels/BroadcastChannelSender';
@@ -111,4 +111,5 @@ const cozoDbWorker = createDbWorkerApi();
 export type CozoDbWorker = typeof cozoDbWorker;
 
 // Expose the API to the main thread as shared/regular worker
+// @ts-ignore
 exposeWorkerApi(self, cozoDbWorker);

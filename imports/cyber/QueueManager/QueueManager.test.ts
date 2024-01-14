@@ -1,4 +1,4 @@
-import { fetchIpfsContent } from 'src/services/ipfs/utils/utils-ipfs';
+import { fetchIpfsContent } from '../ipfs/utils/utils-ipfs';
 
 import QueueManager from './QueueManager';
 import { QueueStrategy } from './QueueStrategy';
@@ -64,6 +64,7 @@ describe('QueueManager', () => {
     return;
   }
 
+  // @ts-ignore
   let queueManager: QueueManager<string>;
   const strategy = new QueueStrategy(
     {
@@ -75,6 +76,7 @@ describe('QueueManager', () => {
   );
 
   beforeEach(() => {
+    // @ts-ignore
     queueManager = new QueueManager<string>(undefined, QUEUE_DEBOUNCE_MS);
     queueManager.setNode(
       {

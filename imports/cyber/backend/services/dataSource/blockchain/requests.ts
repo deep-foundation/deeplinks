@@ -1,7 +1,7 @@
 import { request } from 'graphql-request';
 import gql from 'graphql-tag';
-import { Cyberlink, ParticleCid, NeuronAddress } from 'src/types/base';
-import { dateToNumber, numberToDate } from 'src/utils/date';
+import { Cyberlink, ParticleCid, NeuronAddress } from '../../../types/base';
+import { dateToNumber, numberToDate } from '../../../../utils/date';
 import { Transaction } from './types';
 
 import { TRANSACTIONS_BATCH_LIMIT, CYBERLINKS_BATCH_LIMIT } from './consts';

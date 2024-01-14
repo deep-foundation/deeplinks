@@ -1,13 +1,13 @@
 import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin';
 
-import { TransactionDto } from 'src/services/CozoDb/types/dto';
-import { NeuronAddress, ParticleCid } from 'src/types/base';
+import { TransactionDto } from '../../CozoDb/types/dto';
+import { NeuronAddress, ParticleCid } from '../../types/base';
 import {
   MsgSendTransaction,
   CyberLinkTransaction,
   MsgMultiSendTransaction,
 } from '../services/dataSource/blockchain/types';
-import { EntryType } from 'src/services/CozoDb/types/entities';
+import { EntryType } from '../../CozoDb/types/entities';
 import { LinkDirection } from '../services/sync/types';
 
 export type SenseChat = {

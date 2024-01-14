@@ -1,7 +1,7 @@
-import { dateToNumber } from 'src/utils/date';
+import { dateToNumber } from '../../../utils/date';
 
-import { ParticleCid } from 'src/types/base';
-import { SyncStatusDto } from 'src/services/CozoDb/types/dto';
+import { ParticleCid } from '../../../types/base';
+import { SyncStatusDto } from '../../../CozoDb/types/dto';
 
 import { CyberlinksByParticleResponse } from '../dataSource/blockchain/requests';
 import { LinkDirection } from './types';

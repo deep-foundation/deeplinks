@@ -2,11 +2,11 @@ import {
   CyberLinkSimple,
   CyberLinkTimestamp,
   ParticleCid,
-} from 'src/types/base';
-import { QueuePriority } from 'src/services/QueueManager/types';
-import { asyncIterableBatchProcessor } from 'src/utils/async/iterable';
-import { CID_TWEET } from 'src/utils/consts';
-import { dateToNumber } from 'src/utils/date';
+} from '../../../../types/base';
+import { QueuePriority } from '../../../../../QueueManager/types';
+import { asyncIterableBatchProcessor } from '../../../../../utils/async/iterable';
+import { CID_TWEET } from '../../../../../utils/consts';
+import { dateToNumber } from '../../../../../utils/date';
 
 import { fetchCyberlinksIterable } from '../../../dataSource/blockchain/requests';
 import ParticlesResolverQueue from '../ParticlesResolverQueue/ParticlesResolverQueue';

@@ -1,6 +1,6 @@
-import { TransactionDto } from 'src/services/CozoDb/types/dto';
-import { SenseChat } from 'src/services/backend/types/sense';
-import { NeuronAddress } from 'src/types/base';
+import { TransactionDto } from '../../../../../CozoDb/types/dto';
+import { SenseChat } from '../../../../../backend/types/sense';
+import { NeuronAddress } from '../../../../types/base';
 import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin';
 
 import {

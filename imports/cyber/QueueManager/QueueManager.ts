@@ -17,11 +17,11 @@ import {
 
 import * as R from 'ramda';
 
-import { fetchIpfsContent } from 'src/services/ipfs/utils/utils-ipfs';
-import { CybIpfsNode, IpfsContentSource } from 'src/services/ipfs/ipfs';
-import { ParticleCid } from 'src/types/base';
+import { fetchIpfsContent } from '../ipfs/utils/utils-ipfs';
+import { CybIpfsNode, IpfsContentSource } from '../ipfs/ipfs';
+import { ParticleCid } from '../types/base';
 
-import { promiseToObservable } from '../../utils/helpers';
+import { promiseToObservable } from '../utils/helpers';
 
 import type {
   QueueItem,
@@ -167,6 +167,7 @@ class QueueManager {
       fetchIpfsContent(cid, source, {
         controller,
         node: this.node,
+        // @ts-ignore
       }).then((content: T) => {
         // debugCid(cid, 'fetchData - fetchIpfsContent', cid, source, content);
 

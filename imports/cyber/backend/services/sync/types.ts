@@ -1,8 +1,8 @@
 import {
   EnqueuedIpfsResult,
   QueuePriority,
-} from 'src/services/QueueManager/types';
-import { NeuronAddress, ParticleCid } from 'src/types/base';
+} from '../../../QueueManager/types';
+import { NeuronAddress, ParticleCid } from '../../types/base';
 
 export type SyncServiceParams = {
   myAddress: NeuronAddress | null;

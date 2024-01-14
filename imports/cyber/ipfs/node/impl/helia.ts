@@ -33,6 +33,7 @@ const libp2pFactory = async (
   bootstrapList: string[] = []
 ) => {
   const libp2p = await createLibp2p({
+    // @ts-ignore
     datastore,
     // addresses: {
     //   listen: [
@@ -71,6 +72,7 @@ const libp2pFactory = async (
     connectionEncryption: [noise()],
     streamMuxers: [yamux()],
     connectionGater: {
+      // @ts-ignore
       denyDialMultiaddr: () => {
         return false;
         // by default we refuse to dial local addresses from the browser since they
@@ -129,20 +131,21 @@ class HeliaNode implements IpfsNode {
     ];
     const libp2p = await libp2pFactory(datastore, bootstrapList);
 
+    // @ts-ignore
     this.node = await createHelia({ blockstore, datastore, libp2p });
 
     this.fs = unixfs(this.node);
 
     if (typeof window !== 'undefined') {
-      window.libp2p = libp2p;
-      window.node = this.node;
-      window.fs = this.fs;
-      window.toCid = stringToCid;
+      (window as any).libp2p = libp2p;
+      (window as any).node = this.node;
+      (window as any).fs = this.fs;
+      (window as any).toCid = stringToCid;
     }
 
     // DEBUG
     libp2p.addEventListener('peer:connect', (evt) => {
-      const peerId = evt.detail.toString();
+      const peerId: any = evt.detail.toString();
       const conn = libp2p.getConnections(peerId) || [];
       const transportsByAddr = Object.fromEntries(
         conn.map((c) => [
@@ -271,6 +274,7 @@ class HeliaNode implements IpfsNode {
 
   async info() {
     const id = this.node!.libp2p.peerId.toString();
+    // @ts-ignore
     const agentVersion = this.node!.libp2p!.services!.identify!.host!
       .agentVersion as string;
     return { id, agentVersion, repoSize: -1 };

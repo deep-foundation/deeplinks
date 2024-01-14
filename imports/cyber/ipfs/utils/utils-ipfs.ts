@@ -1,7 +1,7 @@
 /* eslint-disable import/no-unused-modules */
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
-import { Option } from 'src/types';
+import { Option } from '../../types';
 import {
   // getIpfsUserGatewanAndNodeType,
   IPFSContentMaybe,

@@ -1,6 +1,6 @@
 import { ProxyMarked, Remote, proxy } from 'comlink';
 
-import { initIpfsNode } from 'src/services/ipfs/node/factory';
+import { initIpfsNode } from '../../../ipfs/node/factory';
 
 import {
   CybIpfsNode,
@@ -8,19 +8,19 @@ import {
   IPFSContentMaybe,
   IpfsContentType,
   IpfsOptsType,
-} from 'src/services/ipfs/ipfs';
+} from '../../../ipfs/ipfs';
 
-import QueueManager from 'src/services/QueueManager/QueueManager';
+import QueueManager from '../../../QueueManager/QueueManager';
 
-// import { CozoDbWorkerApi } from 'src/services/backend/workers/db/worker';
+// import { CozoDbWorkerApi } from '../../../backend/workers/db/worker';
 
 import {
   QueueItemCallback,
   QueueItemOptions,
   QueuePriority,
-} from 'src/services/QueueManager/types';
-import { ParticleCid } from 'src/types/base';
-import { LinkDto } from 'src/services/CozoDb/types/dto';
+} from '../../../QueueManager/types';
+import { ParticleCid } from '../../types/base';
+import { LinkDto } from '../../../CozoDb/types/dto';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { exposeWorkerApi } from '../factoryMethods';
 

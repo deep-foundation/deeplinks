@@ -31,8 +31,8 @@ class JsIpfsNode implements IpfsNode {
   async init() {
     this.node = await createJsIpfsClient(configIpfs());
     if (typeof window !== 'undefined') {
-      window.node = this.node;
-      window.toCid = stringToCid;
+      (window as any).node = this.node;
+      (window as any).toCid = stringToCid;
     }
 
     this._isStarted = true;

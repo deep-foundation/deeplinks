@@ -3,8 +3,8 @@ import {
   PinDbEntity,
   TransactionDbEntity,
   SyncQueueStatus,
-} from 'src/services/CozoDb/types/entities';
-import { NeuronAddress, ParticleCid } from 'src/types/base';
+} from '../../../../CozoDb/types/entities';
+import { NeuronAddress, ParticleCid } from '../../../types/base';
 
 import {
   dbResultToDtoList,
@@ -12,18 +12,18 @@ import {
   removeUndefinedFields,
   transformListToDbEntity,
   transformToDbEntity,
-} from 'src/services/CozoDb/utils';
+} from '../../../../CozoDb/utils';
 
-import { CozoDbWorker } from 'src/services/backend/workers/db/worker';
+import { CozoDbWorker } from '../../../../backend/workers/db/worker';
 import {
   LinkDto,
   ParticleDto,
   SyncQueueDto,
   SyncStatusDto,
   TransactionDto,
-} from 'src/services/CozoDb/types/dto';
+} from '../../../../CozoDb/types/dto';
 
-import { SenseListItem, SenseUnread } from 'src/services/backend/types/sense';
+import { SenseListItem, SenseUnread } from '../../../../backend/types/sense';
 import { SyncQueueItem } from '../../sync/services/ParticlesResolverQueue/types';
 import { extractSenseChats } from '../../sync/services/utils/sense';
 import {

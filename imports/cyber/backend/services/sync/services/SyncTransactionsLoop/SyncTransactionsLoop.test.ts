@@ -3,17 +3,17 @@ import { of } from 'rxjs';
 import {
   fetchCyberlinksIterable,
   fetchTransactionsIterable,
-} from 'src/services/backend/services/dataSource/blockchain/requests';
-import { CybIpfsNode } from 'src/services/ipfs/ipfs';
+} from '../../../../../backend/services/dataSource/blockchain/requests';
+import { CybIpfsNode } from '../../../../../ipfs/ipfs';
 
 import DbApi, {
   mockPutSyncStatus,
   mockGetSyncStatus,
-} from 'src/services/backend/services/dataSource/indexedDb/__mocks__/dbApiWrapperMock';
-import { createAsyncIterable } from 'src/utils/async/iterable';
-import { CID_TWEET } from 'src/utils/consts';
-import { EntryType } from 'src/services/CozoDb/types/entities';
-import { dateToNumber } from 'src/utils/date';
+} from '../../../../../backend/services/dataSource/indexedDb/__mocks__/dbApiWrapperMock';
+import { createAsyncIterable } from '../../../../../utils/async/iterable';
+import { CID_TWEET } from '../../../../../utils/consts';
+import { EntryType } from '../../../../../CozoDb/types/entities';
+import { dateToNumber } from '../../../../../utils/date';
 
 import ParticlesResolverQueue from '../ParticlesResolverQueue/ParticlesResolverQueue';
 import { ServiceDeps } from '../types';
