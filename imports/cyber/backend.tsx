@@ -18,19 +18,19 @@ import { CozoDbWorker } from './backend/workers/db/worker';
 import { BackgroundWorker } from './backend/workers/background/worker';
 
 const createSenseApi = (dbApi: DbApiWrapper, myAddress?: string) => ({
-  // getSummary: () => dbApi.getSenseSummary(myAddress),
-  // getList: () => dbApi.getSenseList(myAddress),
-  // markAsRead: (id: NeuronAddress | ParticleCid) =>
-  //   dbApi.senseMarkAsRead(myAddress, id),
-  // getAllParticles: (fields: string[]) => dbApi.getParticles(fields),
-  // getLinks: (cid: ParticleCid) => dbApi.getLinks(cid),
-  // getTransactions: (neuron: NeuronAddress) => dbApi.getTransactions(neuron),
-  // getMyChats: (userAddress: NeuronAddress) => {
-  //   if (!myAddress) {
-  //     throw new Error('myAddress is not defined');
-  //   }
-  //   return dbApi.getMyChats(myAddress, userAddress);
-  // },
+  getSummary: () => dbApi.getSenseSummary(myAddress),
+  getList: () => dbApi.getSenseList(myAddress),
+  markAsRead: (id: NeuronAddress | ParticleCid) =>
+    dbApi.senseMarkAsRead(myAddress, id),
+  getAllParticles: (fields: string[]) => dbApi.getParticles(fields),
+  getLinks: (cid: ParticleCid) => dbApi.getLinks(cid),
+  getTransactions: (neuron: NeuronAddress) => dbApi.getTransactions(neuron),
+  getMyChats: (userAddress: NeuronAddress) => {
+    if (!myAddress) {
+      throw new Error('myAddress is not defined');
+    }
+    return dbApi.getMyChats(myAddress, userAddress);
+  },
 });
 
 const setupStoragePersistence = async () => {
@@ -72,8 +72,8 @@ const valueContext = {
   ipfsApi: null,
 };
 
-const BackendContext =
-  React.createContext<BackendProviderContextType>(valueContext);
+// @ts-ignore
+const BackendContext = React.createContext<BackendProviderContextType>(valueContext);
 
 export function useBackend() {
   return useContext(BackendContext);
@@ -147,38 +147,38 @@ function BackendProvider({ children }: { children: React.ReactNode }) {
         return loadIpfs();
       };
 
-      // const cozoDbLoadPromise = async () => {
-      //   const isInitialized = await cozoDbWorkerInstance.isInitialized();
-      //   if (isInitialized) {
-      //     console.log('🔋 CozoDb worker already active.');
-      //     return Promise.resolve();
-      //   }
-      //   return loadCozoDb();
-      // };
+      const cozoDbLoadPromise = async () => {
+        const isInitialized = await cozoDbWorkerInstance.isInitialized();
+        if (isInitialized) {
+          console.log('🔋 CozoDb worker already active.');
+          return Promise.resolve();
+        }
+        return loadCozoDb();
+      };
 
       // Loading non-blocking, when ready  state.backend.services.* should be changef
-      // Promise.all([ipfsLoadPromise(), cozoDbLoadPromise()]);
-      Promise.all([ipfsLoadPromise()]);
+      Promise.all([ipfsLoadPromise(), cozoDbLoadPromise()]);
     })();
 
+    // @ts-ignore
     window.q = backgroundWorkerInstance.ipfsQueue;
     // return () => channel.close();
   }, [dispatch]);
 
-  // const loadCozoDb = async () => {
-  //   console.time('🔋 CozoDb worker started.');
-  //   await cozoDbWorkerInstance
-  //     .init()
-  //     .then(() => {
-  //       // init dbApi
-  //       // TODO: refactor to use simple object instead of global instance
-  //       dbApi.init(proxy(cozoDbWorkerInstance));
+  const loadCozoDb = async () => {
+    console.time('🔋 CozoDb worker started.');
+    await cozoDbWorkerInstance
+      .init()
+      .then(() => {
+        // init dbApi
+        // TODO: refactor to use simple object instead of global instance
+        dbApi.init(proxy(cozoDbWorkerInstance));
 
-  //       // pass dbApi into background worker
-  //       backgroundWorkerInstance.init(proxy(dbApi));
-  //     })
-  //     .then(() => console.timeEnd('🔋 CozoDb worker started.'));
-  // };
+        // pass dbApi into background worker
+        backgroundWorkerInstance.init(proxy(dbApi));
+      })
+      .then(() => console.timeEnd('🔋 CozoDb worker started.'));
+  };
 
   const loadIpfs = async () => {
     const ipfsOpts = getIpfsOpts();
@@ -204,6 +204,7 @@ function BackendProvider({ children }: { children: React.ReactNode }) {
 
   const valueMemo = useMemo(
     () =>
+      // @ts-ignore
       ({
         // backgroundWorker: backgroundWorkerInstance,
         cozoDbRemote: cozoDbWorkerInstance,

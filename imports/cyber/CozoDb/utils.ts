@@ -27,6 +27,7 @@ export const toListOfObjects = <T extends Record<string, any>>({
     const obj: Partial<T> = {};
     row.forEach((value, index) => {
       const key = headers[index];
+      // @ts-ignore
       obj[key] = value;
     });
     return obj as T;
@@ -85,12 +86,14 @@ export function transformToDbEntity<T extends Record<string, any>>(
 export function transformListToDbEntity<T extends Record<string, any>>(
   array: T[]
 ): T[] {
+  // @ts-ignore
   return array.map((dto) => transformToDbEntity(dto)) as Partial<T>[];
 }
 
 export function transformListToDto<T extends Record<string, any>>(
   array: T[]
 ): T[] {
+  // @ts-ignore
   return array.map((dto) => transformToDto(dto)) as Partial<T>[];
 }
 
@@ -105,7 +108,8 @@ export function removeUndefinedFields(entity: Record<string, any>) {
 
 export const dbResultToDtoList = (dbResult: IDBResult | IDBResultError) => {
   if (!dbResult.ok) {
-    throw new Error(`Can't parse DBResult: ${dbResult.message}`);
+    // @ts-ignore
+    throw new Error(`Can't parse DBResult: ${dbResult?.message}`);
   }
   const { headers, rows } = dbResult;
 

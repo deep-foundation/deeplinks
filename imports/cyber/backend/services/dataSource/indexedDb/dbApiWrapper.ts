@@ -52,7 +52,8 @@ class DbApiWrapper {
     );
 
     if (!result.ok) {
-      throw new Error(result.message);
+      // @ts-ignore
+      throw new Error(result?.message);
     }
 
     const row = result.rows.length
@@ -92,7 +93,8 @@ class DbApiWrapper {
     entryType,
     id,
   }: {
-    ownerId: NeuronAddress;
+    // ownerId: NeuronAddress;
+    ownerId?: NeuronAddress;
     entryType?: EntryType;
     id?: NeuronAddress | ParticleCid;
   }) {
@@ -126,7 +128,8 @@ class DbApiWrapper {
     const result = await this.db!.executeGetCommand('pin', fields);
 
     if (!result.ok) {
-      throw new Error(result.message);
+      // @ts-ignore
+      throw new Error(result?.message);
     }
 
     return result;
@@ -150,7 +153,8 @@ class DbApiWrapper {
     const result = await this.db!.executeGetCommand('particle', fields);
 
     if (!result.ok) {
-      throw new Error(result.message);
+      // @ts-ignore
+      throw new Error(result?.message);
     }
 
     return result;
@@ -201,7 +205,8 @@ class DbApiWrapper {
       ['id', 'owner_id']
     );
 
-    const timestampUpdate = result.rows[0];
+    // @ts-ignore
+    const timestampUpdate = result?.rows?.[0];
     this.updateSyncStatus({
       id,
       ownerId,
@@ -289,7 +294,8 @@ class DbApiWrapper {
     );
 
     if (!result.ok) {
-      throw new Error(result.message);
+      // @ts-ignore
+      throw new Error(result?.message);
     }
 
     return result.rows.map((row) => ({

@@ -28,12 +28,14 @@ export const extractSenseChats = (
     let userAddress = '';
     if (t.type === MSG_MULTI_SEND_TRANSACTION_TYPE) {
       // TODO: How to deal many outputs vs many inputs??
-      const { inputs, outputs } = t.value;
-      const isSender = inputs.find((i) => i.address === myAddress);
-      const userMessages = isSender ? outputs : inputs;
-      userMessages.forEach((msg) =>
-        updateSenseChat(chats, msg.address, t, msg.coins, isSender)
-      );
+
+      // broken on cyb side
+      // const { inputs, outputs } = t.value;
+      // const isSender = inputs.find((i) => i.address === myAddress);
+      // const userMessages = isSender ? outputs : inputs;
+      // userMessages.forEach((msg) =>
+      //   updateSenseChat(chats, msg.address, t, msg.coins, isSender)
+      // );
     } else if (t.type === MSG_SEND_TRANSACTION_TYPE) {
       const { from_address, to_address, amount } =
         t.value as MsgSendTransaction['value'];

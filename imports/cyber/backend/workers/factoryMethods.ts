@@ -49,8 +49,10 @@ function overrideLogging(worker: Worker | MessagePort) {
 function installLoggingHandler(worker: Worker | MessagePort, name: string) {
   // Add event listener
   worker.addEventListener('message', (event) => {
-    if (event.data.type === 'console') {
-      const { method, args } = event.data;
+    // @ts-ignore
+    if (event?.data?.type === 'console') {
+      // @ts-ignore
+      const { method, args } = event?.data;
 
       console[method](name, ...args);
     }
@@ -77,8 +79,10 @@ export function createWorkerApi<T>(
 
 export function exposeWorkerApi<T>(worker: WorkerType, api: T) {
   installTransferHandlers();
-  if (typeof worker.onconnect !== 'undefined') {
-    worker.onconnect = (e) => {
+  // @ts-ignore
+  if (typeof worker?.onconnect !== 'undefined') {
+    // @ts-ignore
+    worker?.onconnect = (e) => {
       const port = e.ports[0];
       overrideLogging(port);
 

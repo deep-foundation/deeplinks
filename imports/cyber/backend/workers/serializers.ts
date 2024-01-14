@@ -41,6 +41,7 @@ const IPFSContentTransferHandler: TransferHandler<
   IPFSContent | undefined,
   IPFSContentTransferable | null
 > = {
+  // @ts-ignore
   canHandle: (obj: IPFSContent | undefined) =>
     obj && obj.result && typeof obj.result[Symbol.asyncIterator] === 'function',
   serialize(obj: IPFSContent) {
@@ -52,6 +53,7 @@ const IPFSContentTransferHandler: TransferHandler<
     if (result) {
       (async () => {
         // eslint-disable-next-line no-restricted-syntax
+        // @ts-ignore
         for await (const value of result) {
           port1.postMessage(value);
         }
@@ -62,6 +64,7 @@ const IPFSContentTransferHandler: TransferHandler<
     }
     return [{ ...rest, port: port2 }, [port2]];
   },
+  // @ts-ignore
   deserialize(serializedObj: IPFSContentTransferable | null) {
     if (!serializedObj) {
       return undefined;

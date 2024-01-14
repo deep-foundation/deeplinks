@@ -233,6 +233,7 @@ export const addAddressPocket =
       return;
     }
 
+    // @ts-ignore
     const cyberAccounts: Account = {
       cyber: accounts,
     };

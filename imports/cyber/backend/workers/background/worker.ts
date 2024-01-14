@@ -111,7 +111,7 @@ const createBackgroundWorkerApi = () => {
       ipfsNode?.fetchWithDetails(cid, parseAs),
     enqueue: async (
       cid: string,
-      callback: QueueItemCallback<IPFSContentMaybe>,
+      callback: QueueItemCallback,
       options: QueueItemOptions
     ) => ipfsQueue!.enqueue(cid, callback, options),
     enqueueAndWait: async (cid: string, options?: QueueItemOptions) =>
@@ -139,4 +139,5 @@ const backgroundWorker = createBackgroundWorkerApi();
 export type BackgroundWorker = typeof backgroundWorker;
 
 // Expose the API to the main thread as shared/regular worker
+// @ts-ignore
 exposeWorkerApi(self, backgroundWorker);

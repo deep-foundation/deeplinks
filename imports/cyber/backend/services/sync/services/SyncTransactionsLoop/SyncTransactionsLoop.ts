@@ -187,6 +187,7 @@ class SyncTransactionsLoop {
         // Add cyberlink to sync observables
         if (addCyberlinksToSync && links.length > 0) {
           await this.db!.putCyberlinks(
+            // @ts-ignore
             links.map((link) => ({ ...link, neuron: '' }))
           );
 

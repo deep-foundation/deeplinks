@@ -86,7 +86,7 @@ export const parseArrayLikeToDetails = async (
       mime.indexOf('text/plain') !== -1 ||
       mime.indexOf('application/xml') !== -1
     ) {
-      if (isSvg(Buffer.from(rawData))) {
+      if (isSvg(Buffer.from(rawData).toString())) {
         response.type = 'image';
         response.content = createImgData(rawData, 'image/svg+xml'); // file
       } else {
