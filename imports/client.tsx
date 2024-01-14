@@ -548,30 +548,31 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   constructor(options: DeepClientOptions<L>) {
-    this.deep = options.deep;
-    if (!this.apolloClient) this.apolloClient = options.apolloClient;
+    this.deep = options?.deep;
+    this.apolloClient = options?.apolloClient;
+    this.token = options?.token;
 
-    if (!this.deep && !options.apolloClient) throw new Error('options.apolloClient or options.deep is required');
-
-    if (this.deep && !this.apolloClient && !options.apolloClient && options.token) {
+    if (this.deep && !this.apolloClient) {
+      const token = this.token ?? this.deep.token;
+      if (!token) {
+        throw new Error('token for apolloClient is invalid or not provided');
+      }
       this.apolloClient = generateApolloClient({
         // @ts-ignore
         path: this.deep.apolloClient?.path,
         // @ts-ignore
         ssl: this.deep.apolloClient?.ssl,
-        token: options.token,
+        token: token,
       });
     }
 
-    if (!this.apolloClient) throw new Error('apolloClient is invalid');
+    if (!this.apolloClient) throw new Error('apolloClient is invalid or not provided');
 
     this.client = this.apolloClient;
 
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();
     this.table = options.table || 'links';
-
-    this.token = options.token;
     
     if (this.token) {
       const decoded = parseJwt(this.token);
