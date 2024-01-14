@@ -1,6 +1,6 @@
 import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin';
 import { Delegation } from 'cosmjs-types/cosmos/staking/v1beta1/staking';
-import { CyberLinkSimple, NeuronAddress } from 'src/types/base';
+import { CyberLinkSimple, NeuronAddress } from '../../../types/base';
 
 interface GenericTransaction<T> {
   value: T;

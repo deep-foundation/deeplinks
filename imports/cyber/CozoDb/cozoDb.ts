@@ -12,6 +12,7 @@ import { DbEntity, ConfigDbEntity } from './types/entities';
 
 import { toListOfObjects, clearIndexedDBStore } from './utils';
 
+// @ts-ignore
 import initializeScript from './migrations/schema.cozo';
 import { createCozoDbCommandFactory } from './cozoDbCommandFactory';
 
@@ -63,6 +64,7 @@ function createCozoDb() {
       const result = await runCommand(initializeScript);
       if (!result.ok) {
         throw new Error(
+          // @ts-ignore
           `DB SCHEMA INITIALIZATION FAILED. \r\n ${result.message}`
         );
       }

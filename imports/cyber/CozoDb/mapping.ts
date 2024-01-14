@@ -13,8 +13,10 @@ export const mapParticleToEntity = (particle: IPFSContent): ParticleDto => {
   const text = textPreview?.replace(/"/g, "'") || '';
   return {
     cid,
+    // @ts-ignore
     size: size || 0,
     mime: mime || 'unknown',
+    // @ts-ignore
     type,
     text,
     size_local: sizeLocal || -1,
@@ -48,6 +50,7 @@ export const mapTransactionToEntity = (
     timestamp: dateToNumber(timestamp),
     // value: JSON.stringify(value),
     memo,
+    // @ts-ignore
     value,
     success,
     neuron,
@@ -85,4 +88,4 @@ export const mapLinkToEntity = (
   to,
   neuron,
   timestamp,
-});
+} as any);

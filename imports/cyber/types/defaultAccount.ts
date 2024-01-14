@@ -8,7 +8,7 @@ export type AccountValue = {
   pk?: string;
 };
 
-type Account = {
+export type Account = {
   [key in AccountKey]: AccountValue;
 };
 

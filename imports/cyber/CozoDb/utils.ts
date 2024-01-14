@@ -8,6 +8,7 @@ import {
   IDBResultError,
 } from './types/types';
 import { DbEntity } from './types/entities';
+import { DbEntityToDto } from './types/dto';
 
 export function withColIndex(result: IDBResult): DBResultWithColIndex {
   const index = result.headers.reduce((acc, column, index) => {

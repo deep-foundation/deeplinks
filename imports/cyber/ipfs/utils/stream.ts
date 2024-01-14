@@ -59,6 +59,7 @@ export async function toAsyncIterableWithMime(
     },
   };
 
+  // @ts-ignore
   return { mime, result: asyncIterable, firstChunk: value };
 }
 
@@ -93,6 +94,7 @@ export async function toReadableStreamWithMime(
     },
   });
 
+  // @ts-ignore
   return { mime, result: modifiedStream, firstChunk: value };
 }
 

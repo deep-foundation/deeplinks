@@ -17,8 +17,8 @@ import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
 import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
 import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
-import {generateCyberInDeepClient} from '/workspace/deeplinks/imports/cyber.js'
-import type {CyberDeepClient} from '/workspace/deeplinks/imports/cyber.js'
+import {generateCyberInDeepClient} from '../imports/cyber.js'
+import type {CyberDeepClient} from '../imports/cyber.js'
 // function Main({ options }: { options: IApolloClientGeneratorOptions }): JSX.Element {
 //   return <ApolloClientTokenizedProvider options={options}>
 //     <div></div>
