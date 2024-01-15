@@ -68,6 +68,7 @@
     "cyb-cozo-lib-wasm": "^0.7.141",
     "datastore-idb": "^2.1.7",
     "debug": "^4.3.4",
+    "dexie": "^3.2.4",
     "dotenv": "^16.0.3",
     "electron": "^13.1.9",
     "file-type": "^19.0.0",
