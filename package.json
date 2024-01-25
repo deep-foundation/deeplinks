@@ -38,6 +38,7 @@
     "deeplinks": "./call.cjs"
   },
   "dependencies": {
+    "@deep-foundation/npm-packager": "^0.0.42",
     "@deep-foundation/tsx": "^0.0.5",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
