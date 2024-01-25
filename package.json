@@ -38,7 +38,7 @@
     "deeplinks": "./call.cjs"
   },
   "dependencies": {
-    "@deep-foundation/npm-packager": "^0.0.39",
+    "@deep-foundation/npm-packager": "^0.0.41",
     "@deep-foundation/tsx": "^0.0.5",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
@@ -79,10 +79,9 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.7.14",
-    "@deep-foundation/hasura": "^0.0.61",
-    "@deep-foundation/materialized-path": "~0.0.30",
-    "@deep-foundation/react-hasura": "~0.0.24",
-    "@deep-foundation/store": "~0.0.25",
+    "@deep-foundation/materialized-path": "0.0.x",
+    "@deep-foundation/react-hasura": "0.0.x",
+    "@deep-foundation/store": "0.0.x",
     "apollo-server": "^2.26.1",
     "apollo-server-core": "^3.12.0",
     "apollo-server-express": "^3.12.0",
