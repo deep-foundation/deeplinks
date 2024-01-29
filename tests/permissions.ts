@@ -1124,4 +1124,40 @@ describe('permissions', () => {
       await d3.can(a1.linkId, a3.linkId, await deep.id('@deep-foundation/core', 'AllowLogin'));
     });
   });
+  describe('join', () => {
+    it('create a new user, join to admin, insert type', async () => {
+      const unloginedDeep = new DeepClient({ apolloClient });
+      const guestLoginResult = await unloginedDeep.guest();
+      const guestDeep = new DeepClient({ deep: unloginedDeep, ...guestLoginResult });
+      const adminLogin = await guestDeep.login({
+        linkId: await guestDeep.id('deep', 'admin'),
+      });
+      console.log({adminLogin})
+      const adminDeep = new DeepClient({ deep: guestDeep, ...adminLogin });
+      console.log({adminDeep})
+      const {data: [{id: newUserLinkId}]} = await adminDeep.insert({
+        type_id: adminDeep.idLocal("@deep-foundation/core", "User")
+      })
+      const newUserLoginResult = await adminDeep.login({
+        linkId: newUserLinkId
+      })
+      console.log({newUserLoginResult})
+      const newUserDeep = new DeepClient({deep: guestDeep, ... newUserLoginResult})
+      console.log({newUserDeep})
+      const joinInsertData = {
+        type_id: adminDeep.idLocal("@deep-foundation/core", "Join"),
+        from_id: newUserDeep.linkId,
+        to_id: adminDeep.linkId
+      }
+      console.log({joinInsertData})
+      const joinInsertResult = await adminDeep.insert(joinInsertData)
+      console.log({joinInsertResult})
+      const deep = newUserDeep;
+      console.log({deep})
+      const insertResult = await deep.insert({
+        type_id: deep.idLocal("@deep-foundation/core", "Type")
+      })
+      console.log({insertResult})
+    })
+  })
 });
