@@ -1031,10 +1031,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   }
 
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
-    const jwtResult = await this.jwt({ ...options, relogin: true });
-    this.token = jwtResult.token;
-    this.linkId = jwtResult.linkId;
-    return jwtResult
+    return await this.jwt({ ...options, relogin: true })
   };
 
   async logout(): Promise<DeepClientAuthResult> {
