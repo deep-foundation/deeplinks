@@ -1,8 +1,12 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-import { DeepClient } from "../imports/client";
+import { DeepClient, parseJwt } from "../imports/client";
 import { assert, expect } from 'chai';
 import { stringify } from "querystring";
 import { delay } from "../imports/promise";
+
+export async function sleep (ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -1132,32 +1136,38 @@ describe('permissions', () => {
       const adminLogin = await guestDeep.login({
         linkId: await guestDeep.id('deep', 'admin'),
       });
-      console.log({adminLogin})
+      console.log({ adminLogin })
       const adminDeep = new DeepClient({ deep: guestDeep, ...adminLogin });
-      console.log({adminDeep})
-      const {data: [{id: newUserLinkId}]} = await adminDeep.insert({
+      // console.log({ adminDeep })
+      const { data: [{ id: newUserLinkId }] } = await adminDeep.insert({
         type_id: adminDeep.idLocal("@deep-foundation/core", "User")
       })
-      const newUserLoginResult = await adminDeep.login({
+
+      const newUserLoginResultBeforeJoin = await unloginedDeep.login({
         linkId: newUserLinkId
-      })
-      console.log({newUserLoginResult})
-      const newUserDeep = new DeepClient({deep: guestDeep, ... newUserLoginResult})
-      console.log({newUserDeep})
+      });
+      console.log({ newUserLoginResultBeforeJoin });
+      console.log({ newUserLoginResultBeforeJoinDecodedToken: parseJwt(newUserLoginResultBeforeJoin.token) });
+
       const joinInsertData = {
         type_id: adminDeep.idLocal("@deep-foundation/core", "Join"),
-        from_id: newUserDeep.linkId,
+        from_id: newUserLinkId,
         to_id: adminDeep.linkId
       }
-      console.log({joinInsertData})
+      console.log({ joinInsertData })
       const joinInsertResult = await adminDeep.insert(joinInsertData)
-      console.log({joinInsertResult})
-      const deep = newUserDeep;
-      console.log({deep})
-      const insertResult = await deep.insert({
-        type_id: deep.idLocal("@deep-foundation/core", "Type")
+      console.log({ joinInsertResult });
+      const newUserLoginResultAfterJoin = await unloginedDeep.login({
+        linkId: newUserLinkId
+      });
+      console.log({ newUserLoginResultAfterJoin });
+      console.log({ newUserLoginResultAfterJoin: parseJwt(newUserLoginResultAfterJoin.token) });
+      const newUserDeep = new DeepClient({ deep: unloginedDeep, ...newUserLoginResultAfterJoin })
+      // console.log({ newUserDeep })
+      const insertResult = await newUserDeep.insert({
+        type_id: newUserDeep.idLocal("@deep-foundation/core", "Type")
       })
-      console.log({insertResult})
+      console.log({ insertResult })
     })
   })
 });
