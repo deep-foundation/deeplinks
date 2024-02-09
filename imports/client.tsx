@@ -761,6 +761,13 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return { ...q, data: (q)?.data?.m0?.returning };
   }; 
 
+  /**
+   * Updates a value in the database. By default updates a link in the links table
+   * @param exp An expression to filter the objects to update
+   * @param value A value to update the objects with
+   * @param options An object with options for the update operation
+   * @returns A promise that resolves to the updated object or an array of updated objects with the fields configured by {@link options.returning} which is by default 'id'
+   */
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
