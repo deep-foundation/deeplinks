@@ -622,6 +622,12 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   serializeQuery = serializeQuery;
   serializeWhere = serializeWhere;
 
+  /**
+   * Gets a value from the database. By default gets a link from the links table
+   * @param exp A filter expression to filter the objects to get
+   * @param options An object with options for the select operation
+   * @returns A promise that resolves to the selected object or an array of selected objects with the fields configured by {@link options.returning} which is by default 'id'
+   */
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) {
       return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
