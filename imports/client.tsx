@@ -733,7 +733,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * Inserts a value into the database. By default inserts a link to the links table
    * @param objects An object or array of objects to insert to the database
    * @param options An object with options for the insert operation
-   * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields provided by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
