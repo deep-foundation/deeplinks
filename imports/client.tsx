@@ -911,11 +911,16 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
       Results: options.results
     });
   };
-
-  /**
+/**
    * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
    * @description Thows error if id is not found. You can set last argument true, for disable throwing error.
    * @returns number
+   */
+  /**
+   * Find id of a link by link name or id and contain values (names) as path items
+   * @param start A name or id of a link
+   * @param path Contain values (names) as path items
+   * @returns A promise that resolves to the id of the link
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
