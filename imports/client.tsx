@@ -895,6 +895,12 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return reserve({ count, client: this.apolloClient });
   };
 
+  /**
+   * Await for a promise
+   * @param id Id of a link which is processed by a handler
+   * @param options An object with options for the await operation
+   * @returns A promise that resolves to the result of the awaited promise
+   */
   async await(id: number, options: { results: boolean } = { results: false } ): Promise<any> {
     return awaitPromise({
       id, client: this.apolloClient,
