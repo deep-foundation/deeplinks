@@ -1066,6 +1066,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return result?.data?.jwt?.linkId;
   }
 
+  /**
+   * Performs a login operation
+   * @param options An object with options for the login operation
+   * @returns A promsie that resolves to the result of the login operation
+   */
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
     const jwtResult = await this.jwt({ ...options, relogin: true });
     this.token = jwtResult.token;
