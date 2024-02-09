@@ -793,6 +793,12 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
+  /**
+   * Deletes a value in the database. By default deletes a link in the links table
+   * @param exp An expression to filter the objects to delete
+   * @param options An object with options for the delete operation
+   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
