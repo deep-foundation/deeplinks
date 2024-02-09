@@ -911,11 +911,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
       Results: options.results
     });
   };
-/**
-   * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
-   * @description Thows error if id is not found. You can set last argument true, for disable throwing error.
-   * @returns number
-   */
+
   /**
    * Find id of a link by link name or id and contain values (names) as path items
    * @param start A name or id of a link
@@ -991,6 +987,12 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return result;
   }
 
+  /**
+   * 
+   * @param start 
+   * @param path 
+   * @returns 
+   */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
     if (get(_ids, paths.join('.'))) {
