@@ -1088,6 +1088,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return { linkId: 0, token: '' };
   };
 
+  /**
+   * Checks whether {@link subjectUds} can perform {@link actionIds} on {@link objectIds}
+   */
   async can(objectIds: null | number | number[], subjectIds: null | number | number[], actionIds: null | number | number[], userIds: number | number[] = this.linkId) {
     const where: any = {
     };
