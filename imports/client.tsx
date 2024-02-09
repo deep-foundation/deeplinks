@@ -988,10 +988,10 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   }
 
   /**
-   * 
-   * @param start 
-   * @param path 
-   * @returns 
+   * Find id of a link from minilinks by link name or id and contain values (names) as path items
+   * @param start A name or id of a link
+   * @param path Contain values (names) as path items
+   * @returns A promise that resolves to the id of the link
    */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
