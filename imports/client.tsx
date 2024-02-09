@@ -1078,6 +1078,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return jwtResult
   };
 
+  /**
+   * Performs a logout operation
+   * @param options An object with options for the logout operation
+   * @returns A promsie that resolves to the result of the logout operation
+   */
   async logout(): Promise<DeepClientAuthResult> {
     if (this?.handleAuth) setTimeout(() => this?.handleAuth(0, ''), 0);
     return { linkId: 0, token: '' };
