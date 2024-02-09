@@ -1101,6 +1101,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return !!result?.data?.length;
   }
 
+  /**
+   * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input}
+   */
   async name(input: Link<number> | number): Promise<string | undefined> {
     const id = typeof(input) === 'number' ? input : input.id;
 
