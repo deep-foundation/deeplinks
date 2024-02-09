@@ -1120,6 +1120,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return containLink?.value?.value;
   };
 
+  /**
+   * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input} according to links stored in minilinks
+   */
   nameLocal(input: Link<number> | number): string | undefined {
     const id = typeof(input) === 'number' ? input : input?.id;
     if (!id) return;
