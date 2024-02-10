@@ -1230,6 +1230,16 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param id Id of a link which is processed by a handler
    * @param options An object with options for the await operation
    * @returns A promise that resolves to the result of the awaited promise
+   * 
+   * @example
+   * #### Await a promise of npm-packager
+   * Let us imagine you have published a package and want to programatically wait until it is published or failed to publish
+   * ```
+   * await deep.await(
+   *   await deep.id('my-package-name')
+   * )
+   * ```
+   * In this case you will await all the promises for 'my-package-name' link
    */
   async await(id: number, options: { results: boolean } = { results: false } ): Promise<any> {
     return awaitPromise({
