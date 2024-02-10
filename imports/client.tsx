@@ -1052,6 +1052,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * In this case all the links with to_id 888 will be deleted
+   * 
+   * #### Delete by type_id
+   * ``` 
+   * await deep.delete({
+   *   type_id: 888
+   * })
+   * ```
+   * In this case all the links with type_id 888 will be deleted
    */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
