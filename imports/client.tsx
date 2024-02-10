@@ -810,7 +810,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
    * 
    * @example
-   * #### Insert without from and to
+   * #### Insert Type
    * ``` 
    * await deep.insert({
    *   type_id: await deep.id("@deep-foundation/core", "Type")
