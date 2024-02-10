@@ -1098,6 +1098,16 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * In this case all the links with object value { myFieldName: "myFieldValue" } will be deleted
+   * 
+   * #### Delete string value by link id
+   * ``` 
+   * await deep.delete({
+   *   link_id: 888
+   * }, {
+   *   table: 'strings'
+   * })
+   * ```
+   * In this case all string value of a link with id 888 will be deleted
    */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
