@@ -627,6 +627,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param exp A filter expression to filter the objects to get
    * @param options An object with options for the select operation
    * @returns A promise that resolves to the selected object or an array of selected objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Select by id
+   * ``` 
+   * await deep.select({
+   *   id: deep.linkId
+   * })
+   * ```
    */
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) {
