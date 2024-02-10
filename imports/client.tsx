@@ -857,6 +857,17 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * In this case instances of your type may go from instances of any link without restrictions to instances of Package 
+   * 
+   * #### Insert string
+   * ``` 
+   * await deep.insert({
+   *   link_id: 888,
+   *   value: 'MyString'
+   * }, {
+   *   table: 'strings'
+   * })
+   * ```
+   * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
