@@ -1027,6 +1027,15 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param exp An expression to filter the objects to delete
    * @param options An object with options for the delete operation
    * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Delete by id
+   * ``` 
+   * await deep.update({
+   *   id: 888
+   * })
+   * ```
+   * In this case the link with id 888 will be deleted
    */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
