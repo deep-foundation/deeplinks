@@ -828,7 +828,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * In this case instances of your type will must have from of type Package and to of type User
    * 
-   * #### Insert with from and to equal to any
+   * #### Insert Type with from Any to Any
    * ``` 
    * await deep.insert({
    *   type_id: await deep.id("@deep-foundation/core", "Type"),
