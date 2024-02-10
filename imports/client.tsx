@@ -1031,7 +1031,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @example
    * #### Delete by id
    * ``` 
-   * await deep.update({
+   * await deep.delete({
    *   id: 888
    * })
    * ```
