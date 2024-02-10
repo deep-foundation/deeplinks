@@ -837,6 +837,16 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * In this case instances of your type may go from instances of any link to instances of any link without restrictions
+   * 
+   * #### Insert Type with from Package to Any
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type"),
+   *   from_id: await deep.id("@deep-foundation/core", "Package"),
+   *   to_id: await deep.id("@deep-foundation/core", "Any")
+   * })
+   * ```
+   * In this case instances of your type may go from instances of Package to instances of any link without restrictions
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
