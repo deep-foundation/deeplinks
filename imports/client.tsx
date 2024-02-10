@@ -935,7 +935,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    *   from_id: 1
    * })
    * ```
-   * In this case link from_id will be updated to 1 for link with id 888
+   * In this case from_id will be updated to 1 for link with id 888
    * 
    * #### Update to by id
    * ``` 
