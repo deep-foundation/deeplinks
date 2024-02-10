@@ -1107,7 +1107,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    *   table: 'strings'
    * })
    * ```
-   * In this case all string value of a link with id 888 will be deleted
+   * In this case string value of a link with id 888 will be deleted
    * 
    * #### Delete number value by link id
    * ``` 
