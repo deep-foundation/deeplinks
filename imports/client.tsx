@@ -676,9 +676,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   };
 
   /**
-   * deep.subscribe
+   * Subscribes to data in the database
    * @example
-   * deep.subscribe({ up: { link_id: 380 } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   * ```
+   * deep.subscribe({ up: { link_id: deep.linkId } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   * ```
    */
   subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
     if (!exp) {
