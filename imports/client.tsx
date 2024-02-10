@@ -808,6 +808,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param objects An object or array of objects to insert to the database
    * @param options An object with options for the insert operation
    * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Insert by without from and to
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type")
+   * })
+   * ```
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
