@@ -644,6 +644,13 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    *   }
    * })
    * ```
+   * 
+   * #### Select by from_id
+   * ``` 
+   * await deep.select({
+   *   from_id: deep.linkId
+   * })
+   * ```
    */
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) {
