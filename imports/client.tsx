@@ -936,6 +936,16 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * In this case link from_id will be updated to 1 for link with id 888
+   * 
+   * #### Update to by id
+   * ``` 
+   * await deep.update({
+   *   id: 888
+   * }, {
+   *   to_id: 1
+   * })
+   * ```
+   * In this case link to_id will be updated to 1 for link with id 888
    */
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
