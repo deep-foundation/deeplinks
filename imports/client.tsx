@@ -925,6 +925,17 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param value A value to update the objects with
    * @param options An object with options for the update operation
    * @returns A promise that resolves to the updated object or an array of updated objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Update from by id
+   * ``` 
+   * await deep.update({
+   *   id: 888
+   * }, {
+   *   from_id: 1
+   * })
+   * ```
+   * In this case link from_id will be updated to 1 for link with id 888
    */
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
