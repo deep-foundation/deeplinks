@@ -879,6 +879,19 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * })
    * ```
    * Note: If a link already has value you should update its value, not insert 
+   * 
+   * #### Insert object
+   * ``` 
+   * await deep.insert({
+   *   link_id: 888,
+   *   value: {
+   *     myFieldName: 'myFieldValue'
+   *   }
+   * }, {
+   *   table: 'objects'
+   * })
+   * ```
+   * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
