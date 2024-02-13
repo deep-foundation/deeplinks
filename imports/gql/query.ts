@@ -14,6 +14,15 @@ const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
   'where': `${tableName}_bool_exp!`,
 });
 
+const manyRelations = {
+  'from': false,
+  'to': false,
+  'type': false,
+  'in': true,
+  'out': true,
+  'typed': true,
+};
+
 export interface IGenerateQueryDataOptions {
   tableNamePostfix?: string;
   tableName: string;
@@ -34,7 +43,6 @@ export interface IGenerateQueryFieldTypes {
 export interface IGenerateQueryDataResult extends IGenerateQueryDataOptions {
   resultReturning: string;
   fields: string[];
-  fieldTypes: IGenerateQueryFieldTypes;
   defs: string[];
   args: string[];
   alias: string;
@@ -49,21 +57,28 @@ export const generateQueryData = ({
   operation = 'query',
   queryName = `${tableName}`,
   returning = `id`,
-  variables,
+  variables: _variables,
 }: IGenerateQueryDataOptions): IGenerateQueryDataBuilder => {
-  log('generateQuery', { tableName, tableNamePostfix, operation, queryName, returning, variables });
+  log('generateQuery', { tableName, tableNamePostfix, operation, queryName, returning, _variables });
   const fields = ['distinct_on', 'limit', 'offset', 'order_by', 'where'];
-  const fieldTypes = fieldsInputs(tableName);
 
   return (alias: string, index: number): IGenerateQueryDataResult => {
+    const { where: { return: customReturn, ...where }, ...__variables } = _variables;
+    const variables = { ...__variables, where };
     log('generateQueryBuilder', { tableName, tableNamePostfix, operation, queryName, returning, variables, alias, index });
-    const defs = [];
-    const args = [];
-    for (let f = 0; f < fields.length; f++) {
-      const field = fields[f];
-      defs.push(`$${field + index}: ${fieldTypes[field]}`);
-      args.push(`${field}: $${field}${index}`);
-    }
+    const generateDefs = (fields, index, tableName, postfix = '') => {
+      const fieldTypes = fieldsInputs(tableName);
+      const defs = [];
+      const args = [];
+      for (let f = 0; f < fields.length; f++) {
+        const field = fields[f];
+        const key = field + index + postfix;
+        defs.push(`$${key}: ${fieldTypes[field]}`);
+        args.push(`${field}: $${key}`);
+      }
+      return { defs, args };
+    };
+    const { defs, args } = generateDefs(fields, index, tableName);
     const resultAlias = `${alias}${typeof(index) === 'number' ? index : ''}`;
     const resultVariables = {};
     for (const v in variables) {
@@ -72,6 +87,29 @@ export const generateQueryData = ({
         resultVariables[v + index] = variable;
       }
     }
+    let customReturnAliases = ``;
+    const generateCustomArgsAndVariables = (customReturn, prefix = '') => {
+      for (let r in customReturn) {
+        const { return: _return, relation, ...customWhere } = customReturn[r];
+        const postfix = `${prefix}_${r}`;
+        let customReturning = '';
+        if (_return) {
+          customReturning += generateCustomArgsAndVariables(_return, postfix);
+        }
+        if (manyRelations[relation]) {
+          const { defs: _defs, args: _args } = generateDefs(fields, index, tableName, postfix);
+          defs.push(..._defs);
+          const variable = customWhere;
+          resultVariables['where' + index + postfix] = variable;
+          return ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${returning} ${customReturning} }`;
+        } else {
+          const variable = customWhere;
+          resultVariables['where' + index + postfix] = variable;
+          return ` ${r}: ${customReturn[r].relation} { ${returning} ${customReturning} }`;
+        }
+      }
+    };
+    customReturnAliases += generateCustomArgsAndVariables(customReturn, '');
     const result = {
       tableName,
       tableNamePostfix,
@@ -79,9 +117,8 @@ export const generateQueryData = ({
       queryName: queryName+tableNamePostfix,
       returning,
       variables,
-      resultReturning: returning,
+      resultReturning: `${returning}${customReturnAliases}`,
       fields,
-      fieldTypes,
       index,
       defs,
       args,
@@ -90,7 +127,7 @@ export const generateQueryData = ({
       resultVariables,
     };
     log('generateQueryResult', result);
-    return result
+    return result;
   };
 };
 export interface IGenerateQueryOptions {

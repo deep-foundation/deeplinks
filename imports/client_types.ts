@@ -2,11 +2,18 @@ import { Id } from "./minilinks";
 
 export type Query = BoolExpLink | number;
 
+export type LinkToLinksRelations = 'from' | 'to' | 'type' | 'in' | 'out' | 'typed';
+
 export interface QueryLink extends BoolExpLink {
   limit?: number;
   order_by?: { [key: string]: 'asc'|'desc' };
   offset?: number;
   distinct_on?: [string];
+  return?: QueryLinkReturn;
+}
+
+export interface QueryLinkReturn extends QueryLink {
+  relation: LinkToLinksRelations;
 }
 
 export interface BoolExp<T> {

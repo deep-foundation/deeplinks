@@ -157,7 +157,9 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
       // if this is link
       if (env === 'links') {
         // if field contain primitive type - string/number
-        if (type === 'string' || type === 'number') {
+        if (key === 'relation') {
+          setted = result[key] = exp[key];
+        } else if (type === 'string' || type === 'number') {
           if (key === 'value' || key === type) {
             // if field id link.value
             setted = result[type] = { value: { _eq: exp[key] } };
@@ -169,6 +171,11 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
           setted = result[key] = serializeWhere(pathToWhere(...exp[key]));
+        } else if (key === 'return') {
+          setted = result[key] = {};
+          for (let r in exp[key]) {
+            result[key][r] = serializeWhere(exp[key][r], env);
+          }
         }
       } else if (env === 'tree') {
         // if field contain primitive type - string/number
@@ -283,6 +290,8 @@ export interface Observer<T> {
 };
 
 export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
+  needConnection?: boolean;
+
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
@@ -548,65 +557,67 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   constructor(options: DeepClientOptions<L>) {
-    this.deep = options?.deep;
-    this.apolloClient = options?.apolloClient;
-    this.token = options?.token;
+    if (options?.needConnection != false) {
+      this.deep = options?.deep;
+      this.apolloClient = options?.apolloClient;
+      this.token = options?.token;
 
-    if (this.deep && !this.apolloClient) {
-      const token = this.token ?? this.deep.token;
-      if (!token) {
-        throw new Error('token for apolloClient is invalid or not provided');
+      if (this.deep && !this.apolloClient) {
+        const token = this.token ?? this.deep.token;
+        if (!token) {
+          throw new Error('token for apolloClient is invalid or not provided');
+        }
+        this.apolloClient = generateApolloClient({
+          // @ts-ignore
+          path: this.deep.apolloClient?.path,
+          // @ts-ignore
+          ssl: this.deep.apolloClient?.ssl,
+          token: token,
+        });
       }
-      this.apolloClient = generateApolloClient({
-        // @ts-ignore
-        path: this.deep.apolloClient?.path,
-        // @ts-ignore
-        ssl: this.deep.apolloClient?.ssl,
-        token: token,
-      });
-    }
 
-    if (!this.apolloClient) throw new Error('apolloClient is invalid or not provided');
+      if (!this.apolloClient) throw new Error('apolloClient is invalid or not provided');
 
-    this.client = this.apolloClient;
+      this.client = this.apolloClient;
 
-    // @ts-ignore
-    this.minilinks = options.minilinks || new MinilinkCollection();
-    this.table = options.table || 'links';
-    
-    if (this.token) {
-      const decoded = parseJwt(this.token);
-      const linkId = decoded?.userId;
-      if (!linkId){
-        throw new Error(`Unable to parse linkId from jwt token.`);
+      this.table = options.table || 'links';
+      
+      if (this.token) {
+        const decoded = parseJwt(this.token);
+        const linkId = decoded?.userId;
+        if (!linkId){
+          throw new Error(`Unable to parse linkId from jwt token.`);
+        }
+        if (options.linkId && options.linkId !== linkId){
+          throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
+        }
+        this.linkId = linkId;
+      } else {
+        this.linkId = options.linkId;
       }
-      if (options.linkId && options.linkId !== linkId){
-        throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
-      }
-      this.linkId = linkId;
-    } else {
-      this.linkId = options.linkId;
+
+      this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
+      this.selectReturning = options.selectReturning || this.linksSelectReturning;
+      this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
+      this.selectorsSelectReturning = options.selectorsSelectReturning ||'item_id selector_id';
+      this.filesSelectReturning = options.filesSelectReturning ||'id link_id name mimeType';
+      this.insertReturning = options.insertReturning || 'id';
+      this.updateReturning = options.updateReturning || 'id';
+      this.deleteReturning = options.deleteReturning || 'id';
+
+      this.defaultSelectName = options.defaultSelectName || 'SELECT';
+      this.defaultInsertName = options.defaultInsertName || 'INSERT';
+      this.defaultUpdateName = options.defaultUpdateName || 'UPDATE';
+      this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
+      
+      this.silent = options.silent || false;
+
+      this.unsafe = options.unsafe || {};
     }
 
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
-
-    this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
-    this.selectReturning = options.selectReturning || this.linksSelectReturning;
-    this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
-    this.selectorsSelectReturning = options.selectorsSelectReturning ||'item_id selector_id';
-    this.filesSelectReturning = options.filesSelectReturning ||'id link_id name mimeType';
-    this.insertReturning = options.insertReturning || 'id';
-    this.updateReturning = options.updateReturning || 'id';
-    this.deleteReturning = options.deleteReturning || 'id';
-
-    this.defaultSelectName = options.defaultSelectName || 'SELECT';
-    this.defaultInsertName = options.defaultInsertName || 'INSERT';
-    this.defaultUpdateName = options.defaultUpdateName || 'UPDATE';
-    this.defaultDeleteName = options.defaultDeleteName || 'DELETE';
-    
-    this.silent = options.silent || false;
-
-    this.unsafe = options.unsafe || {};
+    // @ts-ignore
+    this.minilinks = options.minilinks || new MinilinkCollection();
   }
 
   stringify(any?: any): string {

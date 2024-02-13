@@ -17,8 +17,10 @@ import { LocalStoreProvider } from '@deep-foundation/store/local';
 import { QueryStoreProvider } from '@deep-foundation/store/query';
 import { CookiesStoreProvider } from '@deep-foundation/store/cookies';
 import { CapacitorStoreProvider } from "@deep-foundation/store/capacitor";
-import {generateCyberInDeepClient} from '../imports/cyber.js'
-import type {CyberDeepClient} from '../imports/cyber.js'
+import { generateCyberDeepClient } from '../imports/cyber.js'
+import type { CyberDeepClient } from '../imports/cyber.js'
+
+import * as cyberConfig from '../imports/cyber/config';
 // function Main({ options }: { options: IApolloClientGeneratorOptions }): JSX.Element {
 //   return <ApolloClientTokenizedProvider options={options}>
 //     <div></div>
@@ -30,31 +32,22 @@ const ssl = !!+process.env.DEEPLINKS_HASURA_SSL;
 const secret = process.env.DEEPLINKS_HASURA_SECRET;
 const ws = true;
 */
-let cyberClient: CyberDeepClient<any>;
+let deepClient: CyberDeepClient<any>;
 
 beforeAll(async () => {
-  cyberClient = await generateCyberInDeepClient({});
+  deepClient = await generateCyberDeepClient({
+    config: cyberConfig.CYBER,
+  });
 })
 
-describe('cyber-client', () => {
-  it(`deep.linkId guest and login`, async () => {
-    // assert.equal(deepClient.linkId, undefined);
-    // assert.notEqual(deepClient.linkId, 0);
-    // const guest = await deepClient.guest();
-    // const guestDeep = new DeepClient({ deep: deepClient, ...guest });
-    // assert.notEqual(guestDeep.linkId, undefined);
-    // assert.notEqual(guestDeep.linkId, 0);
-    // const guestId = guestDeep.linkId;
-    // const adminId = await guestDeep.id('deep', 'admin');
-    // assert.notEqual(adminId, undefined)
-    // const admin = await guestDeep.login({ linkId: adminId });
-    // assert.equal(admin.error, undefined)
-    // const deep = new DeepClient({ deep: deepClient, ...admin });
-    // assert.notEqual(deep.linkId, undefined);
-    // assert.notEqual(deep.linkId, 0);
-    // assert.notEqual(deep.linkId, guestId);
-
-    const cyberClient = await generateCyberInDeepClient({});
-    cyberClient.insert({});
+describe('CyberDeepClient', () => {
+  describe(`generators`, async () => {
+    it(`particles`, async () => {});
+    it(`cyberlinks`, async () => {});
+    it(`ps by cbls`, async () => {});
+    it(`ps by cbls with ps`, async () => {});
+    it(`cbls by ps`, async () => {});
+    it(`cbls by ps with cbls`, async () => {});
+    it(`cbls by ps with cbls with ps`, async () => {});
   });
 });

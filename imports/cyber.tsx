@@ -25,6 +25,8 @@ import {
   DeepClient, DeepClientAuthResult, DeepClientGuestOptions, DeepClientInstance,
   DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions,
 } from './client.js';
+import { CyberClient } from '@cybercongress/cyber-js';
+import _m0 from "protobufjs/minimal";
 
 const log = debug.extend('log');
 const error = debug.extend('error');
@@ -34,24 +36,182 @@ corePckg.data.filter(l => !!l.type).forEach((l, i) => {
   corePckgIds[l.id] = i+1;
 });
 
-export async function generateCyberInDeepClient(options: any): Promise<CyberDeepClient<Link<Id>>> {
-  return new CyberDeepClient(options);
+export interface Models {
+  [model: string]: {
+    out: { [field: string]: string };
+    in: { [model: string]: { [field: string]: true } };
+  };
+};
+export const model = (
+  name: string,
+  fields: { [field: string]: string },
+  models: Models = {},
+) => {
+  const th = models[name] = {
+    out: fields,
+    in: {},
+  };
+  for (const f in fields) {
+    if (models[fields[f]]) {
+      models[fields[f]].in[name] = models[fields[f]].in[name] || {};
+      models[fields[f]].in[name][f] = true;
+    }
+  }
+  for (const m in models) {
+    for (const f in models[m].out) {
+      if (models[m].out[f] === name) {
+        th.in[m] = th.in[m] || {};
+        th.in[m][f] = true;
+      }
+    }
+  }
+};
+
+export interface Schemas {
+  byType?: { [type: string]: {
+    from: string;
+    to: string;
+    get?: (deep, id) => Promise<any>;
+  } };
+  byFrom?: { [type: string]: string[] };
+  byTo?: { [type: string]: string[] };
+}
+
+export const schema = (type, from = '', to = '', schemas: Schemas = {}) => {
+  if (!schemas.byType) schemas.byType = {};
+  if (!schemas.byFrom) schemas.byFrom = {};
+  if (!schemas.byTo) schemas.byTo = {};
+  schemas.byType[type] = { from, to };
+  if (from) {
+    schemas.byFrom[from] = schemas.byFrom[from] || [];
+    schemas.byFrom[from].push(type);
+  }
+  if (to) {
+    schemas.byTo[to] = schemas.byTo[to] || [];
+    schemas.byTo[to].push(type);
+  }
+};
+
+// model('account', {});
+// model('tx', {
+//   'coin_received.receiver': 'account',
+//   'coin_spent.spender': 'account',
+//   'message.sender': 'account',
+//   'transfer.recipient': 'account',
+//   'transfer.sender': 'account',
+// });
+// schema('tx', '', '');
+// schema('txReceiver', 'tx', 'account');
+// schema('txSender', 'tx', 'account');
+
+export interface CONFIG {
+  "CYBER_CONGRESS_ADDRESS": string;
+  "DIVISOR_CYBER_G": number;
+  "HYDROGEN": string;
+  "CHAIN_ID": string;
+  "DENOM_CYBER": string;
+  "DENOM_LIQUID_TOKEN": string;
+  "DENOM_CYBER_G": string;
+  "CYBER_NODE_URL_API": string;
+  "CYBER_WEBSOCKET_URL": string;
+  "CYBER_NODE_URL_LCD": string;
+  "CYBER_INDEX_HTTPS": string;
+  "CYBER_INDEX_WEBSOCKET": string;
+  "BECH32_PREFIX_ACC_ADDR_CYBER": string;
+  "BECH32_PREFIX_ACC_ADDR_CYBERVALOPER": string;
+  "MEMO_KEPLR": string;
+  "CYBER_GATEWAY": string;
+};
+
+export async function generateCyberDeepClient(options: {
+  config: CONFIG;
+}): Promise<CyberDeepClient<Link<string>>> {
+  const cyberClient = await CyberClient.connect(options.config.CYBER_NODE_URL_API);
+  const schemas = {};
+  const models = {};
+  model('account', {}, models);
+  model('tx', {
+    'coin_received.receiver': 'account',
+    'coin_spent.spender': 'account',
+    'message.sender': 'account',
+    'transfer.recipient': 'account',
+    'transfer.sender': 'account',
+  }, models);
+  schema('tx', '', '', schemas);
+  schema('txReceiver', 'tx', 'account', schemas);
+  schema('txSender', 'tx', 'account', schemas);
+  return new CyberDeepClient({
+    cyberClient,
+    config: options.config,
+    schemas, models,
+  });
 }
 
 export interface CyberDeepClientInstance<L extends Link<Id> = Link<Id>> extends DeepClientInstance<L> {
 }
 
-export class CyberDeepClient<L extends Link<Id> = Link<Id>> extends DeepClient<L> implements CyberDeepClientInstance<L> {
+export interface CyberDeepClientOptions<L extends Link<Id>> extends DeepClientOptions<L> {
+  cyberClient: CyberClient;
+  config: CONFIG;
+
+  schemas?: Schemas;
+  models?: Models;
+}
+
+export class CyberDeepClient<L extends Link<string> = Link<string>> extends DeepClient<L> implements CyberDeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
+  cyberClient: CyberClient;
+  config: CONFIG;
+
+  accountPrefix: string;
+
+  _byId: { [id: string]: any } = {};
+
+  schemas: Schemas;
+  models: Models;
+
   // @ts-ignore
-  constructor(options: DeepClientOptions<L>) {
-    super(options);
+  constructor(options: CyberDeepClientOptions<L>) {
+    super({
+      apolloClient: generateApolloClient({
+        path: options.config.CYBER_INDEX_HTTPS.slice(8),
+        ssl: true,
+        token: ''
+      }),
+    });
+    this.cyberClient = options.cyberClient;
+    this.config = options.config;
+
+    this.accountPrefix = this.config.BECH32_PREFIX_ACC_ADDR_CYBER;
+    this.schemas = options.schemas;
+    this.models = options.models;
   }
 
-  async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
-    throw new Error('not implemented');
-  };
+  // async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
+  //   let q = {};
+  //   if (typeof(exp) === 'string') {
+  //     if (exp.slice(0, this.accountPrefix.length) === this.accountPrefix) {
+  //       return {
+  //         data: [{ id: exp, type_id: 'account' } as LL],
+  //         loading: false,
+  //         networkStatus: 7,
+  //       };
+  //     }
+  //   } else if (typeof(exp) === 'number') {
+  //     throw new Error('not implemented');
+  //   } else q = exp;
+  //   const level = async (prev, exp) => {
+  //     if (!exp.type_id) {
+  //       throw new Error('!type_id');
+  //     }
+  //     if (exp.to_id && exp.type_id === 'tx') {
+  //       await this.cyberClient.getTx(exp.to_id);
+  //     }
+  //   };
+  //   await level(undefined, exp);
+  //   throw new Error('not implemented');
+  // };
 
   /**
    * deep.subscribe

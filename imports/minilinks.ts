@@ -75,7 +75,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     errors?: MinilinkError[];
   };
   _updating: boolean;
-  apply(linksArray: any[], applyName?: string): {
+  apply(linksArray: any[], applyName?: string, applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
@@ -201,6 +201,15 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 }
 
 export interface MinilinkError extends Error {}
+
+export interface ApplyReturnOptions {
+  [key: string]: ApplyOptions;
+}
+
+export interface ApplyOptions {
+  return?: ApplyReturnOptions;
+  [key: string]: any;
+}
 
 export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<Id> = Link<Id>> {
   useMinilinksQuery = useMinilinksQuery;
@@ -447,7 +456,16 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     };
   }
   _updating: boolean = false;
-  apply(linksArray: any[], applyName: string = ''): {
+  _toPlainLinksArray(linkOrLinks, applyOptions, plainLinksArray, returnLinksPathsById) {
+    const links = Array.isArray(linkOrLinks) ? linkOrLinks : [linkOrLinks];
+    plainLinksArray.push(...links);
+    for (let l in links) {
+      for (let r in (applyOptions?.return || {})) {
+        this._toPlainLinksArray(links[l][r] || [], applyOptions?.return?.[r], plainLinksArray, returnLinksPathsById);
+      }
+    }
+  }
+  apply(linksArray: any[], applyName: string = '', applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
@@ -458,15 +476,20 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const beforeUpdate = {};
     const toRemove = [];
     const _byId: any = {};
+    const plainLinksArray = [];
+    const returnLinksPathsById: any = {};
     for (let l = 0; l < linksArray.length; l++) {
       const link = linksArray[l];
+      this._toPlainLinksArray(link, applyOptions, plainLinksArray, returnLinksPathsById);
+    }
+    for (let l = 0; l < plainLinksArray.length; l++) {
+      const link = plainLinksArray[l];
       const old = byId[link.id];
       if (!old) {
         link._applies = [applyName];
         this.emitter.emit('apply', old, link);
         toAdd.push(link);
-      }
-      else {
+      } else {
         const index = old._applies.indexOf(applyName);
         if (!~index) {
           link._applies = old._applies = [...old._applies, applyName];
