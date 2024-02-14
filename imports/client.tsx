@@ -1263,6 +1263,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * const corePackageLinkId = await deep.id("@deep-foundation/core")
    * ```
+   * 
+   * #### Get User Type Link Id From Core Package
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User")
+   * ```
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
