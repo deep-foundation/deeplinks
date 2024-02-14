@@ -1441,6 +1441,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
 
   /**
    * Returns id of the current user
+   * 
+   * @example
+   * ```
+   * const myLinkId = await deep.whoami()
+   * ```
    */
   async whoami(): Promise<number | undefined> {
     const result = await this.apolloClient.query({ query: WHOISME });
