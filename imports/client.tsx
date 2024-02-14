@@ -1268,6 +1268,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * const userTypeLinkId = await deep.id("@deep-foundation/core", "User")
    * ```
+   * 
+   * #### Get the link called "My Nested Link Name" contained in the link called "My Link Name" contained the current user
+   * ```
+   * const myLinkId = await deep.id(deep.linkId, 'My Link Name', 'My Nested Link Name')
+   * ```
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
