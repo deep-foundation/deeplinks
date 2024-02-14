@@ -1353,6 +1353,12 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param start A name or id of a link
    * @param path Contain values (names) as path items
    * @returns A promise that resolves to the id of the link
+   * 
+   * @example
+   * #### Get Core Package Link Id
+   * ```
+   * const corePackageLinkId = deep.idLocal("@deep-foundation/core")
+   * ```
    */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
