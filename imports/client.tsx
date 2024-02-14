@@ -1364,6 +1364,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * const userTypeLinkId = deep.idLocal("@deep-foundation/core", "User")
    * ```
+   * 
+   * #### Get the link called "My Nested Link Name" contained in the link called "My Link Name" contained the current user
+   * ```
+   * const myLinkId = deep.idLocal(deep.linkId, 'My Link Name', 'My Nested Link Name')
+   * ```
    */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
