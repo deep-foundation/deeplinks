@@ -1359,6 +1359,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * const corePackageLinkId = deep.idLocal("@deep-foundation/core")
    * ```
+   * 
+   * #### Get User Type Link Id From Core Package
+   * ```
+   * const userTypeLinkId = deep.idLocal("@deep-foundation/core", "User")
+   * ```
    */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
