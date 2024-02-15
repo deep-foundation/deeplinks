@@ -1405,6 +1405,25 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     }
   };
 
+  /**
+   * Logs in as a guest
+   * @param options An object with options for the guest login operation
+   * @returns A promise that resolves to the result of the guest login operation
+   * 
+   * @example
+   * ```
+   * import { DeepClient } from "@deep-foundation/deeplinks/imports/client.js";
+   * import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+   * 
+   * const apolloClient = generateApolloClient({
+   *   path: NEXT_PUBLIC_GQL_PATH,
+   *   ssl: true,
+   * });
+   * const unloginedDeep = new DeepClient({ apolloClient });
+   * const guestLoginResult = await unloginedDeep.guest();
+   * const guestDeep = new DeepClient({ deep: unloginedDeep, ...guestLoginResult });
+   * ```
+   */
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
     const relogin = typeof(options.relogin) === 'boolean' ? options.relogin : true;
     const result = await this.apolloClient.query({ query: GUEST });
