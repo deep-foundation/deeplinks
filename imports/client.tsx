@@ -1571,6 +1571,10 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * Imports from a library
    * @param path A path to import from
    * @returns A promise that resolves to the imported value
+   * 
+   * @remarks
+   * Is able to import CommoJS and ESModule libraries.
+   * This is the recommended way to import from libraries in deep handlers
    */
   async import(path: string) : Promise<any> {
     if (typeof DeepClient.resolveDependency !== 'undefined') {
