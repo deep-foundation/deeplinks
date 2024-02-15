@@ -1412,9 +1412,6 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * 
    * @example
    * ```
-   * import { DeepClient } from "@deep-foundation/deeplinks/imports/client.js";
-   * import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-   * 
    * const apolloClient = generateApolloClient({
    *   path: NEXT_PUBLIC_GQL_PATH,
    *   ssl: true,
@@ -1479,9 +1476,6 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * 
    * @example
    * ```
-   * import { DeepClient } from "@deep-foundation/deeplinks/imports/client.js";
-   * import { generateApolloClient } from '@deep-foundation/hasura/client.js';
-   * 
    * const apolloClient = generateApolloClient({
    *   path: NEXT_PUBLIC_GQL_PATH,
    *   ssl: true,
