@@ -809,6 +809,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param options An object with options for the insert operation
    * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
    * 
+   * @remarks
+   * If a link already has value you should update its value, not insert 
+   * 
    * @example
    * #### Insert Type
    * ``` 
