@@ -1575,6 +1575,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @remarks
    * Is able to import CommoJS and ESModule libraries.
    * This is the recommended way to import from libraries in deep handlers
+   * 
+   * @example
+   * #### Async handler using import
+   * ```
+   * async ({deep}) => {
+   *   const importResult = await deep.import("my-lib-name");
+   * }
+   * ```
    */
   async import(path: string) : Promise<any> {
     if (typeof DeepClient.resolveDependency !== 'undefined') {
