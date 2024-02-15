@@ -1514,6 +1514,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
 
   /**
    * Checks whether {@link subjectUds} can perform {@link actionIds} on {@link objectIds}
+   * @param objectIds A link id or an array of link ids to check whether the {@link subjectUds} can perform the {@link actionIds} on
+   * @param subjectIds A link id or an array of link ids to check whether they can perform the {@link actionIds} on the {@link objectIds}
+   * @param actionIds A link id or an array of link ids to check whether the {@link subjectUds} can perform on the {@link objectIds}
+   * @param userIds A link id or an array of link ids from which perspective the check is performed
+   * @returns A promise that resolves to a boolean value indicating whether the {@link subjectUds} can perform the {@link actionIds} on the {@link objectIds}
    */
   async can(objectIds: null | number | number[], subjectIds: null | number | number[], actionIds: null | number | number[], userIds: number | number[] = this.linkId) {
     const where: any = {
