@@ -1567,6 +1567,11 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return (this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
   }
 
+  /**
+   * Imports from a library
+   * @param path A path to import from
+   * @returns A promise that resolves to the imported value
+   */
   async import(path: string) : Promise<any> {
     if (typeof DeepClient.resolveDependency !== 'undefined') {
       try {
