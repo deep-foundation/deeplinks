@@ -806,26 +806,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-<<<<<<< Updated upstream
   async serial({
     name, operations, returning, silent
   }: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
-=======
-  /**
-   * Performs write operations to the database in a serial manner
-   * @param options An object with data for the serial operation
-   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
-   * 
-   * @example
-   * ```
-   * 
-   * ```
-   */
-  async serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
-    const {
-      name, operations, returning, silent
-    } = options;
->>>>>>> Stashed changes
     // @ts-ignore
     let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
     operationsGroupedByTypeAndTable = operations.reduce((acc, operation) => {
