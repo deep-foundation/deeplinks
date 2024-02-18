@@ -108,6 +108,7 @@ export const generateQueryData = ({
           return ` ${r}: ${customReturn[r].relation} { ${returning} ${customReturning} }`;
         }
       }
+      return '';
     };
     customReturnAliases += generateCustomArgsAndVariables(customReturn, '');
     const result = {
@@ -117,7 +118,7 @@ export const generateQueryData = ({
       queryName: queryName+tableNamePostfix,
       returning,
       variables,
-      resultReturning: `${returning}${customReturnAliases}`,
+      resultReturning: `${returning}${customReturnAliases || ''}`,
       fields,
       index,
       defs,
