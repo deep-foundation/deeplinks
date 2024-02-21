@@ -15,8 +15,6 @@ import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, Bo
 import get from 'get-value';
 import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
-export { createSerialOperation } from './gql/index.js';
-
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
