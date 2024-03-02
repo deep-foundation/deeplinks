@@ -14,10 +14,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get remove containerd.io
           sudo apt-get update && sudo apt-get upgrade
-          sudo apt install -y git curl docker.io docker-compose
-
+          sudo apt install -y git curl
       - name: Allow ports 3006 and 3007
         run: |
           sudo ufw allow 3006
