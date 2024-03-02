@@ -23,13 +23,6 @@ jobs:
           sudo ufw allow 3006
           sudo ufw allow 3007
 
-      - name: Set up Docker
-        run: |
-          sudo groupadd docker
-          sudo usermod -aG docker $USER
-          docker run hello-world
-          docker rm $(docker ps -a -q --filter "ancestor=hello-world")
-
       - name: Install Node Version Manager (NVM)
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
