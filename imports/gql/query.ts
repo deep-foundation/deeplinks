@@ -23,12 +23,14 @@ const manyRelations = {
   'typed': true,
 };
 
+export type IReturningGenerator = (tableName: string) => string;
+
 export interface IGenerateQueryDataOptions {
   tableNamePostfix?: string;
   tableName: string;
   operation?: 'query' | 'subscription';
   queryName?: string;
-  returning?: string;
+  returning?: (string | IReturningGenerator);
   variables?: any; // TODO
 }
 
@@ -61,6 +63,7 @@ export const generateQueryData = ({
 }: IGenerateQueryDataOptions): IGenerateQueryDataBuilder => {
   log('generateQuery', { tableName, tableNamePostfix, operation, queryName, returning, _variables });
   const fields = ['distinct_on', 'limit', 'offset', 'order_by', 'where'];
+  const _returning: (tableName: string) => string = typeof(returning) === 'string' ? (tableName: string) => returning : returning;
 
   return (alias: string, index: number): IGenerateQueryDataResult => {
     const { where: { return: customReturn, ...where }, ...__variables } = _variables;
@@ -90,22 +93,24 @@ export const generateQueryData = ({
     let customReturnAliases = ``;
     const generateCustomArgsAndVariables = (customReturn, prefix = '') => {
       for (let r in customReturn) {
-        const { return: _return, relation, ...customWhere } = customReturn[r];
+        const { return: _return, relation, table, ...customWhere } = customReturn[r];
+        console.log('generateCustomArgsAndVariables', table);
+        const _table = table || tableName;
         const postfix = `${prefix}_${r}`;
         let customReturning = '';
         if (_return) {
           customReturning += generateCustomArgsAndVariables(_return, postfix);
         }
         if (manyRelations[relation]) {
-          const { defs: _defs, args: _args } = generateDefs(fields, index, tableName, postfix);
+          const { defs: _defs, args: _args } = generateDefs(fields, index, _table, postfix);
           defs.push(..._defs);
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          return ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${returning} ${customReturning} }`;
+          return ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_returning(_table)} ${customReturning} }`;
         } else {
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          return ` ${r}: ${customReturn[r].relation} { ${returning} ${customReturning} }`;
+          return ` ${r}: ${customReturn[r].relation} { ${_returning(_table)} ${customReturning} }`;
         }
       }
       return '';
@@ -118,7 +123,7 @@ export const generateQueryData = ({
       queryName: queryName+tableNamePostfix,
       returning,
       variables,
-      resultReturning: `${returning}${customReturnAliases || ''}`,
+      resultReturning: `${_returning(tableName)}${customReturnAliases || ''}`,
       fields,
       index,
       defs,

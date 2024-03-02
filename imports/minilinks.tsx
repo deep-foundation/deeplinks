@@ -6,7 +6,7 @@ import _sum from 'lodash/sum.js';
 import _min from 'lodash/min.js';
 import _max from 'lodash/max.js';
 import EventEmitter from 'events';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
 import { inherits } from 'util';
 import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
@@ -458,7 +458,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   _updating: boolean = false;
   _toPlainLinksArray(linkOrLinks, applyOptions, plainLinksArray, returnLinksPathsById) {
     const links = Array.isArray(linkOrLinks) ? linkOrLinks : [linkOrLinks];
-    plainLinksArray.push(...links);
+    plainLinksArray.push(...links.map(l => ({ id: l.id, type_id: l.type_id, from_id: l.from_id, to_id: l.to_id, value: l.value })));
     for (let l in links) {
       for (let r in (applyOptions?.return || {})) {
         this._toPlainLinksArray(links[l][r] || [], applyOptions?.return?.[r], plainLinksArray, returnLinksPathsById);
@@ -695,3 +695,36 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
   }, [q]);
   return d || ml.query(q);
 };
+
+export function useMinilinksGenerator(
+  minilinks?: MinilinkCollection,
+) {
+  const ref = useRef(minilinks);
+  ref.current = useMemo(() => {
+    if (ref.current) return ref.current;
+    return new MinilinkCollection();
+  }, []);
+  return ref.current;
+}
+
+export const MinilinksContext = createContext<MinilinkCollection>(undefined);
+
+export function MinilinksProvider({
+  minilinks: initialMinilinks,
+  children,
+}: {
+  minilinks?: MinilinkCollection; 
+  children: any;
+}) {
+  const minilinks = useMinilinksGenerator(initialMinilinks);
+
+  return (
+    <MinilinksContext.Provider value={minilinks}>
+      {children}
+    </MinilinksContext.Provider>
+  );
+}
+
+export function useMinilinks() {
+  return useContext(MinilinksContext);
+}

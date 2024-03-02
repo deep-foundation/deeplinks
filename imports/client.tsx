@@ -3,10 +3,10 @@ import { gql, useQuery, useSubscription, useApolloClient, Observable } from '@ap
 import type { ApolloQueryResult } from '@apollo/client/index.js';
 import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { deprecate, inherits, inspect } from "util";
 import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, ISerialResult, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { Id, Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
@@ -15,6 +15,7 @@ import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, Bo
 import get from 'get-value';
 import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
+import { any } from 'ramda';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -165,7 +166,7 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
             setted = result[type] = { value: { _eq: exp[key] } };
           } else {
             // else just equal
-            setted = result[key] = { _eq: exp[key] };
+            setted = result[key] = key === 'table' ? exp[key] : { _eq: exp[key] };
           }
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
@@ -290,6 +291,8 @@ export interface Observer<T> {
 };
 
 export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
+  namespace?: string;
+
   needConnection?: boolean;
 
   linkId?: Id;
@@ -334,6 +337,8 @@ export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
 export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
+  namespace?: string;
+
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
@@ -522,6 +527,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   DeepProvider = DeepProvider;
   DeepContext = DeepContext;
 
+  namespace?: string;
+
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
@@ -557,6 +564,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   constructor(options: DeepClientOptions<L>) {
+    this.namespace = options?.namespace || randomName();
     if (options?.needConnection != false) {
       this.deep = options?.deep;
       this.apolloClient = options?.apolloClient;
@@ -1134,9 +1142,62 @@ export function useAuthNode() {
   return useLocalStore<Id>('use_auth_link_id', 0);
 }
 
+export type INamespaces = {
+  [name: string]: any;
+};
+export const DeepNamespaceContext = createContext<{
+  select: (namespace: string) => any;
+  insert: (namespace: string, deep: any) => void;
+  delete: (namespace: string) => void;
+}>({
+  select: (namespace: string) => {},
+  insert: (namespace: string, deep: any) => {},
+  delete: (namespace: string) => {},
+});
+export function useDeepNamespace(namespace, deep) {
+  const namespaces = useContext(DeepNamespaceContext);
+  const nameRef = useRef();
+  useMemo(() => {
+    if (
+      (!!nameRef.current && nameRef.current != namespace)
+    ) {
+      namespaces.delete(nameRef.current);
+    }
+    if (namespace) {
+      if (namespaces.select(namespace) !== deep) {
+        namespaces.delete(namespace);
+      }
+      namespaces.insert(namespace, deep);
+    }
+  }, [namespace, deep]);
+  useEffect(() => {
+    return () => nameRef.current && namespaces.delete(namespace);
+  }, []);
+}
+export function DeepNamespaceProvider({ children }: { children: any }) {
+  const [namespaces, setNamespaces] = useState<INamespaces>({});
+  const api = useMemo(() => {
+    return {
+      select: (namespace: string) => namespaces[namespace],
+      insert: (namespace: string, deep: any) => {
+        console.log('DeepNamespaceProvider', 'insert', namespace, deep);
+        setNamespaces(namespaces => ({ ...namespaces, [namespace]: deep }));
+      },
+      delete: (namespace: string) => {
+        console.log('DeepNamespaceProvider', 'delete', namespace);
+        setNamespaces(namespaces => ({ ...namespaces, [namespace]: undefined }));
+      },
+    };
+  }, []);
+  return <DeepNamespaceContext.Provider value={api}>
+    {children}
+  </DeepNamespaceContext.Provider>
+}
+
 export const DeepContext = createContext<DeepClient<Link<Id>>>(undefined);
 
-export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
+export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>) {
+  const { apolloClient: apolloClientProps, minilinks, ...otherGeneratorOptions } = generatorOptions;
   const log = debug.extend(useDeepGenerator.name)
   const apolloClientHook = useApolloClient();
   log({apolloClientHook})
@@ -1153,7 +1214,9 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
       log({ token, apolloClient });
     }
     return new DeepClient({
+      ...otherGeneratorOptions,
       apolloClient, linkId, token,
+      minilinks,
       handleAuth: (linkId, token) => {
         setToken(token);
         setLinkId(linkId);
@@ -1166,12 +1229,22 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
 
 export function DeepProvider({
   apolloClient: apolloClientProps,
+  minilinks: inputMinilinks,
+  namespace,
   children,
 }: {
   apolloClient?: IApolloClient<any>,
+  minilinks?: MinilinkCollection,
+  namespace?: string;
   children: any;
 }) {
-  const deep = useDeepGenerator(apolloClientProps);
+  const providedMinilinks = useMinilinks();
+  const deep = useDeepGenerator({
+    apolloClient: apolloClientProps,
+    minilinks: inputMinilinks || providedMinilinks,
+    namespace,
+  });
+  useDeepNamespace(namespace, deep);
   return <DeepContext.Provider value={deep}>
     {children}
   </DeepContext.Provider>;
@@ -1180,6 +1253,8 @@ export function DeepProvider({
 export function useDeep() {
   return useContext(DeepContext);
 }
+
+export const randomName = () => Math.random().toString(36).slice(2, 7);
 
 export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
   query: QueryLink,
@@ -1196,7 +1271,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   error?: any;
   loading: boolean;
 } {
-  const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
+  const [miniName] = useState(options?.mini || randomName());
   debug('useDeepQuery', miniName, query, options);
   const deep = useDeep();
   const wq = useMemo(() => {
