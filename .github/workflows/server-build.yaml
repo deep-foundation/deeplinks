@@ -1,0 +1,71 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Allow ports 3006 and 3007
+        run: |
+          sudo ufw allow 3006
+          sudo ufw allow 3007
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git curl docker.io docker-compose
+
+      - name: Set up Docker
+        run: |
+          sudo groupadd docker
+          sudo usermod -aG docker $USER
+          docker run hello-world
+          docker rm $(docker ps -a -q --filter "ancestor=hello-world")
+
+      - name: Install Node Version Manager (NVM)
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 18 && nvm use 18 && nvm alias default 18
+          npm i -g npm@latest
+
+      - name: Install and configure @deep-foundation/deeplinks
+        run: |
+          npm rm --unsafe-perm -g @deep-foundation/deeplinks
+          npm install --unsafe-perm -g @deep-foundation/deeplinks@latest
+
+      - name: Set environment variables
+        run: |
+          export HOST_IP="185.105.118.59"
+          export DEEPCASE_HOST="$HOST_IP:3007"
+          export DEEPLINKS_HOST="$HOST_IP:3006"
+          export HASURA_ADMIN_SECRET=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
+          export POSTGRES_PASSWORD=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
+          export MINIO_ACCESS_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
+          export MINIO_SECRET_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
+
+          # Create call-options.json
+          echo '{
+            "operation": "run",
+            "envs": {
+              "DEEPLINKS_PUBLIC_URL": "http://$DEEPLINKS_HOST",
+              "NEXT_PUBLIC_DEEPLINKS_URL": "http://$DEEPLINKS_HOST",
+              "NEXT_PUBLIC_GQL_PATH": "$DEEPLINKS_HOST/gql",
+              "NEXT_PUBLIC_GQL_SSL": "0",
+              "NEXT_PUBLIC_DEEPLINKS_SERVER": "http://$DEEPCASE_HOST",
+              "NEXT_PUBLIC_ENGINES_ROUTE": "0",
+              "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
+              "JWT_SECRET": "{\"type\":\"HS256\",\"key\":\"$(node -e "console.log(require('crypto').randomBytes(50).toString('base64'));")\"}",
+              "DEEPLINKS_HASURA_STORAGE_URL": "http://host.docker.internal:8000/",
+              "HASURA_GRAPHQL_ADMIN_SECRET": "$HASURA_ADMIN_SECRET",
+              "MIGRATIONS_HASURA_SECRET": "$HASURA_ADMIN_SECRET"
+            }
+          }' > call-options.json
