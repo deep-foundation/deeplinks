@@ -67,7 +67,7 @@ jobs:
           cat docker-compose.yml
           cd ../..
 
-      - name: Set environment variables
+      - name: Set additional environment variables with envsubst
         run: |
           envsubst '${DEEPLINKS_PORTS}' < ./docker-prod/deep/docker-compose.yml > ./docker-prod/deep/docker-compose.subst.yml
           ls -la
