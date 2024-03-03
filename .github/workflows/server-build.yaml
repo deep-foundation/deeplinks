@@ -64,16 +64,17 @@ jobs:
           ls -la
           cd deep
           ls -la
+          cat docker-compose.yml
           cd ../..
 
       - name: Set environment variables
         run: |
-          exp envsubst '${DEEPLINKS_PORTS}' < ./docker-prod/docker-compose.yml > ./docker-prod/docker-compose.subst.yml
+          exp envsubst '${DEEPLINKS_PORTS}' < ./docker-prod/deep/docker-compose.yml > ./docker-prod/deep/docker-compose.subst.yml
           ls -la
-          cat ./docker-prod/docker-compose.subst.yml
-          rm ./docker-prod/docker-compose.yml
+          cat ./docker-prod/deep/docker-compose.subst.yml
+          rm ./docker-prod/deep/docker-compose.yml
           ls -la
-          mv ./docker-prod/docker-compose.subst.yml ./docker-prod/docker-compose.yml
+          mv ./docker-prod/deep/docker-compose.subst.yml ./docker-prod/deep/docker-compose.yml
           ls -la
 
       - name: Create call-options.json
