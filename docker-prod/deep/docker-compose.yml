@@ -6,7 +6,7 @@ services:
     networks:
       - network
     ports:
-    - "5432:5432"
+    - "${DEEP_POSTGRES_PORT_HOST}:${DEEP_POSTGRES_PORT}"
     restart: always
     command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
     volumes:
@@ -28,7 +28,7 @@ services:
     networks:
       - network
     ports:
-    - "8080:8080"
+    - "${DEEP_HASURA_PORT_HOST}:${DEEP_HASURA_PORT}"
     extra_hosts: ['host.docker.internal:host-gateway']
     links:
     - "postgres:postgres"

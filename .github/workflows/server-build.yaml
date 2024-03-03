@@ -49,10 +49,17 @@ jobs:
           export MINIO_SECRET_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
           export DEEPLINKS_PORT_HOST="3006"
           export DEEPLINKS_PORTS="[4001:4001, 7100-7999:7100-7999]"
+          export DEEP_POSTGRES_PORT="5432"
+          export DEEP_POSTGRES_PORT_HOST="5432"
+          export DEEP_HASURA_PORT="8080"
+          export DEEP_HASURA_PORT_HOST="8080"
           exp envsubst '${D_PORTS}' < ./local/docker-compose.yml > ./local/docker-compose.subst.yml
+          ls -la
           cat ./local/docker-compose.subst.yml
           rm ./local/docker-compose.yml
+          ls -la
           mv ./local/docker-compose.subst.yml ./local/docker-compose.yml
+          ls -la
 
       - name: Create call-options.json
         run: |
