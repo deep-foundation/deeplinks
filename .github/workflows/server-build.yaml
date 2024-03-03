@@ -24,23 +24,23 @@ jobs:
         run: |
           sudo apt-get install -y gettext-base
 
-      # - name: Allow ports 3006 and 3007
-      #   run: |
-      #     sudo ufw allow 3006
-      #     sudo ufw allow 3007
+      - name: Allow ports 3006 and 3007
+        run: |
+          sudo ufw allow 3006
+          sudo ufw allow 3007
 
-      # - name: Install Node Version Manager (NVM)
-      #   run: |
-      #     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-      #     export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-      #     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      #     nvm install 18 && nvm use 18 && nvm alias default 18
-      #     npm i -g npm@latest
+      - name: Install Node Version Manager (NVM)
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 18 && nvm use 18 && nvm alias default 18
+          npm i -g npm@latest
 
-      # - name: Install and configure @deep-foundation/deeplinks
-      #   run: |
-      #     npm rm --unsafe-perm -g @deep-foundation/deeplinks
-      #     npm install --unsafe-perm -g @deep-foundation/deeplinks@latest
+      - name: Install and configure @deep-foundation/deeplinks
+        run: |
+          npm rm --unsafe-perm -g @deep-foundation/deeplinks
+          npm install --unsafe-perm -g @deep-foundation/deeplinks@latest
 
       - name: Set environment variables
         run: |
