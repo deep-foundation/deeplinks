@@ -64,12 +64,12 @@ jobs:
 
       - name: Set environment variables
         run: |
-          exp envsubst '${DEEPLINKS_PORTS}' < ./docker-compose.yml > ./docker-compose.subst.yml
+          exp envsubst '${DEEPLINKS_PORTS}' < ./docker-prod/docker-compose.yml > ./docker-prod/docker-compose.subst.yml
           ls -la
-          cat ./docker-compose.subst.yml
-          rm ./docker-compose.yml
+          cat ./docker-prod/docker-compose.subst.yml
+          rm ./docker-prod/docker-compose.yml
           ls -la
-          mv ./docker-compose.subst.yml ./docker-compose.yml
+          mv ./docker-prod/docker-compose.subst.yml ./docker-prod/docker-compose.yml
           ls -la
 
       - name: Create call-options.json
