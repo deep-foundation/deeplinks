@@ -64,7 +64,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          exp envsubst '${D_PORTS}' < ./docker-compose.yml > ./docker-compose.subst.yml
+          exp envsubst '${DEEPLINKS_PORTS}' < ./docker-compose.yml > ./docker-compose.subst.yml
           ls -la
           cat ./docker-compose.subst.yml
           rm ./docker-compose.yml
