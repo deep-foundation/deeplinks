@@ -60,7 +60,7 @@ jobs:
 
       - name: Show files
         run: |
-          ls -la
+          cd ./docker-prod && ls -la && cd ..
 
       - name: Set environment variables
         run: |
