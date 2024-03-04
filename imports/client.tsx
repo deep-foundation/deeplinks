@@ -1,21 +1,19 @@
-import atob from 'atob';
-import { gql, useQuery, useSubscription, useApolloClient, Observable } from '@apollo/client/index.js';
 import type { ApolloQueryResult } from '@apollo/client/index.js';
-import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
+import { Observable, gql, useApolloClient, useQuery, useSubscription } from '@apollo/client/index.js';
+import { IApolloClient, generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
+import atob from 'atob';
+import get from 'get-value';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { deprecate, inherits, inspect } from "util";
-import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, ISerialResult, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue, QueryLink } from './client_types.js';
+import { corePckg } from './core.js';
+import { debug } from './debug.js';
+import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
+import { Id, Link, MinilinkCollection, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
-import { corePckg } from './core.js';
-import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
-import get from 'get-value';
-import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
-import { any } from 'ramda';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -1178,6 +1176,7 @@ export function DeepNamespaceProvider({ children }: { children: any }) {
   const [namespaces, setNamespaces] = useState<INamespaces>({});
   const api = useMemo(() => {
     return {
+      namespaces: () => namespaces,
       select: (namespace: string) => namespaces[namespace],
       insert: (namespace: string, deep: any) => {
         console.log('DeepNamespaceProvider', 'insert', namespace, deep);
@@ -1188,6 +1187,9 @@ export function DeepNamespaceProvider({ children }: { children: any }) {
         setNamespaces(namespaces => ({ ...namespaces, [namespace]: undefined }));
       },
     };
+  }, []);
+  useEffect(() => {
+    console.log('DeepNamespaceProvider', 'mounted', api);
   }, []);
   return <DeepNamespaceContext.Provider value={api}>
     {children}
@@ -1293,12 +1295,15 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     });
   }, [query, options]);
   const result = useQuery(wq.query, { variables: wq?.variables });
-  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
-  const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
-  return {
+  const toReturn = {
     ...result,
-    data: mlResult,
+    data: result?.data?.q0,
+    deep,
+    return: query?.return,
   };
+  useMinilinksApply(deep.minilinks, miniName, toReturn);
+  toReturn.data = deep.useMinilinksSubscription({ id: { _in: toReturn?.data?.map(l => l.id) } });
+  return toReturn;
 }
 
 export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
@@ -1334,13 +1339,15 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     });
   }, [query, options]);
   const result = useSubscription(wq.query, { variables: wq?.variables });
-  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
-  const mlResult = useMinilinksSubscription(deep.minilinks,{ id: { _in: result?.data?.q0?.map(l => l.id) } });
-  
-  return {
+  const toReturn = {
     ...result,
-    data: mlResult,
+    data: result?.data?.q0,
+    deep,
+    return: query?.return,
   };
+  useMinilinksApply(deep.minilinks, miniName, toReturn);
+  toReturn.data = useMinilinksSubscription(deep.minilinks,{ id: { _in: toReturn?.data?.map(l => l.id) } });
+  return toReturn;
 }
 
 export interface UseDeepSubscriptionResult<LL = Link<Id>> {

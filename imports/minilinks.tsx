@@ -40,6 +40,7 @@ export interface LinkRelations<Ref extends Id, L extends Link<Ref>> {
   to: L;
   value?: any;
   _applies: string[];
+  _namespaces: string[];
   ml?: MinilinkCollection<MinilinksGeneratorOptions, L>;
 }
 
@@ -54,6 +55,7 @@ export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
   aggregate?: A;
 }
 
+export type MinilinksApplyInput = { data: any[]; deep?: any; return?: any; [key:string]: any; };
 export interface MinilinksResult<L extends Link<Id>> {
   links: L[];
   types: { [id: Id]: L[] };
@@ -75,7 +77,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     errors?: MinilinkError[];
   };
   _updating: boolean;
-  apply(linksArray: any[], applyName?: string, applyOptions?: ApplyOptions): {
+  apply(linksArray: any[] | MinilinksApplyInput, applyName?: string, applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
@@ -128,6 +130,7 @@ export class MinilinksLink<Ref extends Id> {
   number?: any;
   object?: any;
   _applies: string[] = [];
+  _namespaces: string[] = [];
   constructor(link: any) {
     Object.assign(this, link);
     if (link.value) {
@@ -284,6 +287,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         const link = new this.options.Link({
           ml: this,
           _applies: [],
+          _namespaces: [],
           ...linksArray[l],
         });
         byId[link[options.id]] = link;
@@ -465,11 +469,16 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       }
     }
   }
-  apply(linksArray: any[], applyName: string = '', applyOptions?: ApplyOptions): {
+  apply(_input: any[] | MinilinksApplyInput, applyName: string = '', applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
-    log('apply', linksArray, this);
+    const input = Array.isArray(_input) ? _input : Array.isArray(_input?.data) ? _input?.data : [];
+    const returning = (_input as any)?.return || {};
+    const deep = (_input as any)?.deep;
+    const namespace = deep?.namespace;
+
+    log('apply', input, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const toAdd = [];
     const toUpdate = [];
@@ -478,8 +487,8 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const _byId: any = {};
     const plainLinksArray = [];
     const returnLinksPathsById: any = {};
-    for (let l = 0; l < linksArray.length; l++) {
-      const link = linksArray[l];
+    for (let l = 0; l < input.length; l++) {
+      const link = input[l];
       this._toPlainLinksArray(link, applyOptions, plainLinksArray, returnLinksPathsById);
     }
     for (let l = 0; l < plainLinksArray.length; l++) {
@@ -487,11 +496,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       const old = byId[link.id];
       if (!old) {
         link._applies = [applyName];
+        if (namespace) link._namespaces = [namespace];
         this.emitter.emit('apply', old, link);
         toAdd.push(link);
       } else {
-        const index = old._applies.indexOf(applyName);
-        if (!~index) {
+        if (!~old._applies.indexOf(applyName)) {
           link._applies = old._applies = [...old._applies, applyName];
           this.emitter.emit('apply', old, link);
         } else {
@@ -500,6 +509,13 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         if (!options.equal(old, link)) {
           toUpdate.push(link);
           beforeUpdate[link.id] = old;
+        }
+        if (namespace) {
+          if (!~old._namespaces.indexOf(namespace)) {
+            link._namespaces = old._namespaces = [...old._namespaces, applyName];
+          } else {
+            link._namespaces = old._namespaces;
+          }
         }
       }
       _byId[link.id] = link;
@@ -649,11 +665,11 @@ export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldL
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[]): any {
+export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[] | MinilinksApplyInput): any {
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
-      ml.apply([], strictName);
+      ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
     };
   }, []);
   ml.apply(data, strictName);
