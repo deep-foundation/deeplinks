@@ -19,7 +19,9 @@ const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
 
-export interface LinkPlain<Ref extends number> {
+export type Id = number | string;
+
+export interface LinkPlain<Ref extends Id> {
   id: Ref;
   type_id: Ref;
   from_id?: Ref;
@@ -27,13 +29,13 @@ export interface LinkPlain<Ref extends number> {
   value?: any;
 }
 
-export interface LinkRelations<L extends Link<number>> {
+export interface LinkRelations<Ref extends Id, L extends Link<Ref>> {
   typed: L[];
   type: L;
   in: L[];
-  inByType: { [id: number]: L[] };
+  inByType: { [id: string]: L[] };
   out: L[];
-  outByType: { [id: number]: L[] };
+  outByType: { [id: string]: L[] };
   from: L;
   to: L;
   value?: any;
@@ -42,12 +44,12 @@ export interface LinkRelations<L extends Link<number>> {
 }
 
 export interface LinkHashFields {
-  [key: string|number]: any;
+  [key: Id]: any;
 }
 
-export interface Link<Ref extends number> extends LinkPlain<Ref>, LinkRelations<Link<Ref>>, LinkHashFields {
-  _id?: number;
-  displayId: number;
+export interface Link<Ref extends Id> extends LinkPlain<Ref>, LinkRelations<Id, Link<Ref>>, LinkHashFields {
+  _id?: Id;
+  displayId: Id;
 }
 
 export type MinilinksQueryOptionAggregate = 'count' | 'sum' | 'avg' | 'min' | 'max';
@@ -55,20 +57,20 @@ export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
   aggregate?: A;
 }
 
-export interface MinilinksResult<L extends Link<number>> {
-  virtual: { [id: number]: number };
+export interface MinilinksResult<L extends Link<Id>> {
+  virtual: { [id: Id]: Id };
   virtualCounter: number;
   links: L[];
-  types: { [id: number]: L[] };
-  byId: { [id: number]: L };
-  byFrom: { [id: number]: L[] };
-  byTo: { [id: number]: L[] };
-  byType: { [id: number]: L[] };
+  types: { [id: Id]: L[] };
+  byId: { [id: Id]: L };
+  byFrom: { [id: Id]: L[] };
+  byTo: { [id: Id]: L[] };
+  byType: { [id: Id]: L[] };
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
-  query(query: QueryLink | number): L[] | any;
-  select(query: QueryLink | number): L[] | any;
-  subscribe(query: QueryLink | number): Observable<L[] | any>;
+  query(query: QueryLink | Id): L[] | any;
+  select(query: QueryLink | Id): L[] | any;
+  subscribe(query: QueryLink | Id): Observable<L[] | any>;
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -88,7 +90,7 @@ export interface MinilinksResult<L extends Link<number>> {
   }
 }
 
-export class MinilinksLink<Ref extends number> {
+export class MinilinksLink<Ref extends Id> {
   ml?: MinilinkCollection<any, any>;
   _id: Ref;
   id: Ref;
@@ -131,7 +133,7 @@ export class MinilinksLink<Ref extends number> {
   get to(): MinilinksLink<Ref>[] {
     return this.ml?.byId?.[this.to_id];
   }
-  get displayId(): number {
+  get displayId(): Id {
     return this._id || this.id;
   }
   value?: any;
@@ -198,12 +200,12 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   Link: MinilinksLink,
 };
 
-export interface MinilinksInstance<L extends Link<number>>{
+export interface MinilinksInstance<L extends Link<Id>>{
   (linksArray: L[], memory?: MinilinksResult<L>): MinilinksResult<L>
 }
 
-export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<number>>(options: MGO): MinilinksInstance<L> {
-  return function minilinks<L extends Link<number>>(linksArray = [], memory: any = {}): MinilinksResult<L> {
+export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<Id>>(options: MGO): MinilinksInstance<L> {
+  return function minilinks<L extends Link<Id>>(linksArray = [], memory: any = {}): MinilinksResult<L> {
     // @ts-ignore
     const mc = new MinilinkCollection<MGO, L>(options, memory);
     mc.add(linksArray);
@@ -213,25 +215,25 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 
 export interface MinilinkError extends Error {}
 
-export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<number> = Link<number>> {
+export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<Id> = Link<Id>> {
   useMinilinksQuery = useMinilinksQuery;
   useMinilinksFilter = useMinilinksFilter;
   useMinilinksApply = useMinilinksApply;
   useMinilinksSubscription = useMinilinksSubscription;
   useMinilinksHandle = useMinilinksHandle;
 
-  virtual: { [id: number]: number } = {};
+  virtual: { [id: Id]: Id } = {};
   virtualCounter = -1;
-  types: { [id: number]: L[] } = {};
-  byId: { [id: number]: L } = {};
-  byFrom: { [id: number]: L[] } = {};
-  byTo: { [id: number]: L[] } = {};
-  byType: { [id: number]: L[] } = {};
+  types: { [id: Id]: L[] } = {};
+  byId: { [id: Id]: L } = {};
+  byFrom: { [id: Id]: L[] } = {};
+  byTo: { [id: Id]: L[] } = {};
+  byType: { [id: Id]: L[] } = {};
   links: L[] = [];
   options: MGO;
   emitter: EventEmitter;
 
-  query<A>(query: QueryLink | number, options?: MinilinksQueryOptions<A>): A extends string ? any : L[] {
+  query<A>(query: QueryLink | Id, options?: MinilinksQueryOptions<A>): A extends string ? any : L[] {
     const result = minilinksQuery<L>(query, this);
     if (options?.aggregate === 'count') return result?.length as any;
     if (options?.aggregate === 'avg') return _mean(result?.map(l => l?.value?.value)) as any;
@@ -240,7 +242,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     if (options?.aggregate === 'max') return _max(result?.map(l => l?.value?.value)) as any;
     return result;
   }
-  select(query: QueryLink | number, options?: MinilinksQueryOptions): L[] | any {
+  select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any {
     return this.query(query, options);
   }
 
@@ -249,7 +251,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    * @example
    * minilinks.subscribe({ type_id: 2 }).subscribe({ next: (links) => {}, error: (err) => {} });
    */
-  subscribe(query: QueryLink | number): Observable<L[] | any> {
+  subscribe(query: QueryLink | Id): Observable<L[] | any> {
     const ml = this;
     return new Observable((observer) => {
       let prev = ml.query(query);
@@ -257,6 +259,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       let listener = (oldL, newL) => {
         const data = ml.query(query);
         if (!_isEqual(prev, data)) {
+          prev = data;
           observer.next(data);
         }
       };
@@ -356,7 +359,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         // link[options.type] = type;
         // // type.typed += link;
         // if (!type[options.typed].find(l => l.id === link.id)) type[options.typed].push(link);
-      } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not founded`));
+      } else if (link[options.type_id]) anomalies.push(new Error(`${link[options.id]} link.type_id ${link[options.type_id]} not found`));
       if (from) {
       //   // link.from = byId[link.from_id] // XXX
       //   link[options.from] = from;
@@ -365,7 +368,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       //   // from.outByType[link.type_id] += link; // XXX
       //   from[options.outByType][link[options.type_id]] = from[options.outByType][link[options.type_id]] || [];
       //   if (!from?.[options.outByType]?.[link[options.type_id]].find(l => l.id === link.id)) from[options.outByType][link[options.type_id]].push(link);
-      } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not founded`));
+      } else if (link[options.from_id]) anomalies.push(new Error(`${link[options.id]} link.from_id ${link[options.from_id]} not found`));
       if (to) {
       //   // link.to = byId[link.to_id] // XXX
       //   link[options.to] = to;
@@ -374,7 +377,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       //   // to.inByType[link.type_id] += link;
       //   to[options.inByType][link[options.type_id]] = to[options.inByType][link[options.type_id]] || [];
       //   if (!to[options.inByType][link[options.type_id]].find(l => l.id === link.id)) to[options.inByType][link[options.type_id]].push(link);
-      } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not founded`));
+      } else if (link[options.to_id]) anomalies.push(new Error(`${link[options.id]} link.to_id ${link[options.to_id]} not found`));
       if (options.handler) options.handler(link, this);
     }
     for (let l = 0; l < newLinks.length; l++) {
@@ -395,7 +398,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const anomalies = [];
     const errors = [];
     const oldLinksArray: L[] = [];
-    const oldLinksObject: { [id:number]: L } = {};
+    const oldLinksObject: { [id:Id]: L } = {};
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
       const link = byId[id];
@@ -411,24 +414,24 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       if (!link) errors.push(new Error(`${id} can't delete because not exists in collection`));
 
       // link.in += byTo[link.id] // XXX
-      // _remove(link?.[options.to]?.[options.in], (r: { id?: number }) => r.id === id);
+      // _remove(link?.[options.to]?.[options.in], (r: { id?: Id }) => r.id === id);
       // link.out += byFrom[link.id] // XXX
-      // _remove(link?.[options.from]?.[options.out], (r: { id?: number }) => r.id === id);
+      // _remove(link?.[options.from]?.[options.out], (r: { id?: Id }) => r.id === id);
 
       // byFrom[link.from_id]: link[]; // XXX
-      _remove(byFrom?.[link?.[options.from_id]] || [], (r: { id?: number }) => r.id === id);
+      _remove(byFrom?.[link?.[options.from_id]] || [], (r: { id?: Id }) => r.id === id);
 
       // byTo[link.to_id]: link[]; // XXX
-      _remove(byTo?.[link?.[options.to_id]] || [], (r: { id?: number }) => r.id === id);
+      _remove(byTo?.[link?.[options.to_id]] || [], (r: { id?: Id }) => r.id === id);
 
       // byType[link.type_id]: link[]; // XXX
-      _remove(byType?.[link?.[options.type_id]] || [], (r: { id?: number }) => r.id === id);
+      _remove(byType?.[link?.[options.type_id]] || [], (r: { id?: Id }) => r.id === id);
 
       // from.outByType[link.type_id] += link; // XXX
-      // _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
+      // _remove(link?.[options.from]?.outByType?.[link.type_id] || [], (r: { id?: Id }) => r.id === id)
 
       // to.inByType[link.type_id] += link; // XXX
-      // _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: number }) => r.id === id)
+      // _remove(link?.[options.to]?.inByType?.[link.type_id] || [], (r: { id?: Id }) => r.id === id)
 
       // for (let i = 0; i < byFrom?.[id]?.length; i++) {
       //   const dep = byFrom?.[id]?.[i];
@@ -602,12 +605,12 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
 
 export const minilinks = Minilinks(MinilinksGeneratorOptionsDefault);
 
-export interface MinilinksHookInstance<L extends Link<number>> {
+export interface MinilinksHookInstance<L extends Link<Id>> {
   ml: MinilinksResult<L>;
   ref: { current: MinilinksResult<L>; };
 }
 
-export function useMinilinksConstruct<L extends Link<number>>(options?: any): MinilinksHookInstance<L> {
+export function useMinilinksConstruct<L extends Link<Id>>(options?: any): MinilinksHookInstance<L> {
   // @ts-ignore
   const mlRef = useRef<MinilinksResult<L>>(useMemo(() => {
     // @ts-ignore
@@ -617,7 +620,7 @@ export function useMinilinksConstruct<L extends Link<number>>(options?: any): Mi
   return { ml, ref: mlRef };
 }
 
-export function useMinilinksFilter<L extends Link<number>, R = any>(
+export function useMinilinksFilter<L extends Link<Id>, R = any>(
   ml,
   filter: (currentLink: L, oldLink: L, newLink: L) => boolean,
   results: (l?: L, ml?: any, oldLink?: L, newLink?: L) => R,
@@ -631,26 +634,31 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
     500,
     true
   );
+  const refs = useRef<any>({});
   useEffect(() => {
-    const addedListener = (ol, nl) => {
+    if (refs.current.addedListener) ml.emitter.removeListener('added', refs.current.addedListener);
+    if (refs.current.updatedListener) ml.emitter.removeListener('updated', refs.current.updatedListener);
+    if (refs.current.removedListener) ml.emitter.removeListener('removed', refs.current.removedListener);
+    if (refs.current.applyListener) ml.emitter.removeListener('apply', refs.current.applyListener);
+    refs.current.addedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
     };
-    ml.emitter.on('added', addedListener);
-    const updatedListener = (ol, nl) => {
+    ml.emitter.on('added', refs.current.addedListener);
+    refs.current.updatedListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
     };
-    ml.emitter.on('updated', updatedListener);
-    const removedListener = (ol, nl) => {
+    ml.emitter.on('updated', refs.current.updatedListener);
+    refs.current.removedListener = (ol, nl) => {
       if (filter(ol, ol, nl)) {
         action(ol, ml, ol, nl);
       }
     };
-    ml.emitter.on('removed', removedListener);
-    const applyListener = (ol, nl) => {
+    ml.emitter.on('removed', refs.current.removedListener);
+    refs.current.applyListener = (ol, nl) => {
       if (filter(nl, ol, nl)) {
         action(nl, ml, ol, nl);
       }
@@ -659,22 +667,22 @@ export function useMinilinksFilter<L extends Link<number>, R = any>(
     if (interval) timeout = setTimeout(() => {
       action(undefined, ml);
     }, interval);
-    ml.emitter.on('apply', applyListener);
+    ml.emitter.on('apply', refs.current.applyListener);
     return () => {
       clearTimeout(timeout);
-      ml.emitter.removeListener('added', addedListener);
-      ml.emitter.removeListener('updated', updatedListener);
-      ml.emitter.removeListener('removed', removedListener);
-      ml.emitter.removeListener('apply', applyListener);
+      ml.emitter.removeListener('added', refs.current.addedListener);
+      ml.emitter.removeListener('updated', refs.current.updatedListener);
+      ml.emitter.removeListener('removed', refs.current.removedListener);
+      ml.emitter.removeListener('apply', refs.current.applyListener);
     };
-  }, []);
+  }, [ml]);
   useEffect(() => {
     setState(results(undefined, ml, undefined, undefined));
-  }, [filter, results]);
+  }, [ml, filter, results]);
   return state;
 };
 
-export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, oldLink, newLink) => any): void {
+export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldLink, newLink) => any): void {
   useEffect(() => {
     const addedListener = (ol, nl) => {
       handler('added', ol, nl);
@@ -701,7 +709,7 @@ export function useMinilinksHandle<L extends Link<number>>(ml, handler: (event, 
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<number>>(ml, name: string, data?: L[]): any {
+export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[]): any {
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
@@ -715,7 +723,7 @@ export function useMinilinksApply<L extends Link<number>>(ml, name: string, data
  * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
  * Recalculates when query changes. (Take query into useMemo!).
  */
-export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink | number) {
+export function useMinilinksQuery<L extends Link<Id>>(ml, query: QueryLink | Id) {
   return useMemo(() => ml.query(query), [ml, query]);
 };
 
@@ -723,13 +731,14 @@ export function useMinilinksQuery<L extends Link<number>>(ml, query: QueryLink |
  * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
-export function useMinilinksSubscription<L extends Link<number>>(ml, query: QueryLink | number) {
+export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLink | Id) {
   const [d, setD] = useState();
   const sRef = useRef<any>();
   const qPrevRef = useRef<any>(query);
   const q = useMemo(() => _isEqual(query, qPrevRef.current) ? qPrevRef.current : query, [query]);
   qPrevRef.current = q;
   useEffect(() => {
+    setD(ml.query(q));
     if (sRef.current) sRef.current.unsubscribe();
     const obs = ml.subscribe(q);
     const sub = sRef.current = obs.subscribe({
@@ -744,5 +753,5 @@ export function useMinilinksSubscription<L extends Link<number>>(ml, query: Quer
       sub.unsubscribe();
     }
   }, [q]);
-  return d || ml.query(query);
+  return d || ml.query(q);
 };

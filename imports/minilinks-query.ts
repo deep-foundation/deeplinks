@@ -1,16 +1,16 @@
 import { _serialize, _boolExpFields, serializeWhere, serializeQuery, useDeep } from './client.js';
 import { BoolExpLink, ComparasionType, QueryLink } from './client_types.js';
-import { MinilinkCollection, MinilinksGeneratorOptions, Link } from './minilinks.js';
+import { MinilinkCollection, MinilinksGeneratorOptions, Link, Id } from './minilinks.js';
 
 export interface BoolExpLinkMinilinks extends BoolExpLink {
-  _applies?: ComparasionType<number>;
+  _applies?: ComparasionType<Id>;
 }
 
-export const minilinksQuery = <L extends Link<number>>(
-  query: QueryLink | number,
+export const minilinksQuery = <L extends Link<Id>>(
+  query: QueryLink | Id,
   ml: MinilinkCollection<MinilinksGeneratorOptions, L>,
 ): L[] => {
-  if (typeof(query) === 'number') return [ml.byId[query]];
+  if (typeof(query) === 'number' || typeof(query) === 'string') return [ml.byId[query]];
   else {
     const q = serializeQuery(query, 'links');
     const result = minilinksQueryHandle<L>(q.where, ml);
@@ -18,7 +18,7 @@ export const minilinksQuery = <L extends Link<number>>(
   }
 };
 
-export const minilinksQueryIs = <L extends Link<number>>(
+export const minilinksQueryIs = <L extends Link<Id>>(
   query: QueryLink | number,
   link: L,
 ): boolean => {
@@ -33,7 +33,7 @@ export const minilinksQueryIs = <L extends Link<number>>(
   }
 };
 
-export const minilinksQueryHandle = <L extends Link<number>>(
+export const minilinksQueryHandle = <L extends Link<Id>>(
   q: BoolExpLinkMinilinks,
   ml: MinilinkCollection<MinilinksGeneratorOptions, L>,
 ): L[] => {
@@ -49,7 +49,7 @@ export const minilinksQueryHandle = <L extends Link<number>>(
 
 export const minilinksQueryLevel = (
   q: BoolExpLinkMinilinks,
-  link: Link<number>,
+  link: Link<Id>,
   env: string = 'links',
 ) => {
   const fields = Object.keys(q);
@@ -140,7 +140,7 @@ export const minilinksQueryLevel = (
 
 export const minilinksQueryComparison = (
   q: BoolExpLinkMinilinks,
-  link: Link<number>,
+  link: Link<Id>,
   field: string,
   env: string = 'links',
 ): boolean => {

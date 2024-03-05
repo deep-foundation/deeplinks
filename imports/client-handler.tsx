@@ -1,11 +1,11 @@
 import { DeepClient } from './client.js';
 import { gql } from '@apollo/client/index.js';
 
-export async function evalClientHandler({
-  value,
-  deep,
-  input = {},
-}: {
+/**
+ * Evaluates a client handler
+ * @returns A promise that resolves to an object with either an error property that contains error or data property that contains result of the handler.
+ */
+export async function evalClientHandler(options: {
   value: string;
   deep: DeepClient;
   input?: any;
@@ -13,10 +13,16 @@ export async function evalClientHandler({
   error?: any;
   data?: any;
 }> {
+  const {
+    value,
+    deep,
+    input = {},
+  } = options;
   try {
     console.log('evalClientHandler', 'value', value);
+    // const evalResult = (new Function(`return ${value}`))();
+    // console.log('evalClientHandler', 'evalResult', evalResult);
     const evalResult = eval(value);
-    console.log('evalClientHandler', 'evalResult', evalResult);
     if (typeof evalResult === 'function') {
       return {
         data: await evalResult({ deep, gql, ...input }),

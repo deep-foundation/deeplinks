@@ -360,8 +360,8 @@ export const up = async () => {
         session_variables json;
         user_id bigint;
         userRole TEXT;
-        foundedBoolExpError RECORD;
-        foundedNotErroredBoolExp BOOL = FALSE;
+        foundBoolExpError RECORD;
+        foundNotErroredBoolExp BOOL = FALSE;
       BEGIN
         session_variables := current_setting('hasura.user', 't');
         IF session_variables IS NULL THEN
@@ -379,7 +379,7 @@ export const up = async () => {
         WHERE t."id" = NEW."type_id";
 
         IF (typeLink IS NULL AND NOT (NEW."type_id" = 0 AND userRole = 'admin')) THEN
-          RAISE EXCEPTION 'Type % not founded.', NEW."type_id";
+          RAISE EXCEPTION 'Type % not found.', NEW."type_id";
         END IF;
 
         SELECT t.* into fromLink
@@ -428,19 +428,19 @@ export const up = async () => {
           LOOP
             SELECT INTO sqlResult bool_exp_execute(NEW.id, boolExp."query_id", user_id);
             IF (sqlResult = FALSE) THEN
-              foundedBoolExpError := boolExp;
+              foundBoolExpError := boolExp;
             END IF;
             IF (sqlResult IS NULL) THEN
               RAISE EXCEPTION 'insert % rejected because selector_id: % query_id: % user_id: % return null', json_agg(NEW), boolExp."selector_id", boolExp."query_id", user_id;
             END IF;
             IF (sqlResult = TRUE) THEN
-              foundedNotErroredBoolExp := TRUE;
+              foundNotErroredBoolExp := TRUE;
             END IF;
           END LOOP;
         END IF;
 
-        IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
-          RAISE EXCEPTION 'insert % rejected because selector_id: % query_id: % user_id: % return false', json_agg(NEW), foundedBoolExpError."selector_id", foundedBoolExpError."query_id", user_id;
+        IF foundBoolExpError IS NOT NULL AND foundNotErroredBoolExp = FALSE THEN
+          RAISE EXCEPTION 'insert % rejected because selector_id: % query_id: % user_id: % return false', json_agg(NEW), foundBoolExpError."selector_id", foundBoolExpError."query_id", user_id;
         END IF;
 
         RETURN NEW;
@@ -460,8 +460,8 @@ export const up = async () => {
         session_variables json;
         user_id bigint;
         userRole TEXT;
-        foundedBoolExpError RECORD;
-        foundedNotErroredBoolExp BOOL = FALSE;
+        foundBoolExpError RECORD;
+        foundNotErroredBoolExp BOOL = FALSE;
       BEGIN
 
       session_variables := current_setting('hasura.user', 't');
@@ -493,19 +493,19 @@ export const up = async () => {
         LOOP
           SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."query_id", user_id);
           IF (sqlResult = FALSE) THEN
-            foundedBoolExpError := boolExp;
+            foundBoolExpError := boolExp;
           END IF;
           IF (sqlResult IS NULL) THEN
             RAISE EXCEPTION 'delete % rejected because selector_id: % query_id: % user_id: % return null', json_agg(OLD), boolExp."selector_id", boolExp."query_id", user_id;
           END IF;
           IF (sqlResult = TRUE) THEN
-            foundedNotErroredBoolExp := TRUE;
+            foundNotErroredBoolExp := TRUE;
           END IF;
         END LOOP;
       END IF;
 
-      IF foundedBoolExpError IS NOT NULL AND foundedNotErroredBoolExp = FALSE THEN
-        RAISE EXCEPTION 'delete % rejected because selector_id: % query_id: % user_id: % return false', json_agg(OLD), foundedBoolExpError."selector_id", foundedBoolExpError."query_id", user_id;
+      IF foundBoolExpError IS NOT NULL AND foundNotErroredBoolExp = FALSE THEN
+        RAISE EXCEPTION 'delete % rejected because selector_id: % query_id: % user_id: % return false', json_agg(OLD), foundBoolExpError."selector_id", foundBoolExpError."query_id", user_id;
       END IF;
 
       RETURN OLD;

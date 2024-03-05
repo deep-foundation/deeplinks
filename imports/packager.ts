@@ -559,25 +559,6 @@ export class Packager<L extends Link<any>> {
         // @ts-ignore
         _: true,
       });
-      // user contain package namespace
-      if (this.client.linkId) {
-        data.push({
-          id: ++counter,
-          type: Contain,
-          from: this.client.linkId,
-          to: namespaceId,
-          // @ts-ignore
-          _: true,
-        });
-        data.push({
-          id: ++counter,
-          type: Join,
-          from: namespaceId,
-          to: this.client.linkId,
-          // @ts-ignore
-          _: true,
-        });
-      }
       // active link if first in namespace
       data.push({
         id: ++counter,
@@ -626,15 +607,6 @@ export class Packager<L extends Link<any>> {
         _: true,
       });
     }
-    // user contain package
-    if (this.client.linkId) data.push({
-      id: ++counter,
-      type: Contain,
-      from: this.client.linkId,
-      to: containsHash[packageId],
-      // @ts-ignore
-      _: true,
-    });
     return { data, errors, counter, dependedLinks, packageId: containsHash[packageId], namespaceId };
   }
 

@@ -104,7 +104,7 @@ export interface BoolExpTree extends BoolExp<BoolExpCan> {
   tree_id?: ComparasionType<number>;
   /** Root link id by current subtree. */
   root_id?: ComparasionType<number>;
-  /** Each parent link id where founded upper from link_id */
+  /** Each parent link id where found upper from link_id */
   parent_id?: ComparasionType<number>;
   /** Depth in subtree of parent_id from root_id */
   depth?: ComparasionType<string>;
@@ -116,7 +116,7 @@ export interface BoolExpTree extends BoolExp<BoolExpCan> {
   tree?: BoolExpLink;
   /** Relation to root link by current subtree. */
   root?: BoolExpLink;
-  /** Relation to each parent link founded upper from link_id. */
+  /** Relation to each parent link found upper from link_id. */
   parent?: BoolExpLink;
   /** Relation to all tree rows with equal link_id. */
   by_link?: BoolExpTree;

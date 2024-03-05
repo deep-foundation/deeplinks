@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.322",
+  "version": "0.0.331",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "package:watch": "tsc -w --project tsconfig.json",
     "package:unbuild": "rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && (cd ./migrations && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../) && (cd ./imports/gql && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./benchmarks && rm -f ./*.js; rm -f ./*.js.map; rm -f ./*.d.ts && cd ..) && (cd ./imports/router && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../..) && (cd ./tests && rimraf ./*.js && rimraf ./*.js.map && rimraf ./*.d.ts && cd ../)",
     "package:publish": "npm run package:build && npm publish --access public && npm run package:unbuild",
-    "package:release": "npm run package:unbuild && npm version patch && git push && git push --tags",
+    "package:release": "npm version patch && git push && git push --tags",
     "test": "npm run package:build && cross-env DEEPLINKS_HASURA_PATH=localhost:8080 DEEPLINKS_HASURA_SSL=0 DEEPLINKS_HASURA_SECRET=myadminsecretkey DOCKER_DEEPLINKS_URL=http://localhost:3006 NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js *.js --testTimeout=50000",
     "benchmark": "export DEEPLINKS_HASURA_PATH=localhost:8080; export DEEPLINKS_HASURA_SSL=0; export DEEPLINKS_HASURA_SECRET=myadminsecretkey; ts-node benchmarks/index.ts",
     "migrate": "npm run package:build && npx migrate@latest up --matches '*.js'",
@@ -31,13 +31,14 @@
     "stop-deeplinks-docker": "cd local && docker-compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
     "snapshot:last": "node snapshots/last.js",
-    "snapshot:dump": "node snapshots/dump.js"
+    "snapshot:dump": "node snapshots/dump.js",
+    "warmup": "node warmup.js"
   },
   "bin": {
     "deeplinks": "./call.cjs"
   },
   "dependencies": {
-    "@deep-foundation/npm-packager": "^0.0.39",
+    "@deep-foundation/npm-packager": "^0.0.42",
     "@deep-foundation/tsx": "^0.0.5",
     "@react-hook/debounce": "^4.0.0",
     "@types/jest": "^29.5.1",
@@ -78,13 +79,12 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.7.14",
-    "@deep-foundation/hasura": "~0.0.53",
-    "@deep-foundation/materialized-path": "~0.0.30",
-    "@deep-foundation/react-hasura": "~0.0.24",
-    "@deep-foundation/store": "~0.0.25",
-    "apollo-server": "^2.26.1",
-    "apollo-server-core": "^3.12.0",
-    "apollo-server-express": "^3.12.0",
+    "@deep-foundation/materialized-path": "0.0.x",
+    "@deep-foundation/react-hasura": "0.0.x",
+    "@deep-foundation/store": "0.0.x",
+    "apollo-server": "^3.13.0",
+    "apollo-server-core": "^3.13.0",
+    "apollo-server-express": "^3.13.0",
     "graphql": "^15.8.0",
     "graphql-playground-middleware-express": "^1.7.23",
     "graphql-tag": "^2.12.6",

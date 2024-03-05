@@ -1,0 +1,3 @@
+tasks:
+  - init: npm ci
+    command: echo "hello"

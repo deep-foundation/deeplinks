@@ -77,7 +77,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
         errors.push(String(e));
       }
     } else {
-      errors.push(`deep.json not founded in gist`);
+      errors.push(`deep.json not found in gist`);
     }
   // } else if (isNpm) {
     // const dirid = uuid();
@@ -105,7 +105,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
     //     errors.push(e);
     //   }
     // } else {
-    //   errors.push(`deep.json not founded in gist`);
+    //   errors.push(`deep.json not found in gist`);
     // }
     // fs.rmSync(dir, { recursive: true, force: true });
   } else {
@@ -182,7 +182,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: numb
     // let npmPckg;
     // let nextVersion;
     // if (!npmPckgJSON) {
-    //   errors.push('package.json not founded in installed package');
+    //   errors.push('package.json not found in installed package');
     //   return { errors };
     // } else {
     //   npmPckg = JSON.parse(npmPckgJSON);
