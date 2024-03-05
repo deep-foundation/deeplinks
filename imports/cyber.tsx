@@ -1,7 +1,7 @@
 import atob from 'atob';
 import { gql, useQuery, useSubscription, useApolloClient, Observable } from '@apollo/client/index.js';
 import type { ApolloQueryResult } from '@apollo/client/index.js';
-import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
+import { IApolloClient, generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deprecate, inherits, inspect } from "util";
@@ -24,7 +24,7 @@ import {
   DeepClientOptions, DeepClientResult, DeepClientPackageSelector, DeepClientPackageContain, DeepClientLinkId, DeepClientStartItem, DeepClientPathItem,
   _serialize, _ids, _boolExpFields, pathToWhere, serializeWhere, serializeQuery, parseJwt,
   DeepClient, DeepClientAuthResult, DeepClientGuestOptions, DeepClientInstance,
-  DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions, useAuthNode, useDeepNamespace,
+  DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions, useAuthNode, useDeepNamespace, useDeepSubscription, useDeepQuery, QueryOptions, Options,
 } from './client.js';
 import { CyberClient } from '@cybercongress/cyber-js';
 import _m0 from "protobufjs/minimal";
@@ -128,26 +128,14 @@ export interface CONFIG {
 export async function generateCyberDeepClient(options: {
   config: CONFIG;
   minilinks?: MinilinkCollection<any, Link<Id>>;
+  namespace?: string;
 }): Promise<CyberDeepClient<Link<string>>> {
   const cyberClient = await CyberClient.connect(options.config.CYBER_NODE_URL_API);
-  const schemas = {};
-  const models = {};
-  model('account', {}, models);
-  model('tx', {
-    'coin_received.receiver': 'account',
-    'coin_spent.spender': 'account',
-    'message.sender': 'account',
-    'transfer.recipient': 'account',
-    'transfer.sender': 'account',
-  }, models);
-  schema('tx', '', '', schemas);
-  schema('txReceiver', 'tx', 'account', schemas);
-  schema('txSender', 'tx', 'account', schemas);
   return new CyberDeepClient({
     cyberClient,
     config: options.config,
-    schemas, models,
-    minilinks: options.minilinks,
+    minilinks: options?.minilinks,
+    namespace: options?.namespace,
   });
 }
 
@@ -157,11 +145,57 @@ export interface CyberDeepClientInstance<L extends Link<Id> = Link<Id>> extends 
 export interface CyberDeepClientOptions<L extends Link<Id>> extends DeepClientOptions<L> {
   cyberClient: CyberClient;
   config: CONFIG;
-
-  schemas?: Schemas;
-  models?: Models;
 }
 
+const deepToCyberHash = {
+  from_id: 'particle_from',
+  to_id: 'particle_to',
+  from: 'from',
+  to: 'to',
+  out: 'out',
+  in: 'in',
+};
+
+const convertExp = (exp, table, hash) => {
+  if (typeof(exp) === 'object') {
+    if (Array.isArray(exp)) {
+      const result = [];
+      for (const key in exp) {
+        result.push(convertExp(exp[key], table, hash));
+      }
+      return result;
+    } else {
+      const result = {};
+      for (const key in exp) {
+        const id = typeof(exp[key]) === 'string' ? exp[key] : exp[key]?._eq ? exp[key]?._eq : undefined;
+        if (hash[key]) result[hash[key]] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table, hash);
+        else if (key === 'id' && typeof(id) === 'string') {
+          const splitted = id.split(':');
+          if (splitted.length === 2) {
+            result[hash.from_id] = { _eq: splitted[0] };
+            result[hash.to_id] = { _eq: splitted[1] };
+          }
+        }
+        else result[key] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table, hash);
+      }
+      return result;
+    }
+  } else return exp;
+};
+
+const rewriteGettedPseudoLinksToLinks = (links, exp) => {
+  for (let l in links) {
+    const link = links[l];
+    if (link.__typename === 'cyberlinks') {
+      link.id = `${link.from_id}:${link.to_id}`
+      link.type_id = 'cyberlink';
+    }
+    else link.type_id = 'particle';
+    for (let r in (exp?.return || [])) {
+      rewriteGettedPseudoLinksToLinks(link[r], exp?.return[r]);
+    }
+  }
+};
 export class CyberDeepClient<L extends Link<string> = Link<string>> extends DeepClient<L> implements CyberDeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
@@ -175,25 +209,30 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
   schemas: Schemas;
   models: Models;
 
+  useDeep = useCyberDeep;
+  DeepProvider = CyberDeepProvider;
+  DeepContext = CyberDeepContext;
+
   // @ts-ignore
   constructor(options: CyberDeepClientOptions<L>) {
     super({
+      ...options,
       apolloClient: generateApolloClient({
         path: options.config.CYBER_INDEX_HTTPS.slice(8),
         ssl: true,
-        token: ''
+        token: '',
+        ws: true,
       }),
-      minilinks: options.minilinks,
     });
     this.cyberClient = options.cyberClient;
     this.config = options.config;
 
     this.accountPrefix = this.config.BECH32_PREFIX_ACC_ADDR_CYBER;
-    this.schemas = options.schemas;
-    this.models = options.models;
+
+    this._generateHooks(this);
   }
 
-  async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
+  _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
     const tableNamePostfix = options?.tableNamePostfix;
     const aggregate = options?.aggregate;
     const variables = options?.variables;
@@ -202,56 +241,14 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
     const query = serializeQuery(exp, options?.table || 'links');
     let cyberTable = 'cyberlinks';
     if (query?.where?.in || query?.where?.out) cyberTable = 'particles';
-    const hash = {
-      from_id: 'particle_from',
-      to_id: 'particle_to',
-      from: 'from',
-      to: 'to',
-      out: 'out',
-      in: 'in',
-    };
-    // const ihash = _.invert(hash);
-    const convertExp = (exp, table) => {
-      if (typeof(exp) === 'object') {
-        if (Array.isArray(exp)) {
-          const result = [];
-          for (const key in exp) {
-            result.push(convertExp(exp[key], table));
-          }
-          return result;
-        } else {
-          const result = {};
-          for (const key in exp) {
-            const id = typeof(exp[key]) === 'string' ? exp[key] : exp[key]?._eq ? exp[key]?._eq : undefined;
-            if (hash[key]) result[hash[key]] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table);
-            else if (key === 'id' && id) {
-              const splitted = id.split(':');
-              if (splitted.length === 2) {
-                result[hash.from_id] = { _eq: splitted[0] };
-                result[hash.to_id] = { _eq: splitted[1] };
-              }
-            }
-            else result[key] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table);
-          }
-          return result;
-        }
-      } else return exp;
-    };
 
-    const cyberExp = convertExp(query, cyberTable);
+    const cyberExp = convertExp(query, cyberTable, deepToCyberHash);
 
-    const table = cyberTable;
-    const returning = options?.returning ?? 
-    (table === 'links' ? this.linksSelectReturning :
-    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
-    table === 'selectors' ? this.selectorsSelectReturning :
-    table === 'files' ? this.filesSelectReturning : `id`);
-
-    const cyberGeneratedExp = generateQueryData({
+    const queryData = generateQueryData({
       tableName: cyberTable,
       tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
       returning: aggregate ? `aggregate { ${aggregate} }` : (tableName: string) => (
-        tableName === 'cyberlinks' ? `from_id: ${hash['from_id']} to_id: ${hash['to_id']}` :
+        tableName === 'cyberlinks' ? `from_id: ${deepToCyberHash['from_id']} to_id: ${deepToCyberHash['to_id']}` :
         tableName === 'particles' ? `id: particle` :
         'id'
       ),
@@ -261,41 +258,66 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
       },
     });
     const generatedQuery = generateQuery({
+      operation: options?.subscription ? 'subscription' : 'query',
       queries: [
-        cyberGeneratedExp,
+        queryData,
       ],
       name: name,
-    })
-    try {
-      const q = await this.apolloClient.query(generatedQuery);
-      const rewriteGettedPseudoLinksToLinks = (links, exp) => {
-        for (let l in links) {
-          const link = links[l];
-          if (link.__typename === 'cyberlinks') {
-            link.id = `${link.from_id}:${link.to_id}`
-            link.type_id = 'cyberlink';
-          }
-          else link.type_id = 'particle';
-          for (let r in (exp?.return || [])) {
-            rewriteGettedPseudoLinksToLinks(link[r], exp?.return[r]);
-          }
-        }
-      };
-      rewriteGettedPseudoLinksToLinks(q?.data?.q0, cyberExp?.where);
-      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
-    } catch (e) {
-      throw new Error(`CyberDeepClient Select Error: ${e.message}`, { cause: e });
-    }
-  };
+    });
+    return {
+      query: generatedQuery,
+      queryData,
+    };
+  }
+
+  _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data) {
+    return rewriteGettedPseudoLinksToLinks(data, exp);
+  }
+
+  async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
+    return super.select.call(this, exp, options);
+  }
+  // async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
+  //   const aggregate = options?.aggregate;
+  //   const queryData = this._generateQuery(exp, options);
+  //   try {
+  //     const q = await this.apolloClient.query(queryData.query.query);
+  //     this._generateResult(exp, options, q?.data?.q0);
+  //     return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
+  //   } catch (e) {
+  //     throw new Error(`CyberDeepClient Select Error: ${e.message}`, { cause: e });
+  //   }
+  // };
 
   /**
    * deep.subscribe
    * @example
    * deep.subscribe({ up: { link_id: 380 } }).subscribe({ next: (links) => {}, error: (err) => {} });
    */
-  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
-    throw new Error('not implemented');
-  };
+  // subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
+  //   if (!exp) return new Observable((observer) => observer.error('!exp'));
+  //   const aggregate = options?.aggregate;
+  //   const queryData = this._generateQuery(exp, { ...options, subscription: true });
+
+  //   try {
+  //     const apolloObservable = this.apolloClient.subscribe(queryData.query);
+
+  //     const observable = new Observable((observer) => {
+  //       const subscription = apolloObservable.subscribe({
+  //         next: (data: any) => {
+  //           observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : rewriteGettedPseudoLinksToLinks(data?.q0, exp));
+  //         },
+  //         error: (error) => observer.error(error),
+  //       });
+  //       return () => subscription.unsubscribe();
+  //     });
+
+  //   // @ts-ignore
+  //     return observable;
+  //   } catch (e) {
+  //     throw new Error(`CyberDeepClient Subscription Error: ${e.message}`, { cause: e });
+  //   }
+  // };
 
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     throw new Error('not implemented');
@@ -356,7 +378,13 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
   };
 }
 
-export function useCyberDeepGenerator({ minilinks }: { minilinks: MinilinkCollection<any, Link<Id>>; }) {
+export function useCyberDeepGenerator({
+  minilinks,
+  namespace,
+}: {
+  minilinks: MinilinkCollection<any, Link<Id>>;
+  namespace?: string;
+}) {
   const log = debug.extend(useCyberDeepGenerator.name)
   const [deep, setDeep] = useState<any>();
 
@@ -369,6 +397,7 @@ export function useCyberDeepGenerator({ minilinks }: { minilinks: MinilinkCollec
     generateCyberDeepClient({
       config: cyberConfig.CYBER,
       minilinks,
+      namespace,
     }).then(d => setDeep(d));
   }, []);
   log({deep})
@@ -391,7 +420,10 @@ export function CyberDeepProvider({
   children?: any;
 }) {
   const providedMinilinks = useMinilinks();
-  const deep = useCyberDeepGenerator({ minilinks: inputMinilinks || providedMinilinks });
+  const deep = useCyberDeepGenerator({
+    minilinks: inputMinilinks || providedMinilinks,
+    namespace,
+  });
   useDeepNamespace(namespace, deep);
   return <CyberDeepContext.Provider value={deep}>
     {children}
