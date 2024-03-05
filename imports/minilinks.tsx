@@ -475,6 +475,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   } {
     const input = Array.isArray(_input) ? _input : Array.isArray(_input?.data) ? _input?.data : [];
     const returning = (_input as any)?.return || {};
+    const _applyOptions = { return: returning, ...applyOptions };
     const deep = (_input as any)?.deep;
     const namespace = deep?.namespace;
 
@@ -489,7 +490,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const returnLinksPathsById: any = {};
     for (let l = 0; l < input.length; l++) {
       const link = input[l];
-      this._toPlainLinksArray(link, applyOptions, plainLinksArray, returnLinksPathsById);
+      this._toPlainLinksArray(link, _applyOptions, plainLinksArray, returnLinksPathsById);
     }
     for (let l = 0; l < plainLinksArray.length; l++) {
       const link = plainLinksArray[l];
