@@ -57,6 +57,12 @@ jobs:
           export DEEP_POSTGRES_PORT_HOST="5432"
           export DEEP_HASURA_PORT="8080"
           export DEEP_HASURA_PORT_HOST="8080"
+          export NODE_VERSION=$(node -v)
+          export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
+          export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/hasura/local/docker-compose.yml"
+          echo $NODE_VERSION
+          echo $DEEPPLINKS_DOCKER_COMPOSE
+          echo $HASURA_DOCKER_COMPOSE
 
       - name: Show files
         run: |
