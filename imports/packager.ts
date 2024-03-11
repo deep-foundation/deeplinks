@@ -278,7 +278,7 @@ export class Packager<L extends Link<any>> {
       let newId;
       if (item.package) {
         newId = await this.client.id(pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue, true);
-        if (!newId) pckg.errors.push(`${pckg.package.name} package depends on link with path [${pckg?.dependencies?.[item?.package?.dependencyId]?.name}, ${item.package.containValue}], but ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package does not have a link with that name (no 'Contain' type instance with value ' ${item.package.containValue}').`);
+        if (!newId) pckg.errors.push(`${pckg.package.name} package depends on link with path [${pckg?.dependencies?.[item?.package?.dependencyId]?.name}, ${item.package.containValue}], but ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package does not have a link with that name (no 'Contain' type instance with value ' ${item.package.containValue}'). It might mean that ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package have a breaking change in its new version.`);
       } else if (item.type) {
         newId = ids[idsIndex++];
       }
