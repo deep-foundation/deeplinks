@@ -52,3 +52,11 @@ docker exec -it deep-links sh
 See [Documentation] for examples and API
 
 [Documentation]: https://deep-foundation.github.io/deeplinks/
+
+# For mainterners
+
+Please publish this package using this command:
+
+```
+npm run package:version
+```
