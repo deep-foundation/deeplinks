@@ -55,7 +55,7 @@ See [Documentation] for examples and API
 
 # For mainterners
 
-Please publish this package using this command:
+Please publish new version of this package using this command:
 
 ```
 npm run package:version
