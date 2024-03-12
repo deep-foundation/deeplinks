@@ -317,6 +317,9 @@ export interface DeepClientOptions<L extends Link<number> = Link<number>> {
   silent?: boolean;
 
   unsafe?: any;
+
+  remote?: boolean;
+  local?: boolean;
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
@@ -509,7 +512,8 @@ export function checkAndFillShorts(obj) {
   }
 }
 
-export function convertDeepInsertToMinilinksApply(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = []): void {
+export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = [], errors: string[], patch: any = {}): void {
+  console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds input', objects, table);
   if (table === 'links') {
     for (let i = 0; i < objects.length; i++) {
       const o = objects[i];
@@ -519,18 +523,33 @@ export function convertDeepInsertToMinilinksApply(deep, objects, table, result: 
         // @ts-ignore
         deep.minilinks?.byId[id]?._id = apply;
       }
+      if (o.from_id < 0) {
+        if (deep.minilinks.virtual[o.from_id]) o.from_id = deep.minilinks.virtual[o.from_id];
+        else errors.push(`.from_id=${o.from_id} can't be devertualized, not exists in minilinks.virtual[${o.from_id}]`);
+      }
+      if (o.to_id < 0) {
+        if (deep.minilinks.virtual[o.to_id]) o.to_id = deep.minilinks.virtual[o.to_id];
+        else errors.push(`.to_id=${o.to_id} can't be devertualized, not exists in minilinks.virtual[${o.to_id}]`);
+      }
+      if (o.type_id < 0) {
+        if (deep.minilinks.virtual[o.type_id]) o.type_id = deep.minilinks.virtual[o.type_id];
+        else errors.push(`.type_id=${o.type_id} can't be devertualized, not exists in minilinks.virtual[${o.type_id}]`);
+      }
       result.push({
         id: o.id || id, from_id: o.from_id, to_id: o.to_id, type_id: o.type_id,
         value: o.string?.data || o.number?.data || o.object?.data,
+        ...patch
       });
-      if (o?.from) convertDeepInsertToMinilinksApply(deep, [o?.from?.data], table, result);
-      if (o?.to) convertDeepInsertToMinilinksApply(deep, [o?.to?.data], table, result);
-      if (o?.type) convertDeepInsertToMinilinksApply(deep, [o?.type?.data], table, result);
-      if (o?.out) convertDeepInsertToMinilinksApply(deep, (o?.out?.data?.length ? o?.out?.data : [o?.out?.data]).map(l => ({ ...l, from_id: id })), table, result);
-      if (o?.in) convertDeepInsertToMinilinksApply(deep, (o?.in?.data?.length ? o?.in?.data : [o?.in?.data]).map(l => ({ ...l, to_id: id })), table, result);
-      if (o?.types) convertDeepInsertToMinilinksApply(deep, (o?.types?.data?.length ? o?.types?.data : [o?.types?.data]).map(l => ({ ...l, type_id: id })), table, result);
+      if (o?.from) o.from.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.from?.data], table, result, errors);
+      if (o?.to) o.to.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.to?.data], table, result, errors);
+      if (o?.type) o.type.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.type?.data], table, result, errors);
+      if (o?.out) o.out.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.out?.data?.length ? o?.out?.data : [o?.out?.data]), table, result, errors, { from_id: id });
+      if (o?.in) o.in.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.in?.data?.length ? o?.in?.data : [o?.in?.data]), table, result, errors, { to_id: id });
+      if (o?.types) o.types.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.types?.data?.length ? o?.types?.data : [o?.types?.data]), table, result, errors, { type_id: id });
     }
   }
+  return objects;
+  console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds output', objects, result);
 }
 
 export function convertDeepUpdateToMinilinksApply(ml, _exp, _set, table, toUpdate: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = []): void {
@@ -613,6 +632,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
 
   unsafe?: any;
 
+  local?: boolean;
+  remote?: boolean;
+
   _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
@@ -621,6 +643,9 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     this.deep = options?.deep;
     this.apolloClient = options?.apolloClient;
     this.token = options?.token;
+
+    this.local = typeof(options?.local) === 'boolean' ? options?.local : true;
+    this.remote = typeof(options?.remote) === 'boolean' ? options?.remote : true;
 
     if (this.deep && !this.apolloClient) {
       const token = this.token ?? this.deep.token;
@@ -973,31 +998,39 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
+    let _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
-  
+
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
 
-    if (this.minilinks) {
-      const toApply: any = [];
-      convertDeepInsertToMinilinksApply(this, _objects, table, toApply);
+    const toApply: any = [];
+    if (this.minilinks && local !== false) {
+      const errors = [];
+      _objects = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(this, _objects, table, toApply, errors) as any;
+      if (errors.length) console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds', 'errors', errors);
       this.minilinks.add(toApply);
     }
 
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
+          name: name,
+        }));
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toApply.map(l => l.id), loading: false };
     }
   
     // @ts-ignore
@@ -1085,12 +1118,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
+
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
   
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
     const table = options?.table || this.table;
 
-    if (this.minilinks) {
-      const toUpdate: any = [];
+    const toUpdate: any = [];
+    if (this.minilinks && local !== false) {
       convertDeepUpdateToMinilinksApply(this.minilinks, exp, value, table, toUpdate);
       this.minilinks.update(toUpdate);
     }
@@ -1099,16 +1134,20 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
     let q;
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
+          name: name,
+        }));
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toUpdate.map(l => l.id), loading: false };
     }
 
     // @ts-ignore
@@ -1224,6 +1263,8 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
@@ -1231,25 +1272,29 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     const name = options?.name || this.defaultDeleteName;
     let q;
 
-    if (this.minilinks) {
-      const toDelete: any = [];
-      const toUpdate: any = [];
+    const toDelete: any = [];
+    const toUpdate: any = [];
+    if (this.minilinks && local !== false) {
       convertDeepDeleteToMinilinksApply(this.minilinks, exp, table, toDelete, toUpdate);
       this.minilinks.update(toUpdate);
       this.minilinks.remove(toDelete);
     }
 
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
-        name: name,
-      }));
-      // @ts-ignore
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
+          name: name,
+        }));
+        // @ts-ignore
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toDelete.map(l => l.id), loading: false };
     }
 
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1794,7 +1839,6 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   loading: boolean;
 } {
   const [miniName] = useState(options?.mini || random());
-  debug('useDeepQuery', miniName, query, options);
   const deep = useDeep();
   const wq = useMemo(() => {
     const sq = serializeQuery(query, 'links', deep.unvertualizeId);
@@ -1919,5 +1963,7 @@ export type ReadOptions<TTable extends Table> = Options<TTable>;
 
 export type WriteOptions<TTable extends Table>  = Options<TTable> & {
   silent?: boolean;
+  remote?: boolean;
+  local?: boolean;
 }
 

@@ -49,6 +49,9 @@ export interface LinkHashFields {
 
 export interface Link<Ref extends Id> extends LinkPlain<Ref>, LinkRelations<Id, Link<Ref>>, LinkHashFields {
   _id?: Id;
+  _type_id?: Id;
+  _from_id?: Id;
+  _to_id?: Id;
   displayId: Id;
 }
 
@@ -90,13 +93,41 @@ export interface MinilinksResult<L extends Link<Id>> {
   }
 }
 
+export function toPlain<Ref extends Id>(link): LinkPlain<Ref> {
+  return {
+    id: link._id || link.id,
+    type_id: link.type_id,
+    from_id: link.from_id,
+    to_id: link.to_id,
+    value: link.value || undefined,
+  };
+}
+
 export class MinilinksLink<Ref extends Id> {
   ml?: MinilinkCollection<any, any>;
   _id: Ref;
   id: Ref;
-  type_id: Ref;
-  from_id?: Ref;
-  to_id?: Ref;
+  _type_id: Ref;
+  _from_id?: Ref;
+  _to_id?: Ref;
+  get type_id(): Ref {
+    return (this.ml?.virtualInverted[this._type_id] || this._type_id) as Ref;
+  }
+  get from_id(): Ref {
+    return (this.ml?.virtualInverted[this._from_id] || this._from_id) as Ref;
+  }
+  get to_id(): Ref {
+    return (this.ml?.virtualInverted[this._to_id] || this._to_id) as Ref;
+  }
+  set type_id(id: Ref) {
+    this._type_id = id;
+  }
+  set from_id(id: Ref) {
+    this._from_id = id;
+  }
+  set to_id(id: Ref) {
+    this._to_id = id;
+  }
   get typed(): MinilinksLink<Ref>[] {
     return this.ml?.byType?.[this.id] || [];
   }
@@ -136,27 +167,30 @@ export class MinilinksLink<Ref extends Id> {
   get displayId(): Id {
     return this._id || this.id;
   }
-  value?: any;
+  get value(): any {
+    return this?.string || this?.number || this?.object;
+  }
   string?: any;
   number?: any;
   object?: any;
   _applies: string[] = [];
   constructor(link: any) {
-    Object.assign(this, link);
+    this.ml = link.ml;
+    this.id = link.id;
+    this._id = link._id;
+    this._type_id = link.type_id;
+    this._from_id = link.from_id;
+    this._to_id = link.to_id;
+    this._applies = link._applies;
+    // Object.assign(this, link);
     if (link.value) {
-      if (typeof(link.value.value) === 'string' && !this.string) this.string = link.value;
-      if (typeof(link.value.value) === 'number' && !this.number) this.number = link.value;
-      if (typeof(link.value.value) === 'object' && !this.object) this.object = link.value;
+      if (typeof(link?.value?.value) === 'string' && !this.string) this.string = link.value;
+      if (typeof(link?.value?.value) === 'number' && !this.number) this.number = link.value;
+      if (typeof(link?.value?.value) === 'object' && !this.object) this.object = link.value;
     }
   }
   toPlain(): LinkPlain<Ref> {
-    return {
-      id: this._id || this.id,
-      type_id: this.type_id,
-      from_id: this.from_id,
-      to_id: this.to_id,
-      value: this.value,
-    };
+    return toPlain<Ref>(this) as LinkPlain<Ref>;
   }
   is(query: QueryLink): boolean {
     // @ts-ignore
@@ -195,7 +229,9 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   inByType: 'inByType',
   outByType: 'outByType',
   equal: (ol, nl) => {
-    return ol.type_id == nl.type_id && ol.from_id == nl.from_id && ol.to_id == nl.to_id && _isEqual(ol.value, nl.value);
+    const _ol = toPlain(ol);
+    const _nl = toPlain(nl);
+    return _ol.type_id == _nl.type_id && _ol.from_id == _nl.from_id && _ol.to_id == _nl.to_id && _isEqual(_ol.value, _nl.value);
   },
   Link: MinilinksLink,
 };
@@ -223,6 +259,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   useMinilinksHandle = useMinilinksHandle;
 
   virtual: { [id: Id]: Id } = {};
+  virtualInverted: { [id: Id]: Id } = {};
   virtualCounter = -1;
   types: { [id: Id]: L[] } = {};
   byId: { [id: Id]: L } = {};
@@ -273,7 +310,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       }
     });
   }
-  add(linksArray: any[]): {
+  add(linksArray: any[], applyName: string = ''): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
@@ -288,11 +325,13 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
         const isVirtual = linksArray[l].id < 0;
-        if (isVirtual) this.virtual[linksArray[l].id] = undefined;
+        if (isVirtual && !this.virtual.hasOwnProperty(linksArray[l].id)) {
+          this.virtual[linksArray[l].id] = undefined;
+        }
         const link = new this.options.Link({
           ml: this,
           _id: isVirtual ? undefined : linksArray[l].id,
-          _applies: [],
+          _applies: [applyName],
           ...linksArray[l],
         });
         byId[link[options.id]] = link;
@@ -482,24 +521,28 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       // find virtual
       let old = byId[link.id];
       const virtualIds = Object.keys(this.virtual);
+      // console.log('abcdef', virtualIds.map(i => Number(i)).filter(id => !Object.values(this.virtualInverted).includes(id)))
       const [virtual] = this.query({
-        id: { _in: virtualIds.map(i => Number(i)) },
+        id: { _in: virtualIds.map(i => Number(i)).filter(id => !Object.values(this.virtualInverted).includes(id)) },
         ...(link.type_id ? { type_id: link.type_id } : {}),
-        ...(link.from_id ? { from_id: link.from_id } : {}),
-        ...(link.to_id ? { to_id: link.to_id } : {}),
-        ...(link.value ? { value: link.value } : {}),
+        // ...(link.from_id ? { from_id: link.from_id } : {}),
+        // ...(link.to_id ? { to_id: link.to_id } : {}),
+        // ...(link.value ? { value: link.value } : {}),
       });
       if (virtual) {
-        if (old) throw new Error(`somehow we have oldLink.id ${old.id} and virtualLink.id ${virtual.id} virtualLink._id = ${virtual._id}`);
-        old = virtual;
-        this.virtual[virtual.id] = link.id;
-        virtual._id = link.id;
-        link = { ...link, _id: link.id, id: virtual.id };
+        if (!old) {
+          old = virtual;
+          this.virtual[virtual.id] = link.id;
+          this.virtualInverted[link.id] = virtual.id;
+          virtual._id = link.id;
+          link = { ...link, _id: link.id, id: virtual.id };
+        }
       }
 
       if (!old) {
         link._applies = [applyName];
         this.emitter.emit('apply', old, link);
+        this.emitter.emit('+apply', old, link, applyName);
         toAdd.push(link);
       }
       else {
@@ -507,6 +550,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         if (!~index) {
           link._applies = old._applies = [...old._applies, applyName];
           this.emitter.emit('apply', old, link);
+          this.emitter.emit('+apply', old, link, applyName);
         } else {
           link._applies = old._applies;
         }
@@ -527,6 +571,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
           } else {
             link._applies.splice(index, 1);
             this.emitter.emit('apply', link, link);
+            this.emitter.emit('-apply', link, link, applyName);
           }
         }
       }
@@ -560,9 +605,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       const virtualIds = Object.keys(this.virtual);
       const [virtual] = this.query({
         id: { _in: virtualIds.map(i => Number(i)) },
-        ...(link.type_id ? { type_id: link.type_id } : {}),
-        ...(link.from_id ? { from_id: link.from_id } : {}),
-        ...(link.to_id ? { to_id: link.to_id } : {}),
+        ...(link.type_id ? { _type_id: link.type_id } : {}),
+        ...(link.from_id ? { _from_id: link.from_id } : {}),
+        ...(link.to_id ? { _to_id: link.to_id } : {}),
         ...(link.value ? { value: link.value } : {}),
       });
       if (virtual) {
