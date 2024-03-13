@@ -96,9 +96,9 @@ export interface MinilinksResult<L extends Link<Id>> {
 export function toPlain<Ref extends Id>(link): LinkPlain<Ref> {
   return {
     id: link._id || link.id,
-    type_id: link.type_id,
-    from_id: link.from_id,
-    to_id: link.to_id,
+    type_id: link._type_id || link.type_id,
+    from_id: link._from_id || link.from_id,
+    to_id: link._to_id || link.to_id,
     value: link.value || undefined,
   };
 }
@@ -515,31 +515,65 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const beforeUpdate = {};
     const toRemove = [];
     const _byId: any = {};
+    const identifyVirtualizedLinks = [...linksArray];
+    const virtualizedLinks: any = {};
+    for (let l = 0; l < identifyVirtualizedLinks.length; l++) {
+      // найти все виртуальные ноды
+      let link = identifyVirtualizedLinks[l];
+      if (!virtualizedLinks[link.id] && !link.from_id && !link.to_id) {
+        const virtualId = this.virtualInverted[link.id];
+        const compatable = virtualId ? [this.byId[virtualId]] : this.select({
+            type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } : link.type_id,
+            // ...(typeof(link.value) !== 'undefined' && link.value !== null ? { value: link.value } : {}),
+            _id: { _is_null: true },
+          limit: 1,
+        });
+        if (compatable[0]) {
+          virtualizedLinks[link.id] = compatable[0];
+        }
+      }
+    }
+    let needRepeatIdentification = true;
+    while (needRepeatIdentification) {
+      let hasIdentifiedVirtualizedPerCycle = false;
+      for (let l = 0; l < identifyVirtualizedLinks.length; l++) {
+        // найти все связи с хотя бы одним не виртуальным from_id to_id
+        let link = identifyVirtualizedLinks[l];
+        if (!virtualizedLinks[link.id]) {
+          if (link.from_id && link.to_id) {
+            const virtual = this.virtualInverted[link.id];
+            const compatable = this.select({
+              type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } :  link.type_id,
+              from_id: virtualizedLinks[link.from_id] ? { _in: [link.from_id, virtualizedLinks[link.from_id].id] } :  link.from_id,
+              to_id: virtualizedLinks[link.to_id] ? { _in: [link.to_id, virtualizedLinks[link.to_id].id] } :  link.to_id,
+              _id: { _is_null: true },
+              limit: 1,
+            });
+            if (compatable[0]) {
+              virtualizedLinks[link.id] = compatable[0];
+              hasIdentifiedVirtualizedPerCycle = true;
+            }
+          }
+        }
+      }
+      if (!hasIdentifiedVirtualizedPerCycle) needRepeatIdentification = false;
+    }
     for (let l = 0; l < linksArray.length; l++) {
       let link = linksArray[l];
 
       // find virtual
       let old = byId[link.id];
-      const virtualIds = Object.keys(this.virtual);
-      // console.log('abcdef', virtualIds.map(i => Number(i)).filter(id => !Object.values(this.virtualInverted).includes(id)))
-      const [virtual] = this.query({
-        id: { _in: virtualIds.map(i => Number(i)).filter(id => !Object.values(this.virtualInverted).includes(id)) },
-        ...(link.type_id ? { type_id: link.type_id } : {}),
-        // ...(link.from_id ? { from_id: link.from_id } : {}),
-        // ...(link.to_id ? { to_id: link.to_id } : {}),
-        // ...(link.value ? { value: link.value } : {}),
-      });
-      if (virtual) {
-        if (!old) {
-          old = virtual;
+      const virtual = virtualizedLinks[link.id] || (this.virtualInverted[link.id] ? this.byId[this.virtualInverted[link.id]] : undefined);
+      if (virtual && !old) {
+        old = virtual;
+        if (!virtual._id) {
           this.virtual[virtual.id] = link.id;
           this.virtualInverted[link.id] = virtual.id;
           virtual._id = link.id;
           link = { ...link, _id: link.id, id: virtual.id };
         }
       }
-
-      if (!old) {
+      if (!old && !virtual) {
         link._applies = [applyName];
         this.emitter.emit('apply', old, link);
         this.emitter.emit('+apply', old, link, applyName);
@@ -563,10 +597,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
-      if (!_byId[link.id]) {
+      if (!_byId[link._id]) {
         const index = link._applies.indexOf(applyName);
+        const isVirtualAndNeedToDelete = link._applies.length == 2 && link._applies.includes('');
         if (!!~index) {
-          if (link._applies.length === 1) {
+          if (link._applies.length === 1 || isVirtualAndNeedToDelete) {
             toRemove.push(link);
           } else {
             link._applies.splice(index, 1);

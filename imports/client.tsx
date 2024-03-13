@@ -33,11 +33,21 @@ export const _ids = {
 
 export const _serialize = {
   links: {
+    virtualize: {
+      id: ['id', '_id'],
+      type_id: ['type_id', '_type_id'],
+      from_id: ['from_id', '_from_id'],
+      to_id: ['to_id', '_to_id'],
+    },
     fields: {
       id: 'number',
       from_id: 'number',
       to_id: 'number',
       type_id: 'number',
+      _id: 'number',
+      _from_id: 'number',
+      _to_id: 'number',
+      _type_id: 'number',
     },
     relations: {
       from: 'links',
@@ -184,11 +194,11 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         }
       } else if (env === 'value') {
         // if this is value
-        if (type === 'string' || type === 'number') {
+        if (type === 'string' || type === 'number' || (type === 'object' && !exp[key].hasOwnProperty('_type_of'))) {
           setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(exp[key]) : exp[key] };
         }
       }
-      if (type === 'object' && exp[key].hasOwnProperty('_type_of') && (
+      if (type === 'object' && exp[key]?.hasOwnProperty('_type_of') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
@@ -202,7 +212,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         } else {
           result[key.slice(0, -3)] = _temp;
         }
-      } else if (type === 'object' && exp[key].hasOwnProperty('_id') && (
+      } else if (type === 'object' && exp[key]?.hasOwnProperty('_id') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
@@ -512,8 +522,8 @@ export function checkAndFillShorts(obj) {
   }
 }
 
-export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = [], errors: string[], patch: any = {}): void {
-  console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds input', objects, table);
+export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = [], errors: string[], patch: any = {}): { objects: any; levelIds: any[]; } {
+  const levelIds = [];
   if (table === 'links') {
     for (let i = 0; i < objects.length; i++) {
       const o = objects[i];
@@ -523,33 +533,61 @@ export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, object
         // @ts-ignore
         deep.minilinks?.byId[id]?._id = apply;
       }
-      if (o.from_id < 0) {
-        if (deep.minilinks.virtual[o.from_id]) o.from_id = deep.minilinks.virtual[o.from_id];
-        else errors.push(`.from_id=${o.from_id} can't be devertualized, not exists in minilinks.virtual[${o.from_id}]`);
+      levelIds.push(id);
+      const patchRelationIds: any = {};
+      if (o?.from) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.from?.data], table, result, errors);
+        o.from.data = objs;
+        patchRelationIds.from_id = levelIds[0];
       }
-      if (o.to_id < 0) {
-        if (deep.minilinks.virtual[o.to_id]) o.to_id = deep.minilinks.virtual[o.to_id];
-        else errors.push(`.to_id=${o.to_id} can't be devertualized, not exists in minilinks.virtual[${o.to_id}]`);
+      if (o?.to) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.to?.data], table, result, errors);
+        o.to.data = objs;
+        patchRelationIds.to_id = levelIds[0];
       }
-      if (o.type_id < 0) {
-        if (deep.minilinks.virtual[o.type_id]) o.type_id = deep.minilinks.virtual[o.type_id];
-        else errors.push(`.type_id=${o.type_id} can't be devertualized, not exists in minilinks.virtual[${o.type_id}]`);
+      if (o?.type) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.type?.data], table, result, errors);
+        o.type.data = objs;
+        patchRelationIds.type_id = levelIds[0];
+      }
+      if (o?.out) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.out?.data?.length ? o?.out?.data : [o?.out?.data]), table, result, errors, { from_id: id });
+        o.out.data = objs;
+      }
+      if (o?.in) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.in?.data?.length ? o?.in?.data : [o?.in?.data]), table, result, errors, { to_id: id });
+        o.in.data = objs;
+      }
+      if (o?.types) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.types?.data?.length ? o?.types?.data : [o?.types?.data]), table, result, errors, { type_id: id });
+        o.types.data = objs;
+      }
+      if (typeof(o.from_id) === 'number' || typeof(o.from_id) === 'string') {
+        if (o.from_id < 0) {
+          if (deep.minilinks.virtual[o.from_id]) o.from_id = deep.minilinks.virtual[o.from_id];
+          else errors.push(`.from_id=${o.from_id} can't be devertualized, not exists in minilinks.virtual[${o.from_id}]`);
+        }
+      }
+      if (typeof(o.to_id) === 'number' || typeof(o.to_id) === 'string') {
+        if (o.to_id < 0) {
+          if (deep.minilinks.virtual[o.to_id]) o.to_id = deep.minilinks.virtual[o.to_id];
+          else errors.push(`.to_id=${o.to_id} can't be devertualized, not exists in minilinks.virtual[${o.to_id}]`);
+        }
+      }
+      if (typeof(o.type_id) === 'number' || typeof(o.type_id) === 'string') {
+        if (o.type_id < 0) {
+          if (deep.minilinks.virtual[o.type_id]) o.type_id = deep.minilinks.virtual[o.type_id];
+          else errors.push(`.type_id=${o.type_id} can't be devertualized, not exists in minilinks.virtual[${o.type_id}]`);
+        }
       }
       result.push({
-        id: o.id || id, from_id: o.from_id, to_id: o.to_id, type_id: o.type_id,
+        id: id, from_id: o.from_id, to_id: o.to_id, type_id: o.type_id,
         value: o.string?.data || o.number?.data || o.object?.data,
-        ...patch
+        ...patch, ...patchRelationIds
       });
-      if (o?.from) o.from.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.from?.data], table, result, errors);
-      if (o?.to) o.to.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.to?.data], table, result, errors);
-      if (o?.type) o.type.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.type?.data], table, result, errors);
-      if (o?.out) o.out.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.out?.data?.length ? o?.out?.data : [o?.out?.data]), table, result, errors, { from_id: id });
-      if (o?.in) o.in.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.in?.data?.length ? o?.in?.data : [o?.in?.data]), table, result, errors, { to_id: id });
-      if (o?.types) o.types.data = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.types?.data?.length ? o?.types?.data : [o?.types?.data]), table, result, errors, { type_id: id });
     }
   }
-  return objects;
-  console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds output', objects, result);
+  return { objects: objects.length == 1 ? objects[0] : objects, levelIds };
 }
 
 export function convertDeepUpdateToMinilinksApply(ml, _exp, _set, table, toUpdate: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = []): void {
@@ -1012,7 +1050,8 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     const toApply: any = [];
     if (this.minilinks && local !== false) {
       const errors = [];
-      _objects = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(this, _objects, table, toApply, errors) as any;
+      const { objects: __objects } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(this, _objects, table, toApply, errors) as any;
+      _objects = __objects;
       if (errors.length) console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds', 'errors', errors);
       this.minilinks.add(toApply);
     }
