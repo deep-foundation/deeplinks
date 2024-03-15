@@ -119,7 +119,7 @@ services:
     networks:
       - network
     ports:
-    - "3006:3006"
+    - "${DEEPLINKS_PORT_HOST:-3006}:${DEEPLINKS_PORT:-3006}"
     restart: always
     pull_policy: always
     volumes:
