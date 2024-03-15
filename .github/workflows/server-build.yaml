@@ -66,7 +66,7 @@ jobs:
           echo $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
           echo $DEEPPLINKS_DOCKER_COMPOSE
           echo HASURA_DOCKER_COMPOSE
-          cat $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
+          sudo cat $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
 
       - name: Show files
         run: |
