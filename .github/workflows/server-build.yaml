@@ -64,6 +64,7 @@ jobs:
           export DEEP_MINIO_PORT_HOST="32765"
           export DEEP_MINIO_PORT="32765"
           export NODE_VERSION=$(node -v)
+          export DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.ports-multiple.yml"
           export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
           export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/node_modules/@deep-foundation/hasura/local/docker-compose.yml"
 
@@ -79,7 +80,7 @@ jobs:
 
       - name: Set additional environment variables with envsubst
         run: |
-          envsubst '${DEEPLINKS_PORTS}' < $DEEPPLINKS_DOCKER_COMPOSE > _deeplinks.docker-compose.temp.yml
+          envsubst '${DEEPLINKS_PORTS}' < $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE > _deeplinks.docker-compose.temp.yml
           mv _deeplinks.docker-compose $DEEPPLINKS_DOCKER_COMPOSE
           ls -la
 
