@@ -10,6 +10,7 @@ services:
     extra_hosts: ['host.docker.internal:host-gateway']
     ports:
       - "${DEEPLINKS_PORT_HOST:-3006}:${DEEPLINKS_PORT:-3006}"
+      - '${DEEPLINKS_PORTS}'
     restart: always
     environment:
       DEEPLINKS_HASURA_PATH: '${DEEPLINKS_HASURA_PATH}'

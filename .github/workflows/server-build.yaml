@@ -53,10 +53,16 @@ jobs:
           export MINIO_SECRET_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
           export DEEPLINKS_PORT_HOST="3006"
           export DEEPLINKS_PORTS="[4001:4001, 7100-7999:7100-7999]"
+          export DEEPCASE_PORT_HOST="3007"
+          export DEEPCASE_PORT="3007"
           export DEEP_POSTGRES_PORT="5432"
           export DEEP_POSTGRES_PORT_HOST="5432"
           export DEEP_HASURA_PORT="8080"
           export DEEP_HASURA_PORT_HOST="8080"
+          export DEEP_MINIO_UI_PORT_HOST="9000"
+          export DEEP_MINIO_UI_PORT="9000"
+          export DEEP_MINIO_PORT_HOST="32765"
+          export DEEP_MINIO_PORT="32765"
           export NODE_VERSION=$(node -v)
           export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
           export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/node_modules/@deep-foundation/hasura/local/docker-compose.yml"

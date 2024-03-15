@@ -6,7 +6,7 @@ services:
     networks:
       - network
     ports:
-    - "${DEEP_POSTGRES_PORT_HOST}:${DEEP_POSTGRES_PORT}"
+    - "${DEEP_POSTGRES_PORT_HOST:-5432}:${DEEP_POSTGRES_PORT:-5432}"
     restart: always
     command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
     volumes:
@@ -28,7 +28,7 @@ services:
     networks:
       - network
     ports:
-    - "${DEEP_HASURA_PORT_HOST}:${DEEP_HASURA_PORT}"
+    - "${DEEP_HASURA_PORT_HOST:-8080}:${DEEP_HASURA_PORT:-8080}"
     extra_hosts: ['host.docker.internal:host-gateway']
     links:
     - "postgres:postgres"
@@ -84,8 +84,8 @@ services:
       - 'minio-data:/export'
       - 'minio-config:/root/.minio'
     ports:
-      - '9000:9000'
-      - '32765:32765'
+      - "${DEEP_MINIO_UI_PORT_HOST:-9000}:${DEEP_MINIO_UI_PORT:-9000}"
+      - "${DEEP_MINIO_PORT_HOST:-32765}:${DEEP_MINIO_PORT:-32765}"
     environment:
       - 'MINIO_ROOT_USER=minioaccesskey'
       - 'MINIO_ROOT_PASSWORD=miniosecretkey'
@@ -102,7 +102,7 @@ services:
     networks:
       - network
     ports:
-    - "3007:3007"
+    - "${DEEPCASE_PORT_HOST:-3007}:${DEEPCASE_PORT:-3007}"
     restart: always
     pull_policy: always
     volumes:
