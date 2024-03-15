@@ -278,7 +278,7 @@ export class Packager<L extends Link<any>> {
       let newId;
       if (item.package) {
         newId = await this.client.id(pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue, true);
-        if (!newId) pckg.errors.push(`dependency [${pckg?.dependencies?.[item?.package?.dependencyId]?.name} ${item.package.containValue}], not found`);
+        if (!newId) pckg.errors.push(`${pckg.package.name} package depends on link with path ['${pckg?.dependencies?.[item?.package?.dependencyId]?.name}', '${item.package.containValue}'], but ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package does not have a link with that name (no 'Contain' type instance with value ' ${item.package.containValue}'). It might mean that ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package have a breaking change in its new version.`);
       } else if (item.type) {
         newId = ids[idsIndex++];
       }
@@ -559,25 +559,6 @@ export class Packager<L extends Link<any>> {
         // @ts-ignore
         _: true,
       });
-      // user contain package namespace
-      if (this.client.linkId) {
-        data.push({
-          id: ++counter,
-          type: Contain,
-          from: this.client.linkId,
-          to: namespaceId,
-          // @ts-ignore
-          _: true,
-        });
-        data.push({
-          id: ++counter,
-          type: Join,
-          from: namespaceId,
-          to: this.client.linkId,
-          // @ts-ignore
-          _: true,
-        });
-      }
       // active link if first in namespace
       data.push({
         id: ++counter,
@@ -626,15 +607,6 @@ export class Packager<L extends Link<any>> {
         _: true,
       });
     }
-    // user contain package
-    if (this.client.linkId) data.push({
-      id: ++counter,
-      type: Contain,
-      from: this.client.linkId,
-      to: containsHash[packageId],
-      // @ts-ignore
-      _: true,
-    });
     return { data, errors, counter, dependedLinks, packageId: containsHash[packageId], namespaceId };
   }
 

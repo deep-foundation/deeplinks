@@ -690,6 +690,78 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return data;
   }
 
+  /**
+   * Gets a value from the database. By default gets a link from the links table
+   * @param exp A filter expression to filter the objects to get
+   * @param options An object with options for the select operation
+   * @returns A promise that resolves to the selected object or an array of selected objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Select by id
+   * ``` 
+   * await deep.select({
+   *   id: deep.linkId
+   * })
+   * ```
+   * 
+   * #### Select by type_id
+   * ``` 
+   * await deep.select({
+   *   type_id: {
+   *     _id: ["@deep-foundation/core", "User"]
+   *   }
+   * })
+   * ```
+   * 
+   * #### Select by from_id
+   * ``` 
+   * await deep.select({
+   *   from_id: deep.linkId
+   * })
+   * ```
+   * 
+   * #### Select by to_id
+   * ``` 
+   * await deep.select({
+   *   to_id: deep.linkId
+   * })
+   * ```
+   * 
+   * #### Select by string value
+   * ``` 
+   * await deep.select({
+   *   string: {
+   *     value: {
+   *       _eq: "MyString"
+   *     }
+   *   }
+   * })
+   * ```
+   * 
+   * #### Select by number value
+   * ``` 
+   * await deep.select({
+   *   number: {
+   *     value: {
+   *       _eq: 888
+   *     }
+   *   }
+   * })
+   * ```
+   * 
+   * #### Select by object value
+   * ``` 
+   * await deep.select({
+   *   object: {
+   *     value: {
+   *       _eq: {
+   *         myFieldKey: "myFieldValue"
+   *       }
+   *     }
+   *   }
+   * })
+   * ```
+   */
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     const aggregate = options?.aggregate;
@@ -705,9 +777,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
 
   /**
-   * deep.subscribe
+   * Subscribes to data in the database
    * @example
-   * deep.subscribe({ up: { link_id: 380 } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   * ```
+   * deep.subscribe({ up: { link_id: deep.linkId } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   * ```
    */
   subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
     if (!exp) return new Observable((observer) => observer.error('!exp'));
@@ -734,6 +808,99 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     }
   };
 
+  /**
+   * Inserts a value into the database. By default inserts a link to the links table
+   * @param objects An object or array of objects to insert to the database
+   * @param options An object with options for the insert operation
+   * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @remarks
+   * If a link already has value you should update its value, not insert 
+   * 
+   * @example
+   * #### Insert Type
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type")
+   * })
+   * ```
+   * In this case instances of your type will not have from and to
+   * 
+   * #### Insert Type from Package to User
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type"),
+   *   from_id: await deep.id("@deep-foundation/core", "Package"),
+   *   to_id: await deep.id("@deep-foundation/core", "User")
+   * })
+   * ```
+   * In this case instances of your type will must go from instances of Package to instances of User
+   * 
+   * #### Insert Type with from Any to Any
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type"),
+   *   from_id: await deep.id("@deep-foundation/core", "Any"),
+   *   to_id: await deep.id("@deep-foundation/core", "Any")
+   * })
+   * ```
+   * In this case instances of your type may go from instances of any link to instances of any link without restrictions
+   * 
+   * #### Insert Type with from Package to Any
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type"),
+   *   from_id: await deep.id("@deep-foundation/core", "Package"),
+   *   to_id: await deep.id("@deep-foundation/core", "Any")
+   * })
+   * ```
+   * In this case instances of your type may go from instances of Package to instances of any link without restrictions
+   * 
+   * #### Insert Type with from Any to Package
+   * ``` 
+   * await deep.insert({
+   *   type_id: await deep.id("@deep-foundation/core", "Type"),
+   *   from_id: await deep.id("@deep-foundation/core", "Any"),
+   *   to_id: await deep.id("@deep-foundation/core", "Package")
+   * })
+   * ```
+   * In this case instances of your type may go from instances of any link without restrictions to instances of Package 
+   * 
+   * #### Insert string
+   * ``` 
+   * await deep.insert({
+   *   link_id: 888,
+   *   value: 'MyString'
+   * }, {
+   *   table: 'strings'
+   * })
+   * ```
+   * Note: If a link already has value you should update its value, not insert 
+   * 
+   * #### Insert number
+   * ``` 
+   * await deep.insert({
+   *   link_id: 888,
+   *   value: 888
+   * }, {
+   *   table: 'numbers'
+   * })
+   * ```
+   * Note: If a link already has value you should update its value, not insert 
+   * 
+   * #### Insert object
+   * ``` 
+   * await deep.insert({
+   *   link_id: 888,
+   *   value: {
+   *     myFieldName: 'myFieldValue'
+   *   }
+   * }, {
+   *   table: 'objects'
+   * })
+   * ```
+   * Note: If a link already has value you should update its value, not insert 
+   */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
@@ -760,6 +927,84 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return { ...q, data: (q)?.data?.m0?.returning };
   }; 
 
+  /**
+   * Updates a value in the database. By default updates a link in the links table
+   * @param exp An expression to filter the objects to update
+   * @param value A value to update the objects with
+   * @param options An object with options for the update operation
+   * @returns A promise that resolves to the updated object or an array of updated objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Update from by id
+   * ``` 
+   * await deep.update({
+   *   id: 888
+   * }, {
+   *   from_id: 1
+   * })
+   * ```
+   * In this case from_id will be updated to 1 for link with id 888
+   * 
+   * #### Update to by id
+   * ``` 
+   * await deep.update({
+   *   id: 888
+   * }, {
+   *   to_id: 1
+   * })
+   * ```
+   * In this case to_id will be updated to 1 for link with id 888
+   * 
+   * #### Update string value by link id
+   * ``` 
+   * await deep.update(
+   *   {
+   *     link_id: 888
+   *   },
+   *   {
+   *     value: "MyStringValue"
+   *   },
+   *   {
+   *     table: 'strings'
+   *   }
+   * )
+   * ```
+   * In this case string value will be updated to "MyStringValue" for link with id 888
+   * 
+   * #### Update number value by link id
+   * ``` 
+   * await deep.update(
+   *   {
+   *     link_id: 888
+   *   },
+   *   {
+   *     value: 888
+   *   },
+   *   {
+   *     table: 'numbers'
+   *   }
+   * )
+   * ```
+   * In this case number value will be updated to 888 for link with id 888
+   * 
+   * #### Update object value by link id
+   * ``` 
+   * await deep.update(
+   *   {
+   *     link_id: 888
+   *   },
+   *   {
+   *     value: {
+   *       myFieldName: "myFieldValue"
+   *     }
+   *   },
+   *   {
+   *     table: 'numbers'
+   *   }
+   * )
+   * ```
+   * In this case number value will be updated to { myFieldName: "myFieldValue" } for link with id 888
+   */
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
@@ -785,6 +1030,113 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
+  /**
+   * Deletes a value in the database. By default deletes a link in the links table
+   * @param exp An expression to filter the objects to delete
+   * @param options An object with options for the delete operation
+   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * 
+   * @example
+   * #### Delete by id
+   * ``` 
+   * await deep.delete({
+   *   id: 888
+   * })
+   * ```
+   * In this case the link with id 888 will be deleted
+   * 
+   * #### Delete by type_id
+   * ``` 
+   * await deep.delete({
+   *   type_id: 888
+   * })
+   * ```
+   * In this case all the links with type_id 888 will be deleted
+   * 
+   * #### Delete by from_id
+   * ``` 
+   * await deep.delete({
+   *   from_id: 888
+   * })
+   * ```
+   * In this case all the links with from_id 888 will be deleted
+   * 
+   * #### Delete by to_id
+   * ``` 
+   * await deep.delete({
+   *   to_id: 888
+   * })
+   * ```
+   * In this case all the links with to_id 888 will be deleted
+   * 
+   * #### Delete by string value
+   * ``` 
+   * await deep.delete({
+   *   string: {
+   *     value: {
+   *       _eq: 'MyString'
+   *     }
+   *   }
+   * })
+   * ```
+   * In this case all the links with string value 'MyString' will be deleted
+   * 
+   * #### Delete by number value
+   * ``` 
+   * await deep.delete({
+   *   number: {
+   *     value: {
+   *       _eq: 888
+   *     }
+   *   }
+   * })
+   * ```
+   * In this case all the links with number value 888 will be deleted
+   * 
+   * #### Delete by object value
+   * ``` 
+   * await deep.delete({
+   *   object: {
+   *     value: {
+   *       _eq: {
+   *         myFieldKey: "myFieldValue"
+   *       }
+   *     }
+   *   }
+   * })
+   * ```
+   * In this case all the links with object value { myFieldName: "myFieldValue" } will be deleted
+   * 
+   * #### Delete string value by link id
+   * ``` 
+   * await deep.delete({
+   *   link_id: 888
+   * }, {
+   *   table: 'strings'
+   * })
+   * ```
+   * In this case string value of a link with id 888 will be deleted
+   * 
+   * #### Delete number value by link id
+   * ``` 
+   * await deep.delete({
+   *   link_id: 888
+   * }, {
+   *   table: 'numbers'
+   * })
+   * ```
+   * In this case number value of a link with id 888 will be deleted
+   * 
+   * #### Delete object value by link id
+   * ``` 
+   * await deep.delete({
+   *   link_id: 888
+   * }, {
+   *   table: 'objects'
+   * })
+   * ```
+   * In this case object value of a link with id 888 will be deleted
+   */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
@@ -808,9 +1160,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
-  async serial({
-    name, operations, returning, silent
-  }: AsyncSerialParams): Promise<DeepClientResult<{ id: Id }[]>> {
+  /**
+   * Performs write operations to the database in a serial manner
+   * @param options An object with data for the serial operation
+   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   */
+  async serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id: Id }[]>> {
+    const {
+      name, operations, returning, silent
+    } = options;
     // @ts-ignore
     let operationsGroupedByTypeAndTable: Record<SerialOperationType, Record<Table, Array<SerialOperation>>> = {};
     operationsGroupedByTypeAndTable = operations.reduce((acc, operation) => {
@@ -875,6 +1233,22 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return reserve({ count, client: this.apolloClient });
   };
 
+  /**
+   * Await for a promise
+   * @param id Id of a link which is processed by a handler
+   * @param options An object with options for the await operation
+   * @returns A promise that resolves to the result of the awaited promise
+   * 
+   * @example
+   * #### Await a promise of npm-packager
+   * Let us imagine you have published a package and want to programatically wait until it is published or failed to publish
+   * ```
+   * await deep.await(
+   *   await deep.id('my-package-name')
+   * )
+   * ```
+   * In this case you will await all the promises for 'my-package-name' link
+   */
   async await(id: Id, options: { results: boolean } = { results: false } ): Promise<any> {
     return awaitPromise({
       id, client: this.apolloClient,
@@ -887,9 +1261,31 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
 
   /**
-   * Find id of link by packageName/id as first argument, and Contain value (name) as path items.
-   * @description Thows error if id is not found. You can set last argument true, for disable throwing error.
-   * @returns number
+   * Find id of a link by link name or id and contain values (names) as path items
+   * @param start A name or id of a link
+   * @param path Contain values (names) as path items
+   * @returns A promise that resolves to the id of the link
+   * 
+   * @example
+   * #### Get Core Package Link Id
+   * ```
+   * const corePackageLinkId = await deep.id("@deep-foundation/core")
+   * ```
+   * 
+   * #### Get User Type Link Id From Core Package
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User")
+   * ```
+   * 
+   * #### Get the link called "My Nested Link Name" contained in the link called "My Link Name" contained the current user
+   * ```
+   * const myLinkId = await deep.id(deep.linkId, 'My Link Name', 'My Nested Link Name')
+   * ```
+   * 
+   * #### Get Admin Link Id
+   * ```
+   * const adminLinkId = await deep.id("deep", "admin")
+   * ```
    */
   async id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number> {
     if (typeof(start) === 'object') {
@@ -960,6 +1356,33 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return result;
   }
 
+  /**
+   * Find id of a link from minilinks by link name or id and contain values (names) as path items
+   * @param start A name or id of a link
+   * @param path Contain values (names) as path items
+   * @returns A promise that resolves to the id of the link
+   * 
+   * @example
+   * #### Get Core Package Link Id
+   * ```
+   * const corePackageLinkId = deep.idLocal("@deep-foundation/core")
+   * ```
+   * 
+   * #### Get User Type Link Id From Core Package
+   * ```
+   * const userTypeLinkId = deep.idLocal("@deep-foundation/core", "User")
+   * ```
+   * 
+   * #### Get the link called "My Nested Link Name" contained in the link called "My Link Name" contained the current user
+   * ```
+   * const myLinkId = deep.idLocal(deep.linkId, 'My Link Name', 'My Nested Link Name')
+   * ```
+   * 
+   * #### Get Admin Link Id
+   * ```
+   * const adminLinkId = deep.idLocal("deep", "admin")
+   * ```
+   */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
     if (get(_ids, paths.join('.'))) {
@@ -990,6 +1413,22 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     }
   };
 
+  /**
+   * Logs in as a guest
+   * @param options An object with options for the guest login operation
+   * @returns A promise that resolves to the result of the guest login operation
+   * 
+   * @example
+   * ```
+   * const apolloClient = generateApolloClient({
+   *   path: NEXT_PUBLIC_GQL_PATH,
+   *   ssl: true,
+   * });
+   * const unloginedDeep = new DeepClient({ apolloClient });
+   * const guestLoginResult = await unloginedDeep.guest();
+   * const guestDeep = new DeepClient({ deep: unloginedDeep, ...guestLoginResult });
+   * ```
+   */
   async guest(options: DeepClientGuestOptions = {}): Promise<DeepClientAuthResult> {
     const relogin = typeof(options.relogin) === 'boolean' ? options.relogin : true;
     const result = await this.apolloClient.query({ query: GUEST });
@@ -1025,8 +1464,12 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
 
   /**
-   * Return is of current authorized user linkId.
-   * Refill client.linkId and return.
+   * Returns id of the current user
+   * 
+   * @example
+   * ```
+   * const myLinkId = await deep.whoami()
+   * ```
    */
   async whoami(): Promise<number | undefined> {
     const result = await this.apolloClient.query({ query: WHOISME });
@@ -1034,18 +1477,48 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return result?.data?.jwt?.linkId;
   }
 
+  /**
+   * Performs a login operation
+   * @param options An object with options for the login operation
+   * @returns A promsie that resolves to the result of the login operation
+   * 
+   * @example
+   * ```
+   * const apolloClient = generateApolloClient({
+   *   path: NEXT_PUBLIC_GQL_PATH,
+   *   ssl: true,
+   * });
+   * const unloginedDeep = new DeepClient({ apolloClient });
+   * const guestLoginResult = await unloginedDeep.guest();
+   * const guestDeep = new DeepClient({ deep: unloginedDeep, ...guestLoginResult });
+   * const adminLoginResult = await guestDeep.login({
+   *   linkId: await guestDeep.id('deep', 'admin'),
+   * });
+   * const deep = new DeepClient({ deep: guestDeep, ...adminLoginResult });
+   * ```
+   */
   async login(options: DeepClientJWTOptions): Promise<DeepClientAuthResult> {
-    const jwtResult = await this.jwt({ ...options, relogin: true });
-    this.token = jwtResult.token;
-    this.linkId = jwtResult.linkId;
-    return jwtResult
+    return await this.jwt({ ...options, relogin: true })
   };
 
+  /**
+   * Performs a logout operation
+   * @param options An object with options for the logout operation
+   * @returns A promsie that resolves to the result of the logout operation
+   */
   async logout(): Promise<DeepClientAuthResult> {
     if (this?.handleAuth) setTimeout(() => this?.handleAuth(0, ''), 0);
     return { linkId: 0, token: '' };
   };
 
+  /**
+   * Checks whether {@link subjectUds} can perform {@link actionIds} on {@link objectIds}
+   * @param objectIds A link id or an array of link ids to check whether the {@link subjectUds} can perform the {@link actionIds} on
+   * @param subjectIds A link id or an array of link ids to check whether they can perform the {@link actionIds} on the {@link objectIds}
+   * @param actionIds A link id or an array of link ids to check whether the {@link subjectUds} can perform on the {@link objectIds}
+   * @param userIds A link id or an array of link ids from which perspective the check is performed
+   * @returns A promise that resolves to a boolean value indicating whether the {@link subjectUds} can perform the {@link actionIds} on the {@link objectIds}
+   */
   async can(objectIds: null | Id | Id[], subjectIds: null | Id | Id[], actionIds: null | Id | Id[], userIds: Id | Id[] = this.linkId): Promise<boolean> {
     const where: any = {
     };
@@ -1056,6 +1529,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return !!result?.data?.length;
   }
 
+  /**
+   * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input}
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkName = await deep.name(userTypeLinkId);
+   * ```
+   */
   async name(input: Link<Id> | Id): Promise<string | undefined> {
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input.id;
 
@@ -1072,6 +1554,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return containLink?.value?.value;
   };
 
+  /**
+   * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input} according to links stored in minilinks
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkName = deep.nameLocal(userTypeLinkId);
+   * ```
+   * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
+   */
   nameLocal(input: Link<Id> | Id): Id | undefined {
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return;
@@ -1080,6 +1572,23 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return (this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
   }
 
+  /**
+   * Imports from a library
+   * @param path A path to import from
+   * @returns A promise that resolves to the imported value
+   * 
+   * @remarks
+   * Is able to import CommoJS and ESModule libraries.
+   * This is the recommended way to import from libraries in deep handlers
+   * 
+   * @example
+   * #### Async handler using import
+   * ```
+   * async ({deep}) => {
+   *   const importResult = await deep.import("my-lib-name");
+   * }
+   * ```
+   */
   async import(path: string) : Promise<any> {
     if (typeof DeepClient.resolveDependency !== 'undefined') {
       try {
