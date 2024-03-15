@@ -63,6 +63,10 @@ jobs:
           export DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.ports-multiple.yml"
           export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
           export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/node_modules/@deep-foundation/hasura/local/docker-compose.yml"
+          echo $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
+          echo $DEEPPLINKS_DOCKER_COMPOSE
+          echo HASURA_DOCKER_COMPOSE
+          cat $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
 
       - name: Show files
         run: |
