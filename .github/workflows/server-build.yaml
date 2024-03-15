@@ -80,8 +80,8 @@ jobs:
 
       - name: Set additional environment variables with envsubst
         run: |
-          envsubst '${DEEPLINKS_PORTS}' < $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE > _deeplinks.docker-compose.temp.yml
-          mv _deeplinks.docker-compose $DEEPPLINKS_DOCKER_COMPOSE
+          sudo envsubst '${DEEPLINKS_PORTS}' < $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE > _deeplinks.docker-compose.temp.yml
+          sudo mv _deeplinks.docker-compose $DEEPPLINKS_DOCKER_COMPOSE
           ls -la
 
       - name: Allow ports 3006 and 3007
