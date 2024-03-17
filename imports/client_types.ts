@@ -26,6 +26,10 @@ export interface BoolExpLink extends BoolExp<BoolExpLink> {
   from_id?: ComparasionType<Id>;
   to_id?: ComparasionType<Id>;
   type_id?: ComparasionType<Id>;
+  _id?: ComparasionType<Id>;
+  _from_id?: ComparasionType<Id>;
+  _to_id?: ComparasionType<Id>;
+  _type_id?: ComparasionType<Id>;
   from?: BoolExpLink;
   to?: BoolExpLink;
   type?: BoolExpLink;

@@ -156,27 +156,83 @@ const deepToCyberHash = {
   in: 'in',
 };
 
-const convertExp = (exp, table, hash) => {
+const convertExpIds = (exp) => {
+  let ids = [];
+  if (typeof(exp) === 'string') ids = [exp];
+  else if (typeof(exp) === 'object') {
+    for (let key in exp) {
+      if (typeof(exp[key]) === 'string') ids.push(exp[key]);
+      else if (typeof(exp[key]) === 'object' && Array.isArray(exp[key])) ids.push(...exp[key]);
+    }
+  }
+  return ids;
+};
+const splitIds = (ids: string[]) => {
+  const result = { cyberlinks: [], particles: [] };
+  for (let i in ids) {
+    const splitted = ids[i].split(':');
+    if (splitted.length === 2) {
+      result.cyberlinks.push(splitted);
+    } else {
+      result.particles.push(ids[i]);
+    }
+  }
+  return result;
+};
+
+const convertExp = (exp, mem, hash) => {
   if (typeof(exp) === 'object') {
     if (Array.isArray(exp)) {
       const result = [];
       for (const key in exp) {
-        result.push(convertExp(exp[key], table, hash));
+        result.push(convertExp(exp[key], mem, hash));
       }
       return result;
     } else {
-      const result = {};
+      const result: any = {};
+      // принять решение на этом уровне совместим или нет
+      // пройти циклом внутрь _ полей и повторить процедуру проверки
+      if (exp._and) result._and = convertExp(exp._and, mem, hash);
+      if (exp._or) result._or = convertExp(exp._or, mem, hash);
+      if (exp._not) result._not = convertExp(exp._not, mem, hash);
+      if (!mem.table) {
+        if (exp.type_id === 'cyberlink') mem.table = 'cyberlinks';
+        else if (exp.type_id === 'particle') mem.table = 'particles';
+        else if (exp.from_id || exp.to_id || exp.to || exp.from) mem.table = 'cyberlinks';
+        else if (exp.in || exp.out) mem.table = 'particles';
+        else if (exp.id) {
+          const ids = splitIds(convertExpIds(exp.id));
+          if (ids.cyberlinks.length) mem.table = 'cyberlinks';
+          else if (ids.particles.length) mem.table = 'particles';
+        }
+      }
       for (const key in exp) {
-        const id = typeof(exp[key]) === 'string' ? exp[key] : exp[key]?._eq ? exp[key]?._eq : undefined;
-        if (hash[key]) result[hash[key]] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table, hash);
-        else if (key === 'id' && typeof(id) === 'string') {
-          const splitted = id.split(':');
-          if (splitted.length === 2) {
-            result[hash.from_id] = { _eq: splitted[0] };
-            result[hash.to_id] = { _eq: splitted[1] };
+        if (key === 'in' || key === 'out') {
+          if (mem.table === 'cyberlinks') throw new Error(`cyberlink cant have ${key}`);
+          result[hash[key]] = convertExp(exp[key], mem.table === 'cyberlinks' ? { table: 'particles' } : { table: 'cyberlinks' }, hash);
+        } else if (key === 'from' || key === 'to') {
+          if (mem.table === 'particles') throw new Error(`particle cant have ${key}`);
+          result[hash[key]] = convertExp(exp[key], mem.table === 'cyberlinks' ? { table: 'particles' } : { table: 'cyberlinks' }, hash);
+        } else if (key === 'from_id' || key === 'to_id') {
+          if (mem.table === 'particles') throw new Error(`particle cant have ${key}`);
+          result[hash[key]] = exp[key];
+        } else {
+          if (mem.table === 'cyberlinks') {
+            if (key === 'id') {
+              const ids = splitIds(convertExpIds(exp.id));
+              if (ids.particles.length) throw new Error(`cyberlink id cant be: ${ids.particles.join(' ')}`);
+              if (!result._and) result._and = [];
+              result._and.push(...ids.cyberlinks.map(pair => ({ [hash.from_id]: pair[0], [hash.to_id]: pair[1] })));
+            }
+          }
+          if (mem.table === 'particles') {
+            if (key === 'id') {
+              const ids = splitIds(convertExpIds(exp.id));
+              if (ids.cyberlinks.length) throw new Error(`particle id cant be: ${ids.cyberlinks.map(pair => pair.join(':')).join(' ')}`);
+              result.particle = exp.id;
+            }
           }
         }
-        else result[key] = convertExp(exp[key], table === 'cyberlinks' ? 'particles' : table, hash);
       }
       return result;
     }
@@ -239,13 +295,12 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
     const name = options?.name || this.defaultSelectName;
 
     const query = serializeQuery(exp, options?.table || 'links');
-    let cyberTable = 'cyberlinks';
-    if (query?.where?.in || query?.where?.out) cyberTable = 'particles';
 
-    const cyberExp = convertExp(query, cyberTable, deepToCyberHash);
+    const mutableOptions = { table: undefined };
+    const cyberExp = convertExp(query.where, mutableOptions, deepToCyberHash);
 
     const queryData = generateQueryData({
-      tableName: cyberTable,
+      tableName: mutableOptions.table,
       tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
       returning: aggregate ? `aggregate { ${aggregate} }` : (tableName: string) => (
         tableName === 'cyberlinks' ? `from_id: ${deepToCyberHash['from_id']} to_id: ${deepToCyberHash['to_id']}` :
@@ -254,7 +309,8 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
       ),
       variables: {
         ...variables,
-        ...cyberExp,
+        ...query,
+        where: cyberExp,
       },
     });
     const generatedQuery = generateQuery({

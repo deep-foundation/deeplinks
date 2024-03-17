@@ -159,7 +159,12 @@ export const generateQuery = ({
   const calledQueries = queries.map((m,i) => typeof(m) === 'function' ? m(alias, i) : m);
   const defs = calledQueries.map(m => m.defs.join(',')).join(',');
   const queryString = `${operation} ${name} (${defs}) { ${calledQueries.map(m => `${m.resultAlias}: ${m.queryName}(${m.args.join(',')}) { ${m.resultReturning} }`).join('')} }`;
-  const query = gql`${queryString}`;
+  let query;
+  try {
+    query = gql`${queryString}`;
+  } catch(e) {
+    throw e;
+  }
   const variables = {};
   for (let a = 0; a < calledQueries.length; a++) {
     const action = calledQueries[a];

@@ -1,6 +1,7 @@
-import { _serialize, _boolExpFields, serializeWhere, serializeQuery } from './client.js';
+import { _serialize, _boolExpFields, serializeWhere, serializeQuery, useDeep } from './client.js';
 import { BoolExpLink, ComparasionType, QueryLink } from './client_types.js';
 import { MinilinkCollection, MinilinksGeneratorOptions, Link, Id } from './minilinks.js';
+import _isEqual from 'lodash/isEqual.js';
 
 export interface BoolExpLinkMinilinks extends BoolExpLink {
   _applies?: ComparasionType<Id>;
@@ -12,7 +13,7 @@ export const minilinksQuery = <L extends Link<Id>>(
 ): L[] => {
   if (typeof(query) === 'number' || typeof(query) === 'string') return [ml.byId[query]];
   else {
-    const q = serializeQuery(query);
+    const q = serializeQuery(query, 'links');
     const result = minilinksQueryHandle<L>(q.where, ml);
     return q.limit ? result.slice(q.offset || 0, (q.offset || 0) + (q.limit)) : result;
   }
@@ -24,7 +25,7 @@ export const minilinksQueryIs = <L extends Link<Id>>(
 ): boolean => {
   if (typeof(query) === 'number') return link.id === query;
   else {
-    const q = serializeQuery(query);
+    const q = serializeQuery(query, 'links');
     return minilinksQueryLevel(
       q,
       link,
@@ -54,6 +55,7 @@ export const minilinksQueryLevel = (
 ) => {
   const fields = Object.keys(q);
   if (env === 'links') {
+    if (!link) return false;
     for (const f in fields) {
       const field = fields[f];
       if (field === '_and') {
@@ -76,8 +78,17 @@ export const minilinksQueryLevel = (
           return false;
         }
       } else if (_serialize?.[env]?.fields?.[field]) {
-        if (!minilinksQueryComparison(q, link, field, env)) {
-          return false;
+        if (_serialize?.[env]?.virtualize?.[field]) {
+          let isValid = false;
+          for (const a in _serialize?.[env]?.virtualize?.[field]) {
+            const alias = _serialize?.[env]?.virtualize?.[field][a];
+            if (minilinksQueryComparison(q, link, field, alias, env)) isValid = true;
+          }
+          if (!isValid) return false;
+        } else {
+          if (!minilinksQueryComparison(q, link, field, field, env)) {
+            return false;
+          }
         }
       } else {
         if (_serialize?.[env]?.relations?.[field] === 'links') {
@@ -125,7 +136,7 @@ export const minilinksQueryLevel = (
     for (const f in fields) {
       const field = fields[f];
       if (_serialize?.[env]?.fields?.[field]) {
-        if (!minilinksQueryComparison(q, link, field, env)) {
+        if (!minilinksQueryComparison(q, link, field, field, env)) {
           return false;
         }
       } else {
@@ -142,77 +153,81 @@ export const minilinksQueryComparison = (
   q: BoolExpLinkMinilinks,
   link: Link<Id>,
   field: string,
+  alias: string,
   env: string = 'links',
 ): boolean => {
   const comp = q?.[field];
   if (typeof(comp) === 'undefined') throw new Error(`${field} === undefined`);
-  if (typeof(link?.[field]) === 'object' && Array.isArray(link?.[field])) {
+  if (env === 'links' && typeof(link?.[alias]) === 'object' && Array.isArray(link?.[alias])) {
     if (comp.hasOwnProperty('_eq')) {
-      if (!link?.[field].includes(comp._eq)) return false;
+      if (!link?.[alias].includes(comp._eq)) return false;
     }
     if (comp.hasOwnProperty('_neq')) {
-      if (link?.[field].includes(comp._neq)) return false;
+      if (link?.[alias].includes(comp._neq)) return false;
     }
   } else {
-    if (typeof(link?.[field]) === 'undefined') return false;
+    if (comp.hasOwnProperty('_is_null')) {
+      if (((link?.[alias] === null) || typeof(link?.[alias]) === 'undefined') !== comp._is_null) return false;
+    } else {
+      if (typeof(link?.[alias]) === 'undefined') return false;
+    }
     if (comp.hasOwnProperty('_eq')) {
-      if (link?.[field] !== comp._eq) return false;
+      if (env === 'links' && link?.[alias] !== comp._eq) return false;
+      if (env === 'value' && !_isEqual(link?.[alias], comp._eq)) return false;
     }
     if (comp.hasOwnProperty('_neq')) {
-      if (link?.[field] === comp._neq) return false;
+      if (env === 'links' && link?.[alias] === comp._neq) return false;
+      if (env === 'value' && _isEqual(link?.[alias], comp._neq)) return false;
     }
     if (comp.hasOwnProperty('_gt')) {
-      if (!(link?.[field] > comp._gt)) return false;
+      if (!(link?.[alias] > comp._gt)) return false;
     }
     if (comp.hasOwnProperty('_gte')) {
-      if (!(link?.[field] >= comp._gte)) return false;
+      if (!(link?.[alias] >= comp._gte)) return false;
     }
     if (comp.hasOwnProperty('_lt')) {
-      if (!(link?.[field] < comp._lt)) return false;
+      if (!(link?.[alias] < comp._lt)) return false;
     }
     if (comp.hasOwnProperty('_lte')) {
-      if (!(link?.[field] <= comp._lte)) return false;
-    }
-    if (comp.hasOwnProperty('_is_null')) {
-      if ((link?.[field] === null) === comp._is_null) return false;
+      if (!(link?.[alias] <= comp._lte)) return false;
     }
     if (comp.hasOwnProperty('_in')) {
-      if (!comp?._in?.includes(link?.[field])) return false;
+      if (!comp?._in?.includes(link?.[alias])) return false;
     }
     if (comp.hasOwnProperty('_nin')) {
-      if (comp?._nin?.includes(link?.[field])) return false;
+      if (comp?._nin?.includes(link?.[alias])) return false;
     }
     if (comp.hasOwnProperty('_ilike')) {
       if (
-        !link?.[field]?.toLowerCase || !link?.[field]?.toLowerCase()?.includes(comp?._ilike?.toLowerCase()
+        !link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase()?.includes(comp?._ilike?.toLowerCase()
       )) return false;
     }
     if (comp.hasOwnProperty('_nilike')) {
       if (
-        !link?.[field]?.toLowerCase || !link?.[field]?.toLowerCase()?.includes(comp?._nilike?.toLowerCase()
+        !link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase()?.includes(comp?._nilike?.toLowerCase()
       )) return false;
     }
     if (comp.hasOwnProperty('_like')) {
       if (
-        !link?.[field]?.includes(comp?._like)
+        !link?.[alias]?.includes(comp?._like)
       ) return false;
     }
     if (comp.hasOwnProperty('_nlike')) {
       if (
-        !link?.[field]?.includes(comp?._nlike)
+        !link?.[alias]?.includes(comp?._nlike)
       ) return false;
     }
     if (comp.hasOwnProperty('_iregex')) {
-      if (!link?.[field]?.toLowerCase || !link?.[field]?.toLowerCase().match(comp?._iregex)) return false;
+      if (!link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase().match(comp?._iregex)) return false;
     }
     if (comp.hasOwnProperty('_regex')) {
-      if (!link?.[field].match(comp?._regex)) return false;
+      if (!link?.[alias].match(comp?._regex)) return false;
     }
     if (comp.hasOwnProperty('_niregex')) {
-      if (!link?.[field]?.toLowerCase || !link?.[field]?.toLowerCase().match(comp?._niregex)) return false;
+      if (!link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase().match(comp?._niregex)) return false;
     }
     if (comp.hasOwnProperty('_nregex')) {
-      if (!link?.[field].match(comp?._nregex)) return false;
+      if (!link?.[alias].match(comp?._nregex)) return false;
     }
     return true;
   }
