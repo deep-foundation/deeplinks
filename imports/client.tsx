@@ -1590,14 +1590,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
       try {
         return await DeepClient.resolveDependency(path);
       } catch (e) {
-        console.log(`IGNORED ERROR: Call to DeepClient.resolveDependency is failed with`, e);
+        console.log(`IGNORED ERROR (ignore if you don't see other errors): Call to DeepClient.resolveDependency is failed with`, e);
       }
     }
     if (typeof require !== 'undefined') {
       try {
         return await require(path);
       } catch (e) {
-        console.log(`IGNORED ERROR: Call to require is failed with`, e);
+        console.log(`IGNORED ERROR (ignore if you don't see other errors): Call to require is failed with`, e);
       }
     }
     return await import(path);
