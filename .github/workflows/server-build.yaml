@@ -20,10 +20,6 @@ jobs:
         run: |
           sudo apt install -y git curl
 
-      - name: Install envsubst
-        run: |
-          sudo apt-get install -y gettext-base
-
       - name: Install Node Version Manager (NVM)
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
@@ -59,30 +55,8 @@ jobs:
           export DEEP_MINIO_UI_PORT="9000"
           export DEEP_MINIO_PORT_HOST="32765"
           export DEEP_MINIO_PORT="32765"
-          export NODE_VERSION=$(node -v)
-          export DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.ports-multiple.yml"
           export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
           export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/node_modules/@deep-foundation/hasura/local/docker-compose.yml"
-          echo $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
-          echo $DEEPPLINKS_DOCKER_COMPOSE
-          echo HASURA_DOCKER_COMPOSE
-          sudo cat $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE
-
-      - name: Show files
-        run: |
-          ls -la
-          cd ./docker-prod
-          ls -la
-          cd deep
-          ls -la
-          cat docker-compose.yml
-          cd ../..
-
-      - name: Set additional environment variables with envsubst
-        run: |
-          sudo envsubst '${DEEPLINKS_PORTS}' < $DEEPPLINKS_DOCKER_COMPOSE_PORTS_MULTIPLE > _deeplinks.docker-compose.temp.yml
-          sudo mv _deeplinks.docker-compose $DEEPPLINKS_DOCKER_COMPOSE
-          ls -la
 
       - name: Allow ports 3006 and 3007
         run: |
