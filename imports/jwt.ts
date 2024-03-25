@@ -1,8 +1,9 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import JWT from 'jsonwebtoken';
+import { Id } from './minilinks';
 
 export interface Options {
-  linkId: number;
+  linkId: Id;
   secret: string;
   role?: string;
 }

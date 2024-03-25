@@ -1,7 +1,7 @@
 import Debug from 'debug';
 import { DeepClient } from './client.js';
 import type { DeepSerialOperation } from './client.js';
-import { Link, minilinks, MinilinksResult } from './minilinks.js';
+import { Id, Link, minilinks, MinilinksResult } from './minilinks.js';
 
 const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');
@@ -26,21 +26,21 @@ export interface Package {
 }
 
 export interface PackageItem {
-  id: number | string;
-  type?: number | string;
-  from?: number | string;
-  to?: number | string;
+  id: Id | string;
+  type?: Id | string;
+  from?: Id | string;
+  to?: Id | string;
   value?: PackagerValue;
 
-  package?: { dependencyId: number; containValue: string; };
+  package?: { dependencyId: Id; containValue: string; };
 
   _?: boolean;
   updated?: string[];
 }
 
 export interface PackagerValue {
-  id?: number | string;
-  link_id?: number | string;
+  id?: Id;
+  link_id?: Id;
   value?: number | string | any;
 }
 
@@ -48,15 +48,15 @@ export type PackagerError = any;
 
 export interface PackagerImportResult {
   errors?: PackagerError[];
-  ids?: number[];
-  packageId?: number;
-  namespaceId?: number;
+  ids?: Id[];
+  packageId?: Id;
+  namespaceId?: Id;
 }
 
 export type PackagerMutated = { [index: number]: boolean };
 
 export interface PackagerExportOptions {
-  packageLinkId: number;
+  packageLinkId: Id;
 }
 
 export interface PackagerLink extends Link<any> {
@@ -122,8 +122,8 @@ export class Packager<L extends Link<any>> {
    */
   async fetchPackageNamespaceId(
     name: string,
-    deep: DeepClient<Link<number>>,
-  ): Promise<{ error: any, namespaceId: number }> {
+    deep: DeepClient<Link<Id>>,
+  ): Promise<{ error: any, namespaceId: Id }> {
     try {
       const q = await this.client.select({
         value: { _eq: name },
@@ -268,7 +268,7 @@ export class Packager<L extends Link<any>> {
     return;
   }
 
-  async globalizeIds(pckg: Package, ids: number[], links: PackageItem[]): Promise<{ global: PackageItem[], difference: { [id:number]:number; } }> {
+  async globalizeIds(pckg: Package, ids: Id[], links: PackageItem[]): Promise<{ global: PackageItem[], difference: { [id:Id]:Id; } }> {
     const difference = {};
     const global = links.map(l => ({ ...l }));
     let idsIndex = 0;
@@ -462,8 +462,8 @@ export class Packager<L extends Link<any>> {
     errors?: PackagerError[];
     counter: number;
     dependedLinks: PackageItem[];
-    packageId: number;
-    namespaceId: number;
+    packageId: Id;
+    namespaceId: Id;
   }> {
     const Contain = await this.client.id('@deep-foundation/core', 'Contain');
     const Join = await this.client.id('@deep-foundation/core', 'Join');
@@ -472,7 +472,7 @@ export class Packager<L extends Link<any>> {
     const Active = await this.client.id('@deep-foundation/core', 'PackageActive');
     const Version = await this.client.id('@deep-foundation/core', 'PackageVersion');
     // clone for now hert pckg object
-    const containsHash: { [key: string]: number } = {};
+    const containsHash: { [key: string]: Id } = {};
     let counter = 0;
     const dependedLinks = [];
     let packageId;

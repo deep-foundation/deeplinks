@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from './client.js';
 import _ from 'lodash';
+import { Id } from './minilinks.js';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -11,7 +12,7 @@ const apolloClient = generateApolloClient({
 
 const deep = new DeepClient({ apolloClient });
 
-export const insertHandler = async (handleOperationTypeId: number, typeId: number, code: string, forceOwnerId?: number, supportsId?: number) => {
+export const insertHandler = async (handleOperationTypeId: Id, typeId: Id, code: string, forceOwnerId?: Id, supportsId?: Id) => {
   const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
@@ -189,7 +190,7 @@ export const deleteSelector = async (selector: any) => {
   await deep.delete(compact);
 };
 
-export async function deleteId(id: number, options: {
+export async function deleteId(id: Id, options: {
   table?: string;
   returning?: string;
   variables?: any;
@@ -199,7 +200,7 @@ export async function deleteId(id: number, options: {
   await deleteIds([id], options);
 }
 
-export async function deleteIds(ids: number[], options: {
+export async function deleteIds(ids: Id[], options: {
   table?: string;
   returning?: string;
   variables?: any;

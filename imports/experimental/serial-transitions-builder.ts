@@ -1,6 +1,7 @@
 import { DeepClient, DeepClientResult, Table } from "../client";
 import { MutationInputLink } from "../client_types";
 import { deleteMutation, generateSerial, IGenerateMutationBuilder, insertMutation, ISerialOptions, updateMutation } from "../gql";
+import { Id } from "../minilinks";
 
 /**
  * A class for building serial transitions
@@ -82,7 +83,7 @@ export class SerialTransitionsBuilder {
     return this;
   }
 
-  public async execute(options: ExecuteOptions = this.executeOptions): Promise<DeepClientResult<Record<string, { id: number }>>> {
+  public async execute(options: ExecuteOptions = this.executeOptions): Promise<DeepClientResult<Record<string, { id: Id }>>> {
     const result = await this.deep.apolloClient.mutate(generateSerial({
       actions: this.serialActions.map(serialAction => serialAction.mutation),
       ...options
@@ -102,7 +103,7 @@ export class SerialTransitionsBuilder {
     return {
       ...result,
       data,
-    } as Record<string, DeepClientResult<{ id: number }>>
+    } as Record<string, DeepClientResult<{ id: Id }>>
 
   }
 

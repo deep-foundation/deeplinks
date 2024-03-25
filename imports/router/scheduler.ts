@@ -17,6 +17,7 @@ import {
 } from './links.js';
 import { boolExpToSQL } from '../bool_exp_to_sql.js';
 import { useRunner, processPromises } from './links.js';
+import { Id } from '../minilinks.js';
 
 const SCHEMA = 'public';
 
@@ -41,7 +42,7 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
-export const insertPromise = async (scheduleId: number) => {
+export const insertPromise = async (scheduleId: Id) => {
   const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
   const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
   const promise = (await deep.insert({ 
@@ -59,7 +60,7 @@ export const insertPromise = async (scheduleId: number) => {
 };
 
 export async function handleScheduleMomemt(moment: any) {
-  const scheduleId: number = moment.payload.scheduleId;
+  const scheduleId: Id = moment.payload.scheduleId;
   // log('currentLinkId', currentLinkId);
   // log('currentTypeId', currentTypeId);
 

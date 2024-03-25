@@ -76,25 +76,6 @@ describe('minilinks', () => {
     expect(mlc?.byId?.[5]).to.be.undefined;
     assert.deepEqual(events, [1,3,5,2]);
   });
-  it(`apply`, async () => {
-    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
-    mlc.apply([
-      { id: 1, type_id: 3, from_id: 2 },
-      { id: 3, type_id: 3, from_id: 1, to_id: 2, value: { value: 123 } },
-      { id: 5, type_id: 2, from_id: 7, to_id: 3 },
-    ]);
-    mlc.apply([
-      { id: 1, type_id: 3, from_id: 2 },
-      { id: 2, type_id: 1 },
-      { id: 3, type_id: 1, from_id: 5, to_id: 2, value: { value: 234 } },
-    ]);
-    expect(mlc?.byId?.[2]?.type?.id).to.be.equal(1);
-    expect(mlc?.byId?.[3]?.type?.id).to.be.equal(1);
-    expect(mlc?.byId?.[3]?.from).to.be.undefined;
-    expect(mlc?.byId?.[3]?.to?.id).to.be.equal(2);
-    expect(mlc?.byId?.[3]?.value?.value).to.be.equal(234);
-    expect(mlc?.byId?.[5]).to.be.undefined;
-  });
   describe('multiple applies', () => {
     it(`equal`, async () => {
       const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
@@ -143,5 +124,46 @@ describe('minilinks', () => {
       expect(mlc?.byId?.[3]).to.be.undefined;
     });
   });
+  it('apply with nested return', async () => {
+    const mlc = new MinilinkCollection(MinilinksGeneratorOptionsDefault);
+    mlc.apply([
+      { id: 1, type_id: 3, abc: [{ id: 4, from_id: 1, to_id: 6 }] },
+      { id: 2, type_id: 3, abc: [{ id: 5, from_id: 2, to_id: 7, qwe: [{ id: 6 }], xyz: { id: 7 } }] },
+    ], '1', { return: {
+      abc: { relation: 'out', return: {
+        xyz: { relation: 'to' },
+        qwe: { relation: 'up' },
+      } },
+    } });
+    mlc.apply([
+      { id: 2, type_id: 3 },
+      { id: 3, type_id: 3 },
+    ], '2');
+    expect(mlc?.links?.length).to.be.equal(7);
+    expect(mlc?.byId?.[1]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[2]?._applies.length).to.be.equal(2);
+    expect(mlc?.byId?.[3]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[4]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[5]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[6]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[7]?._applies.length).to.be.equal(1);
+    mlc.apply([
+      { id: 1, type_id: 3 },
+    ], '1');
+    expect(mlc?.links?.length).to.be.equal(3);
+    expect(mlc?.byId?.[1]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[2]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[3]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[4]).to.be.undefined;
+    expect(mlc?.byId?.[5]).to.be.undefined;
+    expect(mlc?.byId?.[6]).to.be.undefined;
+    expect(mlc?.byId?.[7]).to.be.undefined;
+    mlc.apply([
+    ], '2');
+    expect(mlc?.links?.length).to.be.equal(1);
+    expect(mlc?.byId?.[1]?._applies.length).to.be.equal(1);
+    expect(mlc?.byId?.[2]).to.be.undefined;
+    expect(mlc?.byId?.[3]).to.be.undefined;
+  })
   // TODO inByType outByType
 });

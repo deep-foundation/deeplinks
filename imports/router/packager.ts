@@ -9,6 +9,7 @@ import path from 'path';
 import url from 'url';
 import { DeepClient } from '../client.js';
 import { Packager } from '../packager.js';
+import { Id } from '../minilinks.js';
 
 const tmpdir = os.tmpdir();
 
@@ -113,7 +114,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
   }
 };
 
-export const packagerPublishCore = async (errors = [], address: string, id: number) => {
+export const packagerPublishCore = async (errors = [], address: string, id: Id) => {
   console.log('packagerPublishCore');
   if (!id) return { errors: ['!id'] };
   const packageResults = await deep.select(id);

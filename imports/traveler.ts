@@ -1,6 +1,6 @@
 import { DeepClient, Exp } from "./client";
 import { QueryLink } from "./client_types";
-import { Link } from "./minilinks";
+import { Id, Link } from "./minilinks";
 
 type Direction = "from" | "to" | "type" | "out" | "in" | "typed" | "up" | "down";
 
@@ -23,12 +23,12 @@ export const inversions = {
 };
 
 export class Traveler {
-  deep: DeepClient<Link<number>>;
-  links: Link<number>[] = [];
+  deep: DeepClient<Link<Id>>;
+  links: Link<Id>[] = [];
   travels: Travel<"links">[];
   mode: Mode = 'remote';
 
-  constructor(deep, links: Link<number>[] = [], travels: Travel<any>[] = [], mode: Mode = 'remote') {
+  constructor(deep, links: Link<Id>[] = [], travels: Travel<any>[] = [], mode: Mode = 'remote') {
     this.deep = deep;
     this.links = links;
     this.travels = travels;
