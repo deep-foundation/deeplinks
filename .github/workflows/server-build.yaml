@@ -20,11 +20,6 @@ jobs:
         run: |
           sudo apt install -y git curl
 
-      - name: Allow ports 3006 and 3007
-        run: |
-          sudo ufw allow 3006
-          sudo ufw allow 3007
-
       - name: Install Node Version Manager (NVM)
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
@@ -47,6 +42,26 @@ jobs:
           export POSTGRES_PASSWORD=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
           export MINIO_ACCESS_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
           export MINIO_SECRET_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'));")
+          export DEEPLINKS_PORT_HOST="3006"
+          export DEEPLINKS_PORT="3006"
+          export DEEPLINKS_PORTS="[4001:4001, 7100-7999:7100-7999]"
+          export DEEPCASE_PORT_HOST="3007"
+          export DEEPCASE_PORT="3007"
+          export DEEP_POSTGRES_PORT="5432"
+          export DEEP_POSTGRES_PORT_HOST="5432"
+          export DEEP_HASURA_PORT="8080"
+          export DEEP_HASURA_PORT_HOST="8080"
+          export DEEP_MINIO_UI_PORT_HOST="9000"
+          export DEEP_MINIO_UI_PORT="9000"
+          export DEEP_MINIO_PORT_HOST="32765"
+          export DEEP_MINIO_PORT="32765"
+          export DEEPPLINKS_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/local/docker-compose.yml"
+          export HASURA_DOCKER_COMPOSE="/root/.nvm/versions/node/$NODE_VERSION/lib/node_modules/@deep-foundation/deeplinks/node_modules/@deep-foundation/hasura/local/docker-compose.yml"
+
+      - name: Allow ports 3006 and 3007
+        run: |
+          sudo ufw allow $DEEPLINKS_PORT_HOST
+          sudo ufw allow $DEEPCASE_PORT_HOST
 
       - name: Create call-options.json
         run: |
