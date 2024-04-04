@@ -406,7 +406,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   serializeQuery(exp: any, env?: string, unvertualizeId?: (id: Id) => Id): any;
   unvertualizeId(id: Id): Id;
 
-  id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<Id>;
+  id(start: DeepClientStartItem | Exp, ...path: DeepClientPathItem[]): Promise<Id>;
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
@@ -421,8 +421,8 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   useDeepSubscription: typeof useDeepSubscription;
   useDeepQuery: typeof useDeepQuery;
-  useMinilinksQuery: (query: QueryLink) => L[];
-  useMinilinksSubscription: (query: QueryLink) => L[];
+  useMinilinksQuery: (query: Exp) => L[];
+  useMinilinksSubscription: (query: Exp) => L[];
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -683,8 +683,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   useDeepSubscription: typeof useDeepSubscription;
   useDeepQuery: typeof useDeepQuery;
-  useMinilinksQuery: (query: QueryLink) => L[];
-  useMinilinksSubscription: (query: QueryLink) => L[];
+  useMinilinksQuery: (query: Exp) => L[];
+  useMinilinksSubscription: (query: Exp) => L[];
   local?: boolean;
   remote?: boolean;
 
@@ -771,10 +771,14 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   _generateHooks(deep) {
-    this.useDeepSubscription = (query: QueryLink, options?: QueryOptions) => useDeepSubscription(query, { ...(options || {}), deep: deep });
-    this.useDeepQuery = (query: QueryLink, options?: QueryOptions) => useDeepQuery(query, { ...(options || {}), deep: deep });
-    this.useMinilinksQuery = (query: QueryLink) => useMinilinksQuery(deep.minilinks, query);
-    this.useMinilinksSubscription = (query: QueryLink) => useMinilinksSubscription(deep.minilinks, query)
+    // @ts-ignore
+    this.useDeepSubscription = (query: Exp, options?: Options) => useDeepSubscription(query, { ...(options || {}), deep: deep });
+    // @ts-ignore
+    this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
+    // @ts-ignore
+    this.useMinilinksQuery = (query: Exp) => useMinilinksQuery(deep.minilinks, query);
+    // @ts-ignore
+    this.useMinilinksSubscription = (query: Exp) => useMinilinksSubscription(deep.minilinks, query)
   }
 
   stringify(any?: any): string {
@@ -826,7 +830,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     };
   }
 
-  _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data) {
+  _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data): any[] | Promise<any[]> {
     return data;
   }
 
@@ -908,8 +912,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const queryData = this._generateQuery(exp, options);
     try {
       const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
-      this._generateResult(exp, options, q?.data?.q0);
-      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
+      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0) };
     } catch (e) {
       console.log(queryData);
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
@@ -932,9 +935,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       const apolloObservable = this.apolloClient.subscribe({ query: queryData.query.query, variables: queryData?.query?.variables });
       const observable = new Observable((observer) => {
         const subscription = apolloObservable.subscribe({
-          next: (data: any) => {
+          next: async (data: any) => {
             observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : 
-            this._generateResult(exp, options, data?.q0));
+            await this._generateResult(exp, options, data?.q0));
           },
           error: (error) => observer.error(error),
         });
@@ -1953,19 +1956,9 @@ export function useDeep() {
 
 export const randomName = () => Math.random().toString(36).slice(2, 7);
 
-export type QueryOptions = {
-  table?: Table;
-  tableNamePostfix?: string;
-  returning?: string;
-  variables?: any;
-  name?: string;
-  mini?: string;
-  deep?: DeepClient<Link<Id>>;
-};
-
 export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
-  query: QueryLink,
-  options?: QueryOptions,
+  query: Exp<Table>,
+  options?: Options<Table>,
 ): {
   data?: LL[];
   error?: any;
@@ -1976,14 +1969,23 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   const _deep = useDeep();
   const deep = options?.deep || _deep;
   const wq = useMemo(() => {
-    return deep._generateQuery(query, { ...options, table: 'links' });
+    return deep._generateQuery<Table>(query, { ...options });
   }, [query, options]);
   const result = useQuery(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
-  deep._generateResult(query, options, result?.data?.q0);
+  const [generatedResult, setGeneratedResult] = useState([]);
+  useEffect(() => {
+    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    else {
+      (async () => {
+        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+      })();
+    }
+  }, [result]);
   const toReturn = {
     ...result,
-    data: result?.data?.q0,
+    data: generatedResult,
     deep,
+    // @ts-ignore
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
@@ -1992,8 +1994,8 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
 }
 
 export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
-  query: QueryLink,
-  options?: QueryOptions,
+  query: Exp<Table>,
+  options?: Options<Table>,
 ): UseDeepSubscriptionResult<LL> {
   const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
   debug('useDeepSubscription', miniName, query, options);
@@ -2001,14 +2003,23 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   const deep = options?.deep || _deep;
   useState({query, options, deep});
   const wq = useMemo(() => {
-    return deep._generateQuery(query, { ...options, table: 'links', subscription: true });
+    return deep._generateQuery(query, { ...options, subscription: true });
   }, [query, options]);
   const result = useSubscription(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
-  deep._generateResult(query, options, result?.data?.q0);
+  const [generatedResult, setGeneratedResult] = useState([]);
+  useEffect(() => {
+    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    else {
+      (async () => {
+        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+      })();
+    }
+  }, [result]);
   const toReturn = {
     ...result,
-    data: result?.data?.q0,
+    data: generatedResult,
     deep,
+    // @ts-ignore
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
@@ -2027,7 +2038,7 @@ export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepC
   return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
 
-export type Exp<TTable extends Table> = (
+export type Exp<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? BoolExpValue<number> :
   TTable extends 'strings' ? BoolExpValue<string> :
   TTable extends 'objects' ? BoolExpValue<object> :
@@ -2038,14 +2049,14 @@ export type Exp<TTable extends Table> = (
   QueryLink
 ) | Id | Id[];
 
-export type UpdateValue<TTable extends Table> = (
+export type UpdateValue<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? MutationInputValue<number> :
   TTable extends 'strings' ? MutationInputValue<string> :
   TTable extends 'objects' ? MutationInputValue<any> :
   MutationInputLinkPlain
 );
 
-export type InsertObjects<TTable extends Table> = (
+export type InsertObjects<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? MutationInputValue<number> :
   TTable extends 'strings' ? MutationInputValue<string> :
   TTable extends 'objects' ? MutationInputValue<any> :
@@ -2057,19 +2068,21 @@ export type InsertObjects<TTable extends Table> = (
   MutationInputLink
 )[]
 
-export type Options<TTable extends Table> = {
+export type Options<TTable extends Table = 'links'> = {
   table?: TTable;
   tableNamePostfix?: string;
   returning?: string;
   variables?: any;
   name?: string;
   aggregate?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  mini?: string;
+  deep?: DeepClient<Link<Id>>;
   subscription?: boolean;
 };
 
-export type ReadOptions<TTable extends Table> = Options<TTable>;
+export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;
 
-export type WriteOptions<TTable extends Table>  = Options<TTable> & {
+export type WriteOptions<TTable extends Table = 'links'>  = Options<TTable> & {
   silent?: boolean;
   remote?: boolean;
   local?: boolean;

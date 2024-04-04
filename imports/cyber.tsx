@@ -16,6 +16,13 @@ import get from 'get-value';
 import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
 import _ from 'lodash';
+
+import { createHelia } from 'helia';
+import { strings } from '@helia/strings';
+import { CID } from 'multiformats/cid';
+import { fileTypeFromBuffer } from 'file-type';
+import str2Buff from '@stdlib/buffer-from-string';
+
 const moduleLog = debug.extend('cyberclient');
 import { 
   Subscription,
@@ -24,7 +31,7 @@ import {
   DeepClientOptions, DeepClientResult, DeepClientPackageSelector, DeepClientPackageContain, DeepClientLinkId, DeepClientStartItem, DeepClientPathItem,
   _serialize, _ids, _boolExpFields, pathToWhere, serializeWhere, serializeQuery, parseJwt,
   DeepClient, DeepClientAuthResult, DeepClientGuestOptions, DeepClientInstance,
-  DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions, useAuthNode, useDeepNamespace, useDeepSubscription, useDeepQuery, QueryOptions, Options,
+  DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions, useAuthNode, useDeepNamespace, useDeepSubscription, useDeepQuery, Options,
 } from './client.js';
 import { CyberClient } from '@cybercongress/cyber-js';
 import _m0 from "protobufjs/minimal";
@@ -92,6 +99,17 @@ export const schema = (type, from = '', to = '', schemas: Schemas = {}) => {
     schemas.byTo[to] = schemas.byTo[to] || [];
     schemas.byTo[to].push(type);
   }
+};
+
+export const getValue = async (cid) => {
+  const helia = await createHelia()
+  const s = strings(helia);
+  const parsed = CID.parse(cid);
+  // @ts-ignore
+  const result = await s.get(parsed);
+  // const buff = str2Buff(result);
+  // await fileTypeFromBuffer(buff);
+  return result.trim();
 };
 
 // model('account', {});
@@ -239,16 +257,29 @@ const convertExp = (exp, mem, hash) => {
   } else return exp;
 };
 
-const rewriteGettedPseudoLinksToLinks = (links, exp) => {
+const rewriteGettedPseudoLinksToLinks = async (links, exp, deep) => {
+  console.log('_generateResult', 'rewrite', links, exp);
   for (let l in links) {
     const link = links[l];
     if (link.__typename === 'cyberlinks') {
       link.id = `${link.from_id}:${link.to_id}`
       link.type_id = 'cyberlink';
     }
-    else link.type_id = 'particle';
+    else {
+      link.type_id = 'particle';
+      if (!deep._loadedValues[link.id]) {
+        console.log('_generateResult', 'rewrite', 'getValue', link.id);
+        deep._loadedValues[link.id] = await getValue(link.id);
+        console.log('_generateResult', 'rewrite', 'gettedValue', link.id, deep._loadedValues[link.id]);
+      }
+      link.value = {
+        id: link.id,
+        link_id: link.id,
+        value: deep._loadedValues?.[link.id],
+      };
+    }
     for (let r in (exp?.return || [])) {
-      rewriteGettedPseudoLinksToLinks(link[r], exp?.return[r]);
+      await rewriteGettedPseudoLinksToLinks(link[r], exp?.return[r], deep);
     }
   }
 };
@@ -326,8 +357,11 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
     };
   }
 
-  _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data) {
-    return rewriteGettedPseudoLinksToLinks(data, exp);
+  _loadedValues: any = {};
+  async _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data): Promise<any[]> {
+    await rewriteGettedPseudoLinksToLinks(data, exp, this);
+    console.log('_generateResult', data, exp);
+    return data;
   }
 
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
