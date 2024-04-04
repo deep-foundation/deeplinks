@@ -17,7 +17,7 @@ import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
 import _ from 'lodash';
 
-import { createHelia } from 'helia';
+import { Helia, createHelia } from 'helia';
 import { strings } from '@helia/strings';
 import { CID } from 'multiformats/cid';
 import { fileTypeFromBuffer } from 'file-type';
@@ -101,8 +101,8 @@ export const schema = (type, from = '', to = '', schemas: Schemas = {}) => {
   }
 };
 
-export const getValue = async (cid) => {
-  const helia = await createHelia()
+export const getValue = async (cid, deep) => {
+  const helia = deep.helia;
   const s = strings(helia);
   const parsed = CID.parse(cid);
   // @ts-ignore
@@ -149,8 +149,10 @@ export async function generateCyberDeepClient(options: {
   namespace?: string;
 }): Promise<CyberDeepClient<Link<string>>> {
   const cyberClient = await CyberClient.connect(options.config.CYBER_NODE_URL_API);
+  const helia = await createHelia()
   return new CyberDeepClient({
     cyberClient,
+    helia,
     config: options.config,
     minilinks: options?.minilinks,
     namespace: options?.namespace,
@@ -163,6 +165,7 @@ export interface CyberDeepClientInstance<L extends Link<Id> = Link<Id>> extends 
 export interface CyberDeepClientOptions<L extends Link<Id>> extends DeepClientOptions<L> {
   cyberClient: CyberClient;
   config: CONFIG;
+  helia: Helia;
 }
 
 const deepToCyberHash = {
@@ -269,7 +272,7 @@ const rewriteGettedPseudoLinksToLinks = async (links, exp, deep) => {
       link.type_id = 'particle';
       if (!deep._loadedValues[link.id]) {
         console.log('_generateResult', 'rewrite', 'getValue', link.id);
-        deep._loadedValues[link.id] = await getValue(link.id);
+        deep._loadedValues[link.id] = await getValue(link.id, deep);
         console.log('_generateResult', 'rewrite', 'gettedValue', link.id, deep._loadedValues[link.id]);
       }
       link.value = {
@@ -287,6 +290,7 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
   static resolveDependency?: (path: string) => Promise<any>
 
   cyberClient: CyberClient;
+  helia: Helia;
   config: CONFIG;
 
   accountPrefix: string;
@@ -313,6 +317,7 @@ export class CyberDeepClient<L extends Link<string> = Link<string>> extends Deep
     });
     this.cyberClient = options.cyberClient;
     this.config = options.config;
+    this.helia = options.helia;
 
     this.accountPrefix = this.config.BECH32_PREFIX_ACC_ADDR_CYBER;
 
