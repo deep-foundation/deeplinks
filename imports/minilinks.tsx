@@ -6,7 +6,7 @@ import _sum from 'lodash/sum.js';
 import _min from 'lodash/min.js';
 import _max from 'lodash/max.js';
 import EventEmitter from 'events';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Debug from 'debug';
 import { inherits } from 'util';
 import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
@@ -40,6 +40,7 @@ export interface LinkRelations<Ref extends Id, L extends Link<Ref>> {
   to: L;
   value?: any;
   _applies: string[];
+  _namespaces: string[];
   ml?: MinilinkCollection<MinilinksGeneratorOptions, L>;
 }
 
@@ -47,14 +48,23 @@ export interface LinkHashFields {
   [key: Id]: any;
 }
 
-export interface Link<Ref extends Id> extends LinkPlain<Ref>, LinkRelations<Id, Link<Ref>>, LinkHashFields {}
+export interface Link<Ref extends Id> extends LinkPlain<Ref>, LinkRelations<Id, Link<Ref>>, LinkHashFields {
+  _id?: Id;
+  _type_id?: Id;
+  _from_id?: Id;
+  _to_id?: Id;
+  displayId: Id;
+}
 
 export type MinilinksQueryOptionAggregate = 'count' | 'sum' | 'avg' | 'min' | 'max';
 export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
   aggregate?: A;
 }
 
+export type MinilinksApplyInput = { data: any[]; deep?: any; return?: any; [key:string]: any; };
 export interface MinilinksResult<L extends Link<Id>> {
+  virtual: { [id: Id]: Id };
+  virtualCounter: number;
   links: L[];
   types: { [id: Id]: L[] };
   byId: { [id: Id]: L };
@@ -75,18 +85,51 @@ export interface MinilinksResult<L extends Link<Id>> {
     errors?: MinilinkError[];
   };
   _updating: boolean;
-  apply(linksArray: any[], applyName?: string): {
+  apply(linksArray: any[] | MinilinksApplyInput, applyName?: string, applyOptions?: ApplyOptions): {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+  }
+  update(linksArray: any[]): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
 }
 
+export function toPlain<Ref extends Id>(link): LinkPlain<Ref> {
+  return {
+    id: link._id || link.id,
+    type_id: link._type_id || link.type_id,
+    from_id: link._from_id || link.from_id,
+    to_id: link._to_id || link.to_id,
+    value: link.value || undefined,
+  };
+}
+
 export class MinilinksLink<Ref extends Id> {
   ml?: MinilinkCollection<any, any>;
+  _id: Ref;
   id: Ref;
-  type_id: Ref;
-  from_id?: Ref;
-  to_id?: Ref;
+  _type_id: Ref;
+  _from_id?: Ref;
+  _to_id?: Ref;
+  get type_id(): Ref {
+    return (this.ml?.virtualInverted[this._type_id] || this._type_id) as Ref;
+  }
+  get from_id(): Ref {
+    return (this.ml?.virtualInverted[this._from_id] || this._from_id) as Ref;
+  }
+  get to_id(): Ref {
+    return (this.ml?.virtualInverted[this._to_id] || this._to_id) as Ref;
+  }
+  set type_id(id: Ref) {
+    this._type_id = id;
+  }
+  set from_id(id: Ref) {
+    this._from_id = id;
+  }
+  set to_id(id: Ref) {
+    this._to_id = id;
+  }
   get typed(): MinilinksLink<Ref>[] {
     return this.ml?.byType?.[this.id] || [];
   }
@@ -123,27 +166,34 @@ export class MinilinksLink<Ref extends Id> {
   get to(): MinilinksLink<Ref>[] {
     return this.ml?.byId?.[this.to_id];
   }
-  value?: any;
+  get displayId(): Id {
+    return this._id || this.id;
+  }
+  get value(): any {
+    return this?.string || this?.number || this?.object;
+  }
   string?: any;
   number?: any;
   object?: any;
   _applies: string[] = [];
+  _namespaces: string[] = [];
   constructor(link: any) {
-    Object.assign(this, link);
+    this.ml = link.ml;
+    this.id = link.id;
+    this._id = link._id;
+    this._type_id = link.type_id;
+    this._from_id = link.from_id;
+    this._to_id = link.to_id;
+    this._applies = link._applies;
+    // Object.assign(this, link);
     if (link.value) {
-      if (typeof(link.value.value) === 'string' && !this.string) this.string = link.value;
-      if (typeof(link.value.value) === 'number' && !this.number) this.number = link.value;
-      if (typeof(link.value.value) === 'object' && !this.object) this.object = link.value;
+      if (typeof(link?.value?.value) === 'string' && !this.string) this.string = link.value;
+      if (typeof(link?.value?.value) === 'number' && !this.number) this.number = link.value;
+      if (typeof(link?.value?.value) === 'object' && !this.object) this.object = link.value;
     }
   }
   toPlain(): LinkPlain<Ref> {
-    return {
-      id: this.id,
-      type_id: this.type_id,
-      from_id: this.from_id,
-      to_id: this.to_id,
-      value: this.value,
-    };
+    return toPlain<Ref>(this) as LinkPlain<Ref>;
   }
   is(query: QueryLink): boolean {
     // @ts-ignore
@@ -182,7 +232,9 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
   inByType: 'inByType',
   outByType: 'outByType',
   equal: (ol, nl) => {
-    return ol.type_id == nl.type_id && ol.from_id == nl.from_id && ol.to_id == nl.to_id && _isEqual(ol.value, nl.value);
+    const _ol = toPlain(ol);
+    const _nl = toPlain(nl);
+    return _ol.type_id == _nl.type_id && _ol.from_id == _nl.from_id && _ol.to_id == _nl.to_id && _isEqual(_ol.value, _nl.value);
   },
   Link: MinilinksLink,
 };
@@ -202,6 +254,15 @@ export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<
 
 export interface MinilinkError extends Error {}
 
+export interface ApplyReturnOptions {
+  [key: string]: ApplyOptions;
+}
+
+export interface ApplyOptions {
+  return?: ApplyReturnOptions;
+  [key: string]: any;
+}
+
 export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<Id> = Link<Id>> {
   useMinilinksQuery = useMinilinksQuery;
   useMinilinksFilter = useMinilinksFilter;
@@ -209,6 +270,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   useMinilinksSubscription = useMinilinksSubscription;
   useMinilinksHandle = useMinilinksHandle;
 
+  virtual: { [id: Id]: Id } = {};
+  virtualInverted: { [id: Id]: Id } = {};
+  virtualCounter = -1;
   types: { [id: Id]: L[] } = {};
   byId: { [id: Id]: L } = {};
   byFrom: { [id: Id]: L[] } = {};
@@ -258,7 +322,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       }
     });
   }
-  add(linksArray: any[]): {
+  add(linksArray: any[], applyName: string = ''): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
@@ -272,9 +336,15 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       if (byId[linksArray[l][options.id]]) {
         if (options.handler) options.handler(byId[linksArray[l][options.id]], this);
       } else {
+        const isVirtual = linksArray[l].id < 0;
+        if (isVirtual && !this.virtual.hasOwnProperty(linksArray[l].id)) {
+          this.virtual[linksArray[l].id] = undefined;
+        }
         const link = new this.options.Link({
           ml: this,
-          _applies: [],
+          _applies: [applyName],
+          _namespaces: [],
+          _id: isVirtual ? undefined : linksArray[l].id,
           ...linksArray[l],
         });
         byId[link[options.id]] = link;
@@ -380,7 +450,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const anomalies = [];
     const errors = [];
     const oldLinksArray: L[] = [];
-    const oldLinksObject: { [id:number]: L } = {};
+    const oldLinksObject: { [id:Id]: L } = {};
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
       const link = byId[id];
@@ -447,30 +517,106 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     };
   }
   _updating: boolean = false;
-  apply(linksArray: any[], applyName: string = ''): {
+  _toPlainLinksArray(linkOrLinks, applyOptions, plainLinksArray, returnLinksPathsById) {
+    const links = Array.isArray(linkOrLinks) ? linkOrLinks : [linkOrLinks];
+    plainLinksArray.push(...links.map(l => ({ id: l.id, type_id: l.type_id, from_id: l.from_id, to_id: l.to_id, value: l.value })));
+    for (let l in links) {
+      for (let r in (applyOptions?.return || {})) {
+        this._toPlainLinksArray(links[l][r] || [], applyOptions?.return?.[r], plainLinksArray, returnLinksPathsById);
+      }
+    }
+  }
+  apply(_input: any[] | MinilinksApplyInput, applyName: string = '', applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
-    log('apply', linksArray, this);
+    const input = Array.isArray(_input) ? _input : Array.isArray(_input?.data) ? _input?.data : [];
+    const returning = (_input as any)?.return || {};
+    const _applyOptions = { return: returning, ...applyOptions };
+    const deep = (_input as any)?.deep;
+    const namespace = deep?.namespace;
+
+    log('apply', input, this);
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const toAdd = [];
     const toUpdate = [];
     const beforeUpdate = {};
     const toRemove = [];
     const _byId: any = {};
+    const linksArray = [];
+    const returnLinksPathsById: any = {};
+    for (let l = 0; l < input.length; l++) {
+      const link = input[l];
+      this._toPlainLinksArray(link, _applyOptions, linksArray, returnLinksPathsById);
+    }
+    const virtualizedLinks: any = {};
     for (let l = 0; l < linksArray.length; l++) {
-      const link = linksArray[l];
-      const old = byId[link.id];
-      if (!old) {
-        link._applies = [applyName];
-        this.emitter.emit('apply', old, link);
-        toAdd.push(link);
+      // найти все виртуальные ноды
+      let link = linksArray[l];
+      if (!virtualizedLinks[link.id] && !link.from_id && !link.to_id) {
+        const virtualId = this.virtualInverted[link.id];
+        const compatable = virtualId ? [this.byId[virtualId]] : this.select({
+            type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } : link.type_id,
+            // ...(typeof(link.value) !== 'undefined' && link.value !== null ? { value: link.value } : {}),
+            _id: { _is_null: true },
+          limit: 1,
+        });
+        if (compatable[0]) {
+          virtualizedLinks[link.id] = compatable[0];
+        }
       }
-      else {
-        const index = old._applies.indexOf(applyName);
-        if (!~index) {
+    }
+    let needRepeatIdentification = true;
+    while (needRepeatIdentification) {
+      let hasIdentifiedVirtualizedPerCycle = false;
+      for (let l = 0; l < linksArray.length; l++) {
+        // найти все связи с хотя бы одним не виртуальным from_id to_id
+        let link = linksArray[l];
+        if (!virtualizedLinks[link.id]) {
+          if (link.from_id && link.to_id) {
+            const virtual = this.virtualInverted[link.id];
+            const compatable = this.select({
+              type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } :  link.type_id,
+              from_id: virtualizedLinks[link.from_id] ? { _in: [link.from_id, virtualizedLinks[link.from_id].id] } :  link.from_id,
+              to_id: virtualizedLinks[link.to_id] ? { _in: [link.to_id, virtualizedLinks[link.to_id].id] } :  link.to_id,
+              _id: { _is_null: true },
+              limit: 1,
+            });
+            if (compatable[0]) {
+              virtualizedLinks[link.id] = compatable[0];
+              hasIdentifiedVirtualizedPerCycle = true;
+            }
+          }
+        }
+      }
+      if (!hasIdentifiedVirtualizedPerCycle) needRepeatIdentification = false;
+    }
+    for (let l = 0; l < linksArray.length; l++) {
+      let link = linksArray[l];
+
+      // find virtual
+      let old = byId[link.id];
+      const virtual = virtualizedLinks[link.id] || (this.virtualInverted[link.id] ? this.byId[this.virtualInverted[link.id]] : undefined);
+      if (virtual && !old) {
+        old = virtual;
+        if (!virtual._id) {
+          this.virtual[virtual.id] = link.id;
+          this.virtualInverted[link.id] = virtual.id;
+          virtual._id = link.id;
+          link = { ...link, _id: link.id, id: virtual.id };
+        }
+      }
+      if (!old && !virtual) {
+        link._applies = [applyName];
+        if (namespace) link._namespaces = [namespace];
+        this.emitter.emit('apply', old, link);
+        this.emitter.emit('+apply', old, link, applyName);
+        toAdd.push(link);
+      } else {
+        if (!~old._applies.indexOf(applyName)) {
           link._applies = old._applies = [...old._applies, applyName];
           this.emitter.emit('apply', old, link);
+          this.emitter.emit('+apply', old, link, applyName);
         } else {
           link._applies = old._applies;
         }
@@ -478,19 +624,28 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
           toUpdate.push(link);
           beforeUpdate[link.id] = old;
         }
+        if (namespace) {
+          if (!~old._namespaces.indexOf(namespace)) {
+            link._namespaces = old._namespaces = [...old._namespaces, namespace];
+          } else {
+            link._namespaces = old._namespaces;
+          }
+        }
       }
       _byId[link.id] = link;
     }
     for (let l = 0; l < links.length; l++) {
       const link = links[l];
-      if (!_byId[link.id]) {
+      if (!_byId[link._id]) {
         const index = link._applies.indexOf(applyName);
+        const isVirtualAndNeedToDelete = link._applies.length == 2 && link._applies.includes('');
         if (!!~index) {
-          if (link._applies.length === 1) {
+          if (link._applies.length === 1 || isVirtualAndNeedToDelete) {
             toRemove.push(link);
           } else {
             link._applies.splice(index, 1);
             this.emitter.emit('apply', link, link);
+            this.emitter.emit('-apply', link, link, applyName);
           }
         }
       }
@@ -506,6 +661,53 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }
     this._updating = false;
     return { errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors], anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies] };
+  }
+  update(linksArray: any[]): {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+  } {
+    log('update', linksArray, this);
+    const { byId, byFrom, byTo, byType, types, links, options } = this;
+    const toUpdate = [];
+    const beforeUpdate = {};
+    const _byId: any = {};
+    for (let l = 0; l < linksArray.length; l++) {
+      let link = linksArray[l];
+
+      // find virtual
+      let old = byId[link.id];
+      const virtualIds = Object.keys(this.virtual);
+      const [virtual] = this.query({
+        id: { _in: virtualIds.map(i => Number(i)) },
+        ...(link.type_id ? { _type_id: link.type_id } : {}),
+        ...(link.from_id ? { _from_id: link.from_id } : {}),
+        ...(link.to_id ? { _to_id: link.to_id } : {}),
+        ...(link.value ? { value: link.value } : {}),
+      });
+      if (virtual) {
+        if (old) throw new Error(`somehow we have oldLink.id ${old.id} and virtualLink.id ${virtual.id} virtualLink._id = ${virtual._id}`);
+        old = virtual;
+        virtual._id = link.id;
+        link = { ...link, _id: link.id, id: virtual.id };
+      }
+
+      if (old) {
+        if (!options.equal(old, link)) {
+          toUpdate.push(link);
+          beforeUpdate[link.id] = old;
+        }
+      }
+      _byId[link.id] = link;
+    }
+    this._updating = true;
+    const r2 = this.remove(toUpdate.map(l => l[options.id]));
+    const a2 = this.add(toUpdate);
+    for (let i = 0; i < toUpdate.length; i++) {
+      const l = toUpdate[i];
+      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
+    }
+    this._updating = false;
+    return { errors: [...r2.errors, ...a2.errors], anomalies: [...r2.anomalies, ...a2.anomalies] };
   }
   constructor(options?: MGO, memory?: any) {
     const _options = options || MinilinksGeneratorOptionsDefault;
@@ -626,11 +828,11 @@ export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldL
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[]): any {
+export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[] | MinilinksApplyInput): any {
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
-      ml.apply([], strictName);
+      ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
     };
   }, []);
   ml.apply(data, strictName);
@@ -672,3 +874,36 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
   }, [q]);
   return d || ml.query(q);
 };
+
+export function useMinilinksGenerator(
+  minilinks?: MinilinkCollection,
+) {
+  const ref = useRef(minilinks);
+  ref.current = useMemo(() => {
+    if (ref.current) return ref.current;
+    return new MinilinkCollection();
+  }, []);
+  return ref.current;
+}
+
+export const MinilinksContext = createContext<MinilinkCollection>(undefined);
+
+export function MinilinksProvider({
+  minilinks: initialMinilinks,
+  children,
+}: {
+  minilinks?: MinilinkCollection; 
+  children: any;
+}) {
+  const minilinks = useMinilinksGenerator(initialMinilinks);
+
+  return (
+    <MinilinksContext.Provider value={minilinks}>
+      {children}
+    </MinilinksContext.Provider>
+  );
+}
+
+export function useMinilinks() {
+  return useContext(MinilinksContext);
+}

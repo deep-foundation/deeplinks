@@ -1,10 +1,19 @@
+import { Id } from "./minilinks";
+
 export type Query = BoolExpLink | number;
+
+export type LinkToLinksRelations = 'from' | 'to' | 'type' | 'in' | 'out' | 'typed';
 
 export interface QueryLink extends BoolExpLink {
   limit?: number;
   order_by?: { [key: string]: 'asc'|'desc' };
   offset?: number;
   distinct_on?: [string];
+  return?: QueryLinkReturn;
+}
+
+export interface QueryLinkReturn extends QueryLink {
+  relation: LinkToLinksRelations;
 }
 
 export interface BoolExp<T> {
@@ -13,10 +22,14 @@ export interface BoolExp<T> {
   _not?: T;
 }
 export interface BoolExpLink extends BoolExp<BoolExpLink> {
-  id?: ComparasionType<number>;
-  from_id?: ComparasionType<number>;
-  to_id?: ComparasionType<number>;
-  type_id?: ComparasionType<number>;
+  id?: ComparasionType<Id>;
+  from_id?: ComparasionType<Id>;
+  to_id?: ComparasionType<Id>;
+  type_id?: ComparasionType<Id>;
+  _id?: ComparasionType<Id>;
+  _from_id?: ComparasionType<Id>;
+  _to_id?: ComparasionType<Id>;
+  _type_id?: ComparasionType<Id>;
   from?: BoolExpLink;
   to?: BoolExpLink;
   type?: BoolExpLink;
@@ -56,22 +69,22 @@ export interface BoolExpLink extends BoolExp<BoolExpLink> {
   root?: BoolExpTree;
 }
 export interface BoolExpValue<T> extends BoolExp<BoolExpValue<T>> {
-  id?: ComparasionType<number>;
+  id?: ComparasionType<Id>;
   /** If of link that contains this value. */
-  link_id?: ComparasionType<number>;
+  link_id?: ComparasionType<Id>;
   /** Relation to the link that contains this value. */
   link?: BoolExpLink;
   value?: ComparasionType<T>;
 }
 export interface BoolExpCan extends BoolExp<BoolExpCan> {
   /** Link of current rule. */
-  rule_id?: ComparasionType<number>;
+  rule_id?: ComparasionType<Id>;
   /** Id of link symbolizing action, as AllowSelect/AllowInsertType/AllowUpdat e/AllowDelete...*/
-  action_id?: ComparasionType<number>;
+  action_id?: ComparasionType<Id>;
   /** Id of link symbolizing object to which the rule applies. */
-  object_id?: ComparasionType<number>;
+  object_id?: ComparasionType<Id>;
   /** Id of link for which, as an authorized link, the rule to action on the object i s granted.*/
-  subject_id?: ComparasionType<number>;
+  subject_id?: ComparasionType<Id>;
   /** Relation to link symbolizing action, as AllowSelect/AllowInsertType/AllowUpdat e/AllowDelete...*/
   rule?: BoolExpLink;
   /** Relation to link symbolizing object to which the rule applies. */
@@ -83,29 +96,29 @@ export interface BoolExpCan extends BoolExp<BoolExpCan> {
 }
 export interface BoolExpSelector extends BoolExp<BoolExpCan> {
   /** Id of link item to be matched by the selector. */
-  item_id?: ComparasionType<number>;
+  item_id?: ComparasionType<Id>;
   /** Relation to link item to be matched by the selector. */
   item?: BoolExpLink;
   /** Id of link selector that the item includes. */
-  selector_id?: ComparasionType<number>;
+  selector_id?: ComparasionType<Id>;
   /** Relation to link selector that the item includes. */
   selector?: BoolExpLink;
   /** Id of Query - boolean expression attached to a selector. */
-  query_id?: ComparasionType<number>;
+  query_id?: ComparasionType<Id>;
   /** Relation to Query - boolean expression attached to a selector. */
   query?: BoolExpLink;
-  selector_include_id?: ComparasionType<number>;
+  selector_include_id?: ComparasionType<Id>;
 }
 export interface BoolExpTree extends BoolExp<BoolExpCan> {
-  id?: ComparasionType<number>;
+  id?: ComparasionType<Id>;
   /** Current link id. */
-  link_id?: ComparasionType<number>;
+  link_id?: ComparasionType<Id>;
   /** Id of link used as tree. */
-  tree_id?: ComparasionType<number>;
+  tree_id?: ComparasionType<Id>;
   /** Root link id by current subtree. */
-  root_id?: ComparasionType<number>;
+  root_id?: ComparasionType<Id>;
   /** Each parent link id where found upper from link_id */
-  parent_id?: ComparasionType<number>;
+  parent_id?: ComparasionType<Id>;
   /** Depth in subtree of parent_id from root_id */
   depth?: ComparasionType<string>;
   /** Equal string for all parent_id in subtree from root_id to link_id. */
@@ -131,23 +144,23 @@ export interface BoolExpTree extends BoolExp<BoolExpCan> {
 }
 export interface BoolExpHandler extends BoolExp<BoolExpCan> {
   /** Id of link with distribution version of executable handler content. */
-  dist_id?: ComparasionType<number>;
+  dist_id?: ComparasionType<Id>;
   /** Relation to link with distribution version of executable handler content. */
   dist?: BoolExpLink;
   /** Id of link with source version of executable handler content. */
-  src_id?: ComparasionType<number>;
+  src_id?: ComparasionType<Id>;
   /** Relation to link with source version of executable handler content. */
   src?: BoolExpLink;
   /** Id of link ExecutionProvider. */
-  execution_provider_id?: ComparasionType<number>;
+  execution_provider_id?: ComparasionType<Id>;
   /** Relation to link ExecutionProvider. */
   execution_provider?: BoolExpLink;
   /** Id of link IsolationProvider. */
-  isolation_provider_id?: ComparasionType<number>;
+  isolation_provider_id?: ComparasionType<Id>;
   /** Relation to link IsolationProvider. */
   isolation_provider?: BoolExpLink;
   /** Id of Handler link. */
-  handler_id?: ComparasionType<number>;
+  handler_id?: ComparasionType<Id>;
   /** Relation to Handler link. */
   handler?: BoolExpLink;
 }
@@ -175,10 +188,10 @@ export interface ComparasionExp<T> {
 }
 export interface MutationInput {}
 export interface MutationInputLinkPlain {
-  id?: number;
-  from_id?: number;
-  to_id?: number;
-  type_id?: number;
+  id?: Id;
+  from_id?: Id;
+  to_id?: Id;
+  type_id?: Id;
   from?: { data: MutationInputLink } | MutationInputLink;
   to?: { data: MutationInputLink } | MutationInputLink;
   out?: { data: MutationInputLink | MutationInputLink[] } | MutationInputLink | MutationInputLink[];
@@ -199,7 +212,7 @@ export interface MutationInputLink extends MutationInputLinkPlain {
   typed?: { data: MutationInputLink | MutationInputLink[] };
 }
 export interface MutationInputValue<T> {
-  link_id?: number;
+  link_id?: Id;
   link?: { data: MutationInputLink };
   value?: T;
 }

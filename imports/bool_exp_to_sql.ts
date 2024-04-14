@@ -3,6 +3,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateMutation, generateSerial } from './gql/index.js';
 import { DeepClient } from './client.js';
+import { Id } from './minilinks.js';
 
 const debug = Debug('deeplinks:bool_exp');
 const log = debug.extend('log');
@@ -30,11 +31,11 @@ export const userReplaceSymbol = 777777777778;
 export const itemPublicSymbol = 'X-Deep-Item-Id';
 export const userPublicSymbol = 'X-Deep-User-Id';
 
-export const applyBoolExpToLink = (sql: string, linkId: number) => {
+export const applyBoolExpToLink = (sql: string, linkId: Id) => {
   return sql.replace(`${itemReplaceSymbol}`, `${linkId}`);
 };
 
-export const boolExpToSQL = async (boolExpId: number, boolExpValue: any) => {
+export const boolExpToSQL = async (boolExpId: Id, boolExpValue: any) => {
   log('boolExpToSQL', boolExpId, boolExpValue);
   let gql, explained, sql;
   try {

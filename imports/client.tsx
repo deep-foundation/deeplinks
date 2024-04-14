@@ -1,29 +1,30 @@
-import atob from 'atob';
-import { gql, useQuery, useSubscription, useApolloClient, Observable } from '@apollo/client/index.js';
 import type { ApolloQueryResult } from '@apollo/client/index.js';
-import { generateApolloClient, IApolloClient } from '@deep-foundation/hasura/client.js';
+import { Observable, gql, useApolloClient, useQuery, useSubscription } from '@apollo/client/index.js';
+import { IApolloClient, generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { deprecate, inherits, inspect } from "util";
-import { deleteMutation, generateMutation, generateQuery, generateQueryData, generateSerial, IGenerateMutationBuilder, IGenerateMutationOptions, insertMutation, ISerialResult, updateMutation } from './gql/index.js';
-import { Link, MinilinkCollection, minilinks, MinilinksInstance, MinilinksResult, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import atob from 'atob';
+import get from 'get-value';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue, QueryLink } from './client_types.js';
+import { corePckg } from './core.js';
+import { debug } from './debug.js';
+import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
+import { Id, Link, MinilinkCollection, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
-import { corePckg } from './core.js';
-import { BoolExpCan, BoolExpHandler, QueryLink, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue } from './client_types.js';
-import get from 'get-value';
-import {debug} from './debug.js'
 import { Traveler as NativeTraveler } from './traveler.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
 const error = debug.extend('error');
 
-const corePckgIds: { [key: string]: number; } = {};
+const corePckgIds: { [key: Id]: Id; } = {};
 corePckg.data.filter(l => !!l.type).forEach((l, i) => {
   corePckgIds[l.id] = i+1;
 });
+
+const random = () => Math.random().toString(36).slice(2, 7);
 
 export const _ids = {
   '@deep-foundation/core': corePckgIds,
@@ -31,11 +32,21 @@ export const _ids = {
 
 export const _serialize = {
   links: {
+    virtualize: {
+      id: ['id', '_id'],
+      type_id: ['type_id', '_type_id'],
+      from_id: ['from_id', '_from_id'],
+      to_id: ['to_id', '_to_id'],
+    },
     fields: {
       id: 'number',
       from_id: 'number',
       to_id: 'number',
       type_id: 'number',
+      _id: 'number',
+      _from_id: 'number',
+      _to_id: 'number',
+      _type_id: 'number',
     },
     relations: {
       from: 'links',
@@ -140,9 +151,9 @@ export const pathToWhere = (start: (DeepClientStartItem), ...path: DeepClientPat
   return where;
 }
 
-export const serializeWhere = (exp: any, env: string = 'links'): any => {
+export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: (id: Id) => Id = defaultUnvertualizeId): any => {
   // if exp is array - map
-  if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => serializeWhere(e, env));
+  if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => serializeWhere(e, env, unvertualizeId));
   else if (typeof(exp) === 'object') {
     // if object
     const keys = Object.keys(exp);
@@ -157,35 +168,43 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
       // if this is link
       if (env === 'links') {
         // if field contain primitive type - string/number
-        if (type === 'string' || type === 'number') {
+        if (key === 'relation') {
+          setted = result[key] = exp[key];
+        } else if (type === 'string' || type === 'number') {
           if (key === 'value' || key === type) {
             // if field id link.value
             setted = result[type] = { value: { _eq: exp[key] } };
           } else {
             // else just equal
-            setted = result[key] = { _eq: exp[key] };
+            setted = result[key] = key === 'table' ? exp[key] : { _eq: unvertualizeId(exp[key]) };
           }
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]));
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId);
+        } else if (key === 'return') {
+          setted = result[key] = {};
+          for (let r in exp[key]) {
+            result[key][r] = serializeWhere(exp[key][r], env, unvertualizeId);
+          }
         }
       } else if (env === 'tree') {
         // if field contain primitive type - string/number
         if (type === 'string' || type === 'number') {
-          setted = result[key] = { _eq: exp[key] };
+          const isId = key === 'link_id' || key === 'tree_id' || key === 'root_id' || key === 'parent_id';
+          setted = result[key] = { _eq: isId ? unvertualizeId(exp[key]) : exp[key] };
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]));
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId);
         }
       } else if (env === 'value') {
         // if this is value
-        if (type === 'string' || type === 'number') {
-          setted = result[key] = { _eq: exp[key] };
+        if (type === 'string' || type === 'number' || (type === 'object' && !exp[key].hasOwnProperty('_type_of'))) {
+          setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(exp[key]) : exp[key] };
         }
       }
-      if (type === 'object' && exp[key].hasOwnProperty('_type_of') && (
+      if (type === 'object' && exp[key]?.hasOwnProperty('_type_of') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
@@ -193,21 +212,22 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
         (env === 'value' && key === 'link_id')
       )) {
         // if field is object, and contain _type_od
-        const _temp = setted = { _by_item: { path_item_id: { _eq: exp[key]._type_of }, group_id: { _eq: 0 } } };
+        const _temp = setted = { _by_item: { path_item_id: { _eq: unvertualizeId(exp[key]._type_of) }, group_id: { _eq: _ids['@deep-foundation/core'].typesTree } } };
         if (key === 'id') {
           result._and = result._and ? [...result._and, _temp] : [_temp];
         } else {
           result[key.slice(0, -3)] = _temp;
         }
-      } else if (type === 'object' && exp[key].hasOwnProperty('_id') && (
+      } else if (type === 'object' && exp[key]?.hasOwnProperty('_id') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
         (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
         (env === 'value' && key === 'link_id')
       ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
-        // if field is object, and contain _type_od
-        const _temp = setted = serializeWhere(pathToWhere(exp[key]._id[0], ...exp[key]._id.slice(1)), 'links');
+        const root = exp[key]._id[0];
+        // if field is object, and contain _type_of
+        const _temp = setted = serializeWhere(pathToWhere(typeof(root) === 'number' ? unvertualizeId(root) : root, ...exp[key]._id.slice(1)), 'links', unvertualizeId);
         if (key === 'id') {
           result._and = result._and ? [...result._and, _temp] : [_temp];
         } else {
@@ -221,13 +241,13 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
           _boolExpFields[key]
         ) ? (
           // just parse each item in array
-          serializeWhere(exp[key], env)
+          serializeWhere(exp[key], env, unvertualizeId)
         ) : (
           // if we know context
           _serialize?.[env]?.relations?.[key]
         ) ? (
           // go to this context then
-          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key])
+          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key], unvertualizeId)
         ) : (
           // else just stop
           exp[key]
@@ -243,10 +263,12 @@ export const serializeWhere = (exp: any, env: string = 'links'): any => {
   }
 };
 
-export const serializeQuery = (exp: any, env: string = 'links'): any => {
+const defaultUnvertualizeId = (id: Id): Id => id;
+
+export const serializeQuery = (exp: any, env: string = 'links', unvertualizeId = defaultUnvertualizeId): any => {
   const { limit, order_by, offset, distinct_on, ...where } = exp;
-  const result: any = { where: typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp } } : serializeWhere(where, env) : { id: { _eq: exp } } };
-  // const result: any = { where: serializeWhere(where, env) };
+  const result: any = { where: typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp.map(id => unvertualizeId(id)) } } : serializeWhere(where, env, unvertualizeId) : { id: { _eq: unvertualizeId(exp) } } };
+  // const result: any = { where: serializeWhere(where, env, unvertualizeId) };
   if (limit) result.limit = limit;
   if (order_by) result.order_by = order_by;
   if (offset) result.offset = offset;
@@ -255,7 +277,7 @@ export const serializeQuery = (exp: any, env: string = 'links'): any => {
 }
 
 // https://stackoverflow.com/a/38552302/4448999
-export function parseJwt (token): { userId: number; role: string; roles: string[], [key: string]: any; } {
+export function parseJwt (token): { userId: Id; role: string; roles: string[], [key: string]: any; } {
   var base64Url = token.split('.')[1];
   var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -282,15 +304,20 @@ export interface Observer<T> {
   complete?(): void;
 };
 
-export interface DeepClientOptions<L extends Link<number> = Link<number>> {
-  linkId?: number;
+export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
+  namespace?: string;
+
+  needConnection?: boolean;
+
+  linkId?: Id;
   token?: string;
-  handleAuth?: (linkId?: number, token?: string) => any;
+  handleAuth?: (linkId?: Id, token?: string) => any;
 
   deep?: DeepClientInstance<L>;
+  self?: DeepClientInstance<L>;
 
   apolloClient?: IApolloClient<any>;
-  minilinks?: MinilinkCollection<any, Link<number>>;
+  minilinks?: MinilinkCollection<any, Link<Id>>;
   table?: string;
   returning?: string;
 
@@ -311,6 +338,9 @@ export interface DeepClientOptions<L extends Link<number> = Link<number>> {
   silent?: boolean;
 
   unsafe?: any;
+
+  remote?: boolean;
+  local?: boolean;
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
@@ -320,14 +350,16 @@ export interface DeepClientResult<R> extends ApolloQueryResult<R> {
 
 export type DeepClientPackageSelector = string;
 export type DeepClientPackageContain = string;
-export type DeepClientLinkId = number;
+export type DeepClientLinkId = Id;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
 
-export interface DeepClientInstance<L extends Link<number> = Link<number>> {
-  linkId?: number;
+export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
+  namespace?: string;
+
+  linkId?: Id;
   token?: string;
-  handleAuth?: (linkId?: number, token?: string) => any;
+  handleAuth?: (linkId?: Id, token?: string) => any;
 
   deep: DeepClientInstance<L>;
 
@@ -365,16 +397,17 @@ export interface DeepClientInstance<L extends Link<number> = Link<number>> {
 
   serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id }[]>>;
 
-  reserve<LL = L>(count: number): Promise<number[]>;
+  reserve<LL = L>(count: number): Promise<Id[]>;
 
-  await(id: number): Promise<boolean>;
+  await(id: Id): Promise<boolean>;
 
 
   serializeWhere(exp: any, env?: string): any;
-  serializeQuery(exp: any, env?: string): any;
+  serializeQuery(exp: any, env?: string, unvertualizeId?: (id: Id) => Id): any;
+  unvertualizeId(id: Id): Id;
 
-  id(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Promise<number>;
-  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number;
+  id(start: DeepClientStartItem | Exp, ...path: DeepClientPathItem[]): Promise<Id>;
+  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
 
@@ -384,21 +417,21 @@ export interface DeepClientInstance<L extends Link<number> = Link<number>> {
 
   logout(): Promise<DeepClientAuthResult>;
 
-  can(objectIds: number[], subjectIds: number[], actionIds: number[]): Promise<boolean>;
+  can(objectIds: Id[], subjectIds: Id[], actionIds: Id[]): Promise<boolean>;
 
   useDeepSubscription: typeof useDeepSubscription;
   useDeepQuery: typeof useDeepQuery;
-  useMinilinksQuery: (query: QueryLink) => L[];
-  useMinilinksSubscription: (query: QueryLink) => L[];
+  useMinilinksQuery: (query: Exp) => L[];
+  useMinilinksSubscription: (query: Exp) => L[];
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
 
-  Traveler(links: Link<number>[]): NativeTraveler;
+  Traveler(links: Link<Id>[]): NativeTraveler;
 }
 
 export interface DeepClientAuthResult {
-  linkId?: number;
+  linkId?: Id;
   token?: string;
   error?: any;
 }
@@ -408,7 +441,7 @@ export interface DeepClientGuestOptions {
 }
 
 export interface DeepClientJWTOptions {
-  linkId?: number;
+  linkId?: Id;
   token?: string;
   relogin?: boolean;
 }
@@ -502,20 +535,125 @@ export function checkAndFillShorts(obj) {
   }
 }
 
-export class DeepClient<L extends Link<number> = Link<number>> implements DeepClientInstance<L> {
+export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = [], errors: string[], patch: any = {}): { objects: any; levelIds: any[]; } {
+  const levelIds = [];
+  if (table === 'links') {
+    for (let i = 0; i < objects.length; i++) {
+      const o = objects[i];
+      let id = o.id;
+      if (!id) {
+        id = deep.minilinks.virtualCounter--;
+        // @ts-ignore
+        deep.minilinks?.byId[id]?._id = apply;
+      }
+      levelIds.push(id);
+      const patchRelationIds: any = {};
+      if (o?.from) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.from?.data], table, result, errors);
+        o.from.data = objs;
+        patchRelationIds.from_id = levelIds[0];
+      }
+      if (o?.to) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.to?.data], table, result, errors);
+        o.to.data = objs;
+        patchRelationIds.to_id = levelIds[0];
+      }
+      if (o?.type) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, [o?.type?.data], table, result, errors);
+        o.type.data = objs;
+        patchRelationIds.type_id = levelIds[0];
+      }
+      if (o?.out) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.out?.data?.length ? o?.out?.data : [o?.out?.data]), table, result, errors, { from_id: id });
+        o.out.data = objs;
+      }
+      if (o?.in) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.in?.data?.length ? o?.in?.data : [o?.in?.data]), table, result, errors, { to_id: id });
+        o.in.data = objs;
+      }
+      if (o?.types) {
+        const { objects: objs, levelIds } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, (o?.types?.data?.length ? o?.types?.data : [o?.types?.data]), table, result, errors, { type_id: id });
+        o.types.data = objs;
+      }
+      if (typeof(o.from_id) === 'number' || typeof(o.from_id) === 'string') {
+        if (o.from_id < 0) {
+          if (deep.minilinks.virtual[o.from_id]) o.from_id = deep.minilinks.virtual[o.from_id];
+          else errors.push(`.from_id=${o.from_id} can't be devertualized, not exists in minilinks.virtual[${o.from_id}]`);
+        }
+      }
+      if (typeof(o.to_id) === 'number' || typeof(o.to_id) === 'string') {
+        if (o.to_id < 0) {
+          if (deep.minilinks.virtual[o.to_id]) o.to_id = deep.minilinks.virtual[o.to_id];
+          else errors.push(`.to_id=${o.to_id} can't be devertualized, not exists in minilinks.virtual[${o.to_id}]`);
+        }
+      }
+      if (typeof(o.type_id) === 'number' || typeof(o.type_id) === 'string') {
+        if (o.type_id < 0) {
+          if (deep.minilinks.virtual[o.type_id]) o.type_id = deep.minilinks.virtual[o.type_id];
+          else errors.push(`.type_id=${o.type_id} can't be devertualized, not exists in minilinks.virtual[${o.type_id}]`);
+        }
+      }
+      result.push({
+        id: id, from_id: o.from_id, to_id: o.to_id, type_id: o.type_id,
+        value: o.string?.data || o.number?.data || o.object?.data,
+        ...patch, ...patchRelationIds
+      });
+    }
+  }
+  return { objects: objects.length == 1 ? objects[0] : objects, levelIds };
+}
+
+export function convertDeepUpdateToMinilinksApply(ml, _exp, _set, table, toUpdate: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = []): void {
+  if (table === 'links') {
+    try {
+      const founded = ml.query(_exp);
+      for (let f of founded) {
+        toUpdate.push({
+          id: f.id, from_id: f.from_id, to_id: f.to_id, type_id: f.type_id,
+          value: f.value,
+          ..._set
+        });
+      }
+    } catch(e) {}
+  } else if (table === 'strings' || table === 'numbers' || table === 'objects') {
+    const key = table.slice(0, -1);
+    const founded = ml.query({ [key]: _exp });
+    for (let f of founded) {
+      toUpdate.push({
+        id: f.id, from_id: f.from_id, to_id: f.to_id, type_id: f.type_id,
+        value: { ...f?.value, value: _set.value },
+      });
+    }
+  }
+}
+
+export function convertDeepDeleteToMinilinksApply(ml, _exp, table, toDelete: number[] = [], toUpdate: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = []): void {
+  if (table === 'links') {
+    try {
+      const founded = ml.query(_exp);
+      toDelete.push(...founded.map(l => l.id));
+    } catch(e) {}
+  } else if (table === 'strings' || table === 'numbers' || table === 'objects') {
+    const key = table.slice(0, -1);
+    const founded = ml.query({ [key]: _exp });
+    toUpdate.push(...founded.map(o => ({
+      id: o.id, from_id: o.from_id, to_id: o.to_id, type_id: o.type_id,
+    })));
+  }
+}
+
+export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInstance<L> {
   static resolveDependency?: (path: string) => Promise<any>
 
-  useDeepSubscription = useDeepSubscription;
-  useDeepQuery = useDeepQuery;
-  useMinilinksQuery = (query: QueryLink) => useMinilinksQuery(this.minilinks, query);
-  useMinilinksSubscription = (query: QueryLink) => useMinilinksSubscription(this.minilinks, query)
   useDeep = useDeep;
   DeepProvider = DeepProvider;
   DeepContext = DeepContext;
 
-  linkId?: number;
+  namespace?: string;
+
+  linkId?: Id;
   token?: string;
-  handleAuth?: (linkId?: number, token?: string) => any;
+  handleAuth?: (linkId?: Id, token?: string) => any;
 
   deep: DeepClientInstance<L>;
 
@@ -543,52 +681,69 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
 
   unsafe?: any;
 
+  useDeepSubscription: typeof useDeepSubscription;
+  useDeepQuery: typeof useDeepQuery;
+  useMinilinksQuery: (query: Exp) => L[];
+  useMinilinksSubscription: (query: Exp) => L[];
+  local?: boolean;
+  remote?: boolean;
+
+  unvertualizeId: (id: Id) => Id;
+
   _silent(options: Partial<{ silent?: boolean }> = {}): boolean {
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
 
   constructor(options: DeepClientOptions<L>) {
-    this.deep = options?.deep;
-    this.apolloClient = options?.apolloClient;
-    this.token = options?.token;
+    this.namespace = options?.namespace || randomName();
 
-    if (this.deep && !this.apolloClient) {
-      const token = this.token ?? this.deep.token;
-      if (!token) {
-        throw new Error('token for apolloClient is invalid or not provided');
+    this.local = typeof(options?.local) === 'boolean' ? options?.local : true;
+    this.remote = typeof(options?.remote) === 'boolean' ? options?.remote : true;
+
+    if (options?.needConnection != false) {
+      this.deep = options?.deep;
+      this.apolloClient = options?.apolloClient;
+      this.token = options?.token;
+      this.client = this.apolloClient;
+      this.table = options.table || 'links';
+
+      if (this.deep && !this.apolloClient) {
+        const token = this.token ?? this.deep.token;
+        if (!token) {
+          throw new Error('token for apolloClient is invalid or not provided');
+        }
+        this.apolloClient = generateApolloClient({
+          // @ts-ignore
+          path: this.deep.apolloClient?.path,
+          // @ts-ignore
+          ssl: this.deep.apolloClient?.ssl,
+          token: token,
+        });
       }
-      this.apolloClient = generateApolloClient({
-        // @ts-ignore
-        path: this.deep.apolloClient?.path,
-        // @ts-ignore
-        ssl: this.deep.apolloClient?.ssl,
-        token: token,
-      });
+
+      if (!this.apolloClient) throw new Error('apolloClient is invalid or not provided');
+
+      if (this.token) {
+        const decoded = parseJwt(this.token);
+        const linkId = decoded?.userId;
+        if (!linkId){
+          throw new Error(`Unable to parse linkId from jwt token.`);
+        }
+        if (options.linkId && options.linkId !== linkId){
+          throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
+        }
+        this.linkId = linkId;
+      } else {
+        this.linkId = options.linkId;
+      }
     }
-
-    if (!this.apolloClient) throw new Error('apolloClient is invalid or not provided');
-
-    this.client = this.apolloClient;
 
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();
-    this.table = options.table || 'links';
-    
-    if (this.token) {
-      const decoded = parseJwt(this.token);
-      const linkId = decoded?.userId;
-      if (!linkId){
-        throw new Error(`Unable to parse linkId from jwt token.`);
-      }
-      if (options.linkId && options.linkId !== linkId){
-        throw new Error(`linkId (${linkId}) parsed from jwt token is not the same as linkId passed via options (${options.linkId}).`);
-      }
-      this.linkId = linkId;
-    } else {
-      this.linkId = options.linkId;
-    }
-
-    this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
+    this.unvertualizeId = (id: Id): Id => {
+      // @ts-ignore
+      return this.minilinks.virtual.hasOwnProperty(id) ? this.minilinks.virtual[id] : id;
+    };
 
     this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
     this.selectReturning = options.selectReturning || this.linksSelectReturning;
@@ -607,6 +762,23 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     this.silent = options.silent || false;
 
     this.unsafe = options.unsafe || {};
+
+    this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
+    // @ts-ignore
+    this.minilinks = options.minilinks || new MinilinkCollection();
+
+    this._generateHooks(this);
+  }
+
+  _generateHooks(deep) {
+    // @ts-ignore
+    this.useDeepSubscription = (query: Exp, options?: Options) => useDeepSubscription(query, { ...(options || {}), deep: deep });
+    // @ts-ignore
+    this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
+    // @ts-ignore
+    this.useMinilinksQuery = (query: Exp) => useMinilinksQuery(deep.minilinks, query);
+    // @ts-ignore
+    this.useMinilinksSubscription = (query: Exp) => useMinilinksSubscription(deep.minilinks, query)
   }
 
   stringify(any?: any): string {
@@ -622,6 +794,45 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
 
   serializeQuery = serializeQuery;
   serializeWhere = serializeWhere;
+
+  _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
+    const query = serializeQuery(exp, options?.table || 'links', this.unvertualizeId);
+    const table = options?.table || this.table;
+    const returning = options?.returning ?? 
+    (table === 'links' ? this.linksSelectReturning :
+    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
+    table === 'selectors' ? this.selectorsSelectReturning :
+    table === 'files' ? this.filesSelectReturning : `id`);
+    const tableNamePostfix = options?.tableNamePostfix;
+    const aggregate = options?.aggregate;
+
+    const variables = options?.variables;
+    const name = options?.name || this.defaultSelectName;
+
+    const queryData = generateQueryData({
+      tableName: table,
+      tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
+      returning: aggregate ? `aggregate { ${aggregate} }` : returning,
+      variables: {
+        ...variables,
+        ...query,
+      },
+    });
+    return {
+      query: generateQuery({
+        operation: options?.subscription ? 'subscription' : 'query',
+        queries: [
+          queryData,
+        ],
+        name: name,
+      }),
+      queryData,
+    };
+  }
+
+  _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data): any[] | Promise<any[]> {
+    return data;
+  }
 
   /**
    * Gets a value from the database. By default gets a link from the links table
@@ -696,48 +907,14 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    */
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
-    if (!exp) {
-      return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
-    }
-    const query = serializeQuery(exp, options?.table || 'links');
-    const table = options?.table || this.table;
-    const returning = options?.returning ?? 
-    (table === 'links' ? this.linksSelectReturning :
-    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
-    table === 'selectors' ? this.selectorsSelectReturning :
-    table === 'files' ? this.filesSelectReturning : `id`);
-    const tableNamePostfix = options?.tableNamePostfix;
+    if (!exp) return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     const aggregate = options?.aggregate;
-    
-    // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
-    const variables = options?.variables;
-    const name = options?.name || this.defaultSelectName;
-
+    const queryData = this._generateQuery(exp, options);
     try {
-      const q = await this.apolloClient.query(generateQuery({
-        queries: [
-          generateQueryData({
-            tableName: table,
-            tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
-            returning: aggregate ? `aggregate { ${aggregate} }` : returning,
-            variables: {
-              ...variables,
-              ...query,
-            } }),
-        ],
-        name: name,
-      }));
-
-      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : (q)?.data?.q0 };
+      const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
+      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0) };
     } catch (e) {
-      console.log(generateQueryData({
-        tableName: table,
-        tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
-        returning: aggregate ? `aggregate { ${aggregate} }` : returning,
-        variables: {
-          ...variables,
-          ...query,
-        } })('a', 0));
+      console.log(queryData);
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
     }
   };
@@ -750,47 +927,17 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    */
   subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
-    if (!exp) {
-      return new Observable((observer) => {
-        observer.error('!exp');
-      });
-    }
-    const query = serializeQuery(exp, options?.table || 'links');
-    const table = options?.table || this.table;
-    const returning = options?.returning ??
-    (table === 'links' ? this.linksSelectReturning :
-    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
-    table === 'selectors' ? this.selectorsSelectReturning :
-    table === 'files' ? this.filesSelectReturning : `id`);
-    const tableNamePostfix = options?.tableNamePostfix;
+    if (!exp) return new Observable((observer) => observer.error('!exp'));
     const aggregate = options?.aggregate;
-
-    // console.log(`returning: ${returning}; options.returning:${options?.returning}`)
-    const variables = options?.variables;
-    const name = options?.name || this.defaultSelectName;
+    const queryData = this._generateQuery(exp, { ...options, subscription: true });
 
     try {
-      const apolloObservable = this.apolloClient.subscribe({
-        ...generateQuery({
-          operation: 'subscription',
-          queries: [
-            generateQueryData({
-              tableName: table,
-              tableNamePostfix: tableNamePostfix || aggregate ? '_aggregate' : '',
-              returning: returning || aggregate ? `aggregate { ${aggregate} }` : returning,
-              variables: {
-                ...variables,
-                ...query,
-              } }),
-          ],
-          name: name,
-        }),
-      });
-
+      const apolloObservable = this.apolloClient.subscribe({ query: queryData.query.query, variables: queryData?.query?.variables });
       const observable = new Observable((observer) => {
         const subscription = apolloObservable.subscribe({
-          next: (data: any) => {
-            observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : data?.q0);
+          next: async (data: any) => {
+            observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : 
+            await this._generateResult(exp, options, data?.q0));
           },
           error: (error) => observer.error(error),
         });
@@ -898,26 +1045,41 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    const _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
+    let _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects);
-  
+
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
-   
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
-    }   
+
+    const toApply: any = [];
+    if (this.minilinks && local !== false) {
+      const errors = [];
+      const { objects: __objects } = convertDeepInsertToMinilinksApplyAndPatchVirtualIds(this, _objects, table, toApply, errors) as any;
+      _objects = __objects;
+      if (errors.length) console.log('convertDeepInsertToMinilinksApplyAndPatchVirtualIds', 'errors', errors);
+      this.minilinks.add(toApply);
+    }
+
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
+          name: name,
+        }));
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toApply.map(l => l.id), loading: false };
+    }
   
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1004,24 +1166,38 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
+
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
   
-    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
+    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
     const table = options?.table || this.table;
+
+    const toUpdate: any = [];
+    if (this.minilinks && local !== false) {
+      convertDeepUpdateToMinilinksApply(this.minilinks, exp, value, table, toUpdate);
+      this.minilinks.update(toUpdate);
+    }
+
     const returning = options?.returning || this.updateReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
     let q;
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
-        name: name,
-      }));
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
+          name: name,
+        }));
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toUpdate.map(l => l.id), loading: false };
     }
+
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
   };
@@ -1135,24 +1311,40 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    */
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
-    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value');
+    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+
+    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
     const table = options?.table || this.table;
     const returning = options?.returning || this.deleteReturning;
     const variables = options?.variables;
     const name = options?.name || this.defaultDeleteName;
     let q;
-    try {
-      q = await this.apolloClient.mutate(generateSerial({
-        actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
-        name: name,
-      }));
-      // @ts-ignore
-    } catch(e) {
-      const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
-      if (sqlError?.message) e.message = sqlError.message;
-      if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
-      return { ...q, data: (q)?.data?.m0?.returning, error: e };
+
+    const toDelete: any = [];
+    const toUpdate: any = [];
+    if (this.minilinks && local !== false) {
+      convertDeepDeleteToMinilinksApply(this.minilinks, exp, table, toDelete, toUpdate);
+      this.minilinks.update(toUpdate);
+      this.minilinks.remove(toDelete);
     }
+
+    if (remote !== false) {
+      try {
+        q = await this.apolloClient.mutate(generateSerial({
+          actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
+          name: name,
+        }));
+        // @ts-ignore
+      } catch(e) {
+        const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
+        if (sqlError?.message) e.message = sqlError.message;
+        if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
+        return { ...q, data: (q)?.data?.m0?.returning, error: e };
+      }
+    } else {
+      return { ...q, data: toDelete.map(l => l.id), loading: false };
+    }
+
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
@@ -1161,7 +1353,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param options An object with data for the serial operation
    * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
    */
-  async serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id: number }[]>> {
+  async serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id: Id }[]>> {
     const {
       name, operations, returning, silent
     } = options;
@@ -1192,7 +1384,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
           const newSerialActions: IGenerateMutationBuilder[] = updateOperations.map(operation => {
             const exp = operation.exp;
             const value = operation.value;
-            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
+            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value', this.unvertualizeId);
             return updateMutation(table, {...query, _set: value }, { tableName: table, operation: operationType ,returning})
           })
           serialActions = [...serialActions, ...newSerialActions];
@@ -1200,7 +1392,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
           const deleteOperations = operations as Array<SerialOperation<'delete', Table<'delete'>>>;;
           const newSerialActions: IGenerateMutationBuilder[] = deleteOperations.map(operation => {
             const exp = operation.exp;
-            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value');
+            const query = serializeQuery(exp, table === this.table || !table ? 'links' : 'value', this.unvertualizeId);
             return deleteMutation(table, { ...query }, { tableName: table, operation: operationType, returning })
           })
           serialActions = [...serialActions, ...newSerialActions];
@@ -1225,7 +1417,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return { ...result, data: (result)?.data && Object.values((result)?.data).flatMap(m => m.returning)};
   };
 
-  reserve<LL = L>(count: number): Promise<number[]> {
+  reserve<LL = L>(count: number): Promise<Id[]> {
     return reserve({ count, client: this.apolloClient });
   };
 
@@ -1245,7 +1437,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * In this case you will await all the promises for 'my-package-name' link
    */
-  async await(id: number, options: { results: boolean } = { results: false } ): Promise<any> {
+  async await(id: Id, options: { results: boolean } = { results: false } ): Promise<any> {
     return awaitPromise({
       id, client: this.apolloClient,
       Then: await this.id('@deep-foundation/core', 'Then'),
@@ -1379,7 +1571,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * const adminLinkId = deep.idLocal("deep", "admin")
    * ```
    */
-  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): number {
+  idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
     const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
     if (get(_ids, paths.join('.'))) {
       return get(_ids, paths.join('.'));
@@ -1400,7 +1592,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
         _id: paths
       }
     }) 
-    const result = (link as Link<number>)?.id;
+    const result = (link as Link<Id>)?.id;
     
     if(!result) {
       throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
@@ -1515,7 +1707,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * @param userIds A link id or an array of link ids from which perspective the check is performed
    * @returns A promise that resolves to a boolean value indicating whether the {@link subjectUds} can perform the {@link actionIds} on the {@link objectIds}
    */
-  async can(objectIds: null | number | number[], subjectIds: null | number | number[], actionIds: null | number | number[], userIds: number | number[] = this.linkId) {
+  async can(objectIds: null | Id | Id[], subjectIds: null | Id | Id[], actionIds: null | Id | Id[], userIds: Id | Id[] = this.linkId): Promise<boolean> {
     const where: any = {
     };
     if (objectIds) where.object_id = typeof(objectIds) === 'number' ? { _eq: +objectIds } : { _in: objectIds };
@@ -1534,10 +1726,10 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * const userTypeLinkName = await deep.name(userTypeLinkId);
    * ```
    */
-  async name(input: Link<number> | number): Promise<string | undefined> {
-    const id = typeof(input) === 'number' ? input : input.id;
+  async name(input: Link<Id> | Id): Promise<string | undefined> {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input.id;
 
-    // if ((this.minilinks.byId[id] as Link<number>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<number>)?.value?.value;
+    // if ((this.minilinks.byId[id] as Link<Id>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<Id>)?.value?.value;
     const {data: [containLink]} = await this.select({
       type_id: { _id: ['@deep-foundation/core', 'Contain'] },
       to_id: id,
@@ -1560,8 +1752,8 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
    * ```
    * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
    */
-  nameLocal(input: Link<number> | number): string | undefined {
-    const id = typeof(input) === 'number' ? input : input?.id;
+  nameLocal(input: Link<Id> | Id): Id | undefined {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return;
     // @ts-ignore
     if (this.minilinks.byId[id]?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return this.minilinks.byId[id]?.value?.value;
@@ -1603,7 +1795,7 @@ export class DeepClient<L extends Link<number> = Link<number>> implements DeepCl
     return await import(path);
   }
 
-  Traveler(links: Link<number>[]) {
+  Traveler(links: Link<Id>[]) {
     return new NativeTraveler(this, links);
   };
 }
@@ -1629,12 +1821,83 @@ export const GUEST = gql`query GUEST {
 }`;
 
 export function useAuthNode() {
-  return useLocalStore('use_auth_link_id', 0);
+  return useLocalStore<Id>('use_auth_link_id', 0);
 }
 
-export const DeepContext = createContext<DeepClient<Link<number>>>(undefined);
+export type INamespaces = {
+  [name: string]: any;
+};
+export const DeepNamespaceContext = createContext<{
+  all: () => INamespaces;
+  select: (namespace: string) => any;
+  insert: (namespace: string, deep: any) => void;
+  delete: (namespace: string) => void;
+}>({
+  all: () => ({}),
+  select: (namespace: string) => {},
+  insert: (namespace: string, deep: any) => {},
+  delete: (namespace: string) => {},
+});
+export const DeepNamespacesContext = createContext<INamespaces>({});
 
-export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
+export function useDeepNamespaces() {
+  return useContext(DeepNamespacesContext);
+};
+
+export function useDeepNamespace(namespace, deep) {
+  const namespaces = useContext(DeepNamespaceContext);
+  const nameRef = useRef();
+  useMemo(() => {
+    if (
+      (!!nameRef.current && nameRef.current != namespace)
+    ) {
+      namespaces.delete(nameRef.current);
+    }
+    if (namespace) {
+      if (namespaces.select(namespace) !== deep) {
+        namespaces.delete(namespace);
+      }
+      namespaces.insert(namespace, deep);
+    }
+  }, [namespace, deep]);
+  useEffect(() => {
+    return () => nameRef.current && namespaces.delete(namespace);
+  }, []);
+}
+export function DeepNamespaceProvider({ children }: { children: any }) {
+  const [namespaces, setNamespaces] = useState<INamespaces>({});
+  const ref = useRef(namespaces);
+  ref.current = namespaces;
+  const api = useMemo(() => {
+    return {
+      all: () => ref.current,
+      select: (namespace: string) => ref.current[namespace],
+      insert: (namespace: string, deep: any) => {
+        console.log('DeepNamespaceProvider', 'insert', namespace, deep);
+        setNamespaces(namespaces => ({ ...namespaces, [namespace]: deep }));
+      },
+      delete: (namespace: string) => {
+        console.log('DeepNamespaceProvider', 'delete', namespace);
+        setNamespaces(namespaces => ({ ...namespaces, [namespace]: undefined }));
+      },
+    };
+  }, []);
+  useEffect(() => {
+    console.log('DeepNamespaceProvider', 'mounted', api);
+    // @ts-ignore
+    if (typeof(window) == 'object') window.dn = api;
+  }, []);
+  return <DeepNamespaceContext.Provider value={api}>
+    <DeepNamespacesContext.Provider value={namespaces}>
+      {children}
+    </DeepNamespacesContext.Provider>
+  </DeepNamespaceContext.Provider>
+}
+
+export const DeepContext = createContext<DeepClient<Link<Id>>>(undefined);
+
+export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>) {
+  const { apolloClient: apolloClientProps, minilinks, ...otherGeneratorOptions } = generatorOptions;
   const log = debug.extend(useDeepGenerator.name)
   const apolloClientHook = useApolloClient();
   log({apolloClientHook})
@@ -1651,7 +1914,9 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
       log({ token, apolloClient });
     }
     return new DeepClient({
+      ...otherGeneratorOptions,
       apolloClient, linkId, token,
+      minilinks,
       handleAuth: (linkId, token) => {
         setToken(token);
         setLinkId(linkId);
@@ -1664,12 +1929,22 @@ export function useDeepGenerator(apolloClientProps?: IApolloClient<any>) {
 
 export function DeepProvider({
   apolloClient: apolloClientProps,
+  minilinks: inputMinilinks,
+  namespace,
   children,
 }: {
   apolloClient?: IApolloClient<any>,
+  minilinks?: MinilinkCollection,
+  namespace?: string;
   children: any;
 }) {
-  const deep = useDeepGenerator(apolloClientProps);
+  const providedMinilinks = useMinilinks();
+  const deep = useDeepGenerator({
+    apolloClient: apolloClientProps,
+    minilinks: inputMinilinks || providedMinilinks,
+    namespace,
+  });
+  useDeepNamespace(namespace, deep);
   return <DeepContext.Provider value={deep}>
     {children}
   </DeepContext.Provider>;
@@ -1679,105 +1954,91 @@ export function useDeep() {
   return useContext(DeepContext);
 }
 
-export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
-  query: QueryLink,
-  options?: {
-    table?: Table;
-    tableNamePostfix?: string;
-    returning?: string;
-    variables?: any;
-    name?: string;
-    mini?: string;
-  },
+export const randomName = () => Math.random().toString(36).slice(2, 7);
+
+export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
+  query: Exp<Table>,
+  options?: Options<Table>,
 ): {
   data?: LL[];
   error?: any;
   loading: boolean;
 } {
-  const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
+  const [miniName] = useState(options?.mini || randomName());
   debug('useDeepQuery', miniName, query, options);
-  const deep = useDeep();
+  const _deep = useDeep();
+  const deep = options?.deep || _deep;
   const wq = useMemo(() => {
-    const sq = serializeQuery(query);
-    return generateQuery({
-      operation: 'query',
-      queries: [generateQueryData({
-        tableName: 'links',
-        returning: `
-          id type_id from_id to_id value
-          string { id value }
-          number { id value }
-          object { id value }
-        `,
-        ...options,
-        variables: { ...sq, ...options?.variables }
-      })],
-      name: options?.name || 'USE_DEEP_QUERY',
-    });
+    return deep._generateQuery<Table>(query, { ...options });
   }, [query, options]);
-  const result = useQuery(wq.query, { variables: wq?.variables });
-  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
-  const mlResult = deep.useMinilinksSubscription({ id: { _in: result?.data?.q0?.map(l => l.id) } });
-  return {
+  const result = useQuery(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
+  const [generatedResult, setGeneratedResult] = useState([]);
+  useEffect(() => {
+    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    else {
+      (async () => {
+        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+      })();
+    }
+  }, [result]);
+  const toReturn = {
     ...result,
-    data: mlResult,
+    data: generatedResult,
+    deep,
+    // @ts-ignore
+    return: query?.return,
   };
+  useMinilinksApply(deep.minilinks, miniName, toReturn);
+  toReturn.data = deep.useMinilinksSubscription({ id: { _in: toReturn?.data?.map(l => l.id) } });
+  return toReturn;
 }
 
-export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<number>>(
-  query: QueryLink,
-  options?: {
-    table?: Table;
-    tableNamePostfix?: string;
-    returning?: string;
-    variables?: any;
-    name?: string;
-    mini?: string;
-  },
+export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
+  query: Exp<Table>,
+  options?: Options<Table>,
 ): UseDeepSubscriptionResult<LL> {
   const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
   debug('useDeepSubscription', miniName, query, options);
-  const deep = useDeep();
+  const _deep = useDeep();
+  const deep = options?.deep || _deep;
+  useState({query, options, deep});
   const wq = useMemo(() => {
-    const sq = serializeQuery(query);
-    return generateQuery({
-      operation: 'subscription',
-      queries: [generateQueryData({
-        tableName: 'links',
-        returning: `
-          id type_id from_id to_id value
-          string { id value }
-          number { id value }
-          object { id value }
-        `,
-        ...options,
-        variables: { ...sq, ...options?.variables }
-      })],
-      name: options?.name || 'USE_DEEP_SUBSCRIPTION',
-    });
+    return deep._generateQuery(query, { ...options, subscription: true });
   }, [query, options]);
-  const result = useSubscription(wq.query, { variables: wq?.variables });
-  useMinilinksApply(deep.minilinks, miniName, result?.data?.q0 || []);
-  const mlResult = useMinilinksSubscription(deep.minilinks,{ id: { _in: result?.data?.q0?.map(l => l.id) } });
-  
-  return {
+  const result = useSubscription(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
+  const [generatedResult, setGeneratedResult] = useState([]);
+  useEffect(() => {
+    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    else {
+      (async () => {
+        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+      })();
+    }
+  }, [result]);
+  const toReturn = {
     ...result,
-    data: mlResult,
+    data: generatedResult,
+    deep,
+    // @ts-ignore
+    return: query?.return,
   };
+  useMinilinksApply(deep.minilinks, miniName, toReturn);
+  toReturn.data = useMinilinksSubscription(deep.minilinks,{ id: { _in: toReturn?.data?.map(l => l.id) } });
+  return toReturn;
 }
 
-export interface UseDeepSubscriptionResult<LL = Link<number>> {
+export interface UseDeepSubscriptionResult<LL = Link<Id>> {
   data?: LL[];
   error?: any;
   loading: boolean;
 }
 
-export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: number; loading: boolean; error?: any } {
+export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {
   const result = useDeepQuery({ id: { _id: [start, ...path] } });
   return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
 
-export type Exp<TTable extends Table> = (
+export type Exp<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? BoolExpValue<number> :
   TTable extends 'strings' ? BoolExpValue<string> :
   TTable extends 'objects' ? BoolExpValue<object> :
@@ -1786,16 +2047,16 @@ export type Exp<TTable extends Table> = (
   TTable extends 'tree' ? BoolExpTree :
   TTable extends 'handlers' ? BoolExpHandler :
   QueryLink
-) | number | number[];
+) | Id | Id[];
 
-export type UpdateValue<TTable extends Table> = (
+export type UpdateValue<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? MutationInputValue<number> :
   TTable extends 'strings' ? MutationInputValue<string> :
   TTable extends 'objects' ? MutationInputValue<any> :
   MutationInputLinkPlain
 );
 
-export type InsertObjects<TTable extends Table> = (
+export type InsertObjects<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? MutationInputValue<number> :
   TTable extends 'strings' ? MutationInputValue<string> :
   TTable extends 'objects' ? MutationInputValue<any> :
@@ -1807,18 +2068,23 @@ export type InsertObjects<TTable extends Table> = (
   MutationInputLink
 )[]
 
-export type Options<TTable extends Table> = {
+export type Options<TTable extends Table = 'links'> = {
   table?: TTable;
   tableNamePostfix?: string;
   returning?: string;
   variables?: any;
   name?: string;
   aggregate?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  mini?: string;
+  deep?: DeepClient<Link<Id>>;
+  subscription?: boolean;
 };
 
-export type ReadOptions<TTable extends Table> = Options<TTable>;
+export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;
 
-export type WriteOptions<TTable extends Table>  = Options<TTable> & {
+export type WriteOptions<TTable extends Table = 'links'>  = Options<TTable> & {
   silent?: boolean;
+  remote?: boolean;
+  local?: boolean;
 }
 

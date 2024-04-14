@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client/index.js';
 import type { ApolloClient } from '@apollo/client/index.js';
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from './gql/index.js';
+import { Id } from './minilinks.js';
 
 export interface ReservedOptions {
   count: number;
@@ -13,7 +14,7 @@ export const RESERVE = gql`mutation RESERVE($count: Int!) {
   }
 }`;
 
-export async function reserve(options: ReservedOptions) {
+export async function reserve(options: ReservedOptions): Promise<Id[]> {
   const count = options.count;
   const result = await options.client.mutate({
     mutation: RESERVE,

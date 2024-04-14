@@ -1,6 +1,7 @@
 import type { ApolloClient } from '@apollo/client';
 import Debug from 'debug';
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from './gql/index.js';
+import { Id } from './minilinks.js';
 
 
 const debug = Debug('deeplinks:promise');
@@ -11,13 +12,13 @@ const error = debug.extend('error');
 export const delay = (time) => new Promise(res => setTimeout(() => res(null), time));
 
 export interface PromiseOptions {
-  id: number;
+  id: Id;
   timeout?: number;
   client: ApolloClient<any>;
-  Then: number;
-  Promise: number;
-  Resolved: number;
-  Rejected: number;
+  Then: Id;
+  Promise: Id;
+  Resolved: Id;
+  Rejected: Id;
   Results: boolean;
 }
 
