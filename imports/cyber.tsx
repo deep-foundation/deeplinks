@@ -35,7 +35,7 @@ import {
 } from './client.js';
 import { CyberClient } from '@cybercongress/cyber-js';
 import _m0 from "protobufjs/minimal";
-import * as cyberConfig from '@deep-foundation/deeplinks/imports/cyber/config';
+import * as cyberConfig from './cyber/config';
 
 const log = debug.extend('log');
 const error = debug.extend('error');
