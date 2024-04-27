@@ -200,7 +200,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         }
       } else if (env === 'value') {
         // if this is value
-        if (type === 'string' || type === 'number' || (type === 'object' && !exp[key].hasOwnProperty('_type_of'))) {
+        if (type === 'string' || type === 'number') {
           setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(exp[key]) : exp[key] };
         }
       }
