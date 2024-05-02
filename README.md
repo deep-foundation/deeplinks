@@ -53,10 +53,22 @@ See [Documentation] for examples and API
 
 [Documentation]: https://deep-foundation.github.io/deeplinks/
 
-# For mainterners
+## Maintenance
 
-Please publish new version of this package using this command:
+### Refresh package-lock.json
 
+This command deletes `node_modules`, `package-lock.json` and runs `npm i`. So everything is refreshed.
+
+```bash
+npm run package:refresh
 ```
-npm run package:version
+
+### Release a new version
+
+```bash
+npm run package:release
 ```
+
+After that it might be required to release new versions of:
+1. https://github.com/deep-foundation/deepcase
+2. https://github.com/deep-foundation/deepcase-app
