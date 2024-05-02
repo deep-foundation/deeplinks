@@ -21,11 +21,9 @@ async function createClient(
 ): Promise<SigningCyberClient> {
   const cyber = (await import('./config')).CYBER
 
-  const options: SigningCyberClientOptions = { prefix: cyber.BECH32_PREFIX_ACC_ADDR_CYBER };
   const client = await SigningCyberClient.connectWithSigner(
     cyber.CYBER_NODE_URL_API,
-    signer,
-    options
+    signer
   );
 
   return client;
