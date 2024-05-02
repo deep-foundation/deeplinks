@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { SigningCyberClient } from '@cybercongress/cyber-js';
 // import { CYBER } from './config';
 import configKeplr, { getKeplr } from './keplrUtils';
-import { OfflineSigner } from '@cybercongress/cyber-js/build/signingcyberclient';
+import { OfflineSigner, SigningCyberClientOptions } from '@cybercongress/cyber-js/build/signingcyberclient';
 import { Option } from './types';
 
 // TODO: interface for keplr and OfflineSigner
@@ -21,7 +21,7 @@ async function createClient(
 ): Promise<SigningCyberClient> {
   const cyber = (await import('./config')).CYBER
 
-  const options = { prefix: cyber.BECH32_PREFIX_ACC_ADDR_CYBER };
+  const options: SigningCyberClientOptions = { prefix: cyber.BECH32_PREFIX_ACC_ADDR_CYBER };
   const client = await SigningCyberClient.connectWithSigner(
     cyber.CYBER_NODE_URL_API,
     signer,
