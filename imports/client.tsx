@@ -403,7 +403,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
 
   serializeWhere(exp: any, env?: string): any;
-  serializeQuery(exp: any, env?: string, unvertualizeId?: (id: Id) => Id): any;
+  serializeQuery(exp: any, env?: string): any;
   unvertualizeId(id: Id): Id;
 
   id(start: DeepClientStartItem | Exp, ...path: DeepClientPathItem[]): Promise<Id>;
@@ -796,8 +796,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return any;
   }
 
-  serializeQuery(exp, env) { return serializeQuery(exp, env, this.unvertualizeId); }
-  serializeWhere(exp, env) { return serializeWhere(exp, env, this.unvertualizeId); } 
+  serializeQuery(exp, env?: string) { return serializeQuery(exp, env, this.unvertualizeId); }
+  serializeWhere(exp, env?: string) { return serializeWhere(exp, env, this.unvertualizeId); } 
 
   _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
     const query = serializeQuery(exp, options?.table || 'links', this.unvertualizeId);
