@@ -419,6 +419,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   can(objectIds: Id[], subjectIds: Id[], actionIds: Id[]): Promise<boolean>;
 
+  useDeepId: typeof useDeepId;
   useDeepSubscription: typeof useDeepSubscription;
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
@@ -681,6 +682,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   unsafe?: any;
 
+  useDeepId: typeof useDeepId;
   useDeepSubscription: typeof useDeepSubscription;
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
@@ -772,6 +774,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   _generateHooks(deep) {
     // @ts-ignore
+    this.useDeepId = (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } => _useDeepId(deep, start, ...path);
+    // @ts-ignore
     this.useDeepSubscription = (query: Exp, options?: Options) => useDeepSubscription(query, { ...(options || {}), deep: deep });
     // @ts-ignore
     this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
@@ -792,8 +796,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return any;
   }
 
-  serializeQuery = serializeQuery;
-  serializeWhere = serializeWhere;
+  serializeQuery(exp, env) { return serializeQuery(exp, env, this.unvertualizeId); }
+  serializeWhere(exp, env) { return serializeWhere(exp, env, this.unvertualizeId); } 
 
   _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
     const query = serializeQuery(exp, options?.table || 'links', this.unvertualizeId);
@@ -2010,9 +2014,11 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   useEffect(() => {
     if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
     else {
-      (async () => {
-        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
-      })();
+      if (!result.loading) {
+        (async () => {
+          setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+        })();
+      }
     }
   }, [result]);
   const toReturn = {
@@ -2034,7 +2040,11 @@ export interface UseDeepSubscriptionResult<LL = Link<Id>> {
 }
 
 export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {
-  const result = useDeepQuery({ id: { _id: [start, ...path] } });
+  return useDeep().useDeepId({ id: { _id: [start, ...path] } });
+}
+
+export function _useDeepId(deep: DeepClient<Link<Id>>, start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {
+  const result = deep.useDeepQuery({ id: { _id: [start, ...path] } });
   return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
 
