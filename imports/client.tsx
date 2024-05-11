@@ -2040,7 +2040,7 @@ export interface UseDeepSubscriptionResult<LL = Link<Id>> {
 }
 
 export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {
-  return useDeep().useDeepId({ id: { _id: [start, ...path] } });
+  return useDeep().useDeepId(start, ...path);
 }
 
 export function _useDeepId(deep: DeepClient<Link<Id>>, start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {
