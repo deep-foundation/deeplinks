@@ -13,6 +13,7 @@ import { promisify } from 'util';
 import {exec} from 'child_process';
 import waitOn from 'wait-on';
 import { Id } from '../minilinks.js';
+import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
 const execAsync = promisify(exec);
 
 const SCHEMA = 'public';
@@ -486,12 +487,13 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
 
     for (const url of Object.keys(urls)) {
       const handleRouteId = urls[url];
+      const remote_schema_name = `handle_gql_handler_${handleGqlLink?.id}`;
       // add_remote_schema
       const options = {
         type: 'add_remote_schema',
         args: {
           // TODO: It is now possible to create only single schema per all urls
-          name: `handle_gql_handler_${handleGqlLink?.id}`,
+          name: remote_schema_name,
           definition: {
             url,
             headers: [{ name: 'x-hasura-client', value: 'deeplinks-gql-handler' }],
@@ -501,6 +503,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
         }
       };
       handleGqlDebug('options', JSON.stringify(options, null, 2));
+      const handler_path = `${url.replace(DEEPLINKS_ROUTE_HANDLERS_HOST, "localhost").replace('http://','')}`;
       const waitOnUrl = `${url.replace(DEEPLINKS_ROUTE_HANDLERS_HOST, "localhost").replace('http://','http-get://')}?query=%7B__typename%7D`
       handleGqlDebug('waitOnUrl', waitOnUrl);
       await waitOn({ resources: [waitOnUrl] });
@@ -512,6 +515,35 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
           throw response;
         }
         handleGqlDebug('remote schema is added');
+        const remote_schema_client = generateApolloClient({
+          secret: process.env.DEEPLINKS_HASURA_SECRET,
+          path: handler_path,
+        });
+        const __schema = await remote_schema_client.query({ query: gql`${getIntrospectionQuery()}` });
+        const _schema = buildClientSchema(__schema.data);
+        const schema = printSchema(_schema);
+        handleGqlDebug(`remote schema loaded
+${schema}`);
+        await api.query({
+          type: "add_remote_schema_permissions",
+          args: {
+              remote_schema: remote_schema_name,
+              role : "link",
+              definition: { schema },
+              comment: "remote schema permissions for role: link"
+          }
+        }, { route: '/v1/metadata' });
+        handleGqlDebug('remote schema permission for "link" added');
+        await api.query({
+          type: "add_remote_schema_permissions",
+          args: {
+              remote_schema: remote_schema_name,
+              role : "undefined",
+              definition: { schema },
+              comment: "remote schema permissions for role: undefined"
+          }
+        }, { route: '/v1/metadata' });
+        handleGqlDebug('remote schema permission for "undefined" added');
       }
       catch(rejected)
       {
