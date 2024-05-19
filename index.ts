@@ -23,6 +23,7 @@ import { MinilinkCollection, MinilinksGeneratorOptionsDefault } from './imports/
 import _ from 'lodash';
 import Cors from 'cors';
 import cookieParser from 'cookie-parser';
+import async from 'async';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'http://localhost:8000';
@@ -30,6 +31,7 @@ const DEEPLINKS_HASURA_SSL = process.env.DEEPLINKS_HASURA_SSL || 0;
 const DEEPLINKS_HASURA_SECRET = process.env.DEEPLINKS_HASURA_SECRET || 'myadminsecretkey';
 const MOESIF_TOKEN = process.env.MOESIF_TOKEN || '';
 const DEEPLINKS_PUBLIC_URL = process.env.DEEPLINKS_PUBLIC_URL || '';
+const PORT = process.env.PORT || 3006;
 
 const debug = Debug('deeplinks');
 const log = debug.extend('log');
@@ -341,6 +343,20 @@ let portTypeId = 0;
 
 const toJSON = (data) => JSON.stringify(data, Object.getOwnPropertyNames(data), 2);
 
+let nestedApps = {};
+app.use((req, res, next) => {
+  async.eachSeries(
+    Object.values(nestedApps),
+      (handler, callback) => {
+        handler(req, res, callback)
+      },
+      (err) => {
+        if(err) res.status(500).send(`${error}`);
+        else next()
+      }
+  );
+})
+
 const handleRoutes = async () => {
   if (busy)
     return;
@@ -360,6 +376,10 @@ const handleRoutes = async () => {
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+    let mainPort;
+    try {
+      mainPort = await deep.id('@deep-foundation/main-port', 'port');
+    } catch(error) {}
   
     const routesResult = await client.query({
       query: gql`
@@ -434,6 +454,9 @@ const handleRoutes = async () => {
             const element = currentServers[key];
             element.close();
             delete currentServers[key];
+          }
+          if (nestedApps.hasOwnProperty(key)) {
+            delete nestedApps[key];
           }
           delete currentPorts[key];
         }
@@ -566,7 +589,11 @@ const handleRoutes = async () => {
         // start express server
         const portServer = express();
 
-        currentServers[portValue] = http.createServer({ maxHeaderSize: 10*1024*1024*1024 }, portServer).listen(portValue);
+        if (+portValue === +PORT || port?.id === mainPort) {
+          nestedApps[port?.id] = portServer;
+        } else {
+          currentServers[portValue] = http.createServer({ maxHeaderSize: 10*1024*1024*1024 }, portServer).listen(portValue);
+        }
 
         // for each router
         for (const routerListening of port.routerListening) {
