@@ -4,6 +4,8 @@ import Debug from 'debug';
 import { permissions } from '../imports/permission.js';
 import waitOn from 'wait-on';
 import { linksPermissions } from './1622421760260-permissions.js'
+import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { DeepClient } from '../imports/client.js';
 
 const debug = Debug('deeplinks:migrations:hasura-storage');
 const log = debug.extend('log');
@@ -14,6 +16,16 @@ export const api = new HasuraApi({
   ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
   secret: process.env.MIGRATIONS_HASURA_SECRET,
 });
+
+const client = generateApolloClient({
+  path: `${process.env.MIGRATIONS_HASURA_PATH}/v1/graphql`,
+  ssl: !!+(process.env.MIGRATIONS_HASURA_SSL || 0),
+  secret: process.env.MIGRATIONS_HASURA_SECRET,
+});
+
+const deep = new DeepClient({
+  apolloClient: client,
+})
 
 export const up = async () => {
   log('up');
@@ -216,6 +228,19 @@ export const up = async () => {
       },
     },
   });
+  await api.query({
+    type: 'create_event_trigger',
+    args: {
+      name: 'files',
+      table:  { name: 'files', schema: 'storage' },
+      webhook: `${process.env.MIGRATIONS_DEEPLINKS_URL}/api/values`,
+      update: {
+        columns: '*',
+        payload: '*',
+      },
+      replace: false,
+    },
+  });
 
   await api.query({
     type: 'set_table_customization',
@@ -247,6 +272,51 @@ export const up = async () => {
       },
     }
   });
+  
+  await api.sql(sql`CREATE OR REPLACE FUNCTION files__promise__update__function() RETURNS TRIGGER AS $$ 
+  DECLARE 
+    PROMISE bigint;
+    SELECTOR record;
+    LINK links;
+    HANDLE_UPDATE record;
+    user_id bigint;
+    hasura_session json;
+  BEGIN
+    SELECT l.* into LINK
+    FROM links as l
+    WHERE l."id" = NEW."link_id";
+
+    FOR HANDLE_UPDATE IN
+      SELECT id, type_id FROM links l
+      WHERE
+      l."from_id" = LINK."type_id"
+      AND l."type_id" = ${deep.idLocal('@deep-foundation/core', 'HandleUpdate')}
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = l."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${deep.idLocal('@deep-foundation/core', 'DockerIsolationProvider')})
+    LOOP
+      PERFORM insert_promise(NEW."link_id", HANDLE_UPDATE."id", HANDLE_UPDATE."type_id", LINK, LINK, null, 'UPDATE');
+    END LOOP;
+
+    hasura_session := current_setting('hasura.user', 't');
+    user_id := hasura_session::json->>'x-hasura-user-id';
+
+    FOR SELECTOR IN
+      SELECT s.selector_id, h.id as handle_operation_id, h.type_id as handle_operation_type_id, s.query_id
+      FROM selectors s, links h
+      WHERE
+          s.item_id = NEW."link_id"
+      AND s.selector_id = h.from_id
+      AND h.type_id = ${deep.idLocal('@deep-foundation/core', 'HandleUpdate')}
+      AND EXISTS(select true from links handlers, links supports, links isolation_providers where handlers.id = h."to_id" AND supports.
+     id = handlers.from_id AND supports.from_id = isolation_providers.id AND isolation_providers.type_id = ${deep.idLocal('@deep-foundation/core', 'DockerIsolationProvider')})
+    LOOP
+      IF SELECTOR.query_id = 0 OR bool_exp_execute(NEW."link_id", SELECTOR.query_id, user_id) THEN
+        PERFORM insert_promise(NEW."link_id", SELECTOR.handle_operation_id, SELECTOR.handle_operation_type_id, LINK, LINK, SELECTOR.selector_id, 'UPDATE');
+      END IF;
+    END LOOP;
+    RETURN NEW;
+  END; $$ LANGUAGE plpgsql;`);
+  await api.sql(sql`CREATE TRIGGER z_files__promise__update__trigger AFTER UPDATE ON storage.files FOR EACH ROW EXECUTE PROCEDURE files__promise__update__function();`);
 
   log('relationships');
   await api.query({
@@ -374,6 +444,10 @@ export const up = async () => {
 
 export const down = async () => {
   log('down');
+
+  await api.sql(sql`DROP TRIGGER IF EXISTS z_files__promise__update__trigger ON storage.files;`);
+  await api.sql(sql`DROP FUNCTION IF EXISTS files__promise__delete__function CASCADE;`);
+
   log('relationships');
 
   await api.query({
