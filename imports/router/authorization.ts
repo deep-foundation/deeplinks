@@ -96,7 +96,7 @@ const resolvers = {
       }
       let jwt;
       const auth = await deep.select({
-        type_id: await deep.id('@deep-foundation/core', 'Authorization'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Authorization'),
         to_id: authLinkId,
       });
       console.log('seeet', { jwt, auth: auth?.data, linkId });
@@ -118,7 +118,7 @@ const resolvers = {
           jwt = await deep.jwt({ linkId });
         }
         await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Authorization'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Authorization'),
           from_id: jwt.linkId,
           to_id: authLinkId,
         });

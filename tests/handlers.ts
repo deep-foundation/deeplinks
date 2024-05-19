@@ -75,17 +75,17 @@ const collectIds = (data: any) => {
 };
 
 const insertPackageWithPermissions = async (forcePackageId?) => {
-  const Rule = await deep.id('@deep-foundation/core', 'Rule');
-  const RuleSubject = await deep.id('@deep-foundation/core', 'RuleSubject');
-  const Selector = await deep.id('@deep-foundation/core', 'Selector');
-  const RuleObject = await deep.id('@deep-foundation/core', 'RuleObject');
-  const RuleAction = await deep.id('@deep-foundation/core', 'RuleAction');
-  const SelectorInclude = await deep.id('@deep-foundation/core', 'SelectorInclude');
-  const SelectorTree = await deep.id('@deep-foundation/core', 'SelectorTree');
-  const AllowSelect = await deep.id('@deep-foundation/core', 'AllowSelect');
-  const AllowInsertType = await deep.id('@deep-foundation/core', 'AllowInsertType');
-  const containTree = await deep.id('@deep-foundation/core', 'containTree');
-  const joinTree = await deep.id('@deep-foundation/core', 'joinTree');
+  const Rule = deep.idLocal('@deep-foundation/core', 'Rule');
+  const RuleSubject = deep.idLocal('@deep-foundation/core', 'RuleSubject');
+  const Selector = deep.idLocal('@deep-foundation/core', 'Selector');
+  const RuleObject = deep.idLocal('@deep-foundation/core', 'RuleObject');
+  const RuleAction = deep.idLocal('@deep-foundation/core', 'RuleAction');
+  const SelectorInclude = deep.idLocal('@deep-foundation/core', 'SelectorInclude');
+  const SelectorTree = deep.idLocal('@deep-foundation/core', 'SelectorTree');
+  const AllowSelect = deep.idLocal('@deep-foundation/core', 'AllowSelect');
+  const AllowInsertType = deep.idLocal('@deep-foundation/core', 'AllowInsertType');
+  const containTree = deep.idLocal('@deep-foundation/core', 'containTree');
+  const joinTree = deep.idLocal('@deep-foundation/core', 'joinTree');
   
   let packageId;
   let packageValueId;
@@ -95,9 +95,9 @@ const insertPackageWithPermissions = async (forcePackageId?) => {
   if (forcePackageId) {
     packageId = forcePackageId;
   } else {
-    const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
-    const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
-    const typeTypeId = await deep.id('@deep-foundation/core', 'Type');
+    const packageTypeId = deep.idLocal('@deep-foundation/core', 'Package');
+    const containTypeId = deep.idLocal('@deep-foundation/core', 'Contain');
+    const typeTypeId = deep.idLocal('@deep-foundation/core', 'Type');
     const $package = (await deep.insert({
       type_id: packageTypeId,
       string: { data: { value: '@deep-foundation/test-package' } },
@@ -220,13 +220,13 @@ const deletePackageWithPermissions = async (deepPackage: any) => {
 };
 
 const insertOperationHandlerForSchedule = async (schedule: string, code: string, forceOwnerId?: Id) => {
-  const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+  const syncTextFileTypeId = deep.idLocal('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({ 
     type_id: syncTextFileTypeId,
   }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-  const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
+  const handlerTypeId = deep.idLocal('@deep-foundation/core', 'Handler');
+  const isolationProviderThatSupportsJSExecutionProviderId = deep.idLocal('@deep-foundation/core', 'dockerSupportsJs');
   const handler = (await deep.insert({
     from_id: isolationProviderThatSupportsJSExecutionProviderId,
     type_id: handlerTypeId,
@@ -235,16 +235,16 @@ const insertOperationHandlerForSchedule = async (schedule: string, code: string,
   const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
-    type_id: await deep.id('@deep-foundation/core', 'Contain'),
+    type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
     to_id: handler?.id,
   }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
-  const scheduleTypeId = await deep.id('@deep-foundation/core', 'Schedule');
+  const scheduleTypeId = deep.idLocal('@deep-foundation/core', 'Schedule');
   const scheduleNode = (await deep.insert({
     type_id: scheduleTypeId,
   }, { name: 'INSERT_SCHEDULE' })).data[0];
   // log(typeof schedule)
   const scheduleValue = (await deep.insert({ link_id: scheduleNode?.id, value: schedule }, { table: 'strings' })).data[0];
-  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+  const handleScheduleTypeId = deep.idLocal('@deep-foundation/core', 'HandleSchedule');
   const handleOperation = (await deep.insert({
     from_id: scheduleNode?.id,
     type_id: handleScheduleTypeId,
@@ -281,9 +281,9 @@ export const deleteScheduleHandler = async (handler) => {
 
 
 export async function getPromiseResults(deep, resultTypeId: Id, linkId: any) {
-  const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-  const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
-  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+  const promiseTypeId = deep.idLocal('@deep-foundation/core', 'Promise');
+  const thenTypeId = deep.idLocal('@deep-foundation/core', 'Then');
+  const promiseReasonTypeId = deep.idLocal('@deep-foundation/core', 'PromiseReason');
   const client = deep.apolloClient;
   const queryString = `{
     links(where: { 
@@ -327,7 +327,7 @@ export async function getPromiseResults(deep, resultTypeId: Id, linkId: any) {
 // }
 
 beforeAll(async () => {
-  // const packageId = await deep.id('@deep-foundation/core');
+  // const packageId = deep.idLocal('@deep-foundation/core');
   // packageWithPermissions = await insertPackageWithPermissions(packageId);
   packageWithPermissions = await insertPackageWithPermissions();
   // console.log(JSON.stringify(packageWithPermissions, null, 2));
@@ -346,14 +346,14 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
       await deletePromiseResult(promiseResult, linkId);
@@ -364,8 +364,8 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
@@ -374,7 +374,7 @@ describe('Async handlers', () => {
       await deep.insert({ link_id: linkId, value: numberToReturn }, { table: 'numbers' });
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       let promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
       await deletePromiseResult(promiseResult, linkId);
@@ -385,8 +385,8 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
@@ -398,7 +398,7 @@ describe('Async handlers', () => {
       await deep.update({ link_id: linkId }, { value: numberToReturn+1 }, { table: 'numbers' });
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
 
@@ -415,8 +415,8 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
@@ -428,7 +428,7 @@ describe('Async handlers', () => {
       await deep.delete({ link_id: { _eq: linkId } }, { table: 'numbers' });
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
 
@@ -445,15 +445,15 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
@@ -469,8 +469,8 @@ describe('Async handlers', () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const errorMessage = 'return is not possible';
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `({deep, data}) => { 
         deep.insert({id: 4444, type_id: 2});
         throw new Error('${errorMessage}');
@@ -481,7 +481,7 @@ describe('Async handlers', () => {
 
       await deep.await(linkId);
 
-      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       log('promiseResults', JSON.stringify(promiseResults));
       const promiseResult = promiseResults.find(link => link.object?.value.message === errorMessage);
@@ -495,15 +495,15 @@ describe('Async handlers', () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `(arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
 
-      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
       await deletePromiseResult(promiseResult, linkId);
@@ -517,15 +517,15 @@ describe('Async handlers', () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
 
       await deep.await(linkId);
 
-      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
       await deletePromiseResult(promiseResult, linkId);
@@ -536,14 +536,14 @@ describe('Async handlers', () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
       const handler = await insertHandler(handleUpdateTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
       const linkId = (await deep.insert({ type_id: typeId, from_id: typeId, to_id: typeId }))?.data?.[0].id;
-      await deep.update(linkId, { to_id: await deep.id('@deep-foundation/core', 'Any') });
+      await deep.update(linkId, { to_id: deep.idLocal('@deep-foundation/core', 'Any') });
       await deep.await(linkId);
-      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
       await deletePromiseResult(promiseResult, linkId);
@@ -554,14 +554,14 @@ describe('Async handlers', () => {
       // const numberToThrow = randomInteger(5000000, 9999999999);
       const numberToThrow = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
       const handler = await insertHandler(handleDeleteTypeId, typeId, `async (arg) => { throw ${numberToThrow}; return { "error": "return is not possible" }; }`);
 
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.delete(linkId);
       await deep.await(linkId);
-      const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+      const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
       const promiseResults = await getPromiseResults(deep, rejectedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value === numberToThrow);
       await deletePromiseResult(promiseResult, linkId);
@@ -575,12 +575,12 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      // const typeId = await deep.id('@deep-foundation/core', 'Type');
+      // const typeId = deep.idLocal('@deep-foundation/core', 'Type');
       const handler = await insertOperationHandlerForSchedule('* * * * *', `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
 
       await deep.await(handler.scheduleId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, handler.scheduleId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
       await deletePromiseResult(promiseResult, handler.scheduleId);
@@ -595,12 +595,12 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const queryTypeId = deep.idLocal('@deep-foundation/core', 'Query');
       const handler = await insertHandler(handleInsertTypeId, typeId, `async (arg) => {
         const deep = arg.deep;
-        const queryTypeId = await deep.id('@deep-foundation/core', 'Query');
+        const queryTypeId = deep.idLocal('@deep-foundation/core', 'Query');
         const queryId = (await deep.insert({ type_id: queryTypeId }))?.data?.[0]?.id;
         //  const queryId = (await deep.insert({ type_id: ${queryTypeId} }))?.data?.[0]?.id;
         return { queryId, result: ${numberToReturn}}
@@ -609,7 +609,7 @@ describe('Async handlers', () => {
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
@@ -629,8 +629,8 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const typeId = await deep.id('@deep-foundation/core', 'Type');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const handler = await insertHandler(handleInsertTypeId, typeId, `async (arg) => {
         const deep = arg.deep;
         const nodeTypeId = await deep.id('@deep-foundation/test-package', 'test-type');
@@ -641,7 +641,7 @@ describe('Async handlers', () => {
       const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const promiseResult = promiseResults.find(link => link.object?.value?.result === numberToReturn);
 
@@ -661,15 +661,15 @@ describe('Async handlers', () => {
   describe('handle port', () => {
     it(`handle port`, async () => {
       const port = await getPort();
-      const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+      const portTypeId = deep.idLocal('@deep-foundation/core', 'Port');
       const portId = (await deep.insert({
         type_id: portTypeId,
         number: { data: { value: port } }
       }))?.data?.[0]?.id;
 
-      const jsDockerIsolationProviderId = await deep.id('@deep-foundation/core', 'JSDockerIsolationProvider');
+      const jsDockerIsolationProviderId = deep.idLocal('@deep-foundation/core', 'JSDockerIsolationProvider');
 
-      const handlePortTypeId = await deep.id('@deep-foundation/core', 'HandlePort');
+      const handlePortTypeId = deep.idLocal('@deep-foundation/core', 'HandlePort');
       const hanlePortLinkId = (await deep.insert({ from_id: portId, type_id: handlePortTypeId, to_id: jsDockerIsolationProviderId }))?.data?.[0]?.id;
 
       await deep.await(hanlePortLinkId);
@@ -701,7 +701,7 @@ describe('Async handlers', () => {
     it(`handle route`, async () => {
       // const port = await getPort(); // conflicts with container-controller port allocation
       const port = 40005;
-      const portTypeId = await deep.id('@deep-foundation/core', 'Port');
+      const portTypeId = deep.idLocal('@deep-foundation/core', 'Port');
       
       const portId = (await deep.insert({
         type_id: portTypeId,
@@ -711,17 +711,17 @@ describe('Async handlers', () => {
         value: port 
       }, { table: 'numbers' }))?.data?.[0];
 
-      const routeTypeId = await deep.id('@deep-foundation/core', 'Route');
+      const routeTypeId = deep.idLocal('@deep-foundation/core', 'Route');
       const routeId = (await deep.insert({
         type_id: routeTypeId,
       }))?.data?.[0]?.id;
 
-      const routerTypeId = await deep.id('@deep-foundation/core', 'Router');
+      const routerTypeId = deep.idLocal('@deep-foundation/core', 'Router');
       const routerId = (await deep.insert({
         type_id: routerTypeId,
       }))?.data?.[0]?.id;
 
-      const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
+      const routerListeningTypeId = deep.idLocal('@deep-foundation/core', 'RouterListening');
       const routerListeningId = (await deep.insert({
         type_id: routerListeningTypeId,
         from_id: routerId,
@@ -730,7 +730,7 @@ describe('Async handlers', () => {
 
       const route = '/passport';
 
-      const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
+      const routerStringUseTypeId = deep.idLocal('@deep-foundation/core', 'RouterStringUse');
       const routerStringUseId = (await deep.insert({
         type_id: routerStringUseTypeId,
         to_id: routerId,
@@ -738,21 +738,21 @@ describe('Async handlers', () => {
         string: { data: { value: route } }
       }))?.data?.[0]?.id;
 
-      const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+      const syncTextFileTypeId = deep.idLocal('@deep-foundation/core', 'SyncTextFile');
       const handlerJSFile = (await deep.insert({
         type_id: syncTextFileTypeId,
       }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
       const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: `async (req, res) => { res.send('ok'); }` }, { table: 'strings' })).data[0];
       
-      const isolationProviderThatSupportsJSExecutionProviderId = await deep.id('@deep-foundation/core', 'dockerSupportsJs');
-      const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+      const isolationProviderThatSupportsJSExecutionProviderId = deep.idLocal('@deep-foundation/core', 'dockerSupportsJs');
+      const handlerTypeId = deep.idLocal('@deep-foundation/core', 'Handler');
       const handlerId = (await deep.insert({
         type_id: handlerTypeId,
         from_id: isolationProviderThatSupportsJSExecutionProviderId,
         to_id: handlerJSFile?.id,
       }))?.data?.[0]?.id;
 
-      const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+      const containTypeId = deep.idLocal('@deep-foundation/core', 'Contain');
       // const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
       const ownerId = await deep.id('deep', 'admin');
       const ownerContainHandler = (await deep.insert({
@@ -761,7 +761,7 @@ describe('Async handlers', () => {
         to_id: handlerId,
       }, { name: 'INSERT_ADMIN_CONTAIN_HANDLER' })).data[0];
 
-      const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+      const handleRouteTypeId = deep.idLocal('@deep-foundation/core', 'HandleRoute');
       const handleRouteLinkId = (await deep.insert({
         from_id: routeId,
         type_id: handleRouteTypeId,
@@ -802,30 +802,30 @@ describe('Async handlers', () => {
       const route = '/passport';
 
       const insertResult = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Port'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Port'),
         number: { data: { value: port } },
         in: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+          type_id: deep.idLocal('@deep-foundation/core', 'RouterListening'),
           from: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Router'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Router'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+              type_id: deep.idLocal('@deep-foundation/core', 'RouterStringUse'),
               string: { data: { value: route } },
               from: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Route'),
+                type_id: deep.idLocal('@deep-foundation/core', 'Route'),
                 out: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'HandleRoute'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'Handler'),
-                    from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'Handler'),
+                    from_id: deep.idLocal('@deep-foundation/core', 'dockerSupportsJs'),
                     in: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
                       // from_id: deep.linkId,
                       from_id: await deep.id('deep', 'admin'),
                       string: { data: { value: 'passport' } },
                     } },
                     to: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
                       string: { data: {
                         value: /*javascript*/`async (req, res) => { res.send('ok'); }`,
                       } },
@@ -842,19 +842,19 @@ describe('Async handlers', () => {
           number {
             id
           }
-          in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterListening')}" }}){
+          in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterListening')}" }}){
             id
             from {
               id
-              in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterStringUse')}" }}){
+              in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterStringUse')}" }}){
                 id
                 from {
                   id
-                  out(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'HandleRoute')}" }}){
+                  out(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'HandleRoute')}" }}){
                     id
                     to {
                       id
-                      in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'Contain')}" }}){
+                      in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'Contain')}" }}){
                         id
                         string {
                           id
@@ -921,30 +921,30 @@ describe('Async handlers', () => {
       const route = '/passport';
 
       const insertResult = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Port'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Port'),
         number: { data: { value: port } },
         in: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+          type_id: deep.idLocal('@deep-foundation/core', 'RouterListening'),
           from: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Router'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Router'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+              type_id: deep.idLocal('@deep-foundation/core', 'RouterStringUse'),
               string: { data: { value: route } },
               from: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Route'),
+                type_id: deep.idLocal('@deep-foundation/core', 'Route'),
                 out: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'HandleRoute'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'Handler'),
-                    from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'Handler'),
+                    from_id: deep.idLocal('@deep-foundation/core', 'dockerSupportsJs'),
                     in: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
                       // from_id: deep.linkId,
                       from_id: await deep.id('deep', 'admin'),
                       string: { data: { value: 'passport' } },
                     } },
                     to: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
                       string: { data: {
                         value: /*javascript*/`async (req, res) => { throw 'Error'; }`,
                       } },
@@ -961,19 +961,19 @@ describe('Async handlers', () => {
           number {
             id
           }
-          in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterListening')}" }}){
+          in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterListening')}" }}){
             id
             from {
               id
-              in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterStringUse')}" }}){
+              in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterStringUse')}" }}){
                 id
                 from {
                   id
-                  out(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'HandleRoute')}" }}){
+                  out(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'HandleRoute')}" }}){
                     id
                     to {
                       id
-                      in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'Contain')}" }}){
+                      in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'Contain')}" }}){
                         id
                         string {
                           id
@@ -1027,7 +1027,7 @@ describe('Async handlers', () => {
       // }
       const queryString = `{
         links(where: { 
-          type_id: { _eq: ${await deep.id('@deep-foundation/core', 'HandlingError')} },
+          type_id: { _eq: ${deep.idLocal('@deep-foundation/core', 'HandlingError')} },
         }) {
           id
           object {
@@ -1078,30 +1078,30 @@ describe('Async handlers', () => {
       const route = `/${field}`;
 
       const insertResult = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Port'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Port'),
         number: { data: { value: port } },
         in: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'RouterListening'),
+          type_id: deep.idLocal('@deep-foundation/core', 'RouterListening'),
           from: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Router'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Router'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'RouterStringUse'),
+              type_id: deep.idLocal('@deep-foundation/core', 'RouterStringUse'),
               string: { data: { value: route } },
               from: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'Route'),
+                type_id: deep.idLocal('@deep-foundation/core', 'Route'),
                 out: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'HandleRoute'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'HandleRoute'),
                   to: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'Handler'),
-                    from_id: await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'Handler'),
+                    from_id: deep.idLocal('@deep-foundation/core', 'dockerSupportsJs'),
                     in: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'Contain'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
                       // from_id: deep.linkId,
                       from_id: await deep.id('deep', 'admin'),
                       string: { data: { value: 'constant' } },
                     } },
                     to: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
                       string: { data: {
                         value: /*javascript*/`async (req, res, next, { deep, require, gql }) => {
                           const express = require('express');
@@ -1153,19 +1153,19 @@ describe('Async handlers', () => {
           number {
             id
           }
-          in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterListening')}" }}){
+          in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterListening')}" }}){
             id
             from {
               id
-              in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'RouterStringUse')}" }}){
+              in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'RouterStringUse')}" }}){
                 id
                 from {
                   id
-                  out(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'HandleRoute')}" }}){
+                  out(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'HandleRoute')}" }}){
                     id
                     to {
                       id
-                      in(where: { type_id: {_eq: "${await deep.id('@deep-foundation/core', 'Contain')}" }}){
+                      in(where: { type_id: {_eq: "${deep.idLocal('@deep-foundation/core', 'Contain')}" }}){
                         id
                         string {
                           id
@@ -1202,8 +1202,8 @@ describe('Async handlers', () => {
 
       // insert gql handler link
       const handleGqlLink = (await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'HandleGql'),
-        from_id: await deep.id('@deep-foundation/core', 'MainGqlEndpoint'),
+        type_id: deep.idLocal('@deep-foundation/core', 'HandleGql'),
+        from_id: deep.idLocal('@deep-foundation/core', 'MainGqlEndpoint'),
         to_id: handleRoute.id,
       }, {
         returning: `id`,
@@ -1252,7 +1252,7 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const selector = await insertSelector();
       const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
       // console.log(`nodeTypeId: ${nodeTypeId}`);
@@ -1277,13 +1277,13 @@ describe('Async handlers', () => {
       log(`awaiting ${selectorItems[0].linkId} link.`)
       await deep.await(selectorItems[0].linkId);
 
-      const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId1 = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
       log('promiseResults1', JSON.stringify(promiseResults1));
       const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
       // console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
 
-      const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId2 = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
       const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
       // console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
@@ -1305,7 +1305,7 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+      const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
       const selector = await insertSelector();
       const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
       // console.log(`nodeTypeId: ${nodeTypeId}`);
@@ -1333,12 +1333,12 @@ describe('Async handlers', () => {
       // console.log(`awaiting ${selectorItems[0].linkId} link.`)
       await deep.await(selectorItems[0].linkId);
 
-      const resolvedTypeId1 = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId1 = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults1 = await getPromiseResults(deep, resolvedTypeId1, selectorItems[1].linkId);
       const promiseResult1 = promiseResults1.find(link => link.object?.value?.result === numberToReturn);
       // console.log('promiseResult1', JSON.stringify(promiseResult1, null, 2))
 
-      const resolvedTypeId2 = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId2 = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults2 = await getPromiseResults(deep, resolvedTypeId2, selectorItems[0].linkId);
       const promiseResult2 = promiseResults2.find(link => link.object?.value?.result === numberToReturn);
       // console.log('promiseResult2', JSON.stringify(promiseResult2, null, 2))
@@ -1360,7 +1360,7 @@ describe('Async handlers', () => {
       // const numberToReturn = randomInteger(5000000, 9999999999);
       const numberToReturn = nextHandlerResult();
 
-      const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+      const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
       const selector = await insertSelector();
       const { nodeTypeId, linkTypeId, treeId, treeIncludesIds, selectorId, selectorIncludeId, selectorTreeId, rootId } = selector;
       const handler = await insertHandler(handleUpdateTypeId, selectorId, `(arg) => {console.log(arg); return {result: ${numberToReturn}}}`);
@@ -1376,7 +1376,7 @@ describe('Async handlers', () => {
       await deep.update({ link_id: linkId }, { value: numberToReturn+1 }, { table: 'numbers' });
       await deep.await(linkId);
 
-      const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
+      const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
       const promiseResults = await getPromiseResults(deep, resolvedTypeId, linkId);
       const matchedPromiseResults = promiseResults.filter(link => link.object?.value?.result === numberToReturn);
 

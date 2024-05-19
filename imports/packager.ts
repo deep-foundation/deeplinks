@@ -127,7 +127,7 @@ export class Packager<L extends Link<any>> {
     try {
       const q = await this.client.select({
         value: { _eq: name },
-        link: { type_id: { _eq: await deep.id('@deep-foundation/core', 'PackageNamespace') } },
+        link: { type_id: { _eq: deep.idLocal('@deep-foundation/core', 'PackageNamespace') } },
       }, {
         table: `strings`,
         returning: 'id: link_id'

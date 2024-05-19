@@ -30,8 +30,8 @@ export const up = async () => {
   await api.sql(sql`
     CREATE VIEW ${HANDLERS_TABLE_NAME} AS
     SELECT DISTINCT
-      coalesce((SELECT gl.from_id as id FROM links gl WHERE (gl.type_id = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS dist_id,
-      coalesce((SELECT gl.to_id as id FROM links gl WHERE (gl.type_id = ${await deep.id('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS src_id,
+      coalesce((SELECT gl.from_id as id FROM links gl WHERE (gl.type_id = ${deep.idLocal('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS dist_id,
+      coalesce((SELECT gl.to_id as id FROM links gl WHERE (gl.type_id = ${deep.idLocal('@deep-foundation/core', 'GeneratedFrom')}) AND (gl.from_id = handling_link.id OR gl.to_id = handling_link.id) LIMIT 1), handling_link.id) AS src_id,
       handler_link.id AS handler_id,
       supports_link.from_id AS isolation_provider_id,
       supports_link.to_id AS execution_provider_id
@@ -39,9 +39,9 @@ export const up = async () => {
       links handler_link,
       links supports_link
     WHERE (
-      (handler_link.type_id = ${await deep.id('@deep-foundation/core', 'Handler')})
+      (handler_link.type_id = ${deep.idLocal('@deep-foundation/core', 'Handler')})
       AND (handler_link.from_id = supports_link.id)
-      AND (supports_link.type_id = ${await deep.id('@deep-foundation/core', 'Supports')})
+      AND (supports_link.type_id = ${deep.idLocal('@deep-foundation/core', 'Supports')})
       AND (handler_link.to_id = handling_link.id)
     );
   `);

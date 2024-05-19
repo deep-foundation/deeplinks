@@ -210,14 +210,14 @@ const resolvers = {
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
+          deep.idLocal('@deep-foundation/core', 'AllowPackageInstall'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackageInstall')
+          deep.idLocal('@deep-foundation/core', 'AllowPackageInstall')
         ) &&
         !await deep.can(
           null,
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowAdmin')
+          deep.idLocal('@deep-foundation/core', 'AllowAdmin')
         )
       ) {
         errors.push('cant');
@@ -234,27 +234,27 @@ const resolvers = {
         userId: +context?.headers?.['x-hasura-user-id'],
         roleAdmin: context?.headers?.['x-hasura-role'] === 'admin',
         AllowPackagePublish: await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
+          deep.idLocal('@deep-foundation/core', 'AllowPackagePublish'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackagePublish')
+          deep.idLocal('@deep-foundation/core', 'AllowPackagePublish')
         ),
         AllowAdmin: await deep.can(
           null,
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowAdmin')
+          deep.idLocal('@deep-foundation/core', 'AllowAdmin')
         ),
       });
       if (
         context?.headers?.['x-hasura-role'] !== 'admin' &&
         !await deep.can(
-          await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
+          deep.idLocal('@deep-foundation/core', 'AllowPackagePublish'),
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowPackagePublish')
+          deep.idLocal('@deep-foundation/core', 'AllowPackagePublish')
         ) &&
         !await deep.can(
           null,
           +context?.headers?.['x-hasura-user-id'],
-          await deep.id('@deep-foundation/core', 'AllowAdmin')
+          deep.idLocal('@deep-foundation/core', 'AllowAdmin')
         )
       ) {
         errors.push('cant');

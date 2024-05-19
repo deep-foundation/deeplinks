@@ -50,8 +50,12 @@ const deep = new DeepClient({
   apolloClient: client,
 })
 
+let mainPort;
 const getMainPort = async () => {
-  try { return await deep.id('@deep-foundation/main-port', 'port'); } catch(error) {}
+  try {
+    if (!mainPort) mainPort = await deep.id('@deep-foundation/main-port', 'port');
+    return mainPort;
+  } catch(error) {}
 }
 
 export function makePromiseResult(promiseId: Id, resolvedTypeId: Id, promiseResultTypeId: Id, result: any, promiseReasonTypeId: Id, handleInsertId: any): any {
@@ -128,9 +132,9 @@ export const containerController = new ContainerController({
 
 export async function getJwt(handlerId: Id, useRunnerDebug: any) {
   const getJwtDebug = Debug('deeplinks:eh:links:getJwt');
-  const userTypeId = await deep.id('@deep-foundation/core', 'User');
+  const userTypeId = deep.idLocal('@deep-foundation/core', 'User');
   getJwtDebug("userTypeId: ", JSON.stringify(userTypeId, null, 2));
-  const packageTypeId = await deep.id('@deep-foundation/core', 'Package');
+  const packageTypeId = deep.idLocal('@deep-foundation/core', 'Package');
   getJwtDebug("packageTypeId: ", JSON.stringify(packageTypeId, null, 2));
   const queryString = `query {
     mpUp: mp(where: {
@@ -222,7 +226,7 @@ export const handlerOperations = {
 export async function handleOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: Id, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleOperationDebug = Debug('deeplinks:eh:links:handleOperation');
   handleOperationDebug('handleOperation', operation);
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
+  const handleOperationTypeId = deep.idLocal('@deep-foundation/core', handlerOperations[operation]);
   handleOperationDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
@@ -252,10 +256,10 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     return;
   }
 
-  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-  const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+  const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
+  const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
+  const promiseResultTypeId = deep.idLocal('@deep-foundation/core', 'PromiseResult');
+  const promiseReasonTypeId = deep.idLocal('@deep-foundation/core', 'PromiseReason');
 
   for (const promiseLink of promiseLinks) {
     const code = promiseLink?.code;
@@ -286,7 +290,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
 export async function handleSelectorOperation(operation: keyof typeof handlerOperations, triggeredByLinkId: Id, oldLink: any, newLink: any, valuesOperation?: string) {
   const handleSelectorDebug = debug.extend('handleSelector').extend('log');
   handleSelectorDebug('handleOperation', operation);
-  const handleOperationTypeId = await deep.id('@deep-foundation/core', handlerOperations[operation]);
+  const handleOperationTypeId = deep.idLocal('@deep-foundation/core', handlerOperations[operation]);
   handleSelectorDebug('handleOperationTypeId', handleOperationTypeId);
 
   const promiseLinksQueryString = `query SELECT_PROMISE_LINKS { 
@@ -317,10 +321,10 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     return;
   }
 
-  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
-  const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-  const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+  const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
+  const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
+  const promiseResultTypeId = deep.idLocal('@deep-foundation/core', 'PromiseResult');
+  const promiseReasonTypeId = deep.idLocal('@deep-foundation/core', 'PromiseReason');
 
   for (const promiseLink of promiseLinks) {
     const code = promiseLink?.code;
@@ -356,7 +360,7 @@ export async function handleSchedule(handleScheduleLink: any, operation: 'INSERT
   if (operation == 'INSERT') {
     // get schedule
     const schedule = await deep.select({
-      type_id: await deep.id('@deep-foundation/core', 'Schedule'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Schedule'),
       out: {
         id: { _eq: handleScheduleLink.id },
       },
@@ -408,10 +412,10 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
   handleGqlDebug('operation', operation);
   if (operation == 'INSERT') {
     // insert gql handler
-    const portTypeId = await deep.id('@deep-foundation/core', 'Port');
-    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
-    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
-    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+    const portTypeId = deep.idLocal('@deep-foundation/core', 'Port');
+    const routerStringUseTypeId = deep.idLocal('@deep-foundation/core', 'RouterStringUse');
+    const routerListeningTypeId = deep.idLocal('@deep-foundation/core', 'RouterListening');
+    const handleRouteTypeId = deep.idLocal('@deep-foundation/core', 'HandleRoute');
     const mainPort = await getMainPort();
 
     const routesResult = await client.query({
@@ -480,7 +484,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       const portValue = port?.id === mainPort ? PORT : port?.port?.value;
       // TODO: Use better way to get base url
       // const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
-      const baseUrl = `http://${port?.id === mainPort ? 'localhost' : DEEPLINKS_ROUTE_HANDLERS_HOST}:${portValue}`;
+      const baseUrl = `http://${DEEPLINKS_ROUTE_HANDLERS_HOST}:${portValue}`;
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
@@ -555,7 +559,7 @@ ${schema}`);
       {
         const processedRejection = JSON.parse(toJSON(rejected));
         handleGqlDebug('rejected', processedRejection);
-        const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+        const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
         handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
         const insertResult = await deep.insert({
@@ -563,7 +567,7 @@ ${schema}`);
           object: { data: { value: processedRejection } },
           out: { data: [
             {
-              type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+              type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
               to_id: handleRouteId,
             },
           ]},
@@ -612,7 +616,7 @@ ${schema}`);
     {
       const processedRejection = JSON.parse(toJSON(rejected));
       handleGqlDebug('rejected', processedRejection);
-      const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
+      const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
       handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
       const insertResult = await deep.insert({
@@ -620,7 +624,7 @@ ${schema}`);
         object: { data: { value: processedRejection } },
         out: { data: [
           {
-            type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+            type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
             to_id: reasonId,
           },
         ]},
@@ -693,7 +697,7 @@ export default async (req, res) => {
   try {
     let handlePortId;
     try {
-      handlePortId = await deep.id('@deep-foundation/core', 'HandlePort');
+      handlePortId = deep.idLocal('@deep-foundation/core', 'HandlePort');
     } catch {
       return res.status(500).json({ error: '@deep-foundation/core package is not ready to support links handlers.' });
     }
@@ -746,11 +750,11 @@ export default async (req, res) => {
 
         const typeId = current.type_id;
 
-        const handleScheduleId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+        const handleScheduleId = deep.idLocal('@deep-foundation/core', 'HandleSchedule');
         if (typeId === handleScheduleId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleSchedule(current, operation);
         }
-        const handleGqlTypeId = await deep.id('@deep-foundation/core', 'HandleGql');
+        const handleGqlTypeId = deep.idLocal('@deep-foundation/core', 'HandleGql');
         if (typeId === handleGqlTypeId && (operation === 'INSERT' || operation === 'DELETE')) {
           await handleGql(current, operation);
         }
@@ -765,10 +769,10 @@ export default async (req, res) => {
           log('resolve', current.id);
           await resolve({
             id: current.id, client,
-            Then: await deep.id('@deep-foundation/core', 'Then'),
-            Promise: await deep.id('@deep-foundation/core', 'Promise'),
-            Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-            Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Then: deep.idLocal('@deep-foundation/core', 'Then'),
+            Promise: deep.idLocal('@deep-foundation/core', 'Promise'),
+            Resolved: deep.idLocal('@deep-foundation/core', 'Resolved'),
+            Rejected: deep.idLocal('@deep-foundation/core', 'Rejected'),
             Results: false,
           });
         }
@@ -779,10 +783,10 @@ export default async (req, res) => {
           log('reject', current.id);
           await reject({
             id: current.id, client,
-            Then: await deep.id('@deep-foundation/core', 'Then'),
-            Promise: await deep.id('@deep-foundation/core', 'Promise'),
-            Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-            Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+            Then: deep.idLocal('@deep-foundation/core', 'Then'),
+            Promise: deep.idLocal('@deep-foundation/core', 'Promise'),
+            Resolved: deep.idLocal('@deep-foundation/core', 'Resolved'),
+            Rejected: deep.idLocal('@deep-foundation/core', 'Rejected'),
             Results: false,
           });
         }

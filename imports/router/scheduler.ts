@@ -43,8 +43,8 @@ const deep = new DeepClient({
 })
 
 export const insertPromise = async (scheduleId: Id) => {
-  const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-  const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
+  const promiseTypeId = deep.idLocal('@deep-foundation/core', 'Promise');
+  const thenTypeId = deep.idLocal('@deep-foundation/core', 'Then');
   const promise = (await deep.insert({ 
     type_id: promiseTypeId,
   }, { name: 'IMPORT_HANDLER_JS_FILE' })).data[0];
@@ -64,13 +64,13 @@ export async function handleScheduleMomemt(moment: any) {
   // log('currentLinkId', currentLinkId);
   // log('currentTypeId', currentTypeId);
 
-  const resolvedTypeId = await deep.id('@deep-foundation/core', 'Resolved');
-  const rejectedTypeId = await deep.id('@deep-foundation/core', 'Rejected');
+  const resolvedTypeId = deep.idLocal('@deep-foundation/core', 'Resolved');
+  const rejectedTypeId = deep.idLocal('@deep-foundation/core', 'Rejected');
 
   const promise = await findPromiseLink({
     id: scheduleId, client: deep.apolloClient,
-    Then: await deep.id('@deep-foundation/core', 'Then'),
-    Promise: await deep.id('@deep-foundation/core', 'Promise'),
+    Then: deep.idLocal('@deep-foundation/core', 'Then'),
+    Promise: deep.idLocal('@deep-foundation/core', 'Promise'),
     Resolved: resolvedTypeId,
     Rejected: rejectedTypeId,
     Results: false,
@@ -78,16 +78,16 @@ export async function handleScheduleMomemt(moment: any) {
   log('promise: ', promise);
   if (promise)
   {
-    const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
-    const handleOperationTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
+    const handlerTypeId = deep.idLocal('@deep-foundation/core', 'Handler');
+    const handleOperationTypeId = deep.idLocal('@deep-foundation/core', 'HandleSchedule');
   
     // log('handlerTypeId', handlerTypeId);
     // log('handleInsertTypeId', handleInsertTypeId);
   
     const queryString = `query SELECT_CODE($scheduleId: bigint) { links(where: {
-            type_id: { _eq: ${await deep.id('@deep-foundation/core', 'SyncTextFile')} },
+            type_id: { _eq: ${deep.idLocal('@deep-foundation/core', 'SyncTextFile')} },
             in: {
-              from_id: { _eq: ${await deep.id('@deep-foundation/core', 'dockerSupportsJs')} },
+              from_id: { _eq: ${deep.idLocal('@deep-foundation/core', 'dockerSupportsJs')} },
               type_id: { _eq: ${handlerTypeId} },
               in: {
                 from_id: { _eq: $scheduleId },
@@ -156,8 +156,8 @@ export async function handleScheduleMomemt(moment: any) {
         }
       }
 
-      const promiseResultTypeId = await deep.id('@deep-foundation/core', 'PromiseResult');
-      const promiseReasonTypeId = await deep.id('@deep-foundation/core', 'PromiseReason');
+      const promiseResultTypeId = deep.idLocal('@deep-foundation/core', 'PromiseResult');
+      const promiseReasonTypeId = deep.idLocal('@deep-foundation/core', 'PromiseReason');
 
       await insertPromise(scheduleId);
 
@@ -190,10 +190,10 @@ export default async (req, res) => {
       //   log('resolve', current.id);
       //   await resolve({
       //     id: current.id, client,
-      //     Then: await deep.id('@deep-foundation/core', 'Then'),
-      //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-      //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+      //     Then: deep.idLocal('@deep-foundation/core', 'Then'),
+      //     Promise: deep.idLocal('@deep-foundation/core', 'Promise'),
+      //     Resolved: deep.idLocal('@deep-foundation/core', 'Resolved'),
+      //     Rejected: deep.idLocal('@deep-foundation/core', 'Rejected'),
       //   });
       // }
       return res.status(200).json({});
@@ -204,10 +204,10 @@ export default async (req, res) => {
       //   log('reject', current.id);
       //   await reject({
       //     id: current.id, client,
-      //     Then: await deep.id('@deep-foundation/core', 'Then'),
-      //     Promise: await deep.id('@deep-foundation/core', 'Promise'),
-      //     Resolved: await deep.id('@deep-foundation/core', 'Resolved'),
-      //     Rejected: await deep.id('@deep-foundation/core', 'Rejected'),
+      //     Then: deep.idLocal('@deep-foundation/core', 'Then'),
+      //     Promise: deep.idLocal('@deep-foundation/core', 'Promise'),
+      //     Resolved: deep.idLocal('@deep-foundation/core', 'Resolved'),
+      //     Rejected: deep.idLocal('@deep-foundation/core', 'Rejected'),
       //   });
       // }
     }

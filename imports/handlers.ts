@@ -13,18 +13,18 @@ const apolloClient = generateApolloClient({
 const deep = new DeepClient({ apolloClient });
 
 export const insertHandler = async (handleOperationTypeId: Id, typeId: Id, code: string, forceOwnerId?: Id, supportsId?: Id) => {
-  const syncTextFileTypeId = await deep.id('@deep-foundation/core', 'SyncTextFile');
+  const syncTextFileTypeId = deep.idLocal('@deep-foundation/core', 'SyncTextFile');
   const handlerJSFile = (await deep.insert({
     type_id: syncTextFileTypeId,
   }, { name: 'INSERT_HANDLER_JS_FILE' })).data[0];
   const handlerJSFileValue = (await deep.insert({ link_id: handlerJSFile?.id, value: code }, { table: 'strings' })).data[0];
-  const handlerTypeId = await deep.id('@deep-foundation/core', 'Handler');
+  const handlerTypeId = deep.idLocal('@deep-foundation/core', 'Handler');
   const handler = (await deep.insert({
-    from_id: supportsId || await deep.id('@deep-foundation/core', 'dockerSupportsJs'),
+    from_id: supportsId || deep.idLocal('@deep-foundation/core', 'dockerSupportsJs'),
     type_id: handlerTypeId,
     to_id: handlerJSFile?.id,
   }, { name: 'INSERT_HANDLER' })).data[0];
-  const containTypeId = await deep.id('@deep-foundation/core', 'Contain');
+  const containTypeId = deep.idLocal('@deep-foundation/core', 'Contain');
   const ownerId = forceOwnerId || (await deep.id('deep', 'admin'));
   const ownerContainHandler = (await deep.insert({
     from_id: ownerId,
@@ -46,7 +46,7 @@ export const insertHandler = async (handleOperationTypeId: Id, typeId: Id, code:
 };
 
 export async function insertSelector() {
-  const typeTypeId = await deep.id('@deep-foundation/core', 'Type');
+  const typeTypeId = deep.idLocal('@deep-foundation/core', 'Type');
   const { data: [{ id: ty0 }] } = await deep.insert({
     type_id: typeTypeId,
   });
@@ -55,9 +55,9 @@ export async function insertSelector() {
     from_id: ty0,
     to_id: ty0,
   });
-  const treeIncludeDownTypeId = await deep.id('@deep-foundation/core', 'TreeIncludeDown');
+  const treeIncludeDownTypeId = deep.idLocal('@deep-foundation/core', 'TreeIncludeDown');
   const { data: [{ id: tr1, out: treeIncludes }] } = await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Tree'),
+    type_id: deep.idLocal('@deep-foundation/core', 'Tree'),
     out: { data: [
       {
         type_id: treeIncludeDownTypeId,
@@ -79,10 +79,10 @@ export async function insertSelector() {
   const { data: [{ id: id0 }] } = await deep.insert({
     type_id: ty0,
   });
-  const selectorIncludeTypeId = await deep.id('@deep-foundation/core', 'SelectorInclude');
-  const selectorTreeTypeId = await deep.id('@deep-foundation/core', 'SelectorTree');
+  const selectorIncludeTypeId = deep.idLocal('@deep-foundation/core', 'SelectorInclude');
+  const selectorTreeTypeId = deep.idLocal('@deep-foundation/core', 'SelectorTree');
   const { data: [{ id: s1, out: selectorData }] } = await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Selector'),
+    type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
     out: { data: [
       {
         type_id: selectorIncludeTypeId,

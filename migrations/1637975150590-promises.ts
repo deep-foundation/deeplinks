@@ -22,12 +22,12 @@ const deep = new DeepClient({
 export const up = async () => {
   log('up');
 
-  const promiseTypeId = await deep.id('@deep-foundation/core', 'Promise');
-  const thenTypeId = await deep.id('@deep-foundation/core', 'Then');
-  const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-  const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-  const handleScheduleTypeId = await deep.id('@deep-foundation/core', 'HandleSchedule');
-  const dockerIsolationProviderTypeId = await deep.id('@deep-foundation/core', 'DockerIsolationProvider');
+  const promiseTypeId = deep.idLocal('@deep-foundation/core', 'Promise');
+  const thenTypeId = deep.idLocal('@deep-foundation/core', 'Then');
+  const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+  const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+  const handleScheduleTypeId = deep.idLocal('@deep-foundation/core', 'HandleSchedule');
+  const dockerIsolationProviderTypeId = deep.idLocal('@deep-foundation/core', 'DockerIsolationProvider');
 
   // create sql type values_operation_type upper case
   await api.sql(sql`CREATE TYPE public.values_operation_type AS ENUM ('INSERT', 'UPDATE', 'DELETE');`);
@@ -197,7 +197,7 @@ export const up = async () => {
   END; $$ LANGUAGE plpgsql;`);
   await api.sql(sql`CREATE TRIGGER z_${LINKS_TABLE_NAME}__promise__update__trigger AFTER UPDATE ON "links" FOR EACH ROW EXECUTE PROCEDURE ${LINKS_TABLE_NAME}__promise__update__function();`);
 
-  const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
+  const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${LINKS_TABLE_NAME}__promise__delete__function() RETURNS TRIGGER AS $trigger$ 
   DECLARE

@@ -24,40 +24,40 @@ beforeAll(async () => {
 describe('selectors', () => {
   it(`selector include exclude`, async () => {
     const { data: [{ id: ty0 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Type'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Type'),
     });
     const { data: [{ id: ty1 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Type'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Type'),
       from_id: ty0,
       to_id: ty0,
     });
     const { data: [{ id: tr1 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Tree'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Tree'),
       out: { data: [
         {
-          type_id: await deep.id('@deep-foundation/core', 'TreeIncludeDown'),
+          type_id: deep.idLocal('@deep-foundation/core', 'TreeIncludeDown'),
           to_id: ty1,
         },
         {
-          type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+          type_id: deep.idLocal('@deep-foundation/core', 'TreeIncludeNode'),
           to_id: ty0,
         },
       ] }
     });
     const { data: [{ id: ty2 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Type'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Type'),
       from_id: ty0,
       to_id: ty0,
     });
     const { data: [{ id: tr2 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Tree'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Tree'),
       out: { data: [
         {
-          type_id: await deep.id('@deep-foundation/core', 'TreeIncludeDown'),
+          type_id: deep.idLocal('@deep-foundation/core', 'TreeIncludeDown'),
           to_id: ty2,
         },
         {
-          type_id: await deep.id('@deep-foundation/core', 'TreeIncludeNode'),
+          type_id: deep.idLocal('@deep-foundation/core', 'TreeIncludeNode'),
           to_id: ty0,
         },
       ] }
@@ -101,42 +101,42 @@ describe('selectors', () => {
       } }
     });
     const { data: [{ id: s1 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Selector'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
       out: { data: [
         {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
           to_id: id0,
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
             to_id: tr1
           } },
         },
         {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
           to_id: id3,
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
             to_id: tr1
           } },
         },
       ] }
     });
     const { data: [{ id: s2 }] } = await deep.insert({
-      type_id: await deep.id('@deep-foundation/core', 'Selector'),
+      type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
       out: { data: [
         {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
           to_id: id0,
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
             to_id: tr2
           } },
         },
         {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
           to_id: id3,
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
             to_id: tr2
           } },
         },

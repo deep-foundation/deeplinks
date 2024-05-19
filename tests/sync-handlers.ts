@@ -107,25 +107,25 @@ const deep = new DeepClient({ apolloClient });
   // await api.sql(createSyncDeleteStringsTrigger);
 // });
 
-const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
-const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // await deep.id('@deep-foundation/core', 'HandleDelete');
-const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
-const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
-const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
-const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // await deep.id('@deep-foundation/core', 'Handler');
-const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.id('@deep-foundation/core', 'SelectorType');
-const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
-const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
-const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
+const handleInsertTypeId = _ids?.['@deep-foundation/core']?.HandleInsert; // deep.idLocal('@deep-foundation/core', 'HandleInsert');
+const handleUpdateTypeId = _ids?.['@deep-foundation/core']?.HandleUpdate; // deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+const handleDeleteTypeId = _ids?.['@deep-foundation/core']?.HandleDelete;; // deep.idLocal('@deep-foundation/core', 'HandleDelete');
+const userTypeId = _ids?.['@deep-foundation/core']?.User // deep.idLocal('@deep-foundation/core', 'User');
+const packageTypeId = _ids?.['@deep-foundation/core']?.Package // deep.idLocal('@deep-foundation/core', 'Package');
+const containTypeId = _ids?.['@deep-foundation/core']?.Contain // deep.idLocal('@deep-foundation/core', 'Contain');
+const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
+const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // deep.idLocal('@deep-foundation/core', 'Handler');
+const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // deep.idLocal('@deep-foundation/core', 'SelectorType');
+const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // deep.idLocal('@deep-foundation/core', 'AllowSelectType');
+const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // deep.idLocal('@deep-foundation/core', 'AllowSelect');
+const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // deep.idLocal('@deep-foundation/core', 'AllowAdmin');
 
 log({handleInsertTypeId, handleUpdateTypeId, handleDeleteTypeId, userTypeId,packageTypeId, containTypeId,plv8SupportsJsTypeId, HandlerTypeId, SelectorTypeId, AllowSelectTypeId, AllowSelectId,  AllowAdminId});
 
 describe('sync handlers', () => {
   describe('Prepare fuction', () => {
     it(`handleInsert`, async () => {
-      const handlerId = await deep.id('@deep-foundation/core', 'HandleInsert');
+      const handlerId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
       const link = JSON.stringify({id: 1, type_id: 1}); // change for yours
       const result = await api.sql(sql`select links__sync__handlers__prepare__function('${link}'::jsonb, ${handlerId}::bigint)`);
       log('prepare result', result?.data?.result?.[1]?.[0]);
@@ -134,7 +134,7 @@ describe('sync handlers', () => {
   describe('DeepClient mini', () => {
     it(`id`, async () => {
       const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'id', '["@deep-foundation/core", "Rule"]'::jsonb, '{}'::jsonb)`);
-      const clientResult = await deep.id('@deep-foundation/core', 'Rule');
+      const clientResult = deep.idLocal('@deep-foundation/core', 'Rule');
       log('id result', result?.data?.result?.[1]?.[0]);
       assert.equal(JSON.parse(result?.data?.result?.[1]?.[0])?.[0], clientResult);
     });
@@ -142,11 +142,11 @@ describe('sync handlers', () => {
       const debug = log.extend('HandleInsert');
 
       const guest = await deep.guest({});
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('customLinkId', customLinkId);
@@ -186,11 +186,11 @@ describe('sync handlers', () => {
       const debug = log.extend('HandleInsert');
 
       const guest = await deep.guest({});
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('customLinkId', customLinkId);
@@ -228,11 +228,11 @@ describe('sync handlers', () => {
     it(`new client by linkId`, async () => {
       const debug = log.extend('HandleInsert');
 
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('customLinkId', customLinkId);
@@ -271,11 +271,11 @@ describe('sync handlers', () => {
     it(`new client by jwt`, async () => {
       const debug = log.extend('HandleInsert');
 
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('admin Token', (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token);
@@ -316,11 +316,11 @@ describe('sync handlers', () => {
       const debug = log.extend('HandleInsert');
 
       const guest = await deep.guest({});
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       const admin_token = (await deep.jwt({ linkId: await deep.id('deep', 'admin') })).token;
@@ -340,8 +340,8 @@ describe('sync handlers', () => {
         typeId, 
         `({deep, data}) => {
           deep.insert({type_id: ${customLinkId}, to_id: ${customLinkId}, from_id: ${customLinkId}, object: {
-            canAdmin: deep.can(null, deep.linkId, ${await deep.id('@deep-foundation/core', 'AllowAdmin')}),
-            canGuest: deep.can(null, ${guest.linkId}, ${await deep.id('@deep-foundation/core', 'AllowAdmin')}),
+            canAdmin: deep.can(null, deep.linkId, ${deep.idLocal('@deep-foundation/core', 'AllowAdmin')}),
+            canGuest: deep.can(null, ${guest.linkId}, ${deep.idLocal('@deep-foundation/core', 'AllowAdmin')}),
             linkId: String(deep.linkId),
           }});
         }`,
@@ -372,7 +372,7 @@ describe('sync handlers', () => {
     });
     it(`objectGet`, async () => {
       const { data: [{ id }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
         object: { data: { value: { a: 3 }}}
       });
       const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'objectGet','[${id},["a"]]'::jsonb, '{}'::jsonb)`);
@@ -383,7 +383,7 @@ describe('sync handlers', () => {
     });
     it(`objectSet`, async () => {
       const { data: [{ id }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Operation'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
         object: { data: { value: { a: 3 }}}
       });
       
@@ -396,10 +396,10 @@ describe('sync handlers', () => {
     describe('unsafe', () => {
       it(`objectSet`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { data: { a: { value: 'HelloBugFixers'}, b: { value: 'HelloBugFixers2'}}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -415,10 +415,10 @@ describe('sync handlers', () => {
       });
       it(`objectGet`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { a: { value: 'HelloBugFixers'}, b: { value: 'HelloBugFixers2'}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -436,10 +436,10 @@ describe('sync handlers', () => {
     describe('select', () => {
       it(`select should return value`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           string: { data: { value: 'HelloBugFixers'}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -454,14 +454,14 @@ describe('sync handlers', () => {
       describe('number', () => {
         it(`number: { value: number }}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             number: { data: { value: 1515}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": 1515}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "number": {"value": 1515}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -471,14 +471,14 @@ describe('sync handlers', () => {
         });
         it(`number: { value: { "_in": [ number, number ] }}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             number: { data: { value: 1515}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": {"value": { "_in": [ 1515, 12 ]}}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "number": {"value": { "_in": [ 1515, 12 ]}}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -488,14 +488,14 @@ describe('sync handlers', () => {
         });
         it(`number: number`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             number: { data: { value: 1515}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": 1515}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "number": 1515}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -505,14 +505,14 @@ describe('sync handlers', () => {
         });
         it(`number: { "_in": [ number, number ]}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             number: { data: { value: 1515}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "number": { "_in": [ 1515, 9999 ]}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "number": { "_in": [ 1515, 9999 ]}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -524,14 +524,14 @@ describe('sync handlers', () => {
       describe('string', () => {
         it(`string: { value: string }`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           string: { data: { value: 'HelloBugFixers'}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": {"value": "HelloBugFixers"}}'::jsonb, '{}'::jsonb)`);
+        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "string": {"value": "HelloBugFixers"}}'::jsonb, '{}'::jsonb)`);
         log('select result', result?.data?.result?.[1]?.[0]);
         const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
         const selected = await deep.select(id);
@@ -541,14 +541,14 @@ describe('sync handlers', () => {
         });
         it(`string: { value: { "_in": [ string, string ] }}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixers2'}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": {"value": { "_in": [ "HelloBugFixers2", "noNoNO" ]}}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "string": {"value": { "_in": [ "HelloBugFixers2", "noNoNO" ]}}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -558,22 +558,22 @@ describe('sync handlers', () => {
         });
         it(`string: 'string'`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixersTest'}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
           const { data: [{ id : id2 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'hellobugfixerstest'}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": "hellobugfixerstest"}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "string": "hellobugfixerstest"}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result);
           log('select result?.[1]', result?.data?.result?.[1]);
           log('select result?.[1]?.[0]', result?.data?.result?.[1]?.[0]);
@@ -586,14 +586,14 @@ describe('sync handlers', () => {
         });
         it(`string: { "_in": ['string', 'string'] }`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixersTest'}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "string": { "_in": ["hellobugfixerstest", "goodbyebugfixerstest"]}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "string": { "_in": ["hellobugfixerstest", "goodbyebugfixerstest"]}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -605,14 +605,14 @@ describe('sync handlers', () => {
       describe('object', () => {
         it(`object: { value: object }`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             object: { data: { value: { key: 'HelloBugFixers' }}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": {"value": { "key": "HelloBugFixers" }}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "object": {"value": { "key": "HelloBugFixers" }}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -622,14 +622,14 @@ describe('sync handlers', () => {
         });
         it(`object: { value: { "_in": [ object, object ] }}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             object: { data: { value: { key: 'HelloBugFixersObject' }}},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "value": { "_in": [ { "key": "HelloBugFixersObject" }, { "key": "asdasd" }]}}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "object": { "value": { "_in": [ { "key": "HelloBugFixersObject" }, { "key": "asdasd" }]}}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           await deep.delete(id);
@@ -637,14 +637,14 @@ describe('sync handlers', () => {
         });
         it(`object: object`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { data: { value: { key: 'HelloBugFixersTestObject123' }}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "key": "HelloBugFixersTestObject123" }}'::jsonb, '{}'::jsonb)`);
+        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "object": { "key": "HelloBugFixersTestObject123" }}'::jsonb, '{}'::jsonb)`);
         log('select result', result?.data?.result?.[1]?.[0]);
         const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
         const selected = await deep.select(id);
@@ -654,14 +654,14 @@ describe('sync handlers', () => {
         });
         it(`object: { "_in": [object, object] }`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { data: { value: { key: 'HelloBugFixersTestObject123' }}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
-        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "object": { "_in": [{ "key": "HelloBugFixersTestObject123" }, { "key": "HelloBugFixersTestObject124" }] }}'::jsonb, '{}'::jsonb)`);
+        const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "object": { "_in": [{ "key": "HelloBugFixersTestObject123" }, { "key": "HelloBugFixersTestObject124" }] }}'::jsonb, '{}'::jsonb)`);
         log('select result', result?.data?.result?.[1]?.[0]);
         const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
         const selected = await deep.select(id);
@@ -673,14 +673,14 @@ describe('sync handlers', () => {
       describe('value', () => {
         it(`value: { value: string }`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixersValue2' }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": "HelloBugFixersValue2" }}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": { "value": "HelloBugFixersValue2" }}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -690,14 +690,14 @@ describe('sync handlers', () => {
         });
         it(`value: string`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixersValue2' }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text,'{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": "HelloBugFixersValue2"}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text,'{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": "HelloBugFixersValue2"}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -707,14 +707,14 @@ describe('sync handlers', () => {
         });
         it(`value: { value: object }`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             object: { data: { value: { key: 'HelloBugFixersValue2' } }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "key": "HelloBugFixersValue2" } }}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": { "value": { "key": "HelloBugFixersValue2" } }}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -724,14 +724,14 @@ describe('sync handlers', () => {
         });
         it(`value: object`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             object: { data: { value: { key: 'HelloBugFixersValue2' } }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "key": "HelloBugFixersValue2" } }'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": { "key": "HelloBugFixersValue2" } }'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -741,14 +741,14 @@ describe('sync handlers', () => {
         });
         it(`value: { value: { _in: [ string, number, object ] } }}`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixers' }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": { "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}}'::jsonb, '{}'::jsonb)`);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
           const selected = await deep.select(id);
@@ -758,15 +758,15 @@ describe('sync handlers', () => {
         });
         it(`value: {"_in":[ string, number, object ]} }`, async () => {
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'HelloBugFixers' }},
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: await deep.id('deep', 'admin')
             } }
           });
           console.log(11);
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${await deep.id('@deep-foundation/core', 'Operation')}, "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'select'::text, '{"type_id": ${deep.idLocal('@deep-foundation/core', 'Operation')}, "value": { "_in": ["HelloBugFixers", 1516, { "key": "HelloBugFixers"} ] }}'::jsonb, '{}'::jsonb)`);
           console.log(123);
           log('select result', result?.data?.result?.[1]?.[0]);
           const value = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.value;
@@ -780,10 +780,10 @@ describe('sync handlers', () => {
     describe('update', () => {
       it(`update string`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           string: { data: { value: 'HelloBugFixers'}},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -795,10 +795,10 @@ describe('sync handlers', () => {
       });
       it(`update number`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           number: { data: { value: 1515 }},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -810,10 +810,10 @@ describe('sync handlers', () => {
       });
       it(`update object value`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { data: { value: { key: 'HelloBugFixers' } }},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -825,10 +825,10 @@ describe('sync handlers', () => {
       });
       it(`update object value by value`, async () => {
         const { data: [{ id }] } = await deep.insert({
-          type_id: await deep.id('@deep-foundation/core', 'Operation'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           object: { data: { value: { key: 'HelloBugFixers' } }},
           in: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             from_id: await deep.id('deep', 'admin')
           } }
         });
@@ -869,9 +869,9 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           log('a2', a2);
           const { data: [{ id }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: a1.linkId,
             } }
           });
@@ -898,70 +898,70 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
           const { data: [{ id: id1 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: a1.linkId,
             } }
           });
           const { data: [{ id: id2 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             in: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Contain'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
               from_id: id1,
             } }
           });
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                     to_id: a2.linkId,
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: id1,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
                       to_id: id2,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowSelect'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1001,7 +1001,7 @@ describe('sync handlers', () => {
       });
       describe('insert', () => {
         it(`root can insert`, async () => {
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${await deep.id('deep', 'admin')}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const customLinkId = JSON.parse(result?.data?.result?.[1]?.[0])?.data?.[0]?.id;
           log('customLinkId', customLinkId);
           const clientResult = await deep.select({id: {_eq: customLinkId}});
@@ -1011,7 +1011,7 @@ describe('sync handlers', () => {
         });
         it(`guest cant insert by default`, async () => {
           const a1 = await deep.guest({});
-          const result = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const result = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           assert.isNotEmpty(result?.error);
         });
         it(`insert permission can be gived to guest`, async () => {
@@ -1019,64 +1019,64 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
           const ruleResult = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1084,7 +1084,7 @@ describe('sync handlers', () => {
             ] },
           });
           
-          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           log('r1', r1?.data?.result?.[1]?.[0]);
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data; 
@@ -1094,13 +1094,13 @@ describe('sync handlers', () => {
           expect(da1).to.not.be.undefined;
           assert.equal(!!e1, false);
           
-          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r2 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r2?.error;
           const da2 = JSON.parse(r2?.data?.result?.[1]?.[0])?.data;
           expect(da2).to.not.be.undefined;
           assert.equal(!!e2, false);
 
-          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r3?.error;
           const da3 = r3?.data?.result?.[1]?.[0] ? JSON.parse(r3?.data?.result?.[1]?.[0])?.data : undefined;
           log('da3', da3);
@@ -1111,71 +1111,71 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
           const { data: [{ id: TempType }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Type'),
-            from_id: await deep.id('@deep-foundation/core', 'Any'),
-            to_id: await deep.id('@deep-foundation/core', 'Any'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Type'),
+            from_id: deep.idLocal('@deep-foundation/core', 'Any'),
+            to_id: deep.idLocal('@deep-foundation/core', 'Any'),
           });
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: await deep.id('@deep-foundation/core'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: deep.idLocal('@deep-foundation/core'),
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1183,57 +1183,57 @@ describe('sync handlers', () => {
             ] },
           });
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: TempType,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
                       to: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'Query'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'Query'),
                         object: { data: { value: {
                           to_id: { _eq: 'X-Deep-User-Id' } ,// <== HERE
                         }, }, },
@@ -1243,15 +1243,15 @@ describe('sync handlers', () => {
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1261,7 +1261,7 @@ describe('sync handlers', () => {
     
           await delay(5000);
 
-          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e1 = r1?.error;
           const da1 = JSON.parse(r1?.data?.result?.[1]?.[0])?.data;
 
@@ -1274,7 +1274,7 @@ describe('sync handlers', () => {
           expect(da1t).to.not.be.undefined;
           assert.equal(!!e1t, false);
 
-          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r3 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e2 = r3?.error;
           const da2 = JSON.parse(r3?.data?.result?.[1]?.[0])?.data;
 
@@ -1292,7 +1292,7 @@ describe('sync handlers', () => {
           expect(da2t).to.be.undefined;
           expect(e2t).to.not.be.undefined;
 
-          const r5 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${await deep.id('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
+          const r5 = await api.sql(sql`select links__sync__handlers__deep__client(${a3.linkId}::bigint, 'insert', '{"type_id":${deep.idLocal('@deep-foundation/core', 'Operation')}}'::jsonb, '{}'::jsonb)`);
           const e3 = r5?.error;
           const da3 = JSON.parse(r5?.data?.result?.[1]?.[0])?.data;
           expect(da3).to.not.be.undefined;
@@ -1309,7 +1309,7 @@ describe('sync handlers', () => {
         describe('values', () => {
           it(`root can update value`, async () => {
             const { data: [{ id }], error } = await deep.insert({
-              type_id: await deep.id('@deep-foundation/core', 'Operation'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             });
             const n1 = await deep.select({ id });
             assert.lengthOf(n1?.data, 1);
@@ -1338,7 +1338,7 @@ describe('sync handlers', () => {
       describe('delete', () => {
         it(`root can delete`, async () => {
           const { data: [{ id }], error } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
@@ -1353,7 +1353,7 @@ describe('sync handlers', () => {
         });
         it(`nobody can delete from not permitted tables`, async () => {
           const { data: [{ id }], error } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
@@ -1364,7 +1364,7 @@ describe('sync handlers', () => {
         });
         it(`guest cant delete by default`, async () => {
           const { data: [{ id }], error } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
           const n1 = await deep.select({ id });
           assert.lengthOf(n1?.data, 1);
@@ -1380,64 +1380,64 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] },
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowDeleteType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1445,13 +1445,13 @@ describe('sync handlers', () => {
             ] },
           });
           const { data: [{ id: id1 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
           const { data: [{ id: id2 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
           const { data: [{ id: id3 }] } = await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
           });
 
           const r1 = await api.sql(sql`select links__sync__handlers__deep__client(${a1.linkId}::bigint, 'delete', '{"id":${id1}}'::jsonb, '{}'::jsonb)`);
@@ -1482,66 +1482,66 @@ describe('sync handlers', () => {
           const a2 = await deep.guest({});
           const a3 = await deep.guest({});
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'Operation'),
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1549,57 +1549,57 @@ describe('sync handlers', () => {
             ] },
           });
           await deep.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Rule'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
             out: { data: [
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a1.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a2.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
                       to_id: a3.linkId,
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                   ] }
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: [
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: await deep.id('@deep-foundation/core', 'Operation'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'Operation'),
                       out: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                       } },
                     },
                     {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
                       to: { data: {
-                        type_id: await deep.id('@deep-foundation/core', 'Query'),
+                        type_id: deep.idLocal('@deep-foundation/core', 'Query'),
                         object: { data: { value: {
                           string: { value: { _eq: 'abc2' } },// <== HERE
                         }, }, },
@@ -1609,15 +1609,15 @@ describe('sync handlers', () => {
                 } }
               },
               {
-                type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+                type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
                 to: { data: {
-                  type_id: await deep.id('@deep-foundation/core', 'Selector'),
+                  type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
                   out: { data: {
-                    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-                    to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
+                    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+                    to_id: deep.idLocal('@deep-foundation/core', 'AllowDeleteType'),
                     out: { data: {
-                      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
                     } },
                   } }
                 } }
@@ -1629,7 +1629,7 @@ describe('sync handlers', () => {
 
           const d1 = new DeepClient({ deep, ...a1, silent: true });
           const { data: da1, error: e1 } = await d1.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc1' } },
           });
           assert.equal(!!e1, false);
@@ -1643,7 +1643,7 @@ describe('sync handlers', () => {
 
           const d2 = new DeepClient({ deep, ...a2, silent: true });
           const { data: da2, error: e2 } = await d2.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc2' } },
           });
           assert.equal(!!e2, false);
@@ -1657,7 +1657,7 @@ describe('sync handlers', () => {
 
           const d3 = new DeepClient({ deep, ...a3, silent: true });
           const { data: da3, error: e3 } = await d3.insert({
-            type_id: await deep.id('@deep-foundation/core', 'Operation'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Operation'),
             string: { data: { value: 'abc3' } },
           });
           assert.equal(!!e3, false);
@@ -1677,11 +1677,11 @@ describe('sync handlers', () => {
     it(`require mathjs`, async () => {
       const debug = log.extend('HandleInsert');
 
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('customLinkId', customLinkId);
@@ -1713,11 +1713,11 @@ describe('sync handlers', () => {
     it(`require jsonschema`, async () => {
       const debug = log.extend('HandleInsert');
 
-      const typeId = await deep.id('@deep-foundation/core', 'Operation');
-      const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-      const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+      const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+      const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+      const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
       
-      const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+      const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
       const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
       const customLinkId = inserted?.data?.[0]?.id;
       debug('customLinkId', customLinkId);
@@ -1752,11 +1752,11 @@ describe('sync handlers', () => {
       it(`Handle insert on type`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         debug('customLinkId', customLinkId);
@@ -1788,11 +1788,11 @@ describe('sync handlers', () => {
       it.skip(`Handle insert on type with sql injection (DAMAGES DATABASE SHOULD BE SKIPPED UNTIL FIXED)`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         debug('customLinkId', customLinkId);
@@ -1824,11 +1824,11 @@ describe('sync handlers', () => {
       it(`Handle insert 2 triggers and broke transaction in second`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1868,10 +1868,10 @@ describe('sync handlers', () => {
       it(`Handle insert 1 trigger and 2 types, check not triggered twice`, async () => {
         const debug = log.extend('HandleInsert1x2');
 
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         debug('customLinkId', customLinkId);
@@ -1915,11 +1915,11 @@ describe('sync handlers', () => {
       it(`Handle insert on type throw error`, async () => {
         const debug = log.extend('HandleInsertError');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1957,13 +1957,13 @@ describe('sync handlers', () => {
       it(`Handle insert on selector`, async () => {
         const debug = log.extend('HandleInsertSelect');
 
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const selector = await insertSelector();
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -1998,12 +1998,12 @@ describe('sync handlers', () => {
       it(`Handle insert on type any`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
+        const anyTypeLinkId = deep.idLocal('@deep-foundation/core', 'Any');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const inserted2 = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
@@ -2043,11 +2043,11 @@ describe('sync handlers', () => {
       it(`Handle delete on type`, async () => {
         const debug = log.extend('HandleDelete');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -2081,13 +2081,13 @@ describe('sync handlers', () => {
       it(`Handle delete on selector`, async () => {
         const debug = log.extend('HandleDeleteSelect');
 
-        const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const selector = await insertSelector();
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -2122,10 +2122,10 @@ describe('sync handlers', () => {
 
       it(`Handle delete on type any`, async () => {
         let linkIdsToDelete = [];
-        const handleDeleteTypeLinkId = await deep.id('@deep-foundation/core', 'HandleDelete');
-        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleDeleteTypeLinkId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
+        const supportsLinkId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
-        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeLinkId = deep.idLocal('@deep-foundation/core', 'Any');
         const errorMessage = "Success! Handler is called";
         const expectedErrorMessage = `DeepClient Delete Error: ${errorMessage}`;
         let actualErrorMessage: string;
@@ -2157,12 +2157,12 @@ describe('sync handlers', () => {
       it(`Handle update on type`, async () => {
         const debug = log.extend('HandleUpdate');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Type');
-        const anyId = await deep.id('@deep-foundation/core', 'Any');
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Type');
+        const anyId = deep.idLocal('@deep-foundation/core', 'Any');
+        const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -2197,13 +2197,13 @@ describe('sync handlers', () => {
       it(`Handle update on selector`, async () => {
         const debug = log.extend('HandleUpdateSelect');
 
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const selector = await insertSelector();
         debug('selector', selector);
         const { nodeTypeId, linkTypeId, treeId, selectorId, rootId } = selector;
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -2239,10 +2239,10 @@ describe('sync handlers', () => {
 
       it(`Handle update on type any`, async () => {
         let linkIdsToUpdate = [];
-        const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleUpdateTypeLinkId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsLinkId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
-        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeLinkId = deep.idLocal('@deep-foundation/core', 'Any');
         const errorMessage = "Success! Handler is called";
         const expectedErrorMessage = `DeepClient Update Error: ${errorMessage}`;
         let actualErrorMessage: string;
@@ -2279,11 +2279,11 @@ describe('sync handlers', () => {
         it('Handle insert string', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2318,11 +2318,11 @@ describe('sync handlers', () => {
         it('Handle update string', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2363,11 +2363,11 @@ describe('sync handlers', () => {
         it('Handle delete string', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2410,11 +2410,11 @@ describe('sync handlers', () => {
         it('Handle insert number', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2449,11 +2449,11 @@ describe('sync handlers', () => {
         it('Handle update number', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2494,11 +2494,11 @@ describe('sync handlers', () => {
         it('Handle delete number', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2541,11 +2541,11 @@ describe('sync handlers', () => {
         it('Handle insert object', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2580,11 +2580,11 @@ describe('sync handlers', () => {
         it('Handle update object', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2625,11 +2625,11 @@ describe('sync handlers', () => {
         it('Handle delete object', async () => {
           const debug = log.extend('HandleInsertString');
   
-          const typeId = await deep.id('@deep-foundation/core', 'Operation');
-          const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-          const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+          const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+          const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+          const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
           
-          const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+          const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
           const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
           const customLinkId = inserted?.data?.[0]?.id;
           debug('customLinkId', customLinkId);
@@ -2670,10 +2670,10 @@ describe('sync handlers', () => {
       });
       it(`Handle update on type any`, async () => {
         let linkIdsToDelete = [];
-        const handleUpdateTypeLinkId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsLinkId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const handleUpdateTypeLinkId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsLinkId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         const typeTypeLinkId = await deep.id("@deep-foundation/core", "Type");
-        const anyTypeLinkId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeLinkId = deep.idLocal('@deep-foundation/core', 'Any');
         const errorMessage = "Success! Handler is called";
         const expectedErrorMessage = "DeepClient Insert Error: Success! Handler is called";
         let actualErrorMessage: string;
@@ -2711,12 +2711,12 @@ describe('sync handlers', () => {
       it('Handle IUD for strings', async () => {
         const debug = log.extend('HandleIUDStrings');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const typeToHandle = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeToInsertInHandler = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeIdToInsertInHandler = typeToInsertInHandler?.data?.[0]?.id;
@@ -2784,12 +2784,12 @@ describe('sync handlers', () => {
       it('Handle IUD for numbers', async () => {
         const debug = log.extend('HandleIUDStrings');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const typeToHandle = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeToInsertInHandler = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeIdToInsertInHandler = typeToInsertInHandler?.data?.[0]?.id;
@@ -2857,12 +2857,12 @@ describe('sync handlers', () => {
       it('Handle IUD for object', async () => {
         const debug = log.extend('HandleIUDStrings');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const handleUpdateId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const handleUpdateId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
         
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const typeToHandle = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeToInsertInHandler = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const typeIdToInsertInHandler = typeToInsertInHandler?.data?.[0]?.id;
@@ -2936,11 +2936,11 @@ describe('sync handlers', () => {
       it(`Check in delete link`, async () => {
         const debug = log.extend('HandleDelete');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleDeleteTypeId = await deep.id('@deep-foundation/core', 'HandleDelete');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleDeleteTypeId = deep.idLocal('@deep-foundation/core', 'HandleDelete');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
 
@@ -2975,12 +2975,12 @@ describe('sync handlers', () => {
       it(`Check in update link`, async () => {
         const debug = log.extend('HandleInsert');
 
-        const typeId = await deep.id('@deep-foundation/core', 'Operation');
-        const handleInsertTypeId = await deep.id('@deep-foundation/core', 'HandleInsert');
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-        const supportsId = await deep.id('@deep-foundation/core', 'plv8SupportsJs');
+        const typeId = deep.idLocal('@deep-foundation/core', 'Operation');
+        const handleInsertTypeId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
+        const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+        const supportsId = deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
 
-        const anyTypeId = await deep.id('@deep-foundation/core', 'Any');
+        const anyTypeId = deep.idLocal('@deep-foundation/core', 'Any');
         const inserted = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
         const customLinkId = inserted?.data?.[0]?.id;
         const inserted2 = await deep.insert({type_id: 1, from_id: anyTypeId, to_id: anyTypeId});
@@ -3034,7 +3034,7 @@ describe('sync handlers', () => {
     const customTypeLinkId = await deep.insert({
       type_id: await deep.id("@deep-foundation/core", "Type")
     }).then(result => result.data[0].id);
-    const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const handleInsertTypeLinkId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
     const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
     const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
       `({deep}) => {
@@ -3053,7 +3053,7 @@ describe('sync handlers', () => {
     const customTypeLinkId = await deep.insert({
       type_id: await deep.id("@deep-foundation/core", "Type")
     }).then(result => result.data[0].id);
-    const handleInsertTypeLinkId = await deep.id('@deep-foundation/core', 'HandleInsert');
+    const handleInsertTypeLinkId = deep.idLocal('@deep-foundation/core', 'HandleInsert');
     const supportsId = await deep.id("@deep-foundation/core", "plv8SupportsJs")
     const handler = await insertHandler(handleInsertTypeLinkId, customTypeLinkId, 
       `() => {

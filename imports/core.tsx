@@ -168,7 +168,7 @@ async ({ deep, require, gql, data: { newLink } }) => {
   if (error) throw error;
   if (imported?.errors?.length) throw imported.errors;
   await deep.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Contain'),
+    type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
     from_id: newLink.from_id,
     to_id: imported.packageId,
   });

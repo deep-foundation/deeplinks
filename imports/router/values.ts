@@ -67,7 +67,7 @@ export default async (req, res) => {
           returning: `id from_id type_id to_id`,
         }))?.data?.[0];
 
-        const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
+        const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
         const queryResult = (await client.query({
           query: gql`
             query {
@@ -132,7 +132,7 @@ export default async (req, res) => {
               link_id: { _eq: oldValueRow.link_id },
             }, { table: 'bool_exp' as any });
         }
-        if(newValueRow && newRow.type_id === await deep.id('@deep-foundation/core','Query')) {
+        if(newValueRow && newRow.type_id === deep.idLocal('@deep-foundation/core','Query')) {
             // generate new bool_exp sql version
             await boolExpToSQL(newRow.id, newRow?.value?.value);
         }

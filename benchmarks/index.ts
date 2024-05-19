@@ -23,53 +23,53 @@ const deep = new DeepClient({ apolloClient });
   var suite = new Suite();
   const admin = await deep.jwt({ linkId: await deep.id('deep', 'admin') });
   const deepAdmin = new DeepClient({ deep: deep, token: admin.token, linkId: admin.linkId });
-  const Query = await deep.id('@deep-foundation/core', 'Query');
+  const Query = deep.idLocal('@deep-foundation/core', 'Query');
   const guest = await deep.guest({});
   const deepGuest = new DeepClient({ deep: deepAdmin, ...guest });
 
   await deepAdmin.insert({
-    type_id: await deep.id('@deep-foundation/core', 'Rule'),
+    type_id: deep.idLocal('@deep-foundation/core', 'Rule'),
     out: { data: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleSubject'),
+        type_id: deep.idLocal('@deep-foundation/core', 'RuleSubject'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
           out: { data: [
             {
-              type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+              type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
               to_id: guest.linkId,
               out: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-                to_id: await deep.id('@deep-foundation/core', 'containTree'),
+                type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+                to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
               } },
             },
           ] }
         } }
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleObject'),
+        type_id: deep.idLocal('@deep-foundation/core', 'RuleObject'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-            to_id: await deep.id('@deep-foundation/core'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+            to_id: deep.idLocal('@deep-foundation/core'),
             out: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-              to_id: await deep.id('@deep-foundation/core', 'containTree'),
+              type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+              to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
             } },
           } }
         } }
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'RuleAction'),
+        type_id: deep.idLocal('@deep-foundation/core', 'RuleAction'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Selector'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Selector'),
           out: { data: {
-            type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-            to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+            type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+            to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
             out: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-              to_id: await deep.id('@deep-foundation/core', 'containTree'),
+              type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+              to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
             } },
           } }
         } }
@@ -83,7 +83,7 @@ const deep = new DeepClient({ apolloClient });
       deferred.resolve();
     } });
     suite.add('by deepRoot.id', { defer: true, fn: async function(deferred) {
-      await deep.id('@deep-foundation/core', 'Promise');
+      deep.idLocal('@deep-foundation/core', 'Promise');
       deferred.resolve();
     } });
     // suite.add('by deepGuest.id', { defer: true, fn: async function(deferred) {

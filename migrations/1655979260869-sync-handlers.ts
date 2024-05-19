@@ -21,29 +21,29 @@ const deep = new DeepClient({
 
 // main debug tool, create error and read in apollo. plv8.elog(ERROR, JSON.stringify(Number(link.id))); 
 
-const handleInsertId = _ids?.['@deep-foundation/core']?.HandleInsert; // await deep.id('@deep-foundation/core', 'HandleInsert');
-const handleUpdateId = _ids?.['@deep-foundation/core']?.HandleUpdate; // await deep.id('@deep-foundation/core', 'HandleUpdate');
-const handleDeleteId = _ids?.['@deep-foundation/core']?.HandleDelete; // await deep.id('@deep-foundation/core', 'HandleDelete');
-const userTypeId = _ids?.['@deep-foundation/core']?.User // await deep.id('@deep-foundation/core', 'User');
-const anyTypeId = _ids?.['@deep-foundation/core']?.Any // await deep.id('@deep-foundation/core', 'User');
-const thenTypeId = _ids?.['@deep-foundation/core']?.Then // await deep.id('@deep-foundation/core', 'Then');
-const promiseTypeId = _ids?.['@deep-foundation/core']?.Promise // await deep.id('@deep-foundation/core', 'Promise');
-const resolvedTypeId = _ids?.['@deep-foundation/core']?.Resolved // await deep.id('@deep-foundation/core', 'Resolved');
-const rejectedTypeId = _ids?.['@deep-foundation/core']?.Rejected // await deep.id('@deep-foundation/core', 'Rejected');
-const promiseResultTypeId = _ids?.['@deep-foundation/core']?.PromiseResult // await deep.id('@deep-foundation/core', 'PromiseResult');
-const packageTypeId = _ids?.['@deep-foundation/core']?.Package // await deep.id('@deep-foundation/core', 'Package');
-const containTypeId = _ids?.['@deep-foundation/core']?.Contain // await deep.id('@deep-foundation/core', 'Contain');
-const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // await deep.id('@deep-foundation/core', 'plv8SupportsJs');
-const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // await deep.id('@deep-foundation/core', 'Handler');
-const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // await deep.id('@deep-foundation/core', 'SelectorType');
-const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // await deep.id('@deep-foundation/core', 'AllowSelectType');
-const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // await deep.id('@deep-foundation/core', 'AllowSelect');
-const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // await deep.id('@deep-foundation/core', 'AllowAdmin');
-const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // await deep.id('@deep-foundation/core', 'AllowInsertType')
-const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // await deep.id('@deep-foundation/core', 'AllowUpdateType')
-const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // await deep.id('@deep-foundation/core', 'AllowDeleteType')
-const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // await deep.id('@deep-foundation/core', 'AllowDelete');
-const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // await deep.id('@deep-foundation/core', 'AllowUpdate');
+const handleInsertId = _ids?.['@deep-foundation/core']?.HandleInsert; // deep.idLocal('@deep-foundation/core', 'HandleInsert');
+const handleUpdateId = _ids?.['@deep-foundation/core']?.HandleUpdate; // deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+const handleDeleteId = _ids?.['@deep-foundation/core']?.HandleDelete; // deep.idLocal('@deep-foundation/core', 'HandleDelete');
+const userTypeId = _ids?.['@deep-foundation/core']?.User // deep.idLocal('@deep-foundation/core', 'User');
+const anyTypeId = _ids?.['@deep-foundation/core']?.Any // deep.idLocal('@deep-foundation/core', 'User');
+const thenTypeId = _ids?.['@deep-foundation/core']?.Then // deep.idLocal('@deep-foundation/core', 'Then');
+const promiseTypeId = _ids?.['@deep-foundation/core']?.Promise // deep.idLocal('@deep-foundation/core', 'Promise');
+const resolvedTypeId = _ids?.['@deep-foundation/core']?.Resolved // deep.idLocal('@deep-foundation/core', 'Resolved');
+const rejectedTypeId = _ids?.['@deep-foundation/core']?.Rejected // deep.idLocal('@deep-foundation/core', 'Rejected');
+const promiseResultTypeId = _ids?.['@deep-foundation/core']?.PromiseResult // deep.idLocal('@deep-foundation/core', 'PromiseResult');
+const packageTypeId = _ids?.['@deep-foundation/core']?.Package // deep.idLocal('@deep-foundation/core', 'Package');
+const containTypeId = _ids?.['@deep-foundation/core']?.Contain // deep.idLocal('@deep-foundation/core', 'Contain');
+const plv8SupportsJsTypeId = _ids?.['@deep-foundation/core']?.plv8SupportsJs // deep.idLocal('@deep-foundation/core', 'plv8SupportsJs');
+const HandlerTypeId = _ids?.['@deep-foundation/core']?.Handler // deep.idLocal('@deep-foundation/core', 'Handler');
+const SelectorTypeId = _ids?.['@deep-foundation/core']?.Selector // deep.idLocal('@deep-foundation/core', 'SelectorType');
+const AllowSelectTypeId = _ids?.['@deep-foundation/core']?.AllowSelectType // deep.idLocal('@deep-foundation/core', 'AllowSelectType');
+const AllowSelectId = _ids?.['@deep-foundation/core']?.AllowSelect // deep.idLocal('@deep-foundation/core', 'AllowSelect');
+const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // deep.idLocal('@deep-foundation/core', 'AllowAdmin');
+const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // deep.idLocal('@deep-foundation/core', 'AllowInsertType')
+const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // deep.idLocal('@deep-foundation/core', 'AllowUpdateType')
+const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // deep.idLocal('@deep-foundation/core', 'AllowDeleteType')
+const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // deep.idLocal('@deep-foundation/core', 'AllowDelete');
+const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // deep.idLocal('@deep-foundation/core', 'AllowUpdate');
 const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
 
 const parseJwtCode = sql`

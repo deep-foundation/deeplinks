@@ -21,7 +21,7 @@ export const installPackage = async (deep, packageName) => {
   const adminId = await deep.id('deep', 'admin');
   
   log('adminId', adminId);
-  const packageQueryTypeId = await deep.id('@deep-foundation/core', 'PackageQuery');
+  const packageQueryTypeId = deep.idLocal('@deep-foundation/core', 'PackageQuery');
   log('packageQueryTypeId', packageQueryTypeId);
   const installTypeId = await deep.id('@deep-foundation/npm-packager', 'Install');
   log('installTypeId', installTypeId);
@@ -72,30 +72,30 @@ export const up = async () => {
     const deleteSelector = deep.minilinks.byId[usersCanDeleteSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
     await deep.insert([
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
         from_id: insertSelector,
         to_id: await deep.id(packageName, 'Traveler'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
         from_id: updateSelector,
         to_id: await deep.id(packageName, 'Traveler'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
         from_id: deleteSelector,
         to_id: await deep.id(packageName, 'Traveler'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ]);

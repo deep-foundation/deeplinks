@@ -33,7 +33,7 @@ export const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
   _where: {
     object_id: { _eq: subjectId },
     subject_id: { _eq: subjectId },
-    action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+    action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowAdmin') },
   },
 });
 
@@ -44,14 +44,14 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
       {
         type: {
           can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelectType') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowSelectType') },
             subject_id: { _eq: subjectId },
           },
         }
       },
       {
         can_object: {
-          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowSelect') },
+          action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowSelect') },
           subject_id: { _eq: subjectId },
         },
       },
@@ -63,7 +63,7 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
       {
         type: {
           can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowInsertType') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowInsertType') },
             subject_id: { _eq: subjectId },
           },
         },
@@ -74,14 +74,14 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
     _or: [
       {
         can_object: {
-          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdate') },
+          action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowUpdate') },
           subject_id: { _eq: subjectId },
         },
       },
       {
         type: {
           can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowUpdateType') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowUpdateType') },
             subject_id: { _eq: subjectId },
           },
         },
@@ -92,14 +92,14 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
     _or: [
       {
         can_object: {
-          action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDelete') },
+          action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowDelete') },
           subject_id: { _eq: subjectId },
         },
       },
       {
         type: {
           can_object: {
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowDeleteType') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowDeleteType') },
             subject_id: { _eq: subjectId },
           },
         },
@@ -116,10 +116,10 @@ export const up = async () => {
   log('hasura permissions');
 
   // const isAdminBoolExp = { _by_item: {
-  //   group_id: { _eq: await deep.id('@deep-foundation/core', 'joinTree') },
+  //   group_id: { _eq: deep.idLocal('@deep-foundation/core', 'joinTree') },
   //   path_item: {
   //     to: {
-  //       type_id: { _eq: await deep.id('@deep-foundation/core', 'Contain') },
+  //       type_id: { _eq: deep.idLocal('@deep-foundation/core', 'Contain') },
   //       from_id: { _eq: await deep.id('deep') },
   //       string: { value: { _eq: "admin" } },
   //     }
@@ -128,7 +128,7 @@ export const up = async () => {
   // const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
   //   object_id: { _eq: subjectId },
   //   subject_id: { _eq: subjectId },
-  //   action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+  //   action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowAdmin') },
   // });
   await permissions(api, MP_TABLE_NAME, {
     role: 'link',
@@ -365,7 +365,7 @@ export const up = async () => {
       BEGIN
         session_variables := current_setting('hasura.user', 't');
         IF session_variables IS NULL THEN
-          session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
+          session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${deep.idLocal('@deep-foundation/core', 'Any')}" }')::json;
         END IF;
         user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
         userRole := (session_variables::json->>'x-hasura-role')::text;
@@ -418,8 +418,8 @@ export const up = async () => {
             WHERE
             can."object_id" = NEW."type_id" AND
             can."subject_id" = user_id AND
-            can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowInsertType')} AND
-            ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
+            can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowInsertType')} AND
+            ro."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')} AND
             ro."from_id" = can."rule_id" AND
             sr."selector_id" = ro."to_id" AND
             sr."item_id" = NEW."type_id" AND
@@ -466,7 +466,7 @@ export const up = async () => {
 
       session_variables := current_setting('hasura.user', 't');
       IF session_variables IS NULL THEN
-        session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${await deep.id('@deep-foundation/core', 'Any')}" }')::json;
+        session_variables := ('{ "x-hasura-role": "link", "x-hasura-user-id": "${deep.idLocal('@deep-foundation/core', 'Any')}" }')::json;
       END IF;
       user_id := (session_variables::json->>'x-hasura-user-id')::bigint;
       userRole := (session_variables::json->>'x-hasura-role')::text;
@@ -482,8 +482,8 @@ export const up = async () => {
           WHERE
           can."object_id" = OLD."type_id" AND
           can."subject_id" = user_id AND
-          can."action_id" = ${await deep.id('@deep-foundation/core', 'AllowDeleteType')} AND
-          ro."type_id" = ${await deep.id('@deep-foundation/core', 'RuleObject')} AND
+          can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowDeleteType')} AND
+          ro."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')} AND
           ro."from_id" = can."rule_id" AND
           sr."selector_id" = ro."to_id" AND
           sr."item_id" = OLD."type_id" AND

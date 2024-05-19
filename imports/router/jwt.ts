@@ -50,11 +50,11 @@ const resolvers = {
           context?.headers?.['x-hasura-role'] !== 'admin' &&
           !(await deep.select({
             subject_id: { _eq: +context?.headers?.['x-hasura-user-id'] },
-            action_id: { _eq: await deep.id('@deep-foundation/core', 'AllowAdmin') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowAdmin') },
           }, { table: 'can', returning: 'rule_id' }))?.data?.[0] &&
           +context?.headers?.['x-hasura-user-id'] !== linkId &&
           !await deep.can(
-            linkId, +context?.headers?.['x-hasura-user-id'], await deep.id('@deep-foundation/core', 'AllowLogin')
+            linkId, +context?.headers?.['x-hasura-user-id'], deep.idLocal('@deep-foundation/core', 'AllowLogin')
           )
         ) {
           return { error: 'cant' };
@@ -62,7 +62,7 @@ const resolvers = {
         const token = jwt({
           secret: jwt_secret.key,
           linkId,
-          role: await deep.can(null, linkId, await deep.id('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
+          role: await deep.can(null, linkId, deep.idLocal('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
         });
         return { token, linkId };
       } catch(error) {

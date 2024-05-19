@@ -73,56 +73,56 @@ export const up = async () => {
   const admin = new DeepClient({ deep, token, linkId });
 
   const usersWhere = {
-    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
     to_id: await deep.id('deep', 'users'),
     out: { data: {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-      to_id: await deep.id('@deep-foundation/core', 'joinTree'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+      to_id: deep.idLocal('@deep-foundation/core', 'joinTree'),
     } },
   };
   const adminWhere = {
-    type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+    type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
     to_id: await deep.id('deep', 'admin'),
     out: { data: {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-      to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+      to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
     } },
   };
   await insertRule('adminPackageInstallPublish', admin, {
     subject: adminWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowPackageInstall'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowPackagePublish'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackageInstall'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowPackageInstall'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowPackagePublish'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowPackagePublish'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
@@ -131,29 +131,29 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('deep'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
       // {
-      //   type_id: await deep.id('@deep-foundation/core', 'SelectorExclude'),
+      //   type_id: deep.idLocal('@deep-foundation/core', 'SelectorExclude'),
       //   to_id: await deep.id('deep', 'users'),
       //   out: { data: {
-      //     type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-      //     to_id: await deep.id('@deep-foundation/core', 'containTree'),
+      //     type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+      //     to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       //   } },
       // },
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowSelect'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowSelect'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
@@ -162,80 +162,80 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
         to_id: await deep.id('deep', 'admin'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       }
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowLogin'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowLogin'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
   });
   const types = [
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'Active'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Active'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'Focus'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Focus'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'Contain'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Contain'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'Space'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Space'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'Query'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Query'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
     {
-      type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-      to_id: await deep.id('@deep-foundation/core', 'AsyncFile'),
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'AsyncFile'),
       out: { data: {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-        to_id: await deep.id('@deep-foundation/core', 'containTree'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
   ];
@@ -244,15 +244,15 @@ export const up = async () => {
     object: [
       ...types,
       // {
-      //   type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+      //   type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
       //   to: { data: {
-      //     type_id: await deep.id('@deep-foundation/core', 'Query'),
+      //     type_id: deep.idLocal('@deep-foundation/core', 'Query'),
       //     object: { data: { value: {
       //       _or: [
       //         { from_id: { _eq: 0 } },
       //         { from: {
       //           _by_item: {
-      //             group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+      //             group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
       //             path_item_id: { _eq: 'X-Deep-User-Id' },
       //           },
       //         } },
@@ -263,11 +263,11 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowInsertType'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
@@ -277,12 +277,12 @@ export const up = async () => {
     object: [
       ...types,
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Query'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             _by_item: {
-              group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+              group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
               path_item_id: { _eq: 'X-Deep-User-Id' },
             },
           } } }
@@ -291,11 +291,11 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowUpdateType'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowUpdateType'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],
@@ -305,12 +305,12 @@ export const up = async () => {
     object: [
       ...types,
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorFilter'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
         to: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'Query'),
+          type_id: deep.idLocal('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             _by_item: {
-              group_id: { _eq: await deep.id('@deep-foundation/core', 'containTree') },
+              group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
               path_item_id: { _eq: 'X-Deep-User-Id' },
             },
           } } }
@@ -319,11 +319,11 @@ export const up = async () => {
     ],
     action: [
       {
-        type_id: await deep.id('@deep-foundation/core', 'SelectorInclude'),
-        to_id: await deep.id('@deep-foundation/core', 'AllowDeleteType'),
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowDeleteType'),
         out: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'SelectorTree'),
-          to_id: await deep.id('@deep-foundation/core', 'containTree'),
+          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
         } },
       },
     ],

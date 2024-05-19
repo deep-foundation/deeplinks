@@ -28,14 +28,14 @@ describe('packager', () => {
     it('export import', async () => {
       const packager = new Packager(deep);
       const namespace = await deep.select({
-        type_id: await deep.id('@deep-foundation/core','PackageNamespace'),
+        type_id: deep.idLocal('@deep-foundation/core','PackageNamespace'),
         string: { value: { _eq: '@deep-foundation/test' } },
       });
       const { data: [{ id: packageId }] } = await deep.insert({
-        type_id: await deep.id('@deep-foundation/core', 'Package'),
+        type_id: deep.idLocal('@deep-foundation/core', 'Package'),
         string: { data: { value: '@deep-foundation/test' } },
         in: { data: {
-          type_id: await deep.id('@deep-foundation/core', 'PackageVersion'),
+          type_id: deep.idLocal('@deep-foundation/core', 'PackageVersion'),
           string: { data: { value: '0.0.0' } },
           ...(
             namespace?.data?.[0]
@@ -44,7 +44,7 @@ describe('packager', () => {
             }
             : {
               from: { data: {
-                type_id: await deep.id('@deep-foundation/core', 'PackageNamespace'),
+                type_id: deep.idLocal('@deep-foundation/core', 'PackageNamespace'),
                 string: { data: { value: '@deep-foundation/test' } },
               } },
             }
@@ -52,12 +52,12 @@ describe('packager', () => {
         } },
         out: { data: [
           {
-            type_id: await deep.id('@deep-foundation/core', 'Contain'),
+            type_id: deep.idLocal('@deep-foundation/core', 'Contain'),
             string: { data: { value: 'item' } },
             to: { data: {
-              type_id: await deep.id('@deep-foundation/core', 'Type'),
-              from_id: await deep.id('@deep-foundation/core', 'Any'),
-              to_id: await deep.id('@deep-foundation/core', 'SyncTextFile'),
+              type_id: deep.idLocal('@deep-foundation/core', 'Type'),
+              from_id: deep.idLocal('@deep-foundation/core', 'Any'),
+              to_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
             } },
           },
         ] },

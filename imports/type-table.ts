@@ -134,8 +134,8 @@ export const generateDown = (options: ITypeTableStringOptions) => async () => {
 export const promiseTriggersUp = (options: ITypeTableStringOptions) => async () => {
   const { schemaName, tableName, valueType, customColumnsSql = '', customAfterSql = '', linkRelation, linksTableName, api, deep } = options;
 
-  const handleUpdateTypeId = await deep.id('@deep-foundation/core', 'HandleUpdate');
-  const dockerIsolationProviderTypeId = await deep.id('@deep-foundation/core', 'DockerIsolationProvider');
+  const handleUpdateTypeId = deep.idLocal('@deep-foundation/core', 'HandleUpdate');
+  const dockerIsolationProviderTypeId = deep.idLocal('@deep-foundation/core', 'DockerIsolationProvider');
 
   await api.sql(sql`CREATE OR REPLACE FUNCTION ${tableName}__promise__insert__function() RETURNS TRIGGER AS $trigger$
   DECLARE

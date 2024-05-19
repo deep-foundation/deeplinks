@@ -167,8 +167,8 @@ app.post('/file', async (req, res, next) => {
     console.log('/file post proxy','error: ', e);
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
-  const canResult = await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')) || await deep.can(null, userId, await deep.id('@deep-foundation/core', 'AllowAdmin'));
-  console.log('/file post proxy','can', await deep.can(linkId, userId, await deep.id('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', await deep.can(null, userId, await deep.id('@deep-foundation/core', 'AllowAdmin')));
+  const canResult = await deep.can(linkId, userId, deep.idLocal('@deep-foundation/core', 'AllowUpdateType')) || await deep.can(null, userId, deep.idLocal('@deep-foundation/core', 'AllowAdmin'));
+  console.log('/file post proxy','can', await deep.can(linkId, userId, deep.idLocal('@deep-foundation/core', 'AllowUpdateType')), 'isAdmin', await deep.can(null, userId, deep.idLocal('@deep-foundation/core', 'AllowAdmin')));
   console.log('/file post proxy','userId', userId, typeof(userId));
   console.log('/file post proxy','canResult', canResult);
   if (!canResult) return res.status(403).send(`You cant update link ##${linkId} as user ##${userId}, and user ##${userId} is not admin.`);
@@ -343,20 +343,7 @@ let portTypeId = 0;
 
 const toJSON = (data) => JSON.stringify(data, Object.getOwnPropertyNames(data), 2);
 
-let nestedApps = {};
-app.use((req, res, next) => {
-  async.eachSeries(
-    Object.values(nestedApps),
-      (handler, callback) => {
-        handler(req, res, callback)
-      },
-      (err) => {
-        if(err) res.status(500).send(`${error}`);
-        else next()
-      }
-  );
-})
-
+let mainPort;
 const handleRoutes = async () => {
   if (busy)
     return;
@@ -372,13 +359,12 @@ const handleRoutes = async () => {
   // currentServers = {};
 
   try {
-    portTypeId = await deep.id('@deep-foundation/core', 'Port');
-    const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
-    const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
-    const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
-    let mainPort;
+    const portTypeId = deep.idLocal('@deep-foundation/core', 'Port');
+    const handleRouteTypeId = deep.idLocal('@deep-foundation/core', 'HandleRoute');
+    const routerStringUseTypeId = deep.idLocal('@deep-foundation/core', 'RouterStringUse');
+    const routerListeningTypeId = deep.idLocal('@deep-foundation/core', 'RouterListening');
     try {
-      mainPort = await deep.id('@deep-foundation/main-port', 'port');
+      if (!mainPort) mainPort = await deep.id('@deep-foundation/main-port', 'port');
     } catch(error) {}
   
     const routesResult = await client.query({
@@ -454,9 +440,6 @@ const handleRoutes = async () => {
             const element = currentServers[key];
             element.close();
             delete currentServers[key];
-          }
-          if (nestedApps.hasOwnProperty(key)) {
-            delete nestedApps[key];
           }
           delete currentPorts[key];
         }
@@ -587,11 +570,13 @@ const handleRoutes = async () => {
         // listen on port
         routesDebugLog(`listening on port ${portValue}`);
         // start express server
-        const portServer = express();
+
+        let portServer;
 
         if (+portValue === +PORT || port?.id === mainPort) {
-          nestedApps[port?.id] = portServer;
+          portServer = nestedApp;
         } else {
+          portServer = express();
           currentServers[portValue] = http.createServer({ maxHeaderSize: 10*1024*1024*1024 }, portServer).listen(portValue);
         }
 
@@ -625,8 +610,13 @@ const handleRoutes = async () => {
 
               routesDebugLog('container', container);
 
+              const filter = function (pathname, req) {
+                console.log('pathname', pathname, req.method, req.originalUrl, !!pathname.match(`^${routeString}`));
+                return !!pathname.match(`^${routeString}`);
+              };
+
               // proxy to container using its host and port
-              const proxy = createProxyMiddleware({
+              const proxy = createProxyMiddleware(filter, {
                 target: `http://${container.host}:${container.port}`,
                 changeOrigin: true,
                 ws: true,
@@ -634,9 +624,10 @@ const handleRoutes = async () => {
                   [routeString]: "/http-call",
                 },
                 onProxyReq: (proxyReq, req, res) => {
-                  routesDebugLog('deeplinks request')
-                  routesDebugLog('req.method', req.method);
-                  routesDebugLog('req.body', req.body);
+                  console.log('onProxyReq', req.baseUrl); // selfHandleResponse
+                  console.log('deeplinks request')
+                  console.log('req.method', req.method);
+                  console.log('req.body', req.body);
                   proxyReq.setHeader('deep-call-options', encodeURI(JSON.stringify({
                     jwt,
                     code,
@@ -644,32 +635,33 @@ const handleRoutes = async () => {
                   })));
                 },
                 onProxyRes: (proxyRes, req, res) => {
+                  console.log('onProxyRes', req.baseUrl); // selfHandleResponse
                   // var body = "";
                   proxyRes.on('data', async function(data) {
                     try {  
                       data = data.toString('utf-8');
                       // body += data;
-                      routesDebugLog('data', data);
+                      console.log('data', data);
                       // if JSON
                       if (data.startsWith('{')) {
                         data = JSON.parse(data);
                         // log rejected
                         if (data.hasOwnProperty('rejected')) {
-                          routesDebugLog('rejected', data.rejected);
+                          console.log('rejected', data.rejected);
                           // HandlingError type id
-                          const handlingErrorTypeId = await deep.id('@deep-foundation/core', 'HandlingError');
-                          routesDebugLog('handlingErrorTypeId', handlingErrorTypeId);
+                          const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
+                          console.log('handlingErrorTypeId', handlingErrorTypeId);
 
                           const insertResult = await deep.insert({
                             type_id: handlingErrorTypeId,
                             object: { data: { value: data.rejected } },
                             out: { data: [
                               {
-                                type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
                                 to_id: route.id
                               },
                               {
-                                type_id: await deep.id('@deep-foundation/core', 'HandlingErrorReason'),
+                                type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
                                 to_id: handleRoute.id
                               }
                             ]},
@@ -682,7 +674,7 @@ const handleRoutes = async () => {
                       routesDebugError('deeplinks response error', e)
                     }
                   });
-                  // routesDebugLog('body', body);
+                  // console.log('body', body);
                 }
               });
               portServer.use(routeString, proxy);
@@ -697,6 +689,9 @@ const handleRoutes = async () => {
   
   busy = false;
 };
+
+let nestedApp = express.Router();
+app.all('*', nestedApp);
 
 const startRouteHandling = async () => {
   setInterval(handleRoutes, 5000);
