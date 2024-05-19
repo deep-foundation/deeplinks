@@ -8,7 +8,7 @@ import generatePackagerServer from './imports/router/packager.js';
 import generateAuthorizationServer from './imports/router/authorization.js';
 import axios from 'axios';
 import http from 'http';
-import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
+import { createProxyMiddleware, fixRequestBody, responseInterceptor } from 'http-proxy-middleware';
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const expressPlayground = require('graphql-playground-middleware-express').default;
@@ -70,7 +70,9 @@ app.get('/gql', expressPlayground({
   }],
 }));
 
-app.use('/gql', createProxyMiddleware({
+app.use('/gql', createProxyMiddleware((pathname, req) => {
+  return !!pathname.match(`^/gql`);
+}, {
   target: `http${DEEPLINKS_HASURA_SSL === '1' ? 's' : ''}://${DEEPLINKS_HASURA_PATH}`,
   changeOrigin: true,
   ws: true,
@@ -92,7 +94,9 @@ app.use('/gql', createProxyMiddleware({
 //   return paramValue;
 // }
 
-app.get(['/file'], createProxyMiddleware({
+app.get(['/file'], createProxyMiddleware((pathname, req) => {
+  return !!pathname.match(`^/file`);
+}, {
   target: DEEPLINKS_HASURA_STORAGE_URL,
   changeOrigin: true,
   logLevel: 'debug',
@@ -173,7 +177,9 @@ app.post('/file', async (req, res, next) => {
   console.log('/file post proxy','canResult', canResult);
   if (!canResult) return res.status(403).send(`You cant update link ##${linkId} as user ##${userId}, and user ##${userId} is not admin.`);
   //insert file
-  await createProxyMiddleware({
+  await createProxyMiddleware((pathname, req) => {
+    return !!pathname.match(`^/file`);
+  }, {
     target: DEEPLINKS_HASURA_STORAGE_URL,
     selfHandleResponse: true,
     logLevel: 'debug',
@@ -611,7 +617,7 @@ const handleRoutes = async () => {
               routesDebugLog('container', container);
 
               const filter = function (pathname, req) {
-                console.log('pathname', pathname, req.method, req.originalUrl, !!pathname.match(`^${routeString}`));
+                routesDebugLog('pathname', pathname, req.method, req.originalUrl, !!pathname.match(`^${routeString}`));
                 return !!pathname.match(`^${routeString}`);
               };
 
@@ -623,34 +629,36 @@ const handleRoutes = async () => {
                 pathRewrite: {
                   [routeString]: "/http-call",
                 },
+                logLevel: 'debug',
                 onProxyReq: (proxyReq, req, res) => {
-                  console.log('onProxyReq', req.baseUrl); // selfHandleResponse
-                  console.log('deeplinks request')
-                  console.log('req.method', req.method);
-                  console.log('req.body', req.body);
+                  routesDebugLog('onProxyReq', req.baseUrl); // selfHandleResponse
+                  routesDebugLog('deeplinks request')
+                  routesDebugLog('req.method', req.method);
+                  routesDebugLog('req.body', req.body);
                   proxyReq.setHeader('deep-call-options', encodeURI(JSON.stringify({
                     jwt,
                     code,
                     data: {},
                   })));
+                  return fixRequestBody(proxyReq, req);
                 },
                 onProxyRes: (proxyRes, req, res) => {
-                  console.log('onProxyRes', req.baseUrl); // selfHandleResponse
+                  routesDebugLog('onProxyRes', req.baseUrl); // selfHandleResponse
                   // var body = "";
                   proxyRes.on('data', async function(data) {
                     try {  
                       data = data.toString('utf-8');
                       // body += data;
-                      console.log('data', data);
+                      routesDebugLog('data', data);
                       // if JSON
                       if (data.startsWith('{')) {
                         data = JSON.parse(data);
                         // log rejected
                         if (data.hasOwnProperty('rejected')) {
-                          console.log('rejected', data.rejected);
+                          routesDebugLog('rejected', data.rejected);
                           // HandlingError type id
                           const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
-                          console.log('handlingErrorTypeId', handlingErrorTypeId);
+                          routesDebugLog('handlingErrorTypeId', handlingErrorTypeId);
 
                           const insertResult = await deep.insert({
                             type_id: handlingErrorTypeId,
@@ -674,7 +682,7 @@ const handleRoutes = async () => {
                       routesDebugError('deeplinks response error', e)
                     }
                   });
-                  // console.log('body', body);
+                  // routesDebugLog('body', body);
                 }
               });
               portServer.use(routeString, proxy);
@@ -691,7 +699,7 @@ const handleRoutes = async () => {
 };
 
 let nestedApp = express.Router();
-app.all('*', nestedApp);
+app.use(nestedApp);
 
 const startRouteHandling = async () => {
   setInterval(handleRoutes, 5000);
