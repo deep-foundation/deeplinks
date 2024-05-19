@@ -25,6 +25,7 @@ const error = debug.extend('error');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
+const PORT = process.env.PORT || 3007;
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
 const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
 export const DOCKER = process.env.DOCKER || '0';
@@ -48,6 +49,10 @@ const client = generateApolloClient({
 const deep = new DeepClient({
   apolloClient: client,
 })
+
+const getMainPort = async () => {
+  try { return await deep.id('@deep-foundation/main-port', 'port'); } catch(error) {}
+}
 
 export function makePromiseResult(promiseId: Id, resolvedTypeId: Id, promiseResultTypeId: Id, result: any, promiseReasonTypeId: Id, handleInsertId: any): any {
   if (typeof handleInsertId === 'number' || typeof handleInsertId === 'string') {
@@ -407,6 +412,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
     const routerStringUseTypeId = await deep.id('@deep-foundation/core', 'RouterStringUse');
     const routerListeningTypeId = await deep.id('@deep-foundation/core', 'RouterListening');
     const handleRouteTypeId = await deep.id('@deep-foundation/core', 'HandleRoute');
+    const mainPort = await getMainPort();
 
     const routesResult = await client.query({
       query: gql`
@@ -471,10 +477,10 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
     const urls = {};
 
     for (const port of portsResult) {
-      const portValue = port?.port?.value;
+      const portValue = port?.id === mainPort ? PORT : port?.port?.value;
       // TODO: Use better way to get base url
       // const baseUrl = (await execAsync(`gp url ${portValue}`)).stdout.trim();
-      const baseUrl = `http://${DEEPLINKS_ROUTE_HANDLERS_HOST}:${portValue}`;
+      const baseUrl = `http://${port?.id === mainPort ? 'localhost' : DEEPLINKS_ROUTE_HANDLERS_HOST}:${portValue}`;
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
@@ -788,3 +794,19 @@ export default async (req, res) => {
     return res.status(500).json({ error: e.toString() });
   }
 };
+
+export const handleGqlLinks = async () => {
+  const HandleGql = deep.idLocal('@deep-foundation/core', 'HandleGql');
+  const { data: handles } = await deep.select({
+    type_id: HandleGql
+  });
+  for (let h in handles) {
+    await handleGql(handles[h], 'INSERT');
+  }
+};
+
+const startGqlHandling = async () => {
+  setInterval(handleGqlLinks, 5000);
+};
+
+startGqlHandling();
