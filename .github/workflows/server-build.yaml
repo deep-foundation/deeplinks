@@ -3,7 +3,7 @@ name: Server build
 on:
   push:
     branches:
-      - main
+      - '**'
 
 jobs:
   build:
