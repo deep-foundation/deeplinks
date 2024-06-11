@@ -12,6 +12,7 @@ import { createLoopObservable } from '../utils/rxjs';
 import { IPFS_SYNC_INTERVAL } from '../consts';
 import { fetchPins } from '../../../dataSource/ipfs/ipfsSource';
 import ParticlesResolverQueue from '../ParticlesResolverQueue/ParticlesResolverQueue';
+import { serializeError } from 'serialize-error';
 
 class SyncIpfsLoop {
   private isInitialized$: Observable<boolean>;
@@ -119,7 +120,8 @@ class SyncIpfsLoop {
         await this.db!.putPins(pinsToAdd.map(mapPinToEntity));
       }
     } catch (e) {
-      console.log('---syncPins error', e);
+      const serializedError = serializeError(e);
+      console.log('---syncPins error', JSON.stringify(serializedError, null, 2));
       throw e;
     }
   }

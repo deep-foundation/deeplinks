@@ -5,7 +5,7 @@ import { HasuraApi } from '@deep-foundation/hasura/api.js';
 // import { sql } from '@deep-foundation/hasura/sql.js';
 import { gql } from '@apollo/client/index.js';
 import vm from 'vm';
-
+import { serializeError } from 'serialize-error';
 import { permissions } from '../permission.js';
 import { findPromiseLink, reject, resolve } from '../promise.js';
 import { DeepClient } from '../client.js';
@@ -148,7 +148,8 @@ export async function handleScheduleMomemt(moment: any) {
             promises.push(() => useRunner({ code, handlerId, isolationProviderImageName, data: { moment, promiseId: promise.id } }));
             handleOperationsIds.push(handleOperationId);
           } catch (e) {
-            error('error', e);
+            const serializedError = serializeError(e);
+            error('error', JSON.stringify(serializedError, null, 2));
           }
         } else {
           promises.push(async () => Promise.reject(new Error('Code of a handler is not loaded.')));
@@ -197,8 +198,9 @@ export default async (req, res) => {
       //   });
       // }
       return res.status(200).json({});
-    } catch(e) {
-      error('error', e);
+    } catch (e) {
+      const serializedError = serializeError(e);
+      error('error', JSON.stringify(serializedError, null, 2));
       throw e;
       // if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
       //   log('reject', current.id);
@@ -213,7 +215,8 @@ export default async (req, res) => {
     }
 
     return res.status(500).json({ error: 'notexplained' });
-  } catch(e) {
-    return res.status(500).json({ error: e.toString() });
+  } catch (e) {
+    const serializedError = serializeError(e);
+    return res.status(500).json({ error: serializedError });
   }
 };

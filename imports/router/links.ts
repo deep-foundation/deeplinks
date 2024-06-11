@@ -4,7 +4,7 @@ import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 // import { sql } from '@deep-foundation/hasura/sql.js';
 import { gql } from '@apollo/client/index.js';
-
+import { serializeError } from 'serialize-error';
 import { DeepClient } from '../client.js';
 import { ContainerController } from '../container-controller.js';
 import { ALLOWED_IDS, DENIED_IDS } from '../global-ids.js';
@@ -55,7 +55,7 @@ const getMainPort = async () => {
   try {
     if (!mainPort) mainPort = await deep.id('@deep-foundation/main-port', 'port');
     return mainPort;
-  } catch(error) {}
+  } catch (error) {}
 }
 
 export function makePromiseResult(promiseId: Id, resolvedTypeId: Id, promiseResultTypeId: Id, result: any, promiseReasonTypeId: Id, handleInsertId: any): any {
@@ -118,9 +118,10 @@ export async function processPromises(promises: any[], handleOperationsIds: any[
           await deep.insert(promiseResults as any, { name: 'IMPORT_PROMISES_RESULTS' });
           log("inserted promiseResults: ", JSON.stringify(promiseResults, null, 2));
         }
-        catch(e)
+        catch (e)
         {
-          log('promiseResults insert error: ', e?.message ?? e);
+          const serializedError = serializeError(e);
+          log('promiseResults insert error: ', JSON.stringify(serializedError, null, 2));
         }
       });
 }
@@ -275,7 +276,8 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
         promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId: promiseId } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
-        handleOperationDebug('error', error);
+        const serializedError = serializeError(error);
+        handleOperationDebug('error', JSON.stringify(serializedError, null, 2));
       }
     } else {
       promises.push(async () => Promise.reject(new Error('Id, operation id, code, or image of a handler are not loaded.')));
@@ -341,7 +343,8 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
         promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId, selectorId } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
-        handleSelectorDebug('error', error);
+        const serializedError = serializeError(error);
+        handleSelectorDebug('error', JSON.stringify(serializedError, null, 2));
       }
     } else {
       promises.push(async () => Promise.reject(new Error('Id, operation id, code, or image of a handler are not loaded.')));
@@ -555,10 +558,10 @@ ${schema}`);
         }, { route: '/v1/metadata' });
         handleGqlDebug('remote schema permission for "undefined" added');
       }
-      catch(rejected)
+      catch (rejected)
       {
-        const processedRejection = JSON.parse(toJSON(rejected));
-        handleGqlDebug('rejected', processedRejection);
+        const processedRejection = serializeError(rejected);
+        handleGqlDebug('rejected', JSON.stringify(processedRejection, null, 2));
         const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
         handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
@@ -612,10 +615,10 @@ ${schema}`);
       }
       handleGqlDebug('remote schema is removed');
     }
-    catch(rejected)
+    catch (rejected)
     {
-      const processedRejection = JSON.parse(toJSON(rejected));
-      handleGqlDebug('rejected', processedRejection);
+      const processedRejection = serializeError(rejected);
+      handleGqlDebug('rejected', JSON.stringify(processedRejection, null, 2));
       const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
       handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
 
@@ -777,8 +780,9 @@ export default async (req, res) => {
           });
         }
         return res.status(200).json({});
-      } catch(e) {
-        error('error', e, e?.graphQLErrors?.[0]?.extensions);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        error('error', JSON.stringify(serializedError, null, 2));
         if (operation === 'INSERT' && !DENIED_IDS.includes(current.type_id) && ALLOWED_IDS.includes(current.type_id)) {
           log('reject', current.id);
           await reject({
@@ -794,8 +798,9 @@ export default async (req, res) => {
       return res.status(500).json({ error: 'notexplained' });
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
-  } catch(e) {
-    return res.status(500).json({ error: e.toString() });
+  } catch (e) {
+    const serializedError = serializeError(e);
+    return res.status(500).json({ error: serializedError });
   }
 };
 

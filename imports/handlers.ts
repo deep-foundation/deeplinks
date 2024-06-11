@@ -3,6 +3,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from './client.js';
 import _ from 'lodash';
 import { Id } from './minilinks.js';
+import { serializeError } from 'serialize-error';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -217,7 +218,8 @@ export async function deleteIds(ids: Id[], options: {
     }
     catch (e)
     {
-      console.error(`Error deleting ids: ${idsFiltered.join(', ')}`, JSON.stringify(e, null, 2));
+      const serializedError = serializeError(e);
+      console.error(`Error deleting ids: ${idsFiltered.join(', ')}`, JSON.stringify(serializedError, null, 2));
     }
   } else {
     return { data: [] };

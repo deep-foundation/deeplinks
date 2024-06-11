@@ -1,5 +1,6 @@
 import { wrap, Remote, expose, transferHandlers } from 'comlink';
 import { IPFSContentTransferHandler } from './serializers';
+import { serializeError } from 'serialize-error';
 
 type WorkerType = SharedWorker | Worker;
 
@@ -16,7 +17,8 @@ function safeStringify(obj: any): string {
   try {
     return JSON.stringify(obj);
   } catch (error) {
-    return String(obj);
+    const serializedError = serializeError(error);
+    return JSON.stringify(serializedError, null, 2);
   }
 }
 

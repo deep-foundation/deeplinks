@@ -4,6 +4,7 @@ import axios from 'axios';
 import getPort from 'get-port';
 import Debug from 'debug';
 import util from 'util';
+import { serializeError } from 'serialize-error';
 const execAsync = util.promisify(exec);
 
 const debug = Debug('deeplinks:container-controller');
@@ -106,7 +107,8 @@ export class ContainerController {
           const waitResult = await execAsync(`npx wait-on --timeout 5000 http-get://${host}:${dockerPort}/healthz`);
           log('_runContainer npx done', { waitResult });
         } catch (e) {
-          error('_runContainer error', e);
+          const serializedError = serializeError(e);
+          error('_runContainer error', JSON.stringify(serializedError, null, 2));
           return { error: 'wait-on healthz timeout _runContainer' };
         }
 
@@ -219,7 +221,8 @@ export class ContainerController {
       if (callResult?.data?.rejected) return Promise.reject(callResult?.data?.rejected);
       return callResult?.data?.resolved;
     } catch (e) {
-      error('call error', e);
+      const serializedError = serializeError(e);
+      error('call error', JSON.stringify(serializedError, null, 2));
       const checkResult = await this._checkAndRestart(container);
       if (checkResult?.error) return {...checkResult};
       await this.callHandler(options);

@@ -2,6 +2,7 @@ import { toString as uint8ArrayToAsciiString } from 'uint8arrays/to-string';
 import isSvg from 'is-svg';
 import { IPFSContentDetails, IPFSContentMaybe, IpfsContentType } from '../ipfs';
 import { getResponseResult, onProgressCallback } from './stream';
+import { serializeError } from 'serialize-error';
 
 // TODO: fix to get working inside web worker, REFACTOR
 // import { PATTERN_HTTP, PATTERN_IPFS_HASH } from '../config';
@@ -128,7 +129,8 @@ export const parseArrayLikeToDetails = async (
 
     return response;
   } catch (e) {
-    console.log('----parseRawIpfsData', e, cid);
+    const serializedError = serializeError(e);
+    console.log('----parseRawIpfsData', JSON.stringify(serializedError, null, 2), cid);
     return undefined;
   }
 };

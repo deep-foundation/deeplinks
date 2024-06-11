@@ -26,6 +26,8 @@ import {
   FILE_SIZE_DOWNLOAD,
 } from '../config';
 
+import { serializeError } from 'serialize-error';
+
 // import { convertTimeToMilliseconds } from '../helpers';
 // import { CYBER } from '../config';
 
@@ -173,7 +175,8 @@ const fetchIPFSContentFromNode = async (
       }
     }
   } catch (error) {
-    console.log('error fetchIPFSContentFromNode', error);
+    const serializedError = serializeError(error);
+    console.log('error fetchIPFSContentFromNode', JSON.stringify(serializedError, null, 2));
     return { cid, availableDownload: true, source: 'node', meta: emptyMeta };
   }
 };
@@ -261,7 +264,8 @@ async function fetchIpfsContent(
         return undefined;
     }
   } catch (e) {
-    console.log('----fetchIpfsContent error', e);
+    const serializedError = serializeError(e);
+    console.log('----fetchIpfsContent error', JSON.stringify(serializedError, null, 2));
     return undefined;
   }
 }

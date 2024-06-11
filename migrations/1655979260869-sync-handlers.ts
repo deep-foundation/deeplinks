@@ -471,7 +471,7 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
     try {
       JSON.parse(object);
       const idByObject = plv8.execute(${selectLinkByValue});
-    } catch(e) {
+    } catch (e) {
       plv8.elog(ERROR, 'Error by parsing json object '.concat(object));
     }
     return { id: plv8.execute(${selectLinkByValue}) };
@@ -487,7 +487,7 @@ const findLinkIdByValueCode = /*javascript*/`({ string, object, number, value })
     try {
       JSON.parse(value);
       const idByObject = plv8.execute(${selectLinkByValue})?.[0]?.id;
-    } catch(e) {
+    } catch (e) {
     }
     return idByString || idByNumber || idByObject;
   }

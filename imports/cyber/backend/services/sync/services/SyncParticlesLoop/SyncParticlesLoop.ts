@@ -14,6 +14,7 @@ import { PARTICLES_SYNC_INTERVAL } from '../consts';
 import ParticlesResolverQueue from '../ParticlesResolverQueue/ParticlesResolverQueue';
 import { changeSyncStatus } from '../../utils';
 import { SyncServiceParams } from '../../types';
+import { serializeError } from 'serialize-error';
 
 class SyncParticlesLoop {
   private isInitialized$: Observable<boolean>;
@@ -94,7 +95,8 @@ class SyncParticlesLoop {
       syncStatusEntities.length > 0 &&
         (await this.db!.putSyncStatus(syncStatusEntities));
     } catch (e) {
-      console.log('>>> SyncParticlesLoop error:', e);
+      const serializedError = serializeError(e);
+      console.log('>>> SyncParticlesLoop error:', JSON.stringify(serializedError, null, 2));
       throw e;
     }
   }

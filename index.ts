@@ -24,6 +24,7 @@ import _ from 'lodash';
 import Cors from 'cors';
 import cookieParser from 'cookie-parser';
 import async from 'async';
+import { serializeError } from 'serialize-error';
 
 const DEEPLINKS_HASURA_PATH = process.env.DEEPLINKS_HASURA_PATH || 'localhost:8080';
 const DEEPLINKS_HASURA_STORAGE_URL = process.env.DEEPLINKS_HASURA_STORAGE_URL || 'http://localhost:8000';
@@ -167,8 +168,9 @@ app.post('/file', async (req, res, next) => {
     userId = +(JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id']);
     linkId = +(headers['linkId'] || headers['linkid']);
     console.log('/file post proxy','linkId',linkId);
-  } catch (e){
-    console.log('/file post proxy','error: ', e);
+  } catch (e) {
+    const serializedError = serializeError(e);
+    console.log('/file post proxy','error: ', JSON.stringify(serializedError, null, 2));
   }
   if (!userId) res.status(403).send('Update CAN NOT be processes');
   const canResult = await deep.can(linkId, userId, deep.idLocal('@deep-foundation/core', 'AllowUpdateType')) || await deep.can(null, userId, deep.idLocal('@deep-foundation/core', 'AllowAdmin'));
@@ -220,8 +222,9 @@ app.post('/file', async (req, res, next) => {
         });
         console.log('/file post proxy','linkid',linkId)
         console.log('/file post proxy','data',updated?.data?.updateFiles?.returning);
-      } catch (e){
-        console.log('/file post proxy','try error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        console.log('/file post proxy','try error: ', JSON.stringify(serializedError, null, 2));
          if (files[0]?.id){
           await client.mutate({
             mutation:  gql`mutation DELETE_FILE($fileid: uuid) { deleteFiles(where: {id: {_eq: $fileid}}){ returning { id } } }`,
@@ -289,8 +292,9 @@ const start = async () => {
     }, () => {
       error('hasura metadata broken');
     });
-  } catch(e){
-    error(e);
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
   }
 }
 
@@ -371,7 +375,7 @@ const handleRoutes = async () => {
     const routerListeningTypeId = deep.idLocal('@deep-foundation/core', 'RouterListening');
     try {
       if (!mainPort) mainPort = await deep.id('@deep-foundation/main-port', 'port');
-    } catch(error) {}
+    } catch (error) {}
   
     const routesResult = await client.query({
       query: gql`
@@ -679,7 +683,8 @@ const handleRoutes = async () => {
                         }
                       }
                     } catch (e) {
-                      routesDebugError('deeplinks response error', e)
+                      const serializedError = serializeError(e);
+                      routesDebugError('deeplinks response error', JSON.stringify(serializedError, null, 2))
                     }
                   });
                   // routesDebugLog('body', body);
@@ -691,8 +696,9 @@ const handleRoutes = async () => {
         }
       }
     }
-  } catch(e) {
-    routesDebugLog(toJSON(e));
+  } catch (e) {
+    const serializedError = serializeError(e);
+    routesDebugLog(JSON.stringify(serializedError, null, 2));
   }
   
   busy = false;

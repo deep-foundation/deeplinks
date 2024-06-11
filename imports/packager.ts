@@ -2,6 +2,7 @@ import Debug from 'debug';
 import { DeepClient } from './client.js';
 import type { DeepSerialOperation } from './client.js';
 import { Id, Link, minilinks, MinilinksResult } from './minilinks.js';
+import { serializeError } from 'serialize-error';
 
 const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');
@@ -133,9 +134,10 @@ export class Packager<L extends Link<any>> {
         returning: 'id: link_id'
       });
       return { error: false, namespaceId: q?.data?.[0]?.id };
-    } catch(e) {
+    } catch (e) {
       log('fetchPackageNamespaceId error');
-      return { error: e, namespaceId: 0 };
+      const serializedError = serializeError(e);
+      return { error: serializedError, namespaceId: 0 };
     }
     return { error: true, namespaceId: 0 };
   }
@@ -158,9 +160,10 @@ export class Packager<L extends Link<any>> {
         returning: 'id link { id: to_id }'
       });
       return q?.data?.[0]?.link?.id || 0;
-    } catch(e) {
+    } catch (e) {
       log('fetchDependenciedLinkId error');
-      error(e);
+      const serializedError = serializeError(e);
+      error(JSON.stringify(serializedError, null, 2));
     }
     return 0;
   }
@@ -230,10 +233,11 @@ export class Packager<L extends Link<any>> {
         log('insertItem promise', item.id);
         await this.client.await(+item.id);
       }
-    } catch(e) {
+    } catch (e) {
       log('insertItem error');
-      error(e);
-      errors.push(e);
+      const serializedError = serializeError(e);
+      error(JSON.stringify(serializedError, null, 2));
+      errors.push(serializedError);
     }
     return;
   }
@@ -260,10 +264,11 @@ export class Packager<L extends Link<any>> {
         }
       }
       return;
-    } catch(e) {
+    } catch (e) {
       log('insertItems error');
-      error(e);
-      errors.push(e);
+      const serializedError = serializeError(e);
+      error(JSON.stringify(serializedError, null, 2));
+      errors.push(serializedError);
     }
     return;
   }
@@ -376,9 +381,10 @@ export class Packager<L extends Link<any>> {
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId] };
-    } catch(e) {
+    } catch (e) {
       log('import error');
-;     errors.push(e);
+      const serializedError = serializeError(e);
+;     errors.push(serializedError);
     }
     return { ids: [], errors };
   }

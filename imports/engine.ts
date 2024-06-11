@@ -10,6 +10,7 @@ import fixPath from 'fix-path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { rootPath } from 'root-path-electron';
+import { serializeError } from 'serialize-error';
 // import { remote } from 'electron'
 
 const debug = Debug('deeplinks:engine');
@@ -204,8 +205,9 @@ export const _checkDeeplinksStatus = async (): Promise<ICheckDeeplinksStatusRetu
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
     status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
-  } catch(e){
-    error(e)
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
     err = e;
   }
   return { result: status?.data?.docker, error: err };
@@ -218,8 +220,9 @@ export const _checkDeepcaseStatus = async (): Promise<ICheckDeeplinksStatusRetur
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
     status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3007' : NEXT_PUBLIC_DEEPLINKS_SERVER}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
-  } catch(e){
-    error(e)
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
     err = e;
   }
   return { result: status?.data?.docker, error: err };
@@ -269,9 +272,10 @@ const _execEngine = async ({ envsStr, envs, engineStr }: { envsStr: string; envs
     console.log(command);
     const { stdout, stderr } = await execP(command);
     return { result: { stdout, stderr } };
-  } catch(e) {
-    error(e);
-    return { error: e };
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
+    return { error: serializedError };
   }
 }
 
@@ -289,7 +293,7 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   // try {
   //   fs.accessSync(`/home/menzorg/.nvm/versions/node`, fs.constants.F_OK);
   //   nvmExists = true;
-  // } catch(e){
+  // } catch (e) {
   //   printLog(envs['MIGRATIONS_DIR'], e?.message, 'nvmError');
   //   nvmExists = false;
   // }
@@ -305,8 +309,9 @@ const _AddNvmDirToPathEnv = async (envs: any): Promise<boolean> => {
   try {
     versions = fs.readdirSync(`${homeDir}/.nvm/versions/node`);
     printLog(envs['MIGRATIONS_DIR'], versions, 'versions');
-  } catch(e){
-    printLog(envs['MIGRATIONS_DIR'], e.toString(), 'versions error');
+  } catch (e) {
+    const serializedError = serializeError(e);
+    printLog(envs['MIGRATIONS_DIR'], JSON.stringify(serializedError, null, 2), 'versions error');
   }
 
   if (!versions?.length) {

@@ -8,6 +8,7 @@ import { Packager, Package } from '../imports/packager.js';
 import { corePckg } from '../imports/core.js';
 import { DeepClient } from '../imports/client.js';
 import prompt from 'prompt';
+import { serializeError } from 'serialize-error';
 
 const debug = Debug('deeplinks:migrations:types');
 const log = debug.extend('log');
@@ -304,8 +305,9 @@ export const down = async () => {
       type_id: handleScheduleId,
     }, { name: 'DELETE_SCHEDULE_HANDLERS' });
     await delay(10000);
-  } catch(e) {
-    error(e);
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
   }
   await root.delete({}, { name: 'DELETE_TYPE_TYPE' });
 };

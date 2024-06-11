@@ -4,6 +4,7 @@ import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateMutation, generateSerial } from './gql/index.js';
 import { DeepClient } from './client.js';
 import { Id } from './minilinks.js';
+import { serializeError } from 'serialize-error';
 
 const debug = Debug('deeplinks:bool_exp');
 const log = debug.extend('log');
@@ -67,7 +68,8 @@ export const boolExpToSQL = async (boolExpId: Id, boolExpValue: any) => {
       }
     }
   } catch (e) {
-    error(e);
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
     error('error', gql, explained, sql);
   }
 };

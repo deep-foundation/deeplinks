@@ -6,6 +6,7 @@ import { Transaction } from './types';
 
 import { TRANSACTIONS_BATCH_LIMIT, CYBERLINKS_BATCH_LIMIT } from './consts';
 import { fetchIterable } from './utils/fetch';
+import { serializeError } from 'serialize-error';
 
 type TransactionsByAddressResponse = {
   messages_by_address: Transaction[];
@@ -102,7 +103,8 @@ const fetchTransactions = async (
 
     return res?.messages_by_address;
   } catch (e) {
-    console.log('--- fetchTransactions:', e);
+    const serializedError = serializeError(e);
+    console.log('--- fetchTransactions:', JSON.stringify(serializedError, null, 2));
     return [];
   }
 };
@@ -146,7 +148,8 @@ const fetchCyberlinks = async (
     );
     return res.cyberlinks;
   } catch (e) {
-    console.log('--- fetchCyberlinks:', e);
+    const serializedError = serializeError(e);
+    console.log('--- fetchCyberlinks:', JSON.stringify(serializedError, null, 2));
     return [];
   }
 };

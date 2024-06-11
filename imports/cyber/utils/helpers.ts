@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import { serializeError } from 'serialize-error';
 
 /**
  * Promise will be rejected after timeout.
@@ -38,7 +39,8 @@ export function promiseToObservable<T>(promiseFactory: () => Promise<T>) {
         observer.complete();
       })
       .catch((error) => {
-        console.log('----promiseToObservable error', error); //, error
+        const serializedError = serializeError(error);
+        console.log('----promiseToObservable error', JSON.stringify(serializedError, null, 2)); //, error
         observer.error(error);
       });
   });

@@ -1,6 +1,7 @@
 import { generateQuery, generateQueryData } from '../gql/index.js';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
+import { serializeError } from 'serialize-error';
 
 const RESERVED_LIFETIME_MS = +process.env.RESERVED_LIFETIME || 24 * 60 * 60 * 1000;
 
@@ -31,7 +32,8 @@ export default async (req, res) => {
     }));
 
     return res.json({ cleaned: [] });
-  } catch(e) {
-    return res.status(500).json({ error: e.toString() });
+  } catch (e) {
+    const serializedError = serializeError(e);
+    return res.status(500).json({ error: serializedError });
   }
 };

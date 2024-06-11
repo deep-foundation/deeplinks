@@ -22,6 +22,7 @@ import { CybIpfsNode, IpfsContentSource } from '../ipfs/ipfs';
 import { ParticleCid } from '../types/base';
 
 import { promiseToObservable } from '../utils/helpers';
+import { serializeError } from 'serialize-error';
 
 import type {
   QueueItem,
@@ -193,7 +194,8 @@ class QueueManager {
         };
       }),
       catchError((error): Observable<QueueItemResult> => {
-        debugCid(cid, 'fetchData - fetchIpfsContent catchErr', error);
+        const serializedError = serializeError(error);
+        debugCid(cid, 'fetchData - fetchIpfsContent catchErr', JSON.stringify(serializedError, null, 2));
         if (error instanceof QueueItemTimeoutError) {
           return of({
             item,

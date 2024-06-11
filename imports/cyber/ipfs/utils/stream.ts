@@ -3,6 +3,7 @@
 import { fileTypeFromBuffer } from 'file-type';
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 import { Uint8ArrayLike } from '../ipfs';
+import { serializeError } from 'serialize-error';
 
 type ResultWithMime = {
   result: Uint8ArrayLike;
@@ -150,9 +151,10 @@ export const getResponseResult = async (
     const result = uint8ArrayConcat(chunks);
     return result;
   } catch (error) {
+    const serializedError = serializeError(error);
     console.error(
       `Error reading stream/iterable.\r\n Probably Hot reload error!`,
-      error
+      JSON.stringify(serializedError, null, 2)
     );
 
     return undefined;

@@ -2,6 +2,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from "./imports/client.js";
 import axios from 'axios';
 import Debug from 'debug';
+import { serializeError } from 'serialize-error';
 const debug = Debug('deeplinks:warmup');
 
 const apolloClient = generateApolloClient({
@@ -17,9 +18,10 @@ export const checkSystemStatus = async (): Promise<{ result?: any; error?: any }
     const status = await axios.post(`http://localhost:3006/gql`, { "query": "{ healthz { status } }" }, { validateStatus: status => true, timeout: 7000 });
     // console.log('system status result', JSON.stringify(status?.data));
     return { result: status?.data?.data?.healthz?.[0].status };
-  } catch(e) {
+  } catch (e) {
     // console.log('system status error', e);
-    return { error: e };
+    const serializedError = serializeError(e);
+    return { error: serializedError };
   }
 };
 

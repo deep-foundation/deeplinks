@@ -5,6 +5,7 @@ import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient } from '../client.js';
+import { serializeError } from 'serialize-error';
 
 const apolloClient = generateApolloClient({
   path: `${process.env.DEEPLINKS_HASURA_PATH}/v1/graphql`,
@@ -65,8 +66,9 @@ const resolvers = {
           role: await deep.can(null, linkId, deep.idLocal('@deep-foundation/core', 'AllowAdmin')) ? 'admin' : 'link',
         });
         return { token, linkId };
-      } catch(error) {
-        return { error };
+      } catch (error) {
+        const serializedError = serializeError(error);
+        return { serializedError };
       }
     },
   }

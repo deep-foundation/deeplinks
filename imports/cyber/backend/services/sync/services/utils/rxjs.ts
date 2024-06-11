@@ -11,6 +11,7 @@ import {
   distinctUntilChanged,
   filter,
 } from 'rxjs';
+import { serializeError } from 'serialize-error';
 
 export const createLoopObservable = (
   intervalMs: number,
@@ -28,7 +29,8 @@ export const createLoopObservable = (
         concatMap(() =>
           actionObservable$.pipe(
             catchError((error) => {
-              console.log('Error:', error);
+              const serializedError = serializeError(error);
+              console.log('Error:', JSON.stringify(serializedError, null, 2));
               throw error;
             })
           )

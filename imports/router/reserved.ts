@@ -2,6 +2,7 @@ import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { HasuraApi } from '@deep-foundation/hasura/api.js';
 import { generateMutation, generateSerial, insertMutation } from '../gql/index.js';
 import Debug from 'debug';
+import { serializeError } from 'serialize-error';
 
 const debug = Debug('deeplinks:eh:reserved');
 const log = debug.extend('log');
@@ -46,8 +47,9 @@ export default async (req, res) => {
     }));
     if (!mutateLinksResult.data['m0']?.returning?.[0]?.id) res.status(500).json({ error: 'insert reserved error' });
     return res.json({ ids });
-  } catch(e) {
-    error(JSON.stringify(e, null, 2));
-    return res.status(500).json({ error: e.toString() });
+  } catch (e) {
+    const serializedError = serializeError(e);
+    error(JSON.stringify(serializedError, null, 2));
+    return res.status(500).json({ error: serializedError });
   }
 };

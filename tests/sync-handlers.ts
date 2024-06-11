@@ -8,6 +8,7 @@ import { _ids } from '../imports/client.js';
 import { createPrepareFunction, createDeepClientFunction, createSyncInsertTriggerFunction, dropSyncInsertTriggerFunction, dropSyncInsertTrigger, createSyncInsertTrigger, createSyncDeleteTriggerFunction, createSyncDeleteTrigger, dropSyncDeleteTriggerFunction, dropSyncDeleteTrigger, createSyncDeleteStringsTrigger, createSyncDeleteStringsTriggerFunction, createSyncInsertStringsTrigger, createSyncInsertStringsTriggerFunction, createSyncUpdateStringsTrigger, createSyncUpdateStringsTriggerFunction, dropSyncDeleteStringsTrigger, dropSyncDeleteStringsTriggerFunction, dropSyncInsertStringsTrigger, dropSyncInsertStringsTriggerFunction, dropSyncUpdateStringsTrigger, dropSyncUpdateStringsTriggerFunction, createSyncDeleteNumbersTrigger, createSyncDeleteNumbersTriggerFunction, createSyncInsertNumbersTrigger, createSyncInsertNumbersTriggerFunction, createSyncUpdateNumbersTrigger, createSyncUpdateNumbersTriggerFunction, dropSyncDeleteNumbersTrigger, dropSyncDeleteNumbersTriggerFunction, dropSyncInsertNumbersTrigger, dropSyncInsertNumbersTriggerFunction, dropSyncUpdateNumbersTrigger, dropSyncUpdateNumbersTriggerFunction, createSyncDeleteObjectsTrigger, createSyncDeleteObjectsTriggerFunction, createSyncInsertObjectsTrigger, createSyncInsertObjectsTriggerFunction, createSyncUpdateObjectsTrigger, createSyncUpdateObjectsTriggerFunction, dropSyncDeleteObjectsTrigger, dropSyncDeleteObjectsTriggerFunction, dropSyncInsertObjectsTrigger, dropSyncInsertObjectsTriggerFunction, dropSyncUpdateObjectsTrigger, dropSyncUpdateObjectsTriggerFunction } from "../migrations/1655979260869-sync-handlers";
 import Debug from 'debug';
 import { MutationInputLink } from '../imports/client_types.js';
+import { serializeError } from 'serialize-error';
 // import { _ids } from '../imports/client.js';
 
 const debug = Debug('deeplinks:tests:sync-handlers');
@@ -168,8 +169,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -211,8 +213,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -253,8 +256,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -297,8 +301,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -354,8 +359,9 @@ describe('sync handlers', () => {
         const linkId = (await deepAdmin.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1285,7 +1291,8 @@ describe('sync handlers', () => {
           try {
             r4 = await api.sql(sql`select links__sync__handlers__deep__client(${a2.linkId}::bigint, 'insert', '{"type_id":${TempType}, "from_id": ${da2?.[0]?.id}, "to_id": ${a1.linkId}}'::jsonb, '{}'::jsonb)`);
           } catch (e) {
-            log(e);
+            const serializedError = serializeError(e);            
+            log(JSON.stringify(serializedError, null, 2));
           }
           const da2t = r4?.data?.result?.[1]?.[0] ? JSON.parse(r4?.data?.result?.[1]?.[0])?.data : undefined;
           const e2t = r4?.error;
@@ -1699,8 +1706,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1735,8 +1743,9 @@ describe('sync handlers', () => {
         const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
         debug('linkId', linkId);
         debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-      } catch (e){
-        debug('insert error: ', e);
+      } catch (e) {
+        const serializedError = serializeError(e);
+        debug('insert error: ', JSON.stringify(serializedError, null, 2));
       }
 
       const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1774,8 +1783,9 @@ describe('sync handlers', () => {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
           debug('linkId', linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1810,8 +1820,9 @@ describe('sync handlers', () => {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
           debug('linkId', linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1853,8 +1864,9 @@ describe('sync handlers', () => {
         try {
           const linkId = (await deep.insert({ type_id: typeId }))?.data?.[0].id;
           debug('linkId', linkId);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1894,8 +1906,9 @@ describe('sync handlers', () => {
           const linkId = link.id;
           if (linkId) await deep.delete(linkId);
           debug('linkId', linkId);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -1979,8 +1992,9 @@ describe('sync handlers', () => {
         try {
           selectorItem = await insertSelectorItem({ selectorId, nodeTypeId, linkTypeId, treeId, rootId });
           debug('selectorItem', selectorItem);
-        } catch (e){
-          error(e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          error(JSON.stringify(serializedError, null, 2));
         }
 
         if (selectorItem?.linkId) await deep.delete(selectorItem.linkId);
@@ -2026,8 +2040,9 @@ describe('sync handlers', () => {
           const linkId = (await deep.insert({ type_id: customLinkId2 }))?.data?.[0].id;
           debug('linkId', linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2066,8 +2081,9 @@ describe('sync handlers', () => {
         try {
           const deleted = await deep.delete(linkId);
           debug('deleted', deleted);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
         
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2104,8 +2120,9 @@ describe('sync handlers', () => {
         try {
           const deleted = await deep.delete(selectorItem.linkId);
           debug('deleted', deleted);
-        } catch (e){
-          error(e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          error(JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2181,8 +2198,9 @@ describe('sync handlers', () => {
         try {
           const updated = await deep.update(linkId, { to_id: anyId });
           console.log('updated', updated);
-        } catch (e){
-          debug('update error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('update error: ', JSON.stringify(serializedError, null, 2));
         }
         
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2221,8 +2239,9 @@ describe('sync handlers', () => {
         try {
           const updated = await deep.update(selectorItem.linkId, { to_id: newToId });
           debug('updated', updated);
-        } catch (e){
-          error(e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          error(JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2303,8 +2322,9 @@ describe('sync handlers', () => {
             debug('linkId', linkId);
             debug('insertedLink', insertedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2348,8 +2368,9 @@ describe('sync handlers', () => {
             debug('updated', updated?.data);
             debug('updatedLink', updatedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2393,8 +2414,9 @@ describe('sync handlers', () => {
             debug('deleted', deleted?.data);
             debug('deletedLink', deletedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2434,8 +2456,9 @@ describe('sync handlers', () => {
             debug('linkId', linkId);
             debug('insertedLink', insertedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2479,8 +2502,9 @@ describe('sync handlers', () => {
             debug('updated', updated?.data);
             debug('updatedLink', updatedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2524,8 +2548,9 @@ describe('sync handlers', () => {
             debug('deleted', deleted?.data);
             debug('deletedLink', deletedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2565,8 +2590,9 @@ describe('sync handlers', () => {
             debug('linkId', linkId);
             debug('insertedLink', insertedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2610,8 +2636,9 @@ describe('sync handlers', () => {
             debug('updated', updated?.data);
             debug('updatedLink', updatedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2655,8 +2682,9 @@ describe('sync handlers', () => {
             debug('deleted', deleted?.data);
             debug('deletedLink', deletedLink?.data);
             debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
-          } catch (e){
-            debug('insert error: ', e);
+          } catch (e) {
+            const serializedError = serializeError(e);
+            debug('insert error: ', JSON.stringify(serializedError, null, 2));
           }
   
           const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -2740,8 +2768,9 @@ describe('sync handlers', () => {
           debug('linkId', linkId);
           const insertedLink = await deep.select(linkId);
           debug('insertedLink', insertedLink?.data);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: typeIdToInsertInHandler }, to_id: { _eq: typeIdToInsertInHandler }, from_id: { _eq: typeIdToInsertInHandler } });
@@ -2775,8 +2804,9 @@ describe('sync handlers', () => {
           const deletedLink = await deep.select(linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
 
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         debug('delete update handler', await deleteHandler(onUpdateHandler));
@@ -2813,8 +2843,9 @@ describe('sync handlers', () => {
           debug('linkId', linkId);
           const insertedLink = await deep.select(linkId);
           debug('insertedLink', insertedLink?.data);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: typeIdToInsertInHandler }, to_id: { _eq: typeIdToInsertInHandler }, from_id: { _eq: typeIdToInsertInHandler } });
@@ -2848,8 +2879,9 @@ describe('sync handlers', () => {
           const deletedLink = await deep.select(linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
 
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         debug('delete update handler', await deleteHandler(onUpdateHandler));
@@ -2890,8 +2922,9 @@ describe('sync handlers', () => {
           debug('linkId', linkId);
           const insertedLink = await deep.select(linkId);
           debug('insertedLink', insertedLink?.data);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         const insertedByHandler = await deep.select({ type_id: { _eq: typeIdToInsertInHandler }, to_id: { _eq: typeIdToInsertInHandler }, from_id: { _eq: typeIdToInsertInHandler } });
@@ -2925,8 +2958,9 @@ describe('sync handlers', () => {
           const deletedLink = await deep.select(linkId);
           debug('delete linkid', await deep.delete({ id: { _eq: linkId } }));
 
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
 
         debug('delete update handler', await deleteHandler(onUpdateHandler));
@@ -2959,8 +2993,9 @@ describe('sync handlers', () => {
         try {
           const deleted = await deep.delete(linkId);
           debug('deleted', deleted);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
         
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });
@@ -3009,8 +3044,9 @@ describe('sync handlers', () => {
           linkId = (await deep.insert({ type_id: typeId, string: { data: { value: 'azaza' }} }))?.data?.[0].id;
           const deleted = await deep.delete(linkId);
           debug('deleted', deleted);
-        } catch (e){
-          debug('insert error: ', e);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          debug('insert error: ', JSON.stringify(serializedError, null, 2));
         }
         
         const insertedByHandler = await deep.select({ type_id: { _eq: customLinkId }, to_id: { _eq: customLinkId }, from_id: { _eq: customLinkId } });

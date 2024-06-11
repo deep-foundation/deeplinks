@@ -2,7 +2,7 @@ import type { ApolloClient } from '@apollo/client';
 import Debug from 'debug';
 import { generateQuery, generateQueryData, generateSerial, insertMutation } from './gql/index.js';
 import { Id } from './minilinks.js';
-
+import { serializeError } from 'serialize-error';
 
 const debug = Debug('deeplinks:promise');
 const log = debug.extend('log');
@@ -133,15 +133,17 @@ export function awaitPromise(options: PromiseOptions): Promise<any> {
               return res(options.Results ? [] : true);
             }
           }
-        } catch(e) {
-          error('error', e);
-          return rej(options.Results ? e : false);
+        } catch (e) {
+          const serializedError = serializeError(e);
+          error('error', JSON.stringify(serializedError, null, 2));
+          return rej(options.Results ? serializedError : false);
         }
         await delay(timeout);
       }
-    } catch(e) {
-      error('error', e);
-      return rej(options.Results ? e : false);
+    } catch (e) {
+      const serializedError = serializeError(e);
+      error('error', JSON.stringify(serializedError, null, 2));
+      return rej(options.Results ? serializedError : false);
     }
   });
 };

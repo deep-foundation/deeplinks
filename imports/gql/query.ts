@@ -162,7 +162,7 @@ export const generateQuery = ({
   let query;
   try {
     query = gql`${queryString}`;
-  } catch(e) {
+  } catch (e) {
     throw e;
   }
   const variables = {};

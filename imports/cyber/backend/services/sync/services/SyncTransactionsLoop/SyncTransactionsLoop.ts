@@ -8,6 +8,7 @@ import { dateToNumber } from '../../../../../utils/date';
 import { NeuronAddress } from '../../../../types/base';
 import { QueuePriority } from '../../../../../QueueManager/types';
 import { SyncStatusDto } from '../../../../../CozoDb/types/dto';
+import { serializeError } from 'serialize-error';
 
 import DbApi from '../../../dataSource/indexedDb/dbApiWrapper';
 
@@ -119,7 +120,8 @@ class SyncTransactionsLoop {
       //   this.params.followings.map((addr) => this.syncTransactions(this.params.myAddress, addr))
       // );
     } catch (err) {
-      console.error('>>> syncAllTransactions', err);
+      const serializedError = serializeError(err);
+      console.error('>>> syncAllTransactions', JSON.stringify(serializedError, null, 2));
       throw err;
     }
   }

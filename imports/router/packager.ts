@@ -10,6 +10,7 @@ import url from 'url';
 import { DeepClient } from '../client.js';
 import { Packager } from '../packager.js';
 import { Id } from '../minilinks.js';
+import { serializeError } from 'serialize-error';
 
 const tmpdir = os.tmpdir();
 
@@ -74,8 +75,9 @@ export const packagerInstallCore = async (errors = [], address: string) => {
         const deepPckg = JSON.parse(deepPckgContent);
         const { ids, errors, packageId } = await packager.import(deepPckg);
         return { ids, errors, packageId };
-      } catch(e) {
-        errors.push(String(e));
+      } catch (e) {
+        const serializedError = serializeError(e);
+        errors.push(serializedError);
       }
     } else {
       errors.push(`deep.json not found in gist`);
@@ -88,7 +90,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
     // if (version) selector += '@' + version;
     // try {
     //   child_process.execSync(`cd ${dir}; npm install --no-cache ${selector};`,{stdio:[0,1,2]});
-    // } catch(e) {
+    // } catch (e) {
     //   errors.push(e);
     //   errors.push('installation failed');
     //   return { errors };
@@ -102,7 +104,7 @@ export const packagerInstallCore = async (errors = [], address: string) => {
     //     const { ids, errors, packageId } = await packager.import(deepPckg);
     //     fs.rmSync(dir, { recursive: true, force: true });
     //     return { ids, errors, packageId };
-    //   } catch(e) {
+    //   } catch (e) {
     //     errors.push(e);
     //   }
     // } else {
@@ -173,7 +175,7 @@ export const packagerPublishCore = async (errors = [], address: string, id: Id) 
     // fs.mkdirSync(dir);
     // try {
     //   child_process.execSync(`cd ${dir}; npm install --no-cache ${address};`,{stdio:[0,1,2]});
-    // } catch(e) {
+    // } catch (e) {
     //   errors.push(e);
     //   errors.push('installation failed');
     //   return { errors };

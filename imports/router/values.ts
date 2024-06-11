@@ -5,7 +5,7 @@ import { HasuraApi } from '@deep-foundation/hasura/api.js';
 // import { sql } from '@deep-foundation/hasura/sql.js';
 import { gql } from '@apollo/client/index.js';
 import vm from 'vm';
-
+import { serializeError } from 'serialize-error';
 import { permissions } from '../permission.js';
 import { findPromiseLink, reject, resolve } from '../promise.js';
 import { DeepClient } from '../client.js';
@@ -141,7 +141,8 @@ export default async (req, res) => {
         await handleSelectorOperation('Update', triggeredByLinkId, oldRow, newRow, operation);
         
         return res.status(200).json({});
-      } catch(e) {
+      } catch (e) {
+        const serializedError = serializeError(e);
         log('operation', operation);
         log('linkId', linkId);
         log('linkRow', linkRow);
@@ -149,12 +150,13 @@ export default async (req, res) => {
         log('newValueRow', newValueRow);
         log('newRow', newRow);
         log('oldRow', oldRow);
-        error('Error', e);
+        error('Error', JSON.stringify(serializedError, null, 2));
         throw e;
       }
     }
     return res.status(500).json({ error: 'operation can be only INSERT or UPDATE' });
-  } catch(e) {
-    return res.status(500).json({ error: e.toString() });
+  } catch (e) {
+    const serializedError = serializeError(e);
+    return res.status(500).json({ error: serializedError });
   }
 };

@@ -6,6 +6,7 @@ import { mapParticleToEntity } from '../../../../CozoDb/mapping';
 import { LsResult } from 'ipfs-core-types/src/pin';
 
 import DbApi from '../indexedDb/dbApiWrapper';
+import { serializeError } from 'serialize-error';
 
 const fetchPins = async (node: IpfsNode) => {
   const pins: LsResult[] = [];
@@ -31,7 +32,8 @@ const importParicleContent = async (particle: IPFSContent, dbApi: DbApi) => {
     const result = await dbApi!.putParticles(entity);
     return result;
   } catch (e) {
-    console.error('importParicleContent', e.toString(), !!dbApi);
+    const serializedError = serializeError(e);
+    console.error('importParicleContent', JSON.stringify(serializedError, null, 2), !!dbApi);
     return false;
   }
 };
