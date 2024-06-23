@@ -25,7 +25,7 @@ const error = debug.extend('error');
 
 // const DEEPLINKS_URL = process.env.DEEPLINKS_URL || 'http://localhost:3006';
 
-const PORT = process.env.PORT || 3007;
+const PORT = process.env.PORT || 3006;
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
 const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
 export const DOCKER = process.env.DOCKER || '0';
@@ -491,7 +491,7 @@ export async function handleGql(handleGqlLink: any, operation: 'INSERT' | 'DELET
       for (const routerListening of port?.routerListening) {
         for (const routerStringUse of routerListening?.router?.routerStringUse) {
           const url = `${baseUrl}${routerStringUse?.routeString?.value}`;
-          urls[url] = routerStringUse?.route?.handleRoute?.[0]?.id;
+          if (routerStringUse?.route?.handleRoute?.[0]?.id) urls[url] = routerStringUse?.route?.handleRoute?.[0]?.id;
         }
       }
     }
