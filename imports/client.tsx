@@ -918,7 +918,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
       return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0) };
     } catch (e) {
-      console.log(queryData);
+      // console.log({ typeName: this.nameLocal(163) });
+      console.dir({ queryData }, { depth: null });
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
     }
   };
