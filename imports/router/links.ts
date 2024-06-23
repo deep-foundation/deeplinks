@@ -805,12 +805,18 @@ export default async (req, res) => {
 };
 
 export const handleGqlLinks = async () => {
-  const HandleGql = deep.idLocal('@deep-foundation/core', 'HandleGql');
-  const { data: handles } = await deep.select({
-    type_id: HandleGql
-  });
-  for (let h in handles) {
-    await handleGql(handles[h], 'INSERT');
+  const handleGqlLinksDebug = Debug('deeplinks:eh:links:handleGqlLinks');
+  try {
+    const HandleGql = deep.idLocal('@deep-foundation/core', 'HandleGql');
+    const { data: handles } = await deep.select({
+      type_id: HandleGql
+    });
+    for (let h in handles) {
+      await handleGql(handles[h], 'INSERT');
+    }
+  } catch (e) {
+    const serializedError = serializeError(e);
+    handleGqlLinksDebug('IGNORED ERROR (handleGqlLinks):', JSON.stringify(serializedError, null, 2));
   }
 };
 
