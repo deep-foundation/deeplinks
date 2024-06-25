@@ -362,6 +362,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   handleAuth?: (linkId?: Id, token?: string) => any;
 
   deep: DeepClientInstance<L>;
+  DeepClient: typeof DeepClient;
 
   apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
@@ -657,6 +658,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   handleAuth?: (linkId?: Id, token?: string) => any;
 
   deep: DeepClientInstance<L>;
+  DeepClient = DeepClient;
 
   client: IApolloClient<any>;
   apolloClient: IApolloClient<any>;

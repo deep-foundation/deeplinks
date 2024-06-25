@@ -642,7 +642,7 @@ const handleRoutes = async () => {
                   proxyReq.setHeader('deep-call-options', encodeURI(JSON.stringify({
                     jwt,
                     code,
-                    data: {},
+                    data: { routeString, path: req.path, originalUrl: req.originalUrl, baseUrl: req.baseUrl, handlerId, routeId: route.id, router: router.id },
                   })));
                   return fixRequestBody(proxyReq, req);
                 },
