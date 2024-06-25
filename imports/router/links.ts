@@ -564,6 +564,9 @@ ${schema}`);
         handleGqlDebug('rejected', JSON.stringify(processedRejection, null, 2));
         const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
         handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
+        const error = processedRejection?.data?.error || '';
+  
+        if (error.includes('remote schema with name') && error.includes('already exists')) return;
 
         const insertResult = await deep.insert({
           type_id: handlingErrorTypeId,
@@ -621,6 +624,9 @@ ${schema}`);
       handleGqlDebug('rejected', JSON.stringify(processedRejection, null, 2));
       const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
       handleGqlDebug('handlingErrorTypeId', handlingErrorTypeId);
+      const error = processedRejection?.data?.error || '';
+
+      if (error.includes('remote schema with name') && error.includes('already exists')) return;
 
       const insertResult = await deep.insert({
         type_id: handlingErrorTypeId,
