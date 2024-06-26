@@ -16,6 +16,8 @@ import { Id } from '../minilinks.js';
 import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
 const execAsync = promisify(exec);
 
+console.log('process.env', process.env);
+
 const SCHEMA = 'public';
 
 const debug = Debug('deeplinks:eh:links');
@@ -28,6 +30,7 @@ const error = debug.extend('error');
 const PORT = process.env.PORT || 3006;
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
 const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
+const deeplinksUrl = process.env.NEXT_PUBLIC_DEEPLINKS_URL;
 export const DOCKER = process.env.DOCKER || '0';
 
 const delay = time => new Promise(res => setTimeout(res, time));
@@ -273,7 +276,7 @@ export async function handleOperation(operation: keyof typeof handlerOperations,
     const handleOperationsIds: any[] = [];
     if (code && isolationProviderImageName && handlerId && handleOperationId) {
       try {
-        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId: promiseId } }));
+        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId: promiseId, deeplinksUrl } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
         const serializedError = serializeError(error);
@@ -340,7 +343,7 @@ export async function handleSelectorOperation(operation: keyof typeof handlerOpe
     const handleOperationsIds: any[] = [];
     if (code && isolationProviderImageName && handlerId && handleOperationId) {
       try {
-        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId, selectorId } }));
+        promises.push(async () => useRunner({ code, handlerId, isolationProviderImageName, data: { triggeredByLinkId, oldLink, newLink, promiseId, selectorId, deeplinksUrl } }));
         handleOperationsIds.push(handleOperationId);
       } catch (error) {
         const serializedError = serializeError(error);

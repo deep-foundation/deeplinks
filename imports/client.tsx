@@ -943,8 +943,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       const observable = new Observable((observer) => {
         const subscription = apolloObservable.subscribe({
           next: async (data: any) => {
-            observer.next(aggregate ? data?.q0?.aggregate?.[aggregate] : 
-            await this._generateResult(exp, options, data?.q0));
+            observer.next(aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
+            await this._generateResult(exp, options, data?.data?.q0));
           },
           error: (error) => observer.error(error),
         });

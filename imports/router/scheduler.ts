@@ -20,6 +20,7 @@ import { useRunner, processPromises } from './links.js';
 import { Id } from '../minilinks.js';
 
 const SCHEMA = 'public';
+const deeplinksUrl = process.env.NEXT_PUBLIC_DEEPLINKS_URL;
 
 const debug = Debug('deeplinks:eh:scheduler');
 const log = debug.extend('log');
@@ -145,7 +146,7 @@ export async function handleScheduleMomemt(moment: any) {
         const handleOperationId = handlerWithCode?.in?.[0]?.in?.[0].id;
         if (code && isolationProviderImageName && handlerId && handleOperationId) {
           try {
-            promises.push(() => useRunner({ code, handlerId, isolationProviderImageName, data: { moment, promiseId: promise.id } }));
+            promises.push(() => useRunner({ code, handlerId, isolationProviderImageName, data: { moment, promiseId: promise.id, deeplinksUrl } }));
             handleOperationsIds.push(handleOperationId);
           } catch (e) {
             const serializedError = serializeError(e);
