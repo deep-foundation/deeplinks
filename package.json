@@ -41,6 +41,7 @@
   "dependencies": {
     "@chainsafe/libp2p-yamux": "^6.0.2",
     "@cybercongress/cyber-js": "^0.3.6",
+    "@deep-foundation/hasura": "^0.0.63",
     "@deep-foundation/npm-packager": "^0.0.43",
     "@deep-foundation/tsx": "^0.0.5",
     "@helia/strings": "^3.0.3",
