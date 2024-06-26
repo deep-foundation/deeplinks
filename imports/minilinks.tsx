@@ -29,6 +29,8 @@ export interface LinkPlain<Ref extends Id> {
   value?: any;
 }
 
+const nativeLinkKeys = ['id', 'type_id', 'from_id', 'to_id', 'value', 'type', 'typed', 'from', 'out', 'outByType', 'to', 'in', 'inByType', '_applies', '_namespaces', 'ml'];
+
 export interface LinkRelations<Ref extends Id, L extends Link<Ref>> {
   typed: L[];
   type: L;
@@ -190,6 +192,10 @@ export class MinilinksLink<Ref extends Id> {
       if (typeof(link?.value?.value) === 'string' && !this.string) this.string = link.value;
       if (typeof(link?.value?.value) === 'number' && !this.number) this.number = link.value;
       if (typeof(link?.value?.value) === 'object' && !this.object) this.object = link.value;
+    }
+    const keys = Object.keys(link);
+    for (const key of keys) {
+      if (!nativeLinkKeys.includes(key)) this[key] = link[key];
     }
   }
   toPlain(): LinkPlain<Ref> {
