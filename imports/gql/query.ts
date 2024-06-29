@@ -92,6 +92,7 @@ export const generateQueryData = ({
     }
     let customReturnAliases = ``;
     const generateCustomArgsAndVariables = (customReturn, prefix = '') => {
+      let result = '';
       for (let r in customReturn) {
         const { return: _return, relation, table, ...customWhere } = customReturn[r];
         console.log('generateCustomArgsAndVariables', table);
@@ -106,14 +107,14 @@ export const generateQueryData = ({
           defs.push(..._defs);
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          return ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_returning(_table)} ${customReturning} }`;
+          result += ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_returning(_table)} ${customReturning} }`;
         } else {
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          return ` ${r}: ${customReturn[r].relation} { ${_returning(_table)} ${customReturning} }`;
+          result += ` ${r}: ${customReturn[r].relation} { ${_returning(_table)} ${customReturning} }`;
         }
       }
-      return '';
+      return result;
     };
     customReturnAliases += generateCustomArgsAndVariables(customReturn, '');
     const result = {

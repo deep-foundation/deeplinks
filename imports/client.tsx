@@ -918,7 +918,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const queryData = this._generateQuery(exp, options);
     try {
       const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
-      return { ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0) };
+      return {
+        ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0),
+        // @ts-ignore
+        return: exp?.return,
+      };
     } catch (e) {
       // console.log({ typeName: this.nameLocal(163) });
       console.dir({ queryData }, { depth: null });
@@ -944,7 +948,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         const subscription = apolloObservable.subscribe({
           next: async (data: any) => {
             observer.next(aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
-            await this._generateResult(exp, options, data?.data?.q0));
+            {
+              ...(await this._generateResult(exp, options, data?.data?.q0)),
+              // @ts-ignore
+              return: exp?.return,
+            });
           },
           error: (error) => observer.error(error),
         });
