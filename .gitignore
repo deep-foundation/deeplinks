@@ -138,6 +138,7 @@ projects/app/electron/app
 /automation/**/*.js
 /automation/**/*.js.map
 /automation/**/*.d.ts
+!/imports/engine-server.js
 
 # snapshots
 /snapshots/[0-9]*
