@@ -1,15 +1,20 @@
-const { promisify } = require('util');
-const { exec } = require('child_process');
-const path = require('path');
-const internalIp = require('internal-ip');
-const axios = require('axios');
-const Debug = require('debug');
+import { promisify } from 'util';
+import { exec } from 'child_process';
+import path from 'path';
+import internalIp from 'internal-ip';
+import axios from 'axios';
+import Debug from 'debug';
 // @ts-ignore
-const fixPath = require('fix-path');
-const fs = require('fs');
-const { rootPath } = require('root-path-electron');
-// const { remote } = require('electron');
-const sudo = require('sudo-prompt');
+import fixPath from 'fix-path';
+import fs from 'fs';
+import { rootPath } from 'root-path-electron';
+import sudo from 'sudo-prompt';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const debug = Debug('deeplinks:engine');
 const log = debug.extend('log');
@@ -197,7 +202,7 @@ let user;
 let homeDir;
 let needNPX = false;
 
-const _checkDeeplinksStatus = async () => {
+export const _checkDeeplinksStatus = async () => {
   let status;
   let err;
   try {
@@ -209,9 +214,9 @@ const _checkDeeplinksStatus = async () => {
   }
   return { result: status?.data?.docker, error: err };
 };
-exports._checkDeeplinksStatus = _checkDeeplinksStatus;
+// exports._checkDeeplinksStatus = _checkDeeplinksStatus;
 
-const _checkDeepcaseStatus = async () => {
+export const _checkDeepcaseStatus = async () => {
   let status;
   let err;
   try {
@@ -223,7 +228,7 @@ const _checkDeepcaseStatus = async () => {
   }
   return { result: status?.data?.docker, error: err };
 };
-exports._checkDeepcaseStatus = _checkDeepcaseStatus;
+// exports._checkDeepcaseStatus = _checkDeepcaseStatus;
 
 const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseDocker, envs }) => {
   let str;
@@ -354,7 +359,7 @@ const _AddNvmDirToPathEnv = async (envs) => {
   return true;
 }
 
-const call = async (options) => {
+export const call = async (options) => {
   
   const isDeeplinksDocker = await _checkDeeplinksStatus();
   const isDeepcaseDocker = await _checkDeepcaseStatus();
@@ -401,4 +406,4 @@ const call = async (options) => {
   
   return { ...options, user, homeDir, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
-exports.call = call;
+// exports.call = call;
