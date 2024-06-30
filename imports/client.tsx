@@ -293,6 +293,12 @@ export function parseJwt (token): { userId: Id; role: string; roles: string[], [
   };
 };
 
+export interface Handler {
+  handler_id: number;
+  dist_id: number;
+  src_id: number;
+}
+
 export interface Subscription {
   closed: boolean;
   unsubscribe(): void;
@@ -432,7 +438,14 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   Traveler(links: Link<Id>[]): NativeTraveler;
 
-  eval: (value: string, input?: any) => Promise<{
+  eval: (options: {
+    linkId?: Id; // if only setted, auto find handlerId by context
+    handlerId?: Id; // if setted - ignore value
+    value?: string; // string to execute, using only if handlerId not setted
+    context?: Id[];
+
+    input?: any;
+  }) => Promise<{
     error?: any;
     data?: any;
   }>;
@@ -1820,12 +1833,55 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return new NativeTraveler(this, links);
   };
 
-  eval(value: string, input?: any): Promise<{
+  async _findHandler({
+    handlerId, context = [],
+  }: {
+    handlerId?: Id; context?: Id[];
+  }): Promise<void | Handler> {
+    if (handlerId) {
+      const { data: handlers }: { data: Handler[] } = await this.select({
+        execution_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
+        isolation_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'ClientJSIsolationProvider'), },
+        handler_id: { _eq: handlerId },
+      }, { table: 'handlers', returning: 'handler_id dist_id src_id' },);
+      if (handlers?.[0]) return handlers?.[0];
+    } else {
+      const { data: handlers }: { data: Handler[] } = await this.select({
+        execution_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
+        isolation_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'ClientJSIsolationProvider'), },
+        handler: {
+          in: {
+            type_id: { _eq: await this.id('@deep-foundation/deepcase', 'Context') },
+            from_id: { _in: context }
+          },
+        },
+      }, { table: 'handlers', returning: 'handler_id dist_id src_id' },);
+      if (handlers?.[0]) return handlers?.[0];
+    }
+  }
+  async eval({
+    linkId, handlerId, value, context = [],
+    input,
+  }: {
+    linkId?: Id; // if only setted, auto find handlerId by context
+    value?: string; // string to execute, using only if handlerId not setted
+    handlerId?: Id; // if setted - ignore value
+    context?: Id[];
+
+    input?: any;
+  }): Promise<{
     error?: any;
     data?: any;
   }> {
+    let code = value;
+    let handler;
+    if (handlerId || (!value && linkId)) {
+      handler = await this._findHandler({ handlerId, context });
+      const { data: [file] } = await this.select(handler?.dist_id);
+      code = file?.value?.value;
+    }
     return evalClientHandler({
-      value, input, deep: this,
+      value: code, input, deep: this,
     });
   }
 }
