@@ -1835,20 +1835,24 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   async _findHandler({
     handlerId, context = [],
+    execution_provider_id,
+    isolation_provider_id,
   }: {
     handlerId?: Id; context?: Id[];
+    execution_provider_id?: number;
+    isolation_provider_id?: number;
   }): Promise<void | Handler> {
     if (handlerId) {
       const { data: handlers }: { data: Handler[] } = await this.select({
-        execution_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
-        isolation_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'ClientJSIsolationProvider'), },
+        execution_provider_id: { _eq: execution_provider_id || this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
+        ...(isolation_provider_id ? { isolation_provider_id: { _eq: isolation_provider_id, } } : {}),
         handler_id: { _eq: handlerId },
       }, { table: 'handlers', returning: 'handler_id dist_id src_id' },);
       if (handlers?.[0]) return handlers?.[0];
     } else {
       const { data: handlers }: { data: Handler[] } = await this.select({
         execution_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
-        isolation_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'ClientJSIsolationProvider'), },
+        ...(isolation_provider_id ? { isolation_provider_id: { _eq: isolation_provider_id, } } : {}),
         handler: {
           in: {
             type_id: { _eq: await this.id('@deep-foundation/deepcase', 'Context') },
