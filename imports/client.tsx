@@ -14,6 +14,7 @@ import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
 import { Traveler as NativeTraveler } from './traveler.js';
+import { evalClientHandler } from './client-handler.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -430,6 +431,11 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   DeepContext: typeof DeepContext;
 
   Traveler(links: Link<Id>[]): NativeTraveler;
+
+  eval: (value: string, input?: any) => Promise<{
+    error?: any;
+    data?: any;
+  }>;
 }
 
 export interface DeepClientAuthResult {
@@ -1813,6 +1819,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   Traveler(links: Link<Id>[]) {
     return new NativeTraveler(this, links);
   };
+
+  eval(value: string, input?: any): Promise<{
+    error?: any;
+    data?: any;
+  }> {
+    return evalClientHandler({
+      value, input, deep: this,
+    });
+  }
 }
 
 export const JWT = gql`query JWT($linkId: Int) {
