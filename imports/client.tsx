@@ -152,9 +152,9 @@ export const pathToWhere = (start: (DeepClientStartItem), ...path: DeepClientPat
   return where;
 }
 
-export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: (id: Id) => Id = defaultUnvertualizeId): any => {
+export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: (id: Id) => Id = defaultUnvertualizeId, globalExp?: any): any => {
   // if exp is array - map
-  if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => serializeWhere(e, env, unvertualizeId));
+  if (Object.prototype.toString.call(exp) === '[object Array]') return exp.map((e) => serializeWhere(e, env, unvertualizeId, globalExp));
   else if (typeof(exp) === 'object') {
     // if object
     const keys = Object.keys(exp);
@@ -163,7 +163,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
     for (let k = 0; k < keys.length; k++) {
       const key = keys[k];
       const type = typeof(exp[key]);
-      if (typeof(exp[key]) === 'undefined') throw new Error(`${key} === undefined`);
+      if (typeof(exp[key]) === 'undefined') throw new Error(`${key} === undefined${globalExp ? `in exp ${JSON.stringify(globalExp)}` : ''}`);
       let setted: any = false;
       const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
       // if this is link
@@ -182,11 +182,11 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId);
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId, globalExp);
         } else if (key === 'return') {
           setted = result[key] = {};
           for (let r in exp[key]) {
-            result[key][r] = serializeWhere(exp[key][r], env, unvertualizeId);
+            result[key][r] = serializeWhere(exp[key][r], env, unvertualizeId, globalExp);
           }
         }
       } else if (env === 'tree') {
@@ -197,7 +197,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId);
+          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId, globalExp);
         }
       } else if (env === 'value') {
         // if this is value
@@ -228,7 +228,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
       ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
         const root = exp[key]._id[0];
         // if field is object, and contain _type_of
-        const _temp = setted = serializeWhere(pathToWhere(typeof(root) === 'number' ? unvertualizeId(root) : root, ...exp[key]._id.slice(1)), 'links', unvertualizeId);
+        const _temp = setted = serializeWhere(pathToWhere(typeof(root) === 'number' ? unvertualizeId(root) : root, ...exp[key]._id.slice(1)), 'links', unvertualizeId, globalExp);
         if (key === 'id') {
           result._and = result._and ? [...result._and, _temp] : [_temp];
         } else {
@@ -242,13 +242,13 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
           _boolExpFields[key]
         ) ? (
           // just parse each item in array
-          serializeWhere(exp[key], env, unvertualizeId)
+          serializeWhere(exp[key], env, unvertualizeId, globalExp)
         ) : (
           // if we know context
           _serialize?.[env]?.relations?.[key]
         ) ? (
           // go to this context then
-          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key], unvertualizeId)
+          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key], unvertualizeId, globalExp)
         ) : (
           // else just stop
           exp[key]
@@ -268,7 +268,7 @@ const defaultUnvertualizeId = (id: Id): Id => id;
 
 export const serializeQuery = (exp: any, env: string = 'links', unvertualizeId = defaultUnvertualizeId): any => {
   const { limit, order_by, offset, distinct_on, ...where } = exp;
-  const result: any = { where: typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp.map(id => unvertualizeId(id)) } } : serializeWhere(where, env, unvertualizeId) : { id: { _eq: unvertualizeId(exp) } } };
+  const result: any = { where: typeof(exp) === 'object' ? Object.prototype.toString.call(exp) === '[object Array]' ? { id: { _in: exp.map(id => unvertualizeId(id)) } } : serializeWhere(where, env, unvertualizeId, exp) : { id: { _eq: unvertualizeId(exp) } } };
   // const result: any = { where: serializeWhere(where, env, unvertualizeId) };
   if (limit) result.limit = limit;
   if (order_by) result.order_by = order_by;
@@ -818,7 +818,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   serializeQuery(exp, env?: string) { return serializeQuery(exp, env, this.unvertualizeId); }
-  serializeWhere(exp, env?: string) { return serializeWhere(exp, env, this.unvertualizeId); } 
+  serializeWhere(exp, env?: string) { return serializeWhere(exp, env, this.unvertualizeId, exp); } 
 
   _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
     const query = serializeQuery(exp, options?.table || 'links', this.unvertualizeId);
