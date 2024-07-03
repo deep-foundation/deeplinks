@@ -95,7 +95,6 @@ export const generateQueryData = ({
       let result = '';
       for (let r in customReturn) {
         const { return: _return, relation, table, ...customWhere } = customReturn[r];
-        console.log('generateCustomArgsAndVariables', table);
         const _table = table || tableName;
         const postfix = `${prefix}_${r}`;
         let customReturning = '';
