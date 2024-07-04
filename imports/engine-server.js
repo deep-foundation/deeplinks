@@ -16,7 +16,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const debug = Debug('deeplinks:engine');
+const debug = Debug('deeplinks:engine-server');
 const log = debug.extend('log');
 const error = debug.extend('error');
 // Force enable this file errors output
@@ -137,31 +137,113 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
   envs['MANUAL_MIGRATIONS'] = envs['MANUAL_MIGRATIONS'] ? envs['MANUAL_MIGRATIONS'] : '0';
   envs['npm_config_yes'] = envs['npm_config_yes'] ? envs['npm_config_yes'] : 'true';
   envs['JWT_SECRET'] = envs['JWT_SECRET'] ? envs['JWT_SECRET'] : `${platform !== "win32" ? "'" : ''}{"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}${platform !== "win32" ? "'" : ''}`;
-  envs['HASURA_GRAPHQL_DATABASE_URL'] = envs['HASURA_GRAPHQL_DATABASE_URL'] ? envs['HASURA_GRAPHQL_DATABASE_URL'] : 'postgres://postgres:postgrespassword@postgres:5432/postgres';
-  envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] = envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] ? envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] : 'true';
-  envs['HASURA_GRAPHQL_DEV_MODE'] = envs['HASURA_GRAPHQL_DEV_MODE'] ? envs['HASURA_GRAPHQL_DEV_MODE'] : 'true';
-  envs['HASURA_GRAPHQL_LOG_LEVEL'] = envs['HASURA_GRAPHQL_LOG_LEVEL'] ? envs['HASURA_GRAPHQL_LOG_LEVEL'] : 'debug';
-  envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] = envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] ? envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] : 'startup,http-log,webhook-log,websocket-log,query-log';
-  envs['HASURA_GRAPHQL_ADMIN_SECRET'] = envs['HASURA_GRAPHQL_ADMIN_SECRET'] ? envs['HASURA_GRAPHQL_ADMIN_SECRET'] : 'myadminsecretkey';
-  envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] = envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] ? envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] : 'true';
-  envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] = envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] ? envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] : 'undefined';
-  envs['POSTGRES_USER'] = envs['POSTGRES_USER'] ? envs['POSTGRES_USER'] : 'postgres';
-  envs['POSTGRES_PASSWORD'] = envs['POSTGRES_PASSWORD'] ? envs['POSTGRES_PASSWORD'] : 'postgrespassword';
-  envs['PGGSSENCMODE'] = envs['PGGSSENCMODE'] ? envs['PGGSSENCMODE'] : 'disable';
-  envs['PGSSLMODE'] = envs['PGSSLMODE'] ? envs['PGSSLMODE'] : 'disable';
-  envs['PGREQUIRESSL'] = envs['PGREQUIRESSL'] ? envs['PGREQUIRESSL'] : '0';
-  envs['MINIO_ROOT_USER'] = envs['MINIO_ROOT_USER'] ? envs['MINIO_ROOT_USER'] : 'minioaccesskey';
-  envs['MINIO_ROOT_PASSWORD'] = envs['MINIO_ROOT_PASSWORD'] ? envs['MINIO_ROOT_PASSWORD'] : 'miniosecretkey';
-  envs['HASURA_STORAGE_DEBUG'] = envs['HASURA_STORAGE_DEBUG'] ? envs['HASURA_STORAGE_DEBUG'] : 'true';
-  envs['HASURA_METADATA'] = envs['HASURA_METADATA'] ? envs['HASURA_METADATA'] : '1';
-  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : 'http://host.docker.internal:8080/v1';
-  envs['S3_ENDPOINT'] = envs['S3_ENDPOINT'] ? envs['S3_ENDPOINT'] : 'http://host.docker.internal:9000';
-  envs['S3_ACCESS_KEY'] = envs['S3_ACCESS_KEY'] ? envs['S3_ACCESS_KEY'] : 'minioaccesskey';
-  envs['S3_SECRET_KEY'] = envs['S3_SECRET_KEY'] ? envs['S3_SECRET_KEY'] : 'miniosecretkey';
-  envs['S3_BUCKET'] = envs['S3_BUCKET'] ? envs['S3_BUCKET'] : 'default';
-  envs['S3_ROOT_FOLDER'] = envs['S3_ROOT_FOLDER'] ? envs['S3_ROOT_FOLDER'] : 'default';
-  envs['POSTGRES_MIGRATIONS'] = envs['POSTGRES_MIGRATIONS'] ? envs['POSTGRES_MIGRATIONS'] : '0';
-  envs['POSTGRES_MIGRATIONS_SOURCE'] = envs['POSTGRES_MIGRATIONS_SOURCE'] ? envs['POSTGRES_MIGRATIONS_SOURCE'] : 'postgres://postgres:postgrespassword@host.docker.internal:5432/postgres?sslmode=disable';
+
+  // <hasura>
+
+  envs['DEEP_HASURA_PORT'] = envs['DEEP_HASURA_PORT'] || 8080;
+
+  envs['HASURA_GRAPHQL_DATABASE_URL'] = envs['HASURA_GRAPHQL_DATABASE_URL'] ? envs['HASURA_GRAPHQL_DATABASE_URL'] : `postgres://postgres:${envs['POSTGRES_PASSWORD'] ? envs['POSTGRES_PASSWORD'] : 'postgrespassword'}@host.docker.internal:5432/postgres`; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_DATABASE_URL'] = envs['HASURA_GRAPHQL_DATABASE_URL']; 
+  
+  envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] = envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] ? envs['HASURA_GRAPHQL_ENABLE_CONSOLE'] : 'true'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_ENABLE_CONSOLE'] = envs['HASURA_GRAPHQL_ENABLE_CONSOLE']; 
+
+  envs['HASURA_GRAPHQL_DEV_MODE'] = envs['HASURA_GRAPHQL_DEV_MODE'] ? envs['HASURA_GRAPHQL_DEV_MODE'] : 'true'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_DEV_MODE'] = envs['HASURA_GRAPHQL_DEV_MODE']; 
+  
+  envs['HASURA_GRAPHQL_LOG_LEVEL'] = envs['HASURA_GRAPHQL_LOG_LEVEL'] ? envs['HASURA_GRAPHQL_LOG_LEVEL'] : 'debug'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_LOG_LEVEL'] = envs['HASURA_GRAPHQL_LOG_LEVEL']; 
+  
+  envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] = envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] ? envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES'] : 'startup,http-log,webhook-log,websocket-log,query-log'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_ENABLED_LOG_TYPES'] = envs['HASURA_GRAPHQL_ENABLED_LOG_TYPES']; 
+  
+  envs['HASURA_GRAPHQL_ADMIN_SECRET'] = envs['HASURA_GRAPHQL_ADMIN_SECRET'] ? envs['HASURA_GRAPHQL_ADMIN_SECRET'] : 'myadminsecretkey'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_ADMIN_SECRET'] = envs['HASURA_GRAPHQL_ADMIN_SECRET']; 
+  
+  envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] = envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] ? envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] : 'true'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS'] = envs['HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS']; 
+  
+  envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] = envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] ? envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] : 'undefined'; // к удалению
+  envs['DEEP_HASURA_GRAPHQL_UNAUTHORIZED_ROLE'] = envs['HASURA_GRAPHQL_UNAUTHORIZED_ROLE']; 
+
+  // </hasura>
+
+
+  // <postgres>
+
+  envs['DEEP_POSTGRES_PORT'] = envs['DEEP_POSTGRES_PORT'] || 5432;
+
+  envs['POSTGRES_USER'] = envs['POSTGRES_USER'] ? envs['POSTGRES_USER'] : 'postgres'; // к удалению
+  envs['DEEP_POSTGRES_USER'] = envs['POSTGRES_USER'];
+  
+  envs['POSTGRES_PASSWORD'] = envs['POSTGRES_PASSWORD'] ? envs['POSTGRES_PASSWORD'] : 'postgrespassword'; // к удалению
+  envs['DEEP_POSTGRES_PASSWORD'] = envs['POSTGRES_PASSWORD'];
+  
+  envs['PGGSSENCMODE'] = envs['PGGSSENCMODE'] ? envs['PGGSSENCMODE'] : 'disable'; // к удалению
+  envs['DEEP_POSTGRES_GSS_ENCODING_MODE'] = envs['PGGSSENCMODE'];
+  
+  envs['PGSSLMODE'] = envs['PGSSLMODE'] ? envs['PGSSLMODE'] : 'disable'; // к удалению
+  envs['DEEP_POSTGRES_SSL_MODE'] = envs['PGSSLMODE'];
+  
+  envs['PGREQUIRESSL'] = envs['PGREQUIRESSL'] ? envs['PGREQUIRESSL'] : '0' ;// к удалению
+  envs['DEEP_POSTGRES_REQUIRE_SSL'] = envs['PGREQUIRESSL'];
+  
+  // </postgres>
+  
+  
+  // <hasura-storage>
+
+  envs['DEEP_HASURA_STORAGE_PORT'] = envs['DEEP_HASURA_STORAGE_PORT'] || 8000;
+
+  envs['DEEP_HASURA_STORAGE_HASURA_GRAPHQL_ADMIN_SECRET'] = envs['DEEP_HASURA_GRAPHQL_ADMIN_SECRET'];
+  
+  envs['HASURA_STORAGE_DEBUG'] = envs['HASURA_STORAGE_DEBUG'] ? envs['HASURA_STORAGE_DEBUG'] : 'true'; // к удалению
+  envs['DEEP_HASURA_STORAGE_DEBUG'] = envs['HASURA_STORAGE_DEBUG'];
+
+  envs['HASURA_METADATA'] = envs['HASURA_METADATA'] ? envs['HASURA_METADATA'] : '1'; // к удалению
+  envs['DEEP_HASURA_STORAGE_HASURA_METADATA'] = envs['HASURA_METADATA'];
+  
+  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : 'http://host.docker.internal:8080/v1'; // к удалению
+  envs['DEEP_HASURA_STORAGE_HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'];
+  
+  envs['S3_ENDPOINT'] = envs['S3_ENDPOINT'] ? envs['S3_ENDPOINT'] : 'http://host.docker.internal:9000'; // к удалению
+  envs['DEEP_HASURA_STORAGE_S3_ENDPOINT'] = envs['S3_ENDPOINT'];
+  
+  envs['S3_ACCESS_KEY'] = envs['S3_ACCESS_KEY'] ? envs['S3_ACCESS_KEY'] : 'minioaccesskey'; // к удалению
+  envs['DEEP_HASURA_STORAGE_S3_ACCESS_KEY'] = envs['S3_ACCESS_KEY'];
+  
+  envs['S3_SECRET_KEY'] = envs['S3_SECRET_KEY'] ? envs['S3_SECRET_KEY'] : 'miniosecretkey'; // к удалению
+  envs['DEEP_HASURA_STORAGE_S3_SECRET_KEY'] = envs['S3_SECRET_KEY'];
+  
+  envs['S3_BUCKET'] = envs['S3_BUCKET'] ? envs['S3_BUCKET'] : 'default'; // к удалению
+  envs['DEEP_HASURA_STORAGE_S3_BUCKET'] = envs['S3_BUCKET'];
+  
+  envs['S3_ROOT_FOLDER'] = envs['S3_ROOT_FOLDER'] ? envs['S3_ROOT_FOLDER'] : 'default'; // к удалению
+  envs['DEEP_HASURA_STORAGE_S3_ROOT_FOLDER'] = envs['S3_ROOT_FOLDER'];
+  
+  envs['POSTGRES_MIGRATIONS'] = envs['POSTGRES_MIGRATIONS'] ? envs['POSTGRES_MIGRATIONS'] : '0'; // к удалению
+  envs['DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS'] = envs['POSTGRES_MIGRATIONS'];
+  
+  envs['POSTGRES_MIGRATIONS_SOURCE'] = envs['POSTGRES_MIGRATIONS_SOURCE'] ? envs['POSTGRES_MIGRATIONS_SOURCE'] : `postgres://postgres:${envs['POSTGRES_PASSWORD'] ? envs['POSTGRES_PASSWORD'] : 'postgrespassword'}@host.docker.internal:5432/postgres?sslmode=disable`; // к удалению
+  envs['DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS_SOURCE'] = envs['POSTGRES_MIGRATIONS_SOURCE'];
+  
+  // </hasura-storage>
+
+
+  // <minio>
+
+  envs['DEEP_MINIO_PORT'] = 9000;
+  envs['DEEP_MINIO_CONSOLE_PORT'] = 32765;
+
+  envs['MINIO_ROOT_USER'] = envs['MINIO_ROOT_USER'] ? envs['MINIO_ROOT_USER'] : 'minioaccesskey'; // к удалению
+  envs['DEEP_MINIO_ROOT_USER'] = envs['MINIO_ROOT_USER'];
+
+  envs['MINIO_ROOT_PASSWORD'] = envs['MINIO_ROOT_PASSWORD'] ? envs['MINIO_ROOT_PASSWORD'] : 'miniosecretkey'; // к удалению
+  envs['DEEP_MINIO_ROOT_PASSWORD'] = envs['MINIO_ROOT_PASSWORD'];
+
+  // </minio>
+
+
   envs['MIGRATIONS_ID_TYPE_SQL'] = envs['MIGRATIONS_ID_TYPE_SQL'] ? envs['MIGRATIONS_ID_TYPE_SQL'] : 'bigint';
   envs['MIGRATIONS_ID_TYPE_GQL'] = envs['MIGRATIONS_ID_TYPE_GQL'] ? envs['MIGRATIONS_ID_TYPE_GQL'] : 'bigint';
   envs['MIGRATIONS_HASURA_SECRET'] = envs['MIGRATIONS_HASURA_SECRET'] ? envs['MIGRATIONS_HASURA_SECRET'] : 'myadminsecretkey';
@@ -192,7 +274,12 @@ const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `localhost:${deeplinksPort}/gql`;
     envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : isDeeplinksDocker === 0 ? `http://host.docker.internal:${deeplinksPort}` : `http://deep-links:${deeplinksPort}`;
   }
-  Object.keys(envs).forEach(k => envsStr += handleEnv(k, envs));
+  const _deepEnvs = {};
+  Object.keys(envs).forEach(k => {
+    envsStr += handleEnv(k, envs);
+    if (k.indexOf('DEEP_') === 0) _deepEnvs[k] = envs[k];
+  });
+  console.log(_deepEnvs);
   return envsStr;
 };
 
