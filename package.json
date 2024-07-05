@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.361",
+  "version": "0.0.362",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -67,6 +67,7 @@
     "buffer": "^6.0.3",
     "chai": "^4.3.7",
     "comlink": "^4.4.1",
+    "command-line-args": "^5.2.1",
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",
     "cyb-cozo-lib-wasm": "^0.7.141",

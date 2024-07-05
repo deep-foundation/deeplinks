@@ -6,17 +6,17 @@ services:
     networks:
       - network
     ports:
-    - "5432:5432"
+    - "${DEEP_POSTGRES_PORT}:5432"
     restart: always
     command: postgres -c max_connections=200 -c log_error_verbosity=verbose -c client_min_messages=DEBUG5 -c log_min_messages=DEBUG5 -c log_min_error_statement=DEBUG5 -c log_duration=true
     volumes:
     - db-data:/var/lib/postgresql/data
     environment:
-      - 'POSTGRES_USER=postgres'
-      - 'POSTGRES_PASSWORD=postgrespassword'
-      - 'PGGSSENCMODE=disable'
-      - 'PGSSLMODE=disable'
-      - 'PGREQUIRESSL=0'
+      - 'POSTGRES_USER=${DEEP_POSTGRES_USER}'
+      - 'POSTGRES_PASSWORD=${DEEP_POSTGRES_PASSWORD}'
+      - 'PGGSSENCMODE=${DEEP_POSTGRES_GSS_ENCODING_MODE}'
+      - 'PGSSLMODE=${DEEP_POSTGRES_SSL_MODE}'
+      - 'PGREQUIRESSL=${DEEP_POSTGRES_REQUIRE_SSL}'
     logging:
       driver: "json-file"
       options:
@@ -28,7 +28,7 @@ services:
     networks:
       - network
     ports:
-    - "8080:8080"
+    - "${DEEP_HASURA_PORT}:8080"
     extra_hosts: ['host.docker.internal:host-gateway']
     links:
     - "postgres:postgres"
@@ -36,15 +36,15 @@ services:
     - "postgres"
     restart: always
     environment:
-      - 'HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@postgres:5432/postgres'
-      - 'HASURA_GRAPHQL_ENABLE_CONSOLE=true'
-      - 'HASURA_GRAPHQL_DEV_MODE=true'
-      - 'HASURA_GRAPHQL_LOG_LEVEL=debug'
-      - 'HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log'
-      - 'HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey'
-      - 'HASURA_GRAPHQL_JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
-      - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true'
-      - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=undefined'
+      - 'HASURA_GRAPHQL_DATABASE_URL=${DEEP_HASURA_GRAPHQL_DATABASE_URL}'
+      - 'HASURA_GRAPHQL_ENABLE_CONSOLE=${DEEP_HASURA_GRAPHQL_ENABLE_CONSOLE}'
+      - 'HASURA_GRAPHQL_DEV_MODE=${DEEP_HASURA_GRAPHQL_DEV_MODE}'
+      - 'HASURA_GRAPHQL_LOG_LEVEL=${DEEP_HASURA_GRAPHQL_LOG_LEVEL}'
+      - 'HASURA_GRAPHQL_ENABLED_LOG_TYPES=${DEEP_HASURA_GRAPHQL_ENABLED_LOG_TYPES}'
+      - 'HASURA_GRAPHQL_ADMIN_SECRET=${DEEP_HASURA_GRAPHQL_ADMIN_SECRET}'
+      - 'HASURA_GRAPHQL_JWT_SECRET=${DEEP_HASURA_GRAPHQL_JWT_SECRET}'
+      - 'HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=${DEEP_HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS}'
+      - 'HASURA_GRAPHQL_UNAUTHORIZED_ROLE=${DEEP_HASURA_GRAPHQL_UNAUTHORIZED_ROLE}'
     logging:
       driver: "json-file"
       options:
@@ -57,19 +57,19 @@ services:
       - hasura
     restart: unless-stopped
     ports:
-      - '8000:8000'
+      - "${DEEP_HASURA_STORAGE_PORT}:8000"
     environment:
-      - 'DEBUG=true'
-      - 'HASURA_METADATA=1'
-      - 'HASURA_ENDPOINT=http://host.docker.internal:8080/v1'
-      - 'HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey'
-      - 'S3_ENDPOINT=http://host.docker.internal:9000'
-      - 'S3_ACCESS_KEY=minioaccesskey'
-      - 'S3_SECRET_KEY=miniosecretkey'
-      - 'S3_BUCKET=default'
-      - 'S3_ROOT_FOLDER=default'
-      - 'POSTGRES_MIGRATIONS=0'
-      - 'POSTGRES_MIGRATIONS_SOURCE=postgres://postgres:postgrespassword@host.docker.internal:5432/postgres?sslmode=disable'
+      - 'HASURA_GRAPHQL_ADMIN_SECRET=${DEEP_HASURA_STORAGE_HASURA_GRAPHQL_ADMIN_SECRET}'
+      - 'DEBUG=${DEEP_HASURA_STORAGE_DEBUG}'
+      - 'HASURA_METADATA=${DEEP_HASURA_STORAGE_HASURA_METADATA}'
+      - 'HASURA_ENDPOINT=${DEEP_HASURA_STORAGE_HASURA_ENDPOINT}'
+      - 'S3_ENDPOINT=${DEEP_HASURA_STORAGE_S3_ENDPOINT}'
+      - 'S3_ACCESS_KEY=${DEEP_HASURA_STORAGE_S3_ACCESS_KEY}'
+      - 'S3_SECRET_KEY=${DEEP_HASURA_STORAGE_S3_SECRET_KEY}'
+      - 'S3_BUCKET=${DEEP_HASURA_STORAGE_S3_BUCKET}'
+      - 'S3_ROOT_FOLDER=${DEEP_HASURA_STORAGE_S3_ROOT_FOLDER}'
+      - 'POSTGRES_MIGRATIONS=${DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS}'
+      - 'POSTGRES_MIGRATIONS_SOURCE=${DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS_SOURCE}'
     command: serve
     logging:
       driver: "json-file"
@@ -84,11 +84,11 @@ services:
       - 'minio-data:/export'
       - 'minio-config:/root/.minio'
     ports:
-      - '9000:9000'
-      - '32765:32765'
+      - "${DEEP_MINIO_PORT}:9000"
+      - "${DEEP_MINIO_CONSOLE_PORT}:32765"
     environment:
-      - 'MINIO_ROOT_USER=minioaccesskey'
-      - 'MINIO_ROOT_PASSWORD=miniosecretkey'
+      - 'MINIO_ROOT_USER=${DEEP_MINIO_ROOT_USER}'
+      - 'MINIO_ROOT_PASSWORD=${DEEP_MINIO_ROOT_PASSWORD}'
     entrypoint: sh
     command: '-c ''mkdir -p /export/default && /opt/bin/minio server --address 0.0.0.0:9000 --console-address 0.0.0.0:32765 /export'''
     logging:
@@ -102,7 +102,7 @@ services:
     networks:
       - network
     ports:
-    - "3007:3007"
+    - "${DEEPCASE_PORT}:3007"
     restart: always
     pull_policy: always
     volumes:
@@ -119,17 +119,17 @@ services:
     networks:
       - network
     ports:
-    - "3006:3006"
+    - "${DEEPLINKS_PORT}:3007"
     restart: always
     pull_policy: always
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts: ['host.docker.internal:host-gateway']
     environment:
-      - 'DEEPLINKS_HASURA_PATH=deep-hasura:8080'
-      - 'DEEPLINKS_HASURA_SSL=0'
-      - 'DEEPLINKS_HASURA_SECRET=myadminsecretkey'
-      - 'JWT_SECRET={"type":"HS256","key":"3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
+      - 'DEEPLINKS_HASURA_PATH=${DEEPLINKS_HASURA_PATH}'
+      - 'DEEPLINKS_HASURA_SSL=${DEEPLINKS_HASURA_SSL}'
+      - 'DEEPLINKS_HASURA_SECRET=${DEEPLINKS_HASURA_SECRET}'
+      - 'JWT_SECRET=${JWT_SECRET}'
     logging:
       driver: "json-file"
       options:
