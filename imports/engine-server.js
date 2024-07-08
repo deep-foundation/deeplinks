@@ -116,8 +116,8 @@ const NEXT_PUBLIC_DEEPLINKS_SERVER = process.env.NEXT_PUBLIC_DEEPLINKS_SERVER ||
 const _hasura = path.normalize(`${packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : appPath}/node_modules/@deep-foundation/hasura`); // даже если мы не в дипкейсе, то это скрипт из диплинкса, который зависит от хасуры, а значит в модулях есть хасура.
 const _deeplinks = path.normalize( packageJson.name === '@deep-foundation/deeplinks' ? (rootDir || process.cwd()) : `${appPath}/node_modules/@deep-foundation/deeplinks`); // если в package.json название пакета не диплинксовое - то мы не там, а значит идём в модули
 
-const handleEnvWindows = (k, envs) => ` set ${k}=${envs[k]}&&`;
-const handleEnvUnix = (k, envs) => ` export ${k}=${envs[k]} &&`;
+const handleEnvWindows = (k, envs) => ` set ${k}=${typeof(envs[k]) === 'object' ? JSON.stringify(envs[k]) : envs[k]}&&`;
+const handleEnvUnix = (k, envs) => ` export ${k}=${typeof(envs[k]) === 'object' ? JSON.stringify(envs[k]) : envs[k]} &&`;
 const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
 export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
@@ -274,7 +274,7 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
   return envs;
 };
 
-const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
+export const _generateAndFillEnvs = ({ envs, isDeeplinksDocker }) => {
   generateEnvs({ envs, isDeeplinksDocker });
   let envsStr = '';
   // const _deepEnvs = {};

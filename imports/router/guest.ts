@@ -54,7 +54,7 @@ const resolvers = {
                 to_id: id,
                 out: { data: {
                   type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-                  to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+                  to_id: deep.idLocal('@deep-foundation/core', 'joinTree'),
                 } },
               } }
             } }

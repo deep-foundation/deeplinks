@@ -39,9 +39,11 @@ export interface Container {
 }
 export interface CallOptions {
   code: string;
-  jwt: string,
-  secret?: string,
-  data: any
+  jwt: string;
+  secret?: string;
+  path?: string;
+  ssl?: string;
+  data: any;
   container: Container;
 }
 

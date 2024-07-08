@@ -216,7 +216,7 @@ export const useRunner = async ({
   useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
   useRunnerDebug('initResult', initResult);
-  const callResult = await containerController.callHandler({ code, container, jwt, secret, data });
+  const callResult = await containerController.callHandler({ code, container, jwt, secret, path: process.env.DEEPLINKS_HASURA_PATH, ssl: process.env.DEEPLINKS_HASURA_SSL, data });
   useRunnerDebug('callResult', callResult);
   return callResult;
 }
