@@ -606,7 +606,7 @@ const handleRoutes = async () => {
               const handlerId = handler?.id;
               routesDebugLog(`handler id ${handlerId}`);
 
-              const jwt = await getJwt(handlerId, routesDebugLog);
+              const { token: jwt } = await getJwt(handlerId, routesDebugLog);
               routesDebugLog(`jwt ${jwt}`);
 
               // get container

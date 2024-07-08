@@ -199,7 +199,7 @@ export async function getJwt(handlerId: Id, useRunnerDebug: any) {
   // }
   const jwt = (await deep.jwt({ linkId: ownerId })).token;
   useRunnerDebug('jwt', jwt);
-  return jwt;
+  return { token: jwt, linkId: ownerId };
 }
 
 export const useRunner = async ({
@@ -210,8 +210,13 @@ export const useRunner = async ({
   const useRunnerDebug = Debug('deeplinks:eh:links:useRunner');
   useRunnerDebug("handler4: ");
 
-  const jwt = await getJwt(handlerId, useRunnerDebug);
-  const secret = process.env.DEEPLINKS_HASURA_SECRET; // TODO: check jwt's permissions (unsafe permission must be granted)
+  const { token: jwt, linkId: ownerId } = await getJwt(handlerId, useRunnerDebug);
+  let secret;
+  try {
+    const Unsafe = await deep.id('@deep-foundation/unsafe', 'Unsafe');
+    const isUnsafe = await deep.can(ownerId, ownerId, Unsafe);
+    if (isUnsafe) secret = process.env.DEEPLINKS_HASURA_SECRET; // TODO: check jwt's permissions (unsafe permission must be granted)
+  } catch(error) {}
   const container = await containerController.newContainer({ publish: +DOCKER ? false : true, forceRestart: true, handler: isolationProviderImageName});
   useRunnerDebug('newContainerResult', container);
   const initResult = await containerController.initHandler(container);
