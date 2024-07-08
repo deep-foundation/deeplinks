@@ -98,6 +98,7 @@ describe('client', () => {
       ]
     });
     assert.equal(await deepClient.name(newTypeLinkId), typeName);
+    await deepClient.delete([newTypeLinkId, containLinkId]);
   });
   it(`{ id: 5 }`, () => {
     assert.deepEqual(deepClient.serializeWhere({ id: 5 }), { id: { _eq: 5 } });
