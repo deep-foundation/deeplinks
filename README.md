@@ -4,6 +4,40 @@
 
 # Usage
 
+## Generate deep.config.json
+
+Automatically catch public ip of server.
+```
+npx @deep-foundation/deeplinks -g
+```
+
+Manual define domains.
+```
+npx @deep-foundation/deeplinks -g --deeplinks "http://deeplinks.deep.foundation" --deepcase "http://deepcase.deep.foundation"
+```
+
+## Deep Terminal
+
+```
+npx @deep-foundation/deeplinks -e
+>
+```
+
+## Launch command envs based on config
+
+For example, let's run migrations. Don't forget to clear the timestamp keys in the .migrate file before migrating.
+```
+npm @deep-foundation/deeplinks --bash "npx migrate@latest up --matches '*.js'"
+```
+
+## Alternative deep.config.json
+
+By default, deep.config.json is taken from the folder in which the command is executed. You can set config alternatively.
+
+```
+npm @deep-foundation/deeplinks -c "$(cat ../../call-options.json)"
+```
+
 ## Restart
 
 ### Server
