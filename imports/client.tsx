@@ -15,6 +15,7 @@ import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
 import { Traveler as NativeTraveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
+import { Packager } from './packager.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -437,6 +438,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   DeepContext: typeof DeepContext;
 
   Traveler(links: Link<Id>[]): NativeTraveler;
+  Packager(): Packager<L>;
 
   eval: (options: {
     linkId?: Id; // if only setted, auto find handlerId by context
@@ -1832,6 +1834,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   Traveler(links: Link<Id>[]) {
     return new NativeTraveler(this, links);
   };
+  Packager() {
+    return new Packager(this);
+  }
 
   async _findHandler({
     handlerId, context = [],

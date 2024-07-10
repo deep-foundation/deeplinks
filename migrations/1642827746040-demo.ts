@@ -243,23 +243,23 @@ export const up = async () => {
     subject: usersWhere,
     object: [
       ...types,
-      // {
-      //   type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
-      //   to: { data: {
-      //     type_id: deep.idLocal('@deep-foundation/core', 'Query'),
-      //     object: { data: { value: {
-      //       _or: [
-      //         { from_id: { _eq: 0 } },
-      //         { from: {
-      //           _by_item: {
-      //             group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
-      //             path_item_id: { _eq: 'X-Deep-User-Id' },
-      //           },
-      //         } },
-      //       ],
-      //     } } }
-      //   } },
-      // },
+      {
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorFilter'),
+        to: { data: {
+          type_id: deep.idLocal('@deep-foundation/core', 'Query'),
+          object: { data: { value: {
+            _or: [
+              { from_id: { _eq: 0 } },
+              { from: {
+                _by_item: {
+                  group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
+                  path_item_id: { _eq: 'X-Deep-User-Id' },
+                },
+              } },
+            ],
+          } } }
+        } },
+      },
     ],
     action: [
       {
