@@ -36,6 +36,7 @@ const optionDefinitions = [
   { name: 'generate', alias: 'g', type: Boolean },
   { name: 'deeplinks', type: String },
   { name: 'deepcase', type: String },
+  { name: 'ssl', type: Boolean },
 ];
 
 const options = commandLineArgs(optionDefinitions);
@@ -50,35 +51,35 @@ if (options.generate) {
   try {
     publicIp = await getPublicIP();
   } catch(e) {}
-  const deeplinks = options.deeplinks || `http://${publicIp}`;
-  const deepcase = options.deepcase || `http://${publicIp}`;
+  const deeplinks = options.deeplinks || `http://${publicIp}:3006`;
+  const deepcase = options.deepcase || `http://${publicIp}:3007`;
   if ((!options.deeplinks || !options.deepcase) && !publicIp) throw new Error(`--deepcase and --deeplinks must be defined, or publicIp available`);
   const jwtSecret = `'{\"type\":\"HS256\",\"key\":\"${crypto.randomBytes(50).toString('base64')}\"}'`;
   const generated = {
     "operation": "run",
     "envs": {
-      "DEEPLINKS_PUBLIC_URL": `${deeplinks}:3006`,
-      "NEXT_PUBLIC_DEEPLINKS_URL": `${deeplinks}:3006`,
-      "NEXT_PUBLIC_GQL_PATH": `${deeplinks}:3006/gql`,
-      "NEXT_PUBLIC_GQL_SSL": "0",
-      "NEXT_PUBLIC_DEEPLINKS_SERVER": `${deepcase}:3007`,
+      "DEEPLINKS_PUBLIC_URL": `${deeplinks}`,
+      "NEXT_PUBLIC_DEEPLINKS_URL": `${deeplinks}`,
+      "NEXT_PUBLIC_GQL_PATH": `${deeplinks}/gql`,
+      "NEXT_PUBLIC_GQL_SSL": options.ssl ? "1" : "0",
+      "NEXT_PUBLIC_DEEPLINKS_SERVER": `${deepcase}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
       "JWT_SECRET": jwtSecret,
       "HASURA_GRAPHQL_JWT_SECRET": jwtSecret,
       "DEEP_HASURA_GRAPHQL_JWT_SECRET": jwtSecret,
-      "DEEPLINKS_HASURA_STORAGE_URL": "http://deep-hasura-storage:8000/",
-      "HASURA_ENDPOINT": "http://deep-hasura:8080/v1",
-      "DOCKER_DEEPLINKS_URL": "http://deep-links:3006",
-      "MIGRATIONS_DEEPLINKS_URL": "http://deep-links:3006",
+      "DEEPLINKS_HASURA_STORAGE_URL": "http://host.docker.internal:8000/",
+      "HASURA_ENDPOINT": "http://host.docker.internal:8080/v1",
+      "DOCKER_DEEPLINKS_URL": "http://host.docker.internal:3006",
+      "MIGRATIONS_DEEPLINKS_URL": "http://host.docker.internal:3006",
       "HASURA_GRAPHQL_ADMIN_SECRET": hasuraKey,
       "MIGRATIONS_HASURA_SECRET": hasuraKey,
       "DEEPLINKS_HASURA_SECRET": hasuraKey,
       "POSTGRES_PASSWORD": postgresKey,
-      "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
-      "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
+      "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@host.docker.internal:5432/postgres?sslmode=disable`,
+      "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@host.docker.internal:5432/postgres?sslmode=disable`,
       "RESTORE_VOLUME_FROM_SNAPSHOT": "0",
-      "MANUAL_MIGRATIONS": "1",
+      "MANUAL_MIGRATIONS": "0",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,
       "S3_ACCESS_KEY": minioAccess,

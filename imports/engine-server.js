@@ -200,10 +200,10 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
   envs['HASURA_METADATA'] = envs['HASURA_METADATA'] ? envs['HASURA_METADATA'] : '1'; // к удалению
   envs['DEEP_HASURA_STORAGE_HASURA_METADATA'] = envs['HASURA_METADATA'];
   
-  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : 'http://deep-hasura:8080/v1'; // к удалению
+  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : 'http://host.docker.internal:8080/v1'; // к удалению
   envs['DEEP_HASURA_STORAGE_HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'];
   
-  envs['S3_ENDPOINT'] = envs['S3_ENDPOINT'] ? envs['S3_ENDPOINT'] : 'http://deep-minio:9000'; // к удалению
+  envs['S3_ENDPOINT'] = envs['S3_ENDPOINT'] ? envs['S3_ENDPOINT'] : 'http://host.docker.internal:9000'; // к удалению
   envs['DEEP_HASURA_STORAGE_S3_ENDPOINT'] = envs['S3_ENDPOINT'];
   
   envs['S3_ACCESS_KEY'] = envs['S3_ACCESS_KEY'] ? envs['S3_ACCESS_KEY'] : 'minioaccesskey'; // к удалению
@@ -253,8 +253,8 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
   envs['DOCKER_DEEPLINKS_URL'] = envs['DOCKER_DEEPLINKS_URL'] ? envs['DOCKER_DEEPLINKS_URL'] : `http://host.docker.internal:${deeplinksPort}`;
   envs['MIGRATIONS_DIR'] = envs['MIGRATIONS_DIR'] ? envs['MIGRATIONS_DIR'] : `${platform == "win32" ? `${os.tmpdir()}\\deep` : '/tmp/deep'}`;
   if (isGitpod) {
-    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `$(gp url ${hasuraPort})`;
-    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `deep-hasura:${hasuraPort}`;
+    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `host.docker.internal:${hasuraPort}` : `$(gp url ${hasuraPort})`;
+    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `$(echo $(gp url ${hasuraPort}) | awk -F[/:] '{print $4}')` : `host.docker.internal:${hasuraPort}`;
     envs['MIGRATIONS_HASURA_SSL'] = envs['MIGRATIONS_HASURA_SSL'] ? envs['MIGRATIONS_HASURA_SSL'] : +DOCKER ? '0' : '1';
     envs['DEEPLINKS_HASURA_SSL'] = envs['DEEPLINKS_HASURA_SSL'] ? envs['DEEPLINKS_HASURA_SSL'] : isDeeplinksDocker === 0 ? '1' : '0';
     envs['NEXT_PUBLIC_GQL_SSL'] = envs['NEXT_PUBLIC_GQL_SSL'] ? envs['NEXT_PUBLIC_GQL_SSL'] : '1';
@@ -262,14 +262,14 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `$(echo $(gp url ${deeplinksPort}) | awk -F[/:] '{print $4}')/gql`;
     envs['NEXT_PUBLIC_ENGINES'] = envs['NEXT_PUBLIC_ENGINES'] ? envs['NEXT_PUBLIC_ENGINES'] : '1';
   } else {
-    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `deep-hasura:${hasuraPort}` : `localhost:${hasuraPort}`;
-    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `localhost:${hasuraPort}` : `deep-hasura:${hasuraPort}`;
+    envs['MIGRATIONS_HASURA_PATH'] = envs['MIGRATIONS_HASURA_PATH'] ? envs['MIGRATIONS_HASURA_PATH'] : +DOCKER ? `host.docker.internal:${hasuraPort}` : `localhost:${hasuraPort}`;
+    envs['DEEPLINKS_HASURA_PATH'] = envs['DEEPLINKS_HASURA_PATH'] ? envs['DEEPLINKS_HASURA_PATH'] : isDeeplinksDocker === 0 ? `localhost:${hasuraPort}` : `host.docker.internal:${hasuraPort}`;
     envs['MIGRATIONS_HASURA_SSL'] = envs['MIGRATIONS_HASURA_SSL'] ? envs['MIGRATIONS_HASURA_SSL'] : '0';
     envs['DEEPLINKS_HASURA_SSL'] = envs['DEEPLINKS_HASURA_SSL'] ? envs['DEEPLINKS_HASURA_SSL'] : '0';
     envs['NEXT_PUBLIC_GQL_SSL'] = envs['NEXT_PUBLIC_GQL_SSL'] ? envs['NEXT_PUBLIC_GQL_SSL'] : '0';
     envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] = envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] ? envs['NEXT_PUBLIC_DEEPLINKS_SERVER'] : `http://localhost:${deepcasePort}`;
     envs['NEXT_PUBLIC_GQL_PATH'] = envs['NEXT_PUBLIC_GQL_PATH'] ? envs['NEXT_PUBLIC_GQL_PATH'] : `localhost:${deeplinksPort}/gql`;
-    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : isDeeplinksDocker === 0 ? `http://host.docker.internal:${deeplinksPort}` : `http://deep-links:${deeplinksPort}`;
+    envs['MIGRATIONS_DEEPLINKS_URL'] = envs['MIGRATIONS_DEEPLINKS_URL'] ? envs['MIGRATIONS_DEEPLINKS_URL'] : isDeeplinksDocker === 0 ? `http://host.docker.internal:${deeplinksPort}` : `http://host.docker.internal:${deeplinksPort}`;
   }
   return envs;
 };
@@ -330,11 +330,11 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
-    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz`;
+    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:8080/healthz`;
   }
   if (operation === 'run') {
     console.log('isDeepcaseDocker', isDeepcaseDocker);
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } ) ${+envs['MANUAL_MIGRATIONS'] ? `&& cd "${_deeplinks}" && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate` : ''}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:8080/healthz && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } ) ${+envs['MANUAL_MIGRATIONS'] ? `&& cd "${_deeplinks}" && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate` : ''}`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {

@@ -13,7 +13,7 @@ npx @deep-foundation/deeplinks -g
 
 Manual define domains.
 ```
-npx @deep-foundation/deeplinks -g --deeplinks "http://deeplinks.deep.foundation" --deepcase "http://deepcase.deep.foundation"
+npx @deep-foundation/deeplinks -g --ssl --deeplinks "https://deeplinks.deep.foundation" --deepcase "https://deepcase.deep.foundation"
 ```
 
 ## Deep Terminal
