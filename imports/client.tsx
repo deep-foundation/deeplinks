@@ -2031,7 +2031,7 @@ export function DeepProvider({
   apolloClient?: IApolloClient<any>,
   minilinks?: MinilinkCollection,
   namespace?: string;
-  children: any;
+  children?: any;
 }) {
   const providedMinilinks = useMinilinks();
   const deep = useDeepGenerator({
