@@ -417,6 +417,9 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   id(start: DeepClientStartItem | Exp, ...path: DeepClientPathItem[]): Promise<Id>;
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
+  
+  name(input: Link<Id> | Id): Promise<string | undefined>;
+  nameLocal(input: Link<Id> | Id): string | undefined;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
 
@@ -1788,7 +1791,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * ```
    * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
    */
-  nameLocal(input: Link<Id> | Id): Id | undefined {
+  nameLocal(input: Link<Id> | Id): string | undefined {
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return;
     // @ts-ignore
