@@ -1,5 +1,6 @@
 import Debug from 'debug';
 import gql from 'graphql-tag';
+import { _serialize } from '../client.js';
 
 const debug = Debug('deeplinks:gql:query');
 const log = debug.extend('log');
@@ -15,12 +16,46 @@ const fieldsInputs = (tableName): IGenerateQueryFieldTypes => ({
 });
 
 const manyRelations = {
-  'from': false,
-  'to': false,
-  'type': false,
-  'in': true,
-  'out': true,
-  'typed': true,
+  links: {
+    'from': false,
+    'to': false,
+    'type': false,
+    'in': true,
+    'out': true,
+    'typed': true,
+    selected: true,
+    selectors: true,
+    can_rule: true,
+    can_action: true,
+    can_object: true,
+    can_subject: true,
+    down: true,
+    up: true,
+    tree: true,
+    root: true,
+  },
+  selector: {
+    item: false,
+    selector: false,
+    query: false,
+  },
+  can: {
+    rule: false,
+    action: false,
+    object: false,
+    subject: false,
+  },
+  tree: {
+    link: false,
+    tree: false,
+    root: false,
+    parent: false,
+    by_link: true,
+    by_tree: true,
+    by_root: true,
+    by_parent: true,
+    by_position: true,
+  },
 };
 
 export type IReturningGenerator = (tableName: string) => string;
@@ -91,31 +126,33 @@ export const generateQueryData = ({
       }
     }
     let customReturnAliases = ``;
-    const generateCustomArgsAndVariables = (customReturn, prefix = '') => {
+    const generateCustomArgsAndVariables = (customReturn, prefix = '', tableName) => {
       let result = '';
       for (let r in customReturn) {
         const { return: _return, relation, table, ...customWhere } = customReturn[r];
-        const _table = table || tableName;
+        console.log(JSON.stringify(customReturn[r], null, 2));
+        const _table = _serialize[tableName]?.relations[relation];
+        if (!_table) throw new Error(`relation ${relation} not found in table ${tableName}`);
         const postfix = `${prefix}_${r}`;
         let customReturning = '';
         if (_return) {
-          customReturning += generateCustomArgsAndVariables(_return, postfix);
+          customReturning += generateCustomArgsAndVariables(_return, postfix, _table);
         }
         if (manyRelations[relation]) {
           const { defs: _defs, args: _args } = generateDefs(fields, index, _table, postfix);
           defs.push(..._defs);
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          result += ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_returning(_table)} ${customReturning} }`;
+          result += ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_serialize[_table].returning} ${customReturning} }`;
         } else {
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
-          result += ` ${r}: ${customReturn[r].relation} { ${_returning(_table)} ${customReturning} }`;
+          result += ` ${r}: ${customReturn[r].relation} { ${_serialize[_table].returning} ${customReturning} }`;
         }
       }
       return result;
     };
-    customReturnAliases += generateCustomArgsAndVariables(customReturn, '');
+    customReturnAliases += generateCustomArgsAndVariables(customReturn, '', tableName);
     const result = {
       tableName,
       tableNamePostfix,

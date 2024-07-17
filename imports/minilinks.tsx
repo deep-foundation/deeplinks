@@ -524,8 +524,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   }
   _updating: boolean = false;
   _toPlainLinksArray(linkOrLinks, applyOptions, plainLinksArray, returnLinksPathsById) {
+    console.log('_toPlainLinksArray', linkOrLinks, applyOptions?.return);
     const links = Array.isArray(linkOrLinks) ? linkOrLinks : [linkOrLinks];
-    plainLinksArray.push(...links.map(l => ({ ...l, id: l.id, type_id: l.type_id, from_id: l.from_id, to_id: l.to_id, value: l.value })));
+    plainLinksArray.push(...links.filter(l => l.__typename === 'links').map(l => ({ ...l, id: l.id, type_id: l.type_id, from_id: l.from_id, to_id: l.to_id, value: l.value })));
     for (let l in links) {
       for (let r in (applyOptions?.return || {})) {
         this._toPlainLinksArray(links[l][r] || [], applyOptions?.return?.[r], plainLinksArray, returnLinksPathsById);

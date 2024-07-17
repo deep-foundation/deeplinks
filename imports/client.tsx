@@ -34,6 +34,7 @@ export const _ids = {
 
 export const _serialize = {
   links: {
+    returning: 'id type_id from_id to_id value',
     virtualize: {
       id: ['id', '_id'],
       type_id: ['type_id', '_type_id'],
@@ -74,6 +75,7 @@ export const _serialize = {
     },
   },
   selector: {
+    returning: 'item_id selector_id',
     fields: {
       item_id: 'number',
       selector_id: 'number',
@@ -87,6 +89,7 @@ export const _serialize = {
     }
   },
   can: {
+    returning: 'rule_id action_id object_id subject_id',
     fields: {
       rule_id: 'number',
       action_id: 'number',
@@ -101,6 +104,7 @@ export const _serialize = {
     }
   },
   tree: {
+    returning: 'id link_id tree_id root_id parent_id depth position_id',
     fields: {
       id: 'number',
       link_id: 'number',
@@ -123,6 +127,7 @@ export const _serialize = {
     }
   },
   value: {
+    returning: 'id link_id value',
     fields: {
       id: 'number',
       link_id: 'number',
@@ -187,7 +192,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         } else if (key === 'return') {
           setted = result[key] = {};
           for (let r in exp[key]) {
-            result[key][r] = serializeWhere(exp[key][r], env, unvertualizeId, globalExp);
+            result[key][r] = _serialize?.[env]?.relations?.[exp[key][r]] || _serialize?.[env]?.fields?.[exp[key][r]] ? serializeWhere(exp[key][r], _serialize?.[env]?.relations?.[exp[key][r]?.relation] || env, unvertualizeId, globalExp) : exp[key][r];
           }
         }
       } else if (env === 'tree') {
@@ -199,6 +204,11 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
           setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId, globalExp);
+        } else if (key === 'return') {
+          setted = result[key] = {};
+          for (let r in exp[key]) {
+            result[key][r] = _serialize?.[env]?.relations?.[exp[key][r]] || _serialize?.[env]?.fields?.[exp[key][r]] ? serializeWhere(exp[key][r], _serialize?.[env]?.relations?.[exp[key][r]?.relation] || env, unvertualizeId, globalExp) : exp[key][r];
+          }
         }
       } else if (env === 'value') {
         // if this is value

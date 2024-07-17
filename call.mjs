@@ -111,8 +111,8 @@ if (options.generate) {
   if (options.exec) {
     const deep = new DeepClient({
       apolloClient: generateApolloClient({
-        path: `${envs.DEEPLINKS_HASURA_PATH}/v1/graphql`,
-        ssl: !!+envs.DEEPLINKS_HASURA_SSL,
+        path: `${envs.NEXT_PUBLIC_GQL_PATH}`.replace(/(^\w+:|^)\/\//, ''),
+        ssl: !!+envs.NEXT_PUBLIC_GQL_SSL,
         secret: envs.DEEPLINKS_HASURA_SECRET,
       }),
     })
