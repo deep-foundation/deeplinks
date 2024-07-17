@@ -2091,6 +2091,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   }, [result]);
   const toReturn = {
     ...result,
+    originalData: generatedResult,
     data: generatedResult,
     deep,
     // @ts-ignore
@@ -2127,6 +2128,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   }, [result]);
   const toReturn = {
     ...result,
+    originalData: generatedResult,
     data: generatedResult,
     deep,
     // @ts-ignore
