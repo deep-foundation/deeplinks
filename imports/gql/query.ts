@@ -130,7 +130,6 @@ export const generateQueryData = ({
       let result = '';
       for (let r in customReturn) {
         const { return: _return, relation, table, ...customWhere } = customReturn[r];
-        console.log(JSON.stringify(customReturn[r], null, 2));
         const _table = _serialize[tableName]?.relations[relation];
         if (!_table) throw new Error(`relation ${relation} not found in table ${tableName}`);
         const postfix = `${prefix}_${r}`;
