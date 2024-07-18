@@ -32,7 +32,17 @@ export const _ids = {
   '@deep-foundation/core': corePckgIds,
 };
 
-export const _serialize = {
+interface SerializeTable {
+  returning: string;
+  virtualize?: { [key:string]: string[] };
+  fields?: { [key:string]: string; };
+  relations?: { [key:string]: string; };
+}
+interface Serialize {
+  [key:string]: SerializeTable;
+}
+
+export const _serialize: Serialize = {
   links: {
     returning: 'id type_id from_id to_id value',
     virtualize: {
@@ -64,6 +74,7 @@ export const _serialize = {
       string: 'value',
       number: 'value',
       object: 'value',
+      file: 'files',
       can_rule: 'can',
       can_action: 'can',
       can_object: 'can',
@@ -137,7 +148,44 @@ export const _serialize = {
       link: 'links',
     },
   },
+  files: {
+    returning: 'id link_id mimeType name size',
+    fields: {
+      bucketId: 'string',
+      etag: 'string',
+      id: 'number',
+      isUploaded: 'boolean',
+      link_id: 'number',
+      mimeType: 'string',
+      name: 'string',
+      size: 'number',
+    },
+    relations: {
+      link: 'links',
+    },
+  },
+  handlers: {
+    returning: 'dist_id src_id handler_id execution_provider_id isolation_provider_id',
+    fields: {
+      dist_id: 'number',
+      execution_provider_id: 'number',
+      handler_id: 'number',
+      isolation_provider_id: 'number',
+      src_id: 'number',
+    },
+    relations: {
+      link: 'links',
+      dist: 'links',
+      execution_provider: 'links',
+      handler: 'links',
+      isolation_provider: 'links',
+      src: 'links',
+    },
+  },
 };
+_serialize.strings = _serialize.value;
+_serialize.numbers = _serialize.value;
+_serialize.objects = _serialize.value;
 
 export const _boolExpFields = {
   _and: true,
@@ -341,9 +389,12 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  canSelectReturning?: string;
+  treeSelectReturning?: string;
+  valuesSelectReturning?: string;
   filesSelectReturning?: string;
+  handlersSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -389,9 +440,12 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  canSelectReturning?: string;
+  treeSelectReturning?: string;
+  valuesSelectReturning?: string;
   filesSelectReturning?: string;
+  handlersSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -420,6 +474,13 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   await(id: Id): Promise<boolean>;
 
+  value(id: Id, value: string | number | Object): Promise<{
+    id: Id;
+    link?: Link<Id>;
+    Value?: Link<Id>;
+    data: string | number | Object;
+    [key:string]: any;
+  }>;
 
   serializeWhere(exp: any, env?: string): any;
   serializeQuery(exp: any, env?: string): any;
@@ -702,9 +763,12 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   selectReturning?: string;
   linksSelectReturning?: string;
-  valuesSelectReturning?: string;
   selectorsSelectReturning?: string;
+  canSelectReturning?: string;
+  treeSelectReturning?: string;
+  valuesSelectReturning?: string;
   filesSelectReturning?: string;
+  handlersSelectReturning?: string;
   insertReturning?: string;
   updateReturning?: string;
   deleteReturning?: string;
@@ -783,11 +847,14 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       return this.minilinks.virtual.hasOwnProperty(id) ? this.minilinks.virtual[id] : id;
     };
 
-    this.linksSelectReturning = options.linksSelectReturning || options.selectReturning || 'id type_id from_id to_id value';
+    this.linksSelectReturning = options.selectReturning || _serialize.links.returning;
     this.selectReturning = options.selectReturning || this.linksSelectReturning;
-    this.valuesSelectReturning = options.valuesSelectReturning || 'id link_id value';
-    this.selectorsSelectReturning = options.selectorsSelectReturning ||'item_id selector_id';
-    this.filesSelectReturning = options.filesSelectReturning ||'id link_id name mimeType';
+    this.selectorsSelectReturning = options.selectorsSelectReturning || _serialize.selector.returning;
+    this.canSelectReturning = options.canSelectReturning || _serialize.can.returning;
+    this.treeSelectReturning = options.treeSelectReturning || _serialize.tree.returning;
+    this.valuesSelectReturning = options.valuesSelectReturning || _serialize.value.returning;
+    this.filesSelectReturning = options.filesSelectReturning || _serialize.files.returning;
+    this.handlersSelectReturning = options.handlersSelectReturning || _serialize.handlers.returning;
     this.insertReturning = options.insertReturning || 'id';
     this.updateReturning = options.updateReturning || 'id';
     this.deleteReturning = options.deleteReturning || 'id';
@@ -838,11 +905,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   _generateQuery<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>) {
     const query = serializeQuery(exp, options?.table || 'links', this.unvertualizeId);
     const table = options?.table || this.table;
-    const returning = options?.returning ?? 
-    (table === 'links' ? this.linksSelectReturning :
-    ['strings', 'numbers', 'objects'].includes(table) ? this.valuesSelectReturning :
-    table === 'selectors' ? this.selectorsSelectReturning :
-    table === 'files' ? this.filesSelectReturning : `id`);
+    const returning = options?.returning || _serialize?.[table]?.returning || 'id';
     const tableNamePostfix = options?.tableNamePostfix;
     const aggregate = options?.aggregate;
 
@@ -1496,6 +1559,39 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       Results: options.results
     });
   };
+
+  async value(id: Id, value: string | number | Object) {
+    if (value === undefined) {
+      if (arguments.length === 2) throw new Error(`Trying to set undefined as value for ${id} .`);
+      return {
+        id: id,
+        data: (await this.select(id))?.data?.[0]?.value?.value,
+      };
+    } else {
+      const { data: [link] } = await this.select(id);
+      if (!link) throw new Error(`The link ##${id} not founded`);
+      const { data: [Value] } = await this.select({
+        type_id: this.idLocal('@deep-foundation/core', 'Value'),
+        from_id: link.type_id,
+      });
+      if (!Value) throw new Error(`The link ##${id} cannot have a value, its type is not bound |-Value-> String|Number|Object|File`);
+      const type = Value.to_id ===  this.idLocal('@deep-foundation/core', 'String') ? 'string' : Value.to_id ===  this.idLocal('@deep-foundation/core', 'Number') ? 'number' : Value.to_id ===  this.idLocal('@deep-foundation/core', 'Object') ? 'object' : undefined;
+      if (!type) throw new Error(`Type of ##${id}- - > ##${Value.from_id} |-Value-> ##${Value.id} is not compatable with .value()`);
+      const table: any = type+'s';
+      let result;
+      if (link?.value) {
+        result = await this.update({ link_id: id } as any, { value }, { table });
+      } else {
+        result = await this.insert({ link_id: id, value }, { table });
+      }
+      return {
+        ...result,
+        link,
+        Value,
+        data: value,
+      };
+    }
+  }
 
   /**
    * Find id of a link by link name or id and contain values (names) as path items

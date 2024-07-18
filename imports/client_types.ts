@@ -9,7 +9,7 @@ export interface QueryLink extends BoolExpLink {
   order_by?: { [key: string]: 'asc'|'desc' };
   offset?: number;
   distinct_on?: [string];
-  return?: QueryLinkReturn;
+  return?: { [key:string]: ReturnBoolExp };
 }
 
 export interface QueryLinkReturn extends QueryLink {
@@ -20,6 +20,17 @@ export interface BoolExp<T> {
   _and?: T[];
   _or?: T[];
   _not?: T;
+  'return'?: { [key:string]: ReturnBoolExp };
+}
+
+export interface ReturnBoolExp<T=any> extends BoolExp<T> {
+  _and?: T[];
+  _or?: T[];
+  _not?: T;
+  'return'?: { [key:string]: ReturnBoolExp };
+  relation: string;
+  'table'?: string;
+  [key:string]: any; // temporary, need interpretate relation type
 }
 export interface BoolExpLink extends BoolExp<BoolExpLink> {
   id?: ComparasionType<Id>;
