@@ -221,6 +221,8 @@ export interface MutationInputLink extends MutationInputLinkPlain {
   string?: { data: MutationInputValue<string> } | string;
   object?: { data: MutationInputValue<any> } | any;
   typed?: { data: MutationInputLink | MutationInputLink[] };
+  containerId?: Id;
+  name?: string;
 }
 export interface MutationInputValue<T> {
   link_id?: Id;

@@ -620,16 +620,32 @@ export type AsyncSerialParams = {
   silent?: boolean;
 };
 
-export function checkAndFillShorts(obj) {
+export function checkAndFillShorts(obj, table, containerId, Contain, field?: string) {
+  if (obj.hasOwnProperty('containerId') && !obj.containerId) {
+    throw new Error(`containerId is undefined`);
+  }
+  const cId = obj.containerId || containerId;
   for (var i in obj) {
       if (!obj.hasOwnProperty(i)) continue;
       if ((typeof obj[i]) == 'object' && obj[i] !== null) {
         if (typeof obj[i] === 'object' && i === 'object' && obj[i]?.data?.value === undefined) { obj[i] = { data: { value: obj[i] } }; continue; }
-        if (typeof obj[i] === 'object' && (i === 'to' || i === 'from' || i === 'in' || i === 'out') && obj[i]?.data === undefined) obj[i] = { data: obj[i] };
-        checkAndFillShorts(obj[i]);
+        if (typeof obj[i] === 'object' && (i === 'to' || i === 'from' || i === 'in' || i === 'out' || i === 'typed' || i === 'type') && obj[i]?.data === undefined) obj[i] = { data: obj[i] };
+        checkAndFillShorts(obj[i], _serialize[table]?.relations?.[i] || table, cId, Contain, i);
       }
       else if (i === 'string' && typeof obj[i] === 'string' || i === 'number' && typeof obj[i] === 'number') obj[i] = { data: { value: obj[i] } }; 
   }
+  if (cId && !Array.isArray(obj) && !obj.data && table === 'links' && ((!field || [
+    'to', 'from', 'in', 'out', 'type', 'typed'
+  ].includes(field)) || obj.type_id || obj.type)) {
+    obj.in = obj.in || {};
+    obj.in.data = obj?.in?.data ? Array.isArray(obj?.in?.data) ? obj?.in?.data : [obj?.in?.data] : [];
+    obj.in.data.push({
+      type_id: Contain, from_id: cId,
+      ...(typeof(obj.name) === 'string' ? { string: { data: { value: obj.name } } } : {})
+    });
+  }
+  delete obj.name;
+  delete obj.containerId;
 }
 
 export function convertDeepInsertToMinilinksApplyAndPatchVirtualIds(deep, objects, table, result: { id?: number; from_id?: number; to_id?: number; type_id?: number; value?: any }[] = [], errors: string[], patch: any = {}): { objects: any; levelIds: any[]; } {
@@ -1157,9 +1173,6 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    let _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
-    checkAndFillShorts(_objects);
-
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
 
     const table = options?.table || this.table;
@@ -1167,6 +1180,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const variables = options?.variables;
     const name = options?.name || this.defaultInsertName;
     let q: any = {};
+
+    const containerId = options?.containerId;
+
+    let _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
+    checkAndFillShorts(_objects, table, containerId, this.idLocal('@deep-foundation/core', 'Contain'));
 
     const toApply: any = [];
     if (this.minilinks && local !== false) {
@@ -2298,5 +2316,6 @@ export type WriteOptions<TTable extends Table = 'links'>  = Options<TTable> & {
   silent?: boolean;
   remote?: boolean;
   local?: boolean;
+  containerId?: Id;
 }
 
