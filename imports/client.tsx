@@ -1748,33 +1748,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * ```
    */
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
-    const paths = [start, ...path] as [DeepClientStartItem, ...Array<Exclude<DeepClientPathItem, boolean>>];
-    if (get(_ids, paths.join('.'))) {
-      return get(_ids, paths.join('.'));
-    }
-
-    // let result: number;
-    // if(paths.length === 1) {
-      
-    // } else {
-    //   result = paths[0] as number;
-    //   for (let i = 1; i < paths.length; i++) {
-    //     result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
-    // }
-    // }
-    
-    const [link] = this.minilinks.query({
-      id: {
-        _id: paths
-      }
-    }) 
-    const result = (link as Link<Id>)?.id;
-    
-    if(!result) {
-      throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
-    } else {
-      return result as number
-    }
+    return this.minilinks.id(start, ...path);
   };
 
   /**
@@ -1929,11 +1903,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
    */
   nameLocal(input: Link<Id> | Id): string | undefined {
-    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
-    if (!id) return;
-    // @ts-ignore
-    if (this.minilinks.byId[id]?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return this.minilinks.byId[id]?.value?.value;
-    return (this.minilinks.byType[this.idLocal('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
+    return this.minilinks.name(input);
   }
 
   /**

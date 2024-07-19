@@ -13,6 +13,8 @@ import { minilinksQuery, minilinksQueryIs } from './minilinks-query.js';
 import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { Observable } from '@apollo/client/index.js';
+import get from 'get-value';
+import { _ids, DeepClientPathItem, DeepClientStartItem } from './client.js';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -77,6 +79,8 @@ export interface MinilinksResult<L extends Link<Id>> {
   emitter: EventEmitter;
   query(query: QueryLink | Id): L[] | any;
   select(query: QueryLink | Id): L[] | any;
+  id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
+  name(input: Link<Id> | Id): string | undefined;
   subscribe(query: QueryLink | Id): Observable<L[] | any>;
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
@@ -173,6 +177,9 @@ export class MinilinksLink<Ref extends Id> {
   }
   get value(): any {
     return this?.string || this?.number || this?.object;
+  }
+  get name(): string {
+    return this.ml?.name(this.id);
   }
   string?: any;
   number?: any;
@@ -300,6 +307,81 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   }
   select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any {
     return this.query(query, options);
+  }
+
+  /**
+   * Find id of a link from minilinks by link name or id and contain values (names) as path items
+   * @param start A name or id of a link
+   * @param path Contain values (names) as path items
+   * @returns A promise that resolves to the id of the link
+   * 
+   * @example
+   * #### Get Core Package Link Id
+   * ```
+   * const corePackageLinkId = deep.minilinks.id("@deep-foundation/core")
+   * ```
+   * 
+   * #### Get User Type Link Id From Core Package
+   * ```
+   * const userTypeLinkId = deep.minilinks.id("@deep-foundation/core", "User")
+   * ```
+   * 
+   * #### Get the link called "My Nested Link Name" contained in the link called "My Link Name" contained the current user
+   * ```
+   * const myLinkId = deep.minilinks.id(deep.linkId, 'My Link Name', 'My Nested Link Name')
+   * ```
+   * 
+   * #### Get Admin Link Id
+   * ```
+   * const adminLinkId = deep.minilinks.id("deep", "admin")
+   * ```
+   */
+  id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
+    const paths = [start, ...path] as [Id, ...Array<Exclude<Id, boolean>>];
+    if (get(_ids, paths.join('.'))) {
+      return get(_ids, paths.join('.'));
+    }
+
+    // let result: number;
+    // if(paths.length === 1) {
+      
+    // } else {
+    //   result = paths[0] as number;
+    //   for (let i = 1; i < paths.length; i++) {
+    //     result = this.idLocal(result, paths[i] as Exclude<DeepClientPathItem, boolean>);
+    // }
+    // }
+    
+    const [link] = this.query({
+      id: {
+        _id: paths
+      }
+    }) 
+    const result = (link as Link<Id>)?.id;
+    
+    if(!result) {
+      throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
+    } else {
+      return result as number
+    }
+  };
+
+  /**
+   * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input} according to links stored in minilinks
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkName = deep.minilinks.name(userTypeLinkId);
+   * ```
+   * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
+   */
+  name(input: Link<Id> | Id): string | undefined {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
+    if (!id) return;
+    // @ts-ignore
+    if (this.byId[id]?.type_id === this.id('@deep-foundation/core', 'Package')) return this.byId[id]?.value?.value;
+    return (this.byType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
   }
 
   /**
