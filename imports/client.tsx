@@ -507,6 +507,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
   useMinilinksSubscription: (query: Exp) => L[];
+  useMinilinksApply(data, name: string);
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -803,6 +804,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
   useMinilinksSubscription: (query: Exp) => L[];
+  useMinilinksApply: (data, name: string) => void;
   local?: boolean;
   remote?: boolean;
 
@@ -902,6 +904,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useMinilinksQuery = (query: Exp) => useMinilinksQuery(deep.minilinks, query);
     // @ts-ignore
     this.useMinilinksSubscription = (query: Exp) => useMinilinksSubscription(deep.minilinks, query)
+    // @ts-ignore
+    this.useMinilinksApply = (data, name: string) => useMinilinksApply(deep.minilinks, name, data)
   }
 
   stringify(any?: any): string {
@@ -2212,7 +2216,8 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
-  toReturn.data = deep.useMinilinksSubscription({ id: { _in: toReturn?.data?.map(l => l.id) } });
+  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } });
+  toReturn.data = options?.aggregate ? toReturn.data : mini;
   return toReturn;
 }
 
@@ -2249,7 +2254,8 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
-  toReturn.data = useMinilinksSubscription(deep.minilinks,{ id: { _in: toReturn?.data?.map(l => l.id) } });
+  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } });
+  toReturn.data = options?.aggregate ? toReturn.data : mini;
   return toReturn;
 }
 
