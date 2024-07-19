@@ -249,11 +249,18 @@ export const up = async () => {
           type_id: deep.idLocal('@deep-foundation/core', 'Query'),
           object: { data: { value: {
             _or: [
-              { from_id: { _eq: 0 } },
+              { type_id: { _neq: deep.idLocal('@deep-foundation/core','Contain') } },
               { from: {
-                _by_item: {
-                  group_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
-                  path_item_id: { _eq: 'X-Deep-User-Id' },
+                type_id: deep.idLocal('@deep-foundation/core','Contain'),
+                up: {
+                  tree_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
+                  parent_id: { _eq: 'X-Deep-User-Id' },
+                },
+                _not: {
+                  up: {
+                    tree_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
+                    parent: { type_id: 22 },
+                  },
                 },
               } },
             ],
