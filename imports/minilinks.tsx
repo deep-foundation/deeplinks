@@ -275,6 +275,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   useMinilinksApply = useMinilinksApply;
   useMinilinksSubscription = useMinilinksSubscription;
   useMinilinksHandle = useMinilinksHandle;
+  toPlain = toPlain;
 
   virtual: { [id: Id]: Id } = {};
   virtualInverted: { [id: Id]: Id } = {};
