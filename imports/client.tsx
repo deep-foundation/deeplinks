@@ -502,8 +502,11 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   can(objectIds: Id[], subjectIds: Id[], actionIds: Id[]): Promise<boolean>;
 
+  useId: typeof useDeepId;
   useDeepId: typeof useDeepId;
+  useSubscription: typeof useDeepSubscription;
   useDeepSubscription: typeof useDeepSubscription;
+  useQuery: typeof useDeepQuery;
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
   useMinilinksSubscription: (query: Exp) => L[];
@@ -799,8 +802,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   unsafe?: any;
 
+  useId: typeof useDeepId;
   useDeepId: typeof useDeepId;
+  useSubscription: typeof useDeepSubscription;
   useDeepSubscription: typeof useDeepSubscription;
+  useQuery: typeof useDeepQuery;
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp) => L[];
   useMinilinksSubscription: (query: Exp) => L[];
@@ -896,10 +902,13 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   _generateHooks(deep) {
     // @ts-ignore
     this.useDeepId = (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } => _useDeepId(deep, start, ...path);
+    this.useId = this.useDeepId;
     // @ts-ignore
     this.useDeepSubscription = (query: Exp, options?: Options) => useDeepSubscription(query, { ...(options || {}), deep: deep });
+    this.useSubscription = useDeepSubscription;
     // @ts-ignore
     this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
+    this.useQuery = useDeepQuery;
     // @ts-ignore
     this.useMinilinksQuery = (query: Exp) => useMinilinksQuery(deep.minilinks, query);
     // @ts-ignore
