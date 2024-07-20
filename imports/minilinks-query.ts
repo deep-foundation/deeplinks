@@ -149,6 +149,25 @@ export const minilinksQueryLevel = (
   return true;
 };
 
+var like = (q, v) => {
+    var p = q.split('%');
+    if (p[0] === '') p = p.slice(1);
+    if (p[p.length - 1] === '') p = p.slice(0, p.length - 1);
+    var _v = v;
+    let i = 0
+    if (q[i] !== '%') {
+        if (_v.slice(0, p[i].length - 1) !== p[i]) return false;
+        _v = _v.slice(p[i].length - 1);
+        i++;
+    }
+    for (; i < p.length; i++) {
+        const f = _v.indexOf(p[i]);
+        if (!~f) return false;
+        _v = _v.slice(f+p[i].length-1);
+    }
+    return true;
+}
+
 export const minilinksQueryComparison = (
   q: BoolExpLinkMinilinks,
   link: Link<Id>,
@@ -199,22 +218,22 @@ export const minilinksQueryComparison = (
     }
     if (comp.hasOwnProperty('_ilike')) {
       if (
-        !link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase()?.includes(comp?._ilike?.toLowerCase()
-      )) return false;
+        !link?.[alias]?.toLowerCase || !like(comp?._ilike?.toLowerCase(), link?.[alias]?.toLowerCase())
+      ) return false;
     }
     if (comp.hasOwnProperty('_nilike')) {
       if (
-        !link?.[alias]?.toLowerCase || !link?.[alias]?.toLowerCase()?.includes(comp?._nilike?.toLowerCase()
-      )) return false;
+        !(!link?.[alias]?.toLowerCase || !like(comp?._nilike?.toLowerCase(), link?.[alias]?.toLowerCase()))
+      ) return false;
     }
     if (comp.hasOwnProperty('_like')) {
       if (
-        !link?.[alias]?.includes(comp?._like)
+        !like(comp?._like, link?.[alias])
       ) return false;
     }
     if (comp.hasOwnProperty('_nlike')) {
       if (
-        !link?.[alias]?.includes(comp?._nlike)
+        like(comp?._nlike, link?.[alias])
       ) return false;
     }
     if (comp.hasOwnProperty('_iregex')) {
