@@ -78,10 +78,10 @@ export interface MinilinksResult<L extends Link<Id>> {
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
   query(query: QueryLink | Id): L[] | any;
-  select(query: QueryLink | Id): L[] | any;
+  select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any;
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
   name(input: Link<Id> | Id): string | undefined;
-  subscribe(query: QueryLink | Id): Observable<L[] | any>;
+  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<L[] | any>;
   add(linksArray: any[]): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -389,17 +389,21 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    * @example
    * minilinks.subscribe({ type_id: 2 }).subscribe({ next: (links) => {}, error: (err) => {} });
    */
-  subscribe(query: QueryLink | Id): Observable<L[] | any> {
+  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<L[] | any> {
     const ml = this;
     return new Observable((observer) => {
-      let prev = ml.query(query);
+      let prev = ml.query(query, options);
+      let t;
       observer.next(prev);
       let listener = (oldL, newL) => {
-        const data = ml.query(query);
-        if (!_isEqual(prev, data)) {
-          prev = data;
-          observer.next(data);
-        }
+        clearTimeout(t);
+        t = setTimeout(() => {
+          const data = ml.query(query, options);
+          if (!_isEqual(prev, data)) {
+            prev = data;
+            observer.next(data);
+          }
+        }, 50);
       };
       ml.emitter.on('added', listener);
       ml.emitter.on('updated', listener);
@@ -931,15 +935,15 @@ export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L
  * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
  * Recalculates when query changes. (Take query into useMemo!).
  */
-export function useMinilinksQuery<L extends Link<Id>>(ml, query: QueryLink | Id) {
-  return useMemo(() => ml.query(query), [ml, query]);
+export function useMinilinksQuery<L extends Link<Id>>(ml, query: QueryLink | Id, options?: MinilinksQueryOptions) {
+  return useMemo(() => ml.query(query, options), [ml, query]);
 };
 
 /**
  * React hook. Returns reactiviely links from minilinks, by query in deeplinks dialect.
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
-export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLink | Id) {
+export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLink | Id, options?: MinilinksQueryOptions) {
   const [d, setD] = useState();
   const sRef = useRef<any>();
   const qPrevRef = useRef<any>(query);
@@ -948,7 +952,7 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
   useEffect(() => {
     setD(ml.query(q));
     if (sRef.current) sRef.current.unsubscribe();
-    const obs = ml.subscribe(q);
+    const obs = ml.subscribe(q, options);
     const sub = sRef.current = obs.subscribe({
       next: (links) => {
         setD(links);
