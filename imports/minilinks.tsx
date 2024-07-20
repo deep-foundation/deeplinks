@@ -648,12 +648,23 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       let link = linksArray[l];
       if (!virtualizedLinks[link.id] && !link.from_id && !link.to_id) {
         const virtualId = this.virtualInverted[link.id];
-        const compatable = virtualId ? [this.byId[virtualId]] : this.select({
-            type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } : link.type_id,
-            // ...(typeof(link.value) !== 'undefined' && link.value !== null ? { value: link.value } : {}),
-            _id: { _is_null: true },
-          limit: 1,
-        });
+        const compatable = [];
+        if (virtualId) compatable.push(virtualId);
+        if (!compatable.length && virtualizedLinks[link.type_id]) {
+          compatable.push(this.byType[virtualizedLinks[link.type_id].id]?.find(l => !l._id));
+        }
+        if (!compatable.length) compatable.push(this.byType[link.type_id]?.find(l => !l._id));
+        // const compatable = [];
+        // if (virtualId) compatable.push(this.byId[virtualId]);
+        // else if (!virtualizedLinks[link.type_id]) this.byType[link.type_id] && compatable.push(this.byType[link.type_id]);
+        // // @ts-ignore
+        // else if (this.byType[virtualizedLinks[link.type_id].id] && !this.byType[virtualizedLinks[link.type_id].id]?._id) compatable.push(this.byType[virtualizedLinks[link.type_id].id]);
+        // const compatable = virtualId ? [this.byId[virtualId]] : this.select({
+        //     type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } : link.type_id,
+        //     // ...(typeof(link.value) !== 'undefined' && link.value !== null ? { value: link.value } : {}),
+        //     _id: { _is_null: true },
+        //   limit: 1,
+        // });
         if (compatable[0]) {
           virtualizedLinks[link.id] = compatable[0];
         }
@@ -668,13 +679,18 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         if (!virtualizedLinks[link.id]) {
           if (link.from_id && link.to_id) {
             const virtual = this.virtualInverted[link.id];
-            const compatable = this.select({
-              type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } :  link.type_id,
-              from_id: virtualizedLinks[link.from_id] ? { _in: [link.from_id, virtualizedLinks[link.from_id].id] } :  link.from_id,
-              to_id: virtualizedLinks[link.to_id] ? { _in: [link.to_id, virtualizedLinks[link.to_id].id] } :  link.to_id,
-              _id: { _is_null: true },
-              limit: 1,
-            });
+            const compatable = [];
+            if (virtualizedLinks[link.to_id]) {
+              compatable.push(this.byTo[virtualizedLinks[link.to_id].id]?.find(l => l.from_id === virtualizedLinks[link.from_id]?.id || l.from_id === link.from_id && l.type_id === virtualizedLinks[link.type_id]?.id || l.type_id === link.type_id && !l._id));
+            }
+            if (!compatable.length) compatable.push(this.byTo[link.to_id]?.find(l => l.from_id === virtualizedLinks[link.from_id]?.id || l.from_id === link.from_id && l.type_id === virtualizedLinks[link.type_id]?.id || l.type_id === link.type_id && !l._id));
+            // const compatable = this.select({
+            //   type_id: virtualizedLinks[link.type_id] ? { _in: [link.type_id, virtualizedLinks[link.type_id].id] } :  link.type_id,
+            //   from_id: virtualizedLinks[link.from_id] ? { _in: [link.from_id, virtualizedLinks[link.from_id].id] } :  link.from_id,
+            //   to_id: virtualizedLinks[link.to_id] ? { _in: [link.to_id, virtualizedLinks[link.to_id].id] } :  link.to_id,
+            //   _id: { _is_null: true },
+            //   limit: 1,
+            // });
             if (compatable[0]) {
               virtualizedLinks[link.id] = compatable[0];
               hasIdentifiedVirtualizedPerCycle = true;
