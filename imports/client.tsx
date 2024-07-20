@@ -9,7 +9,7 @@ import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue,
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
 import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { Id, Link, MinilinkCollection, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
@@ -508,8 +508,8 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useDeepSubscription: typeof useDeepSubscription;
   useQuery: typeof useDeepQuery;
   useDeepQuery: typeof useDeepQuery;
-  useMinilinksQuery: (query: Exp) => L[];
-  useMinilinksSubscription: (query: Exp) => L[];
+  useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksApply(data, name: string);
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
@@ -808,8 +808,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useDeepSubscription: typeof useDeepSubscription;
   useQuery: typeof useDeepQuery;
   useDeepQuery: typeof useDeepQuery;
-  useMinilinksQuery: (query: Exp) => L[];
-  useMinilinksSubscription: (query: Exp) => L[];
+  useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksApply: (data, name: string) => void;
   local?: boolean;
   remote?: boolean;
@@ -910,9 +910,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
     this.useQuery = useDeepQuery;
     // @ts-ignore
-    this.useMinilinksQuery = (query: Exp) => useMinilinksQuery(deep.minilinks, query);
+    this.useMinilinksQuery = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksQuery(deep.minilinks, query, options);
     // @ts-ignore
-    this.useMinilinksSubscription = (query: Exp) => useMinilinksSubscription(deep.minilinks, query)
+    this.useMinilinksSubscription = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksSubscription(deep.minilinks, query, options)
     // @ts-ignore
     this.useMinilinksApply = (data, name: string) => useMinilinksApply(deep.minilinks, name, data)
   }
@@ -2195,7 +2195,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
-  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } });
+  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
   toReturn.data = options?.aggregate ? toReturn.data : mini;
   return toReturn;
 }
@@ -2233,7 +2233,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
-  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } });
+  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
   toReturn.data = options?.aggregate ? toReturn.data : mini;
   return toReturn;
 }

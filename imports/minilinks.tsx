@@ -67,6 +67,12 @@ export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
 
 export type MinilinksApplyInput = { data: any[]; deep?: any; return?: any; [key:string]: any; };
 export interface MinilinksResult<L extends Link<Id>> {
+  useMinilinksQuery: typeof useMinilinksQuery;
+  useMinilinksFilter: typeof useMinilinksFilter;
+  useMinilinksApply: typeof useMinilinksApply;
+  useMinilinksSubscription: typeof useMinilinksSubscription;
+  useMinilinksHandle: typeof useMinilinksHandle;
+
   virtual: { [id: Id]: Id };
   virtualCounter: number;
   links: L[];
