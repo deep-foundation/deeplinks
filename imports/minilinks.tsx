@@ -403,7 +403,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
             prev = data;
             observer.next(data);
           }
-        }, 50);
+        }, 300);
       };
       ml.emitter.on('added', listener);
       ml.emitter.on('updated', listener);
@@ -770,13 +770,19 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       // find virtual
       let old = byId[link.id];
       const virtualIds = Object.keys(this.virtual);
-      const [virtual] = this.query({
-        id: { _in: virtualIds.map(i => Number(i)) },
-        ...(link.type_id ? { _type_id: link.type_id } : {}),
-        ...(link.from_id ? { _from_id: link.from_id } : {}),
-        ...(link.to_id ? { _to_id: link.to_id } : {}),
-        ...(link.value ? { value: link.value } : {}),
-      });
+      let virtual;
+      for (let i = 0; i < virtualIds.length; i++) {
+        const v = this.byId[virtualIds[i]];
+        if (
+          (!link.type_id || link.type_id == v._type_id) &&
+          (!link.from_id || link.from_id == v._from_id) &&
+          (!link.to_id || link.to_id == v._to_id) &&
+          (!link.value || _isEqual(link.value, v.value))
+        ) {
+          virtual = v;
+          break;
+        }
+      }
       if (virtual) {
         if (old) throw new Error(`somehow we have oldLink.id ${old.id} and virtualLink.id ${virtual.id} virtualLink._id = ${virtual._id}`);
         old = virtual;
