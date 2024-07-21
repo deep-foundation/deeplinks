@@ -150,6 +150,7 @@ export const minilinksQueryLevel = (
 };
 
 var like = (q, v) => {
+  if (!v) return false;
     var p = q.split('%');
     if (p[0] === '') p = p.slice(1);
     if (p[p.length - 1] === '') p = p.slice(0, p.length - 1);
