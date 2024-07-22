@@ -2196,12 +2196,14 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     originalData: generatedResult,
     data: generatedResult,
     deep,
+    links: [],
     // @ts-ignore
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options.table !== 'links' ? toReturn.data : mini;
+  toReturn.links = mini;
   return toReturn;
 }
 
@@ -2234,12 +2236,14 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     originalData: generatedResult,
     data: generatedResult,
     deep,
+    links: [],
     // @ts-ignore
     return: query?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options.table !== 'links' ? toReturn.data : mini;
+  toReturn.links = mini;
   return toReturn;
 }
 
