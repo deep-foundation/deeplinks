@@ -2118,15 +2118,20 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
     if (!apolloClient?.jwt_token) {
       log({ token, apolloClient });
     }
-    return new DeepClient({
-      ...otherGeneratorOptions,
-      apolloClient, linkId, token,
-      minilinks,
-      handleAuth: (linkId, token) => {
-        setToken(token);
-        setLinkId(linkId);
-      },
-    });
+    try {
+      return new DeepClient({
+        ...otherGeneratorOptions,
+        apolloClient, linkId, token,
+        minilinks,
+        handleAuth: (linkId, token) => {
+          setToken(token);
+          setLinkId(linkId);
+        },
+      });
+    } catch(error) {
+      console.error(error);
+      return undefined;
+    }
   }, [apolloClient]);
   log({deep})
   return deep;
