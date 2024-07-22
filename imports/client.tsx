@@ -831,7 +831,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.apolloClient = options?.apolloClient;
       this.token = options?.token;
       this.client = this.apolloClient;
-      this.table = options.table || 'links';
+      this.table = options?.table || 'links';
 
       if (this.deep && !this.apolloClient) {
         const token = this.token ?? this.deep.token;
@@ -2202,7 +2202,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options.table !== 'links' ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data : mini;
   toReturn.links = mini;
   return toReturn;
 }
@@ -2242,7 +2242,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options.table !== 'links' ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data : mini;
   toReturn.links = mini;
   return toReturn;
 }
