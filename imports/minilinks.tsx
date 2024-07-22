@@ -953,10 +953,10 @@ export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
-      ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
+      if (ml) ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
     };
   }, []);
-  ml.apply(data, strictName);
+  if (ml) ml.apply(data, strictName);
 }
 
 /**
