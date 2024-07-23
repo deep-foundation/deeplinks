@@ -2202,7 +2202,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : mini;
   toReturn.links = mini;
   return toReturn;
 }
@@ -2242,7 +2242,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data : mini;
+  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : mini;
   toReturn.links = mini;
   return toReturn;
 }
