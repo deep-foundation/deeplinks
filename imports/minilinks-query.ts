@@ -152,19 +152,19 @@ export const minilinksQueryLevel = (
 var like = (q, v) => {
   if (!v) return false;
     var p = q.split('%');
-    if (p[0] === '') p = p.slice(1);
-    if (p[p.length - 1] === '') p = p.slice(0, p.length - 1);
+    if (p?.[0] === '') p = p?.slice(1);
+    if (p[p.length - 1] === '') p = p?.slice(0, p.length - 1);
     var _v = v;
     let i = 0
     if (q[i] !== '%') {
-        if (_v.slice(0, p[i].length - 1) !== p[i]) return false;
-        _v = _v.slice(p[i].length - 1);
+        if (_v.slice(0, p?.[i]?.length - 1) !== p?.[i]) return false;
+        _v = _v.slice(p?.[i]?.length - 1);
         i++;
     }
-    for (; i < p.length; i++) {
-        const f = _v.indexOf(p[i]);
+    for (; i < p?.length; i++) {
+        const f = _v.indexOf(p?.[i]);
         if (!~f) return false;
-        _v = _v.slice(f+p[i].length-1);
+        _v = _v.slice(f+p?.[i]?.length-1);
     }
     return true;
 }
