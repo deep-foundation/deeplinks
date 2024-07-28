@@ -384,6 +384,7 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 
   apolloClient?: IApolloClient<any>;
   minilinks?: MinilinkCollection<any, Link<Id>>;
+  ml?: MinilinkCollection<any, Link<Id>>;
   table?: string;
   returning?: string;
 
@@ -435,6 +436,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
+  ml: MinilinksResult<L>;
   table?: string;
   returning?: string;
 
@@ -783,6 +785,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   client: IApolloClient<any>;
   apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
+  ml: MinilinksResult<L>;
   table?: string;
   returning?: string;
 
@@ -874,6 +877,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();
+    this.ml = this.minilinks;
+
+    if (!this.ml.deep) this.ml.deep = this;
+
     this.unvertualizeId = (id: Id): Id => {
       // @ts-ignore
       return this.minilinks.virtual.hasOwnProperty(id) ? this.minilinks.virtual[id] : id;

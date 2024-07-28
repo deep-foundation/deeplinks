@@ -800,7 +800,7 @@ export class Packager<L extends Link<any>> {
       to: 'to_id',
       type: 'type_id',
     });
-    ml.links = sorted;
+    ml.links = ml._traveled(sorted);
     // log('pckg1', JSON.stringify(pckg));
     await this.serialize(ml, options, pckg);
     // log('pckg2', JSON.stringify(pckg));

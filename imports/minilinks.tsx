@@ -14,7 +14,8 @@ import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { Observable } from '@apollo/client/index.js';
 import get from 'get-value';
-import { _ids, DeepClientPathItem, DeepClientStartItem } from './client.js';
+import { _ids, DeepClient, DeepClientPathItem, DeepClientStartItem } from './client.js';
+import { Traveler } from './traveler.js';
 
 const debug = Debug('deeplinks:minilinks');
 const log = debug.extend('log');
@@ -22,6 +23,11 @@ const error = debug.extend('error');
 // Force enable this file errors output
 
 export type Id = number | string;
+
+export interface Links<Ref extends Id, L extends Link<Ref>> extends Array<L> {
+  travel: () => Traveler;
+  [key: number|string]: L | any;
+};
 
 export interface LinkPlain<Ref extends Id> {
   id: Ref;
@@ -34,12 +40,12 @@ export interface LinkPlain<Ref extends Id> {
 const nativeLinkKeys = ['id', 'type_id', 'from_id', 'to_id', 'value', 'type', 'typed', 'from', 'out', 'outByType', 'to', 'in', 'inByType', '_applies', '_namespaces', 'ml'];
 
 export interface LinkRelations<Ref extends Id, L extends Link<Ref>> {
-  typed: L[];
+  typed: Links<Ref, L>;
   type: L;
-  in: L[];
-  inByType: { [id: string]: L[] };
-  out: L[];
-  outByType: { [id: string]: L[] };
+  in: Links<Ref, L>;
+  inByType: { [id: string]: Links<Ref, L> };
+  out: Links<Ref, L>;
+  outByType: { [id: string]: Links<Ref, L> };
   from: L;
   to: L;
   value?: any;
@@ -67,6 +73,8 @@ export interface MinilinksQueryOptions<A = MinilinksQueryOptionAggregate> {
 
 export type MinilinksApplyInput = { data: any[]; deep?: any; return?: any; [key:string]: any; };
 export interface MinilinksResult<L extends Link<Id>> {
+  deep?: DeepClient<Link<Id>>;
+
   useMinilinksQuery: typeof useMinilinksQuery;
   useMinilinksFilter: typeof useMinilinksFilter;
   useMinilinksApply: typeof useMinilinksApply;
@@ -75,20 +83,20 @@ export interface MinilinksResult<L extends Link<Id>> {
 
   virtual: { [id: Id]: Id };
   virtualCounter: number;
-  links: L[];
-  types: { [id: Id]: L[] };
+  links: Links<Id, L>;
+  types: { [id: Id]: Links<Id, L> };
   byId: { [id: Id]: L };
-  byFrom: { [id: Id]: L[] };
-  byTo: { [id: Id]: L[] };
-  byType: { [id: Id]: L[] };
+  byFrom: { [id: Id]: Links<Id, L> };
+  byTo: { [id: Id]: Links<Id, L> };
+  byType: { [id: Id]: Links<Id, L> };
   options: MinilinksGeneratorOptions;
   emitter: EventEmitter;
-  query(query: QueryLink | Id): L[] | any;
-  select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any;
+  query(query: QueryLink | Id): Links<Id, L> | any;
+  select(query: QueryLink | Id, options?: MinilinksQueryOptions): Links<Id, L> | any;
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
   name(input: Link<Id> | Id): string | undefined;
   symbol(input: Link<Id> | Id): string | null;
-  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<L[] | any>;
+  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<Links<Id, L> | any>;
   add(linksArray: any[], applyName?: string): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
@@ -106,6 +114,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
+  _traveled(a: any[]): Links<Id, L>
 }
 
 export function toPlain<Ref extends Id>(link): LinkPlain<Ref> {
@@ -191,6 +200,9 @@ export class MinilinksLink<Ref extends Id> {
   get symbol(): string {
     return this.ml?.symbol(this.id);
   }
+  travel(): Traveler {
+    return this?.ml?.deep ? new Traveler(this.ml?.deep, [this] as any[], [], 'local') : undefined;
+  }
   string?: any;
   number?: any;
   object?: any;
@@ -263,11 +275,11 @@ export const MinilinksGeneratorOptionsDefault: MinilinksGeneratorOptions = {
 };
 
 export interface MinilinksInstance<L extends Link<Id>>{
-  (linksArray: L[], memory?: MinilinksResult<L>): MinilinksResult<L>
+  (linksArray: any[], memory?: MinilinksResult<L>): MinilinksResult<L>
 }
 
 export function Minilinks<MGO extends MinilinksGeneratorOptions, L extends Link<Id>>(options: MGO): MinilinksInstance<L> {
-  return function minilinks<L extends Link<Id>>(linksArray = [], memory: any = {}): MinilinksResult<L> {
+  return function minilinks<L extends Link<Id>>(linksArray: any[] = [], memory: any = {}): MinilinksResult<L> {
     // @ts-ignore
     const mc = new MinilinkCollection<MGO, L>(options, memory);
     mc.add(linksArray);
@@ -287,6 +299,8 @@ export interface ApplyOptions {
 }
 
 export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof MinilinksGeneratorOptionsDefault, L extends Link<Id> = Link<Id>> {
+  deep?: DeepClient<Link<Id>>;
+
   useMinilinksQuery = useMinilinksQuery;
   useMinilinksFilter = useMinilinksFilter;
   useMinilinksApply = useMinilinksApply;
@@ -297,25 +311,26 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   virtual: { [id: Id]: Id } = {};
   virtualInverted: { [id: Id]: Id } = {};
   virtualCounter = -1;
-  types: { [id: Id]: L[] } = {};
+  types: { [id: Id]: Links<Id, L> } = {};
   byId: { [id: Id]: L } = {};
-  byFrom: { [id: Id]: L[] } = {};
-  byTo: { [id: Id]: L[] } = {};
-  byType: { [id: Id]: L[] } = {};
-  links: L[] = [];
+  byFrom: { [id: Id]: Links<Id, L> } = {};
+  byTo: { [id: Id]: Links<Id, L> } = {};
+  byType: { [id: Id]: Links<Id, L> } = {};
+  links: Links<Id, L> = this._traveled([]);
   options: MGO;
   emitter: EventEmitter;
 
-  query<A>(query: QueryLink | Id, options?: MinilinksQueryOptions<A>): A extends string ? any : L[] {
-    const result = minilinksQuery<L>(query, this);
+  query<A>(query: QueryLink | Id, options?: MinilinksQueryOptions<A>): A extends string ? any : Links<Id, L> {
+    const result: Links<Id, L> = minilinksQuery<L>(query, this) as Links<Id, L>;
     if (options?.aggregate === 'count') return result?.length as any;
     if (options?.aggregate === 'avg') return _mean(result?.map(l => l?.value?.value)) as any;
     if (options?.aggregate === 'sum') return _sum(result?.map(l => l?.value?.value)) as any;
     if (options?.aggregate === 'min') return _min(result?.map(l => l?.value?.value)) as any;
     if (options?.aggregate === 'max') return _max(result?.map(l => l?.value?.value)) as any;
+    this._traveled(result);
     return result;
   }
-  select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any {
+  select(query: QueryLink | Id, options?: MinilinksQueryOptions): Links<Id, L> | any {
     return this.query(query, options);
   }
 
@@ -416,7 +431,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    * @example
    * minilinks.subscribe({ type_id: 2 }).subscribe({ next: (links) => {}, error: (err) => {} });
    */
-  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<L[] | any> {
+  subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<Links<Id, L> | any> {
     const ml = this;
     return new Observable((observer) => {
       let prev = ml.query(query, options);
@@ -450,7 +465,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const { byId, byFrom, byTo, byType, links, options } = this;
     const anomalies = [];
     const errors = [];
-    const newLinks: L[] = [];
+    const newLinks: Links<Id, L> = this._traveled([]);
     for (let l = 0; l < linksArray.length; l++) {
       if (!!byId[linksArray[l][options.id]]) errors.push(new Error(`${linksArray[l][options.id]} can't add because already exists in collection`));
       if (byId[linksArray[l][options.id]]) {
@@ -472,19 +487,19 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
         // byFrom[link.from_id]: link[]; // XXX
         if (link[options.from_id]) {
           if (byFrom[link[options.from_id]]) byFrom[link[options.from_id]].push(link);
-          else byFrom[link[options.from_id]] = [link]
+          else byFrom[link[options.from_id]] = this._traveled([link]);
         }
 
         // byTo[link.to_id]: link[]; // XXX
         if (link[options.to_id]) {
           if (byTo[link[options.to_id]]) byTo[link[options.to_id]].push(link);
-          else byTo[link[options.to_id]] = [link]
+          else byTo[link[options.to_id]] = this._traveled([link]);
         }
 
         // byType[link.type_id]: link[]; // XXX
         if (link[options.type_id]) {
           if (byType[link[options.type_id]]) byType[link[options.type_id]].push(link);
-          else byType[link[options.type_id]] = [link]
+          else byType[link[options.type_id]] = this._traveled([link]);
         }
 
         // link.typed += byType[link.id]
@@ -569,7 +584,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const { byId, byFrom, byTo, byType, types, links, options } = this;
     const anomalies = [];
     const errors = [];
-    const oldLinksArray: L[] = [];
+    const oldLinksArray: Links<Id, L> = this._traveled([]);
     const oldLinksObject: { [id:Id]: L } = {};
     for (let l = 0; l < idsArray.length; l++) {
       const id = idsArray[l];
@@ -862,6 +877,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     this.options = _options;
     this.emitter = new EventEmitter();
   }
+
+  _traveled(array: any[]): Links<Id, L> {
+    (array as Links<Id, L>).travel = () => this.deep ? new Traveler(this.deep, array, [], 'local') : undefined;
+    return (array as Links<Id, L>);
+  }
 }
 
 export const minilinks = Minilinks(MinilinksGeneratorOptionsDefault);
@@ -970,7 +990,7 @@ export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldL
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L[] | MinilinksApplyInput): any {
+export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: Links<Id, L> | MinilinksApplyInput): any {
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
