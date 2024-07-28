@@ -489,8 +489,10 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   id(start: DeepClientStartItem | Exp, ...path: DeepClientPathItem[]): Promise<Id>;
   idLocal(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
   
-  name(input: Link<Id> | Id): Promise<string | undefined>;
-  nameLocal(input: Link<Id> | Id): string | undefined;
+  name(input: Link<Id> | Id): Promise<string | null>;
+  nameLocal(input: Link<Id> | Id): string | null;
+  symbol(input: Link<Id> | Id): Promise<string | null>;
+  symbolLocal(input: Link<Id> | Id): string | null;
 
   guest(options: DeepClientGuestOptions): Promise<DeepClientAuthResult>;
 
@@ -511,6 +513,9 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksApply(data, name: string);
+  useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalApply(data, name: string);
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -811,6 +816,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksApply: (data, name: string) => void;
+  useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalApply: (data, name: string) => void;
   local?: boolean;
   remote?: boolean;
 
@@ -915,6 +923,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useMinilinksSubscription = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksSubscription(deep.minilinks, query, options)
     // @ts-ignore
     this.useMinilinksApply = (data, name: string) => useMinilinksApply(deep.minilinks, name, data)
+    this.useLocalQuery = this.useMinilinksQuery;
+    this.useLocalSubscription = this.useMinilinksSubscription;
+    this.useLocalApply = this.useMinilinksApply;
   }
 
   stringify(any?: any): string {
@@ -1868,6 +1879,40 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   /**
+   * Returns a symbol icon of a link {@link input} that is located in a value of a Symbol link to type of the link {@link input}
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkSymbol = await deep.symbol(userTypeLinkId);
+   * ```
+   */
+  async symbol(input: Link<Id> | Id): Promise<string | undefined> {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input.id;
+
+    // if ((this.minilinks.byId[id] as Link<Id>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<Id>)?.value?.value;
+    const {data: [symbol]} = await this.select({
+      type_id: { _id: ['@deep-foundation/core', 'Symbol'] },
+      to: { typed: { id } },
+    });
+    // @ts-ignore
+    return symbol?.value?.value || '📍';
+  };
+
+  /**
+   * Returns a symbol icon of a link {@link input} that is located in a value of a Symbol link to type of the link {@link input} according to links stored in minilinks
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkSymbol = deep.symbolLocal(userTypeLinkId);
+   * ```
+   */
+  symbolLocal(input: Link<Id> | Id): string | undefined {
+    return this.minilinks.symbol(input);
+  }
+
+  /**
    * Returns a name of a link {@link input} that is located in a value of a contain link pointing to the link {@link input}
    * 
    * @example
@@ -1958,11 +2003,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     isolation_provider_id?: number;
   }): Promise<void | Handler> {
     if (handlerId) {
-      const { data: handlers }: { data: Handler[] } = await this.select({
+      const { data: handlers }: { data: Handler[] } = await this.select(({
         execution_provider_id: { _eq: execution_provider_id || this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
         ...(isolation_provider_id ? { isolation_provider_id: { _eq: isolation_provider_id, } } : {}),
-        handler_id: { _eq: handlerId },
-      }, { table: 'handlers', returning: 'handler_id dist_id src_id' },);
+        _or: [
+          { handler_id: { _eq: handlerId } },
+          { dist_id: { _eq: handlerId } },
+          ({ src_id: { _eq: handlerId } } as BoolExpHandler),
+        ],
+      } as BoolExpHandler), { table: 'handlers', returning: 'handler_id dist_id src_id' },);
       if (handlers?.[0]) return handlers?.[0];
     } else {
       const { data: handlers }: { data: Handler[] } = await this.select({
@@ -2136,6 +2185,31 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
   log({deep})
   return deep;
 }
+
+// export const DeepQueriesContext = createContext<any>(undefined);
+// export const DeepQueriesActionsContext = createContext<any>(undefined);
+// export function usDeepeQueries() {
+
+// }
+// export function usDeepeActions() {
+
+// }
+// export const DeepQueriesProvider = React.memo(function DeepQueriesProvider({
+//   linkId,
+//   children = null,
+// }: {
+//   linkId: Id;
+//   children?: any;
+// }) {
+//   const prevA = useContext(DeepQueriesActionsContext);
+//   const nextQ = useState({
+//     linkId,
+//     useQuery: {}, useSubscription: {},
+//     select: {}, subscription: {}, insert: {}, update: {}, delete: {}, children: {}
+//   });
+//   if (prevA) 
+//   return <DeepQueriesActionsContext.Provider value={nextQ}>children</DeepQueriesActionsContext.Provider>;
+// }, () => true)
 
 export function DeepProvider({
   apolloClient: apolloClientProps,

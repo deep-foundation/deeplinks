@@ -87,8 +87,9 @@ export interface MinilinksResult<L extends Link<Id>> {
   select(query: QueryLink | Id, options?: MinilinksQueryOptions): L[] | any;
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id;
   name(input: Link<Id> | Id): string | undefined;
+  symbol(input: Link<Id> | Id): string | null;
   subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<L[] | any>;
-  add(linksArray: any[]): {
+  add(linksArray: any[], applyName?: string): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   };
@@ -186,6 +187,9 @@ export class MinilinksLink<Ref extends Id> {
   }
   get name(): string {
     return this.ml?.name(this.id);
+  }
+  get symbol(): string {
+    return this.ml?.symbol(this.id);
   }
   string?: any;
   number?: any;
@@ -384,10 +388,27 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    */
   name(input: Link<Id> | Id): string | undefined {
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
-    if (!id) return;
+    if (!id) return null;
     // @ts-ignore
     if (this.byId[id]?.type_id === this.id('@deep-foundation/core', 'Package')) return this.byId[id]?.value?.value;
     return (this.byType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
+  }
+
+  /**
+   * Returns a symbol of a link {@link input} that is located in a value of a contain link pointing to the link {@link input} according to links stored in minilinks
+   * 
+   * @example
+   * ```
+   * const userTypeLinkId = await deep.id("@deep-foundation/core", "User");
+   * const userTypeLinkName = deep.minilinks.name(userTypeLinkId);
+   * ```
+   * Note: "@deep-foundation/core" package, "User" link, Contain link pointing from "@deep-foundation/core" to "User" must be in minilinks
+   */
+  symbol(input: Link<Id> | Id): string | null {
+    const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
+    if (!id) return null;
+    // @ts-ignore
+    return this.byId[id]?.type?.inByType?.[this.id('@deep-foundation/core', 'Symbol')]?.[0]?.value?.value || '📍';
   }
 
   /**
