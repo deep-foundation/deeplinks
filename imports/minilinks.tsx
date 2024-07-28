@@ -25,7 +25,7 @@ const error = debug.extend('error');
 export type Id = number | string;
 
 export interface Links<Ref extends Id, L extends Link<Ref>> extends Array<L> {
-  travel: () => Traveler;
+  travel?: () => Traveler;
   [key: number|string]: L | any;
 };
 
@@ -152,40 +152,40 @@ export class MinilinksLink<Ref extends Id> {
   set to_id(id: Ref) {
     this._to_id = id;
   }
-  get typed(): MinilinksLink<Ref>[] {
-    return this.ml?.byType?.[this.id] || [];
+  get typed(): Links<Id, Link<Id>> {
+    return this.ml._traveled(this.ml?.byType?.[this.id] || []);
   }
-  get type(): MinilinksLink<Ref>[] {
-    return this.ml?.byId?.[this.type_id];
+  get type(): Links<Id, Link<Id>> {
+    return this.ml._traveled(this.ml?.byId?.[this.type_id]);
   }
-  get in(): MinilinksLink<Ref>[] {
-    return this.ml?.byTo?.[this.id] || [];
+  get in(): Links<Id, Link<Id>> {
+    return this.ml._traveled(this.ml?.byTo?.[this.id] || []);
   }
-  get inByType(): MinilinksLink<Ref>[] {
+  get inByType(): { [key: string]: Links<Id, Link<Id>> } {
     const hash: any = {};
     for (let i = 0; i < (this.ml?.byTo?.[this.id]?.length || 0); i++) {
       const element = this.ml?.byTo?.[this.id][i];
-      hash[element.type_id] = hash[element.type_id] || [];
+      hash[element.type_id] = hash[element.type_id] || this.ml._traveled([]);
       hash[element.type_id].push(element);
     }
     return hash;
   }
-  get out(): MinilinksLink<Ref>[] {
-    return this.ml?.byFrom?.[this.id];
+  get out(): Links<Id, Link<Id>> {
+    return this.ml._traveled(this.ml?.byFrom?.[this.id]);
   }
-  get outByType(): MinilinksLink<Ref>[] {
+  get outByType(): { [key: string]: Links<Id, Link<Id>> } {
     const hash: any = {};
     for (let i = 0; i < (this.ml?.byFrom?.[this.id]?.length || 0); i++) {
       const element = this.ml?.byFrom?.[this.id]?.[i];
-      hash[element.type_id] = hash[element.type_id] || [];
+      hash[element.type_id] = hash[element.type_id] || this.ml._traveled([]);
       hash[element.type_id].push(element);
     }
     return hash;
   }
-  get from(): MinilinksLink<Ref>[] {
+  get from(): Links<Id, Link<Id>> {
     return this.ml?.byId?.[this.from_id];
   }
-  get to(): MinilinksLink<Ref>[] {
+  get to(): Links<Id, Link<Id>> {
     return this.ml?.byId?.[this.to_id];
   }
   get displayId(): Id {
