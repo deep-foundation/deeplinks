@@ -206,6 +206,9 @@ export class MinilinksLink<Ref extends Id> {
   toString(): string {
     return `${this.symbol} ${this.id} ${this.name}`;
   }
+  valueOf(): any {
+    return this?.value?.value;
+  }
   string?: any;
   number?: any;
   object?: any;
