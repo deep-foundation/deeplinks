@@ -4,7 +4,7 @@ import { IApolloClient, generateApolloClient } from '@deep-foundation/hasura/cli
 import { useLocalStore } from '@deep-foundation/store/local.js';
 import atob from 'atob';
 import get from 'get-value';
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue, QueryLink } from './client_types.js';
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
@@ -16,6 +16,8 @@ import { reserve } from './reserve.js';
 import { Traveler as NativeTraveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
+import isEqual from 'lodash/isEqual';
+import axios from 'axios';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -27,6 +29,18 @@ corePckg.data.filter(l => !!l.type).forEach((l, i) => {
 });
 
 const random = () => Math.random().toString(36).slice(2, 7);
+
+export async function upload(linkId, file: Blob | string, deep) {
+  var formData = new FormData();
+  formData.append("file", file);
+  console.log('drop-zone formData', formData);
+  await axios.post(`http${deep.client.ssl ? 's' : ''}://${deep.client.path.slice(0, -4)}/file`, formData, {
+    headers: {
+      'linkId': linkId,
+      "Authorization": `Bearer ${deep.token}`,
+    },
+  })
+}
 
 export const _ids = {
   '@deep-foundation/core': corePckgIds,
@@ -1214,8 +1228,17 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
     const containerId = options?.containerId;
 
-    let _objects = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
+    let _objects: any = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects, table, containerId, this.idLocal('@deep-foundation/core', 'Contain'));
+
+    let file;
+    if (_objects?.[0]?.file) {
+      if (_objects?.length != 1) throw new Error('Cannot insert multiple files at once');
+      if (table != 'links') throw new Error('Cannot insert file if table is not links');
+      file = _objects?.[0]?.file;
+      delete _objects?.[0]?.file;
+      if (typeof(file) !== 'string' && !(file instanceof Blob)) throw new Error('File must be a string or Blob');
+    }
 
     const toApply: any = [];
     if (this.minilinks && local !== false) {
@@ -1239,9 +1262,13 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         return { ...q, data: (q)?.data?.m0?.returning, error: e };
       }
     } else {
+      if (file) {
+        if (!toApply?.[0]?.id) throw new Error('Cannot insert file without link');
+        await upload(toApply[0].id, file, this);
+      };
       return { ...q, data: toApply.map(l => l.id), loading: false };
     }
-  
+
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
   }; 
@@ -1609,7 +1636,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     });
   };
 
-  async value(id: Id, value: string | number | Object) {
+  async value(id: Id, value: string | number | Object | Blob) {
     if (value === undefined) {
       if (arguments.length === 2) throw new Error(`Trying to set undefined as value for ${id} .`);
       return {
@@ -1628,10 +1655,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       if (!type) throw new Error(`Type of ##${id}- - > ##${Value.from_id} |-Value-> ##${Value.id} is not compatable with .value()`);
       const table: any = type+'s';
       let result;
-      if (link?.value) {
-        result = await this.update({ link_id: id } as any, { value }, { table });
+      if (Value?.to_id === this.idLocal('@deep-foundation/core', 'File')) {
+        if (typeof(value) !== 'string' && !(value instanceof Blob)) throw new Error('File must be a string or Blob');
+        await upload(id, value, this);
       } else {
-        result = await this.insert({ link_id: id, value }, { table });
+        if (link?.value) {
+          result = await this.update({ link_id: id } as any, { value }, { table });
+        } else {
+          result = await this.insert({ link_id: id, value }, { table });
+        }
       }
       return {
         ...result,
@@ -2342,6 +2374,10 @@ export function _useDeepId(deep: DeepClient<Link<Id>>, start: DeepClientStartIte
   const result = deep.useDeepQuery({ id: { _id: [start, ...path] } });
   return { data: result?.data?.[0]?.id, loading: result?.loading, error: result?.error };
 }
+
+// export const Subscription = memo(function Subscription() {
+  
+// }, isEqual);
 
 export type Exp<TTable extends Table = 'links'> = (
   TTable extends 'numbers' ? BoolExpValue<number> :
