@@ -203,6 +203,9 @@ export class MinilinksLink<Ref extends Id> {
   travel(): Traveler {
     return this?.ml?.deep ? new Traveler(this.ml?.deep, [this] as any[], [], 'local') : undefined;
   }
+  toString(): string {
+    return `${this.symbol} ${this.id} ${this.name}`;
+  }
   string?: any;
   number?: any;
   object?: any;
