@@ -412,7 +412,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     if (!id) return null;
     // @ts-ignore
     if (this.byId[id]?.type_id === this.id('@deep-foundation/core', 'Package')) return this.byId[id]?.value?.value;
-    return (this.byType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value;
+    return (this.byType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value || id;
   }
 
   /**
