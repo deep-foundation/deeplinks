@@ -389,6 +389,9 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 
   needConnection?: boolean;
 
+  path?: string;
+  ssl?: boolean;
+
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
@@ -858,16 +861,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.client = this.apolloClient;
       this.table = options?.table || 'links';
 
-      if (this.deep && !this.apolloClient) {
-        const token = this.token ?? this.deep.token;
+      if ((this.deep && !this.apolloClient) || (!!options.path && typeof(options.ssl) === 'boolean')) {
+        const token = this?.deep?.token || options.token;
         if (!token) {
           throw new Error('token for apolloClient is invalid or not provided');
         }
         this.apolloClient = generateApolloClient({
           // @ts-ignore
-          path: this.deep.apolloClient?.path,
+          path: this.deep?.apolloClient?.path || options.path,
           // @ts-ignore
-          ssl: this.deep.apolloClient?.ssl,
+          ssl: this.deep?.apolloClient?.ssl || options.ssl,
           token: token,
         });
       }
@@ -2291,16 +2294,22 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   debug('useDeepQuery', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
+  const prevRef = useRef({ query, options });
+  const { query: q, options: o } = useMemo(() => {
+    const obj = { query, options };
+    if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
+    else return obj;
+  }, [query, options])
   const wq = useMemo(() => {
-    return deep._generateQuery<Table>(query, { ...options });
-  }, [query, options]);
+    return deep._generateQuery<Table>(q, { ...o });
+  }, [q, o]);
   const result = useQuery(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
   const [generatedResult, setGeneratedResult] = useState([]);
   useEffect(() => {
-    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    if (o?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[o.aggregate]);
     else {
       (async () => {
-        setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+        setGeneratedResult(await deep._generateResult(q, o, result?.data?.q0));
       })();
     }
   }, [result]);
@@ -2311,11 +2320,11 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     deep,
     links: [],
     // @ts-ignore
-    return: query?.return,
+    return: q?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
-  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : mini;
+  const mini = deep.useMinilinksSubscription(o?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, o);
+  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : mini;
   toReturn.links = mini;
   return toReturn;
 }
@@ -2328,18 +2337,23 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   debug('useDeepSubscription', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
-  useState({query, options, deep});
+  const prevRef = useRef({ query, options });
+  const { query: q, options: o } = useMemo(() => {
+    const obj = { query, options };
+    if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
+    else return obj;
+  }, [query, options])
   const wq = useMemo(() => {
-    return deep._generateQuery(query, { ...options, subscription: true });
-  }, [query, options]);
+    return deep._generateQuery(q, { ...o, subscription: true });
+  }, [q, o]);
   const result = useSubscription(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient });
   const [generatedResult, setGeneratedResult] = useState([]);
   useEffect(() => {
-    if (options?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[options.aggregate]);
+    if (o?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[o.aggregate]);
     else {
       if (!result.loading) {
         (async () => {
-          setGeneratedResult(await deep._generateResult(query, options, result?.data?.q0));
+          setGeneratedResult(await deep._generateResult(q, o, result?.data?.q0));
         })();
       }
     }
@@ -2351,7 +2365,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     deep,
     links: [],
     // @ts-ignore
-    return: query?.return,
+    return: q?.return,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
