@@ -16,7 +16,7 @@ import { reserve } from './reserve.js';
 import { Traveler as NativeTraveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'lodash/isEqual.js';
 import axios from 'axios';
 const moduleLog = debug.extend('client');
 
