@@ -41,9 +41,9 @@ export interface BoolExpLink extends BoolExp<BoolExpLink> {
   _from_id?: ComparasionType<Id>;
   _to_id?: ComparasionType<Id>;
   _type_id?: ComparasionType<Id>;
-  from?: BoolExpLink;
-  to?: BoolExpLink;
-  type?: BoolExpLink;
+  from?: BoolExpLink | Id;
+  to?: BoolExpLink | Id;
+  type?: BoolExpLink | Id;
   /** Links related to current by to_id field */
   in?: BoolExpLink | BoolExpLink[];
   /** Links related to current by from_id field */
@@ -84,7 +84,7 @@ export interface BoolExpValue<T> extends BoolExp<BoolExpValue<T>> {
   /** If of link that contains this value. */
   link_id?: ComparasionType<Id>;
   /** Relation to the link that contains this value. */
-  link?: BoolExpLink;
+  link?: BoolExpLink | Id;
   value?: ComparasionType<T>;
 }
 export interface BoolExpCan extends BoolExp<BoolExpCan> {
@@ -97,27 +97,27 @@ export interface BoolExpCan extends BoolExp<BoolExpCan> {
   /** Id of link for which, as an authorized link, the rule to action on the object i s granted.*/
   subject_id?: ComparasionType<Id>;
   /** Relation to link symbolizing action, as AllowSelect/AllowInsertType/AllowUpdat e/AllowDelete...*/
-  rule?: BoolExpLink;
+  rule?: BoolExpLink | Id;
   /** Relation to link symbolizing object to which the rule applies. */
-  action?: BoolExpLink;
+  action?: BoolExpLink | Id;
   /** Relation to link symbolizing object to which the rule applies. */
-  object?: BoolExpLink;
+  object?: BoolExpLink | Id;
   /** Relation to link for which, as an authorized link, the rule to action on th e object is granted.*/
-  subject?: BoolExpLink;
+  subject?: BoolExpLink | Id;
 }
 export interface BoolExpSelector extends BoolExp<BoolExpCan> {
   /** Id of link item to be matched by the selector. */
   item_id?: ComparasionType<Id>;
   /** Relation to link item to be matched by the selector. */
-  item?: BoolExpLink;
+  item?: BoolExpLink | Id;
   /** Id of link selector that the item includes. */
   selector_id?: ComparasionType<Id>;
   /** Relation to link selector that the item includes. */
-  selector?: BoolExpLink;
+  selector?: BoolExpLink | Id;
   /** Id of Query - boolean expression attached to a selector. */
   query_id?: ComparasionType<Id>;
   /** Relation to Query - boolean expression attached to a selector. */
-  query?: BoolExpLink;
+  query?: BoolExpLink | Id;
   selector_include_id?: ComparasionType<Id>;
 }
 export interface BoolExpTree extends BoolExp<BoolExpCan> {
@@ -135,13 +135,13 @@ export interface BoolExpTree extends BoolExp<BoolExpCan> {
   /** Equal string for all parent_id in subtree from root_id to link_id. */
   position_id?: ComparasionType<string>;
   /** Relation to current link. */
-  link?: BoolExpLink;
+  link?: BoolExpLink | Id;
   /** Relation to link used as tree. */
-  tree?: BoolExpLink;
+  tree?: BoolExpLink | Id;
   /** Relation to root link by current subtree. */
-  root?: BoolExpLink;
+  root?: BoolExpLink | Id;
   /** Relation to each parent link found upper from link_id. */
-  parent?: BoolExpLink;
+  parent?: BoolExpLink | Id;
   /** Relation to all tree rows with equal link_id. */
   by_link?: BoolExpTree;
   /** Relation to all tree rows with equal tree_id. */
@@ -165,15 +165,15 @@ export interface BoolExpHandler extends BoolExp<BoolExpCan> {
   /** Id of link ExecutionProvider. */
   execution_provider_id?: ComparasionType<Id>;
   /** Relation to link ExecutionProvider. */
-  execution_provider?: BoolExpLink;
+  execution_provider?: BoolExpLink | Id;
   /** Id of link IsolationProvider. */
   isolation_provider_id?: ComparasionType<Id>;
   /** Relation to link IsolationProvider. */
-  isolation_provider?: BoolExpLink;
+  isolation_provider?: BoolExpLink | Id;
   /** Id of Handler link. */
   handler_id?: ComparasionType<Id>;
   /** Relation to Handler link. */
-  handler?: BoolExpLink;
+  handler?: BoolExpLink | Id;
 }
 export type ComparasionType<T> = ComparasionExp<T> | T;
 export interface ComparasionExp<T> {
