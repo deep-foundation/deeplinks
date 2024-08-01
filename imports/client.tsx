@@ -28,7 +28,7 @@ corePckg.data.filter(l => !!l.type).forEach((l, i) => {
   corePckgIds[l.id] = i+1;
 });
 
-const random = () => Math.random().toString(36).slice(2, 7);
+export const random = () => Math.random().toString(36).slice(2, 7);
 
 export async function upload(linkId, file: Blob | string, deep) {
   var formData = new FormData();
@@ -229,56 +229,61 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
     const result: any = {};
     // map keys
     for (let k = 0; k < keys.length; k++) {
-      const key = keys[k];
-      const type = typeof(exp[key]);
-      if (typeof(exp[key]) === 'undefined') throw new Error(`${key} === undefined${globalExp ? `in exp ${JSON.stringify(globalExp)}` : ''}`);
+      let key = keys[k];
+      let value = exp[key];
+      let type = typeof(value);
+      if (typeof(value) === 'undefined') throw new Error(`${key} === undefined${globalExp ? `in exp ${JSON.stringify(globalExp)}` : ''}`);
       let setted: any = false;
+      if (_serialize?.[env]?.relations?.[key] === 'links' && (type === 'string' || type === 'number')) {
+        if (exp[`${key}_id`]) throw new Error(`Cant work with ${key} and ${key}_id in one link`);
+        key = key+'_id';
+      }
       const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
       // if this is link
       if (env === 'links') {
         // if field contain primitive type - string/number
         if (key === 'relation') {
-          setted = result[key] = exp[key];
+          setted = result[key] = value;
         } else if (type === 'string' || type === 'number') {
           if (key === 'value' || key === type) {
             // if field id link.value
-            setted = result[type] = { value: { _eq: exp[key] } };
+            setted = result[type] = { value: { _eq: value } };
           } else {
             // else just equal
-            setted = result[key] = key === 'table' ? exp[key] : { _eq: unvertualizeId(exp[key]) };
+            setted = result[key] = key === 'table' ? value : { _eq: unvertualizeId(value) };
           }
-        } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+        } else if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId, globalExp);
+          setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
         } else if (key === 'return') {
           setted = result[key] = {};
-          for (let r in exp[key]) {
-            result[key][r] = _serialize?.[env]?.relations?.[exp[key][r]] || _serialize?.[env]?.fields?.[exp[key][r]] ? serializeWhere(exp[key][r], _serialize?.[env]?.relations?.[exp[key][r]?.relation] || env, unvertualizeId, globalExp) : exp[key][r];
+          for (let r in value) {
+            result[key][r] = _serialize?.[env]?.relations?.[value[r]] || _serialize?.[env]?.fields?.[value[r]] ? serializeWhere(value[r], _serialize?.[env]?.relations?.[value[r]?.relation] || env, unvertualizeId, globalExp) : value[r];
           }
         }
       } else if (env === 'tree') {
         // if field contain primitive type - string/number
         if (type === 'string' || type === 'number') {
           const isId = key === 'link_id' || key === 'tree_id' || key === 'root_id' || key === 'parent_id';
-          setted = result[key] = { _eq: isId ? unvertualizeId(exp[key]) : exp[key] };
-        } else if (!_boolExpFields[key] && Object.prototype.toString.call(exp[key]) === '[object Array]') {
+          setted = result[key] = { _eq: isId ? unvertualizeId(value) : value };
+        } else if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...exp[key]), 'links', unvertualizeId, globalExp);
+          setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
         } else if (key === 'return') {
           setted = result[key] = {};
-          for (let r in exp[key]) {
-            result[key][r] = _serialize?.[env]?.relations?.[exp[key][r]] || _serialize?.[env]?.fields?.[exp[key][r]] ? serializeWhere(exp[key][r], _serialize?.[env]?.relations?.[exp[key][r]?.relation] || env, unvertualizeId, globalExp) : exp[key][r];
+          for (let r in value) {
+            result[key][r] = _serialize?.[env]?.relations?.[value[r]] || _serialize?.[env]?.fields?.[value[r]] ? serializeWhere(value[r], _serialize?.[env]?.relations?.[value[r]?.relation] || env, unvertualizeId, globalExp) : value[r];
           }
         }
       } else if (env === 'value') {
         // if this is value
         if (type === 'string' || type === 'number') {
-          setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(exp[key]) : exp[key] };
+          setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(value) : value };
         }
       }
-      if (type === 'object' && exp[key]?.hasOwnProperty('_type_of') && (
+      if (type === 'object' && value?.hasOwnProperty('_type_of') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
@@ -286,22 +291,22 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         (env === 'value' && key === 'link_id')
       )) {
         // if field is object, and contain _type_od
-        const _temp = setted = { _by_item: { path_item_id: { _eq: unvertualizeId(exp[key]._type_of) }, group_id: { _eq: _ids['@deep-foundation/core'].typesTree } } };
+        const _temp = setted = { _by_item: { path_item_id: { _eq: unvertualizeId(value._type_of) }, group_id: { _eq: _ids['@deep-foundation/core'].typesTree } } };
         if (key === 'id') {
           result._and = result._and ? [...result._and, _temp] : [_temp];
         } else {
           result[key.slice(0, -3)] = _temp;
         }
-      } else if (type === 'object' && exp[key]?.hasOwnProperty('_id') && (
+      } else if (type === 'object' && value?.hasOwnProperty('_id') && (
         (env === 'links' && (is_id_field || key === 'id')) ||
         (env === 'selector' && key === 'item_id') ||
         (env === 'can' && !!~['rule_id', 'action_id', 'subject_id', 'object_id',].indexOf(key)) ||
         (env === 'tree' && !!~['link_id', 'tree_id', 'root_id', 'parent_id'].indexOf(key)) ||
         (env === 'value' && key === 'link_id')
-      ) && Object.prototype.toString.call(exp[key]._id) === '[object Array]' && exp[key]._id.length >= 1) {
-        const root = exp[key]._id[0];
+      ) && Object.prototype.toString.call(value._id) === '[object Array]' && value._id.length >= 1) {
+        const root = value._id[0];
         // if field is object, and contain _type_of
-        const _temp = setted = serializeWhere(pathToWhere(typeof(root) === 'number' ? unvertualizeId(root) : root, ...exp[key]._id.slice(1)), 'links', unvertualizeId, globalExp);
+        const _temp = setted = serializeWhere(pathToWhere(typeof(root) === 'number' ? unvertualizeId(root) : root, ...value._id.slice(1)), 'links', unvertualizeId, globalExp);
         if (key === 'id') {
           result._and = result._and ? [...result._and, _temp] : [_temp];
         } else {
@@ -315,16 +320,16 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
           _boolExpFields[key]
         ) ? (
           // just parse each item in array
-          serializeWhere(exp[key], env, unvertualizeId, globalExp)
+          serializeWhere(value, env, unvertualizeId, globalExp)
         ) : (
           // if we know context
           _serialize?.[env]?.relations?.[key]
         ) ? (
           // go to this context then
-          serializeWhere(exp[key], _serialize?.[env]?.relations?.[key], unvertualizeId, globalExp)
+          serializeWhere(value, _serialize?.[env]?.relations?.[key], unvertualizeId, globalExp)
         ) : (
           // else just stop
-          exp[key]
+          value
         );
         if (key === '_and') result._and ? result._and.push(..._temp) : result._and = _temp;
         else result[key] = _temp;
@@ -849,7 +854,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   constructor(options: DeepClientOptions<L>) {
-    this.namespace = options?.namespace || randomName();
+    this.namespace = options?.namespace || random();
 
     this.local = typeof(options?.local) === 'boolean' ? options?.local : true;
     this.remote = typeof(options?.remote) === 'boolean' ? options?.remote : true;
@@ -2280,8 +2285,6 @@ export function useDeep() {
   return useContext(DeepContext);
 }
 
-export const randomName = () => Math.random().toString(36).slice(2, 7);
-
 export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
   query: Exp<Table>,
   options?: Options<Table>,
@@ -2290,7 +2293,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   error?: any;
   loading: boolean;
 } {
-  const [miniName] = useState(options?.mini || randomName());
+  const [miniName] = useState(options?.mini || random());
   debug('useDeepQuery', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
@@ -2321,6 +2324,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     links: [],
     // @ts-ignore
     return: q?.return,
+    name: miniName,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(o?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, o);
@@ -2333,7 +2337,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   query: Exp<Table>,
   options?: Options<Table>,
 ): UseDeepSubscriptionResult<LL> {
-  const [miniName] = useState(options?.mini || Math.random().toString(36).slice(2, 7));
+  const [miniName] = useState(options?.mini || random());
   debug('useDeepSubscription', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
@@ -2366,6 +2370,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     links: [],
     // @ts-ignore
     return: q?.return,
+    name: miniName,
   };
   useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
