@@ -56,6 +56,29 @@ const manyRelations = {
     by_parent: true,
     by_position: true,
   },
+  value: {
+    link: false,
+  },
+  string: {
+    link: false,
+  },
+  number: {
+    link: false,
+  },
+  object: {
+    link: false,
+  },
+  files: {
+    link: false,
+  },
+  handlers: {
+    link: false,
+    dist: false,
+    execution_provider: false,
+    handler: false,
+    isolation_provider: false,
+    src: false,
+  },
 };
 
 export type IReturningGenerator = (tableName: string) => string;
@@ -144,8 +167,6 @@ export const generateQueryData = ({
           resultVariables['where' + index + postfix] = variable;
           result += ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_serialize[_table].returning} ${customReturning} }`;
         } else {
-          const variable = customWhere;
-          resultVariables['where' + index + postfix] = variable;
           result += ` ${r}: ${customReturn[r].relation} { ${_serialize[_table].returning} ${customReturning} }`;
         }
       }

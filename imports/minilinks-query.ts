@@ -123,7 +123,7 @@ export const minilinksQueryLevel = (
               }
             }
           }
-        } else if (_serialize?.[env]?.relations?.[field] === 'value') {
+        } else if (['value', 'strings', 'numbers', 'objects'].includes(_serialize?.[env]?.relations?.[field])) {
           if (!link?.[field] || !minilinksQueryLevel(q[field], link?.[field], 'value')) {
             return false;
           }

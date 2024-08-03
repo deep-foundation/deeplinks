@@ -85,9 +85,9 @@ export const _serialize: Serialize = {
       selected: 'selector',
       selectors: 'selector',
       value: 'value',
-      string: 'value',
-      number: 'value',
-      object: 'value',
+      string: 'strings',
+      number: 'numbers',
+      object: 'objects',
       file: 'files',
       can_rule: 'can',
       can_action: 'can',
@@ -157,6 +157,39 @@ export const _serialize: Serialize = {
       id: 'number',
       link_id: 'number',
       value: 'value',
+    },
+    relations: {
+      link: 'links',
+    },
+  },
+  strings: {
+    returning: 'id link_id value',
+    fields: {
+      id: 'number',
+      link_id: 'number',
+      value: 'string',
+    },
+    relations: {
+      link: 'links',
+    },
+  },
+  numbers: {
+    returning: 'id link_id value',
+    fields: {
+      id: 'number',
+      link_id: 'number',
+      value: 'number',
+    },
+    relations: {
+      link: 'links',
+    },
+  },
+  objects: {
+    returning: 'id link_id value',
+    fields: {
+      id: 'number',
+      link_id: 'number',
+      value: 'object',
     },
     relations: {
       link: 'links',
@@ -234,9 +267,15 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
       let type = typeof(value);
       if (typeof(value) === 'undefined') throw new Error(`${key} === undefined${globalExp ? `in exp ${JSON.stringify(globalExp)}` : ''}`);
       let setted: any = false;
-      if (_serialize?.[env]?.relations?.[key] === 'links' && (type === 'string' || type === 'number')) {
-        if (exp[`${key}_id`]) throw new Error(`Cant work with ${key} and ${key}_id in one link`);
-        key = key+'_id';
+      key = addIdsToRelationsIfSimple(exp, key, env);
+      if (env === 'links' && key === 'value' && (type === 'string' || type === 'number')) {
+        key = type;
+      }
+      if (env === 'links' && (key === 'string' || key === 'number') && (type === key)) {
+        value = { value: value };
+      }
+      if (_serialize?.[env]?.fields?.[key] && (type === 'string' || type === 'number')) {
+        value = { _eq: key.slice(-3) === '_id' ? unvertualizeId(value) : value };
       }
       const is_id_field = !!~['type_id', 'from_id', 'to_id'].indexOf(key);
       // if this is link
@@ -244,43 +283,25 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         // if field contain primitive type - string/number
         if (key === 'relation') {
           setted = result[key] = value;
-        } else if (type === 'string' || type === 'number') {
-          if (key === 'value' || key === type) {
-            // if field id link.value
-            setted = result[type] = { value: { _eq: value } };
-          } else {
-            // else just equal
-            setted = result[key] = key === 'table' ? value : { _eq: unvertualizeId(value) };
-          }
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
           setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
-        } else if (key === 'return') {
-          setted = result[key] = {};
-          for (let r in value) {
-            result[key][r] = _serialize?.[env]?.relations?.[value[r]] || _serialize?.[env]?.fields?.[value[r]] ? serializeWhere(value[r], _serialize?.[env]?.relations?.[value[r]?.relation] || env, unvertualizeId, globalExp) : value[r];
-          }
         }
       } else if (env === 'tree') {
         // if field contain primitive type - string/number
-        if (type === 'string' || type === 'number') {
-          const isId = key === 'link_id' || key === 'tree_id' || key === 'root_id' || key === 'parent_id';
-          setted = result[key] = { _eq: isId ? unvertualizeId(value) : value };
-        } else if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
+        if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
           // if field is not boolExp (_and _or _not) but contain array
           // @ts-ignore
           setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
-        } else if (key === 'return') {
-          setted = result[key] = {};
-          for (let r in value) {
-            result[key][r] = _serialize?.[env]?.relations?.[value[r]] || _serialize?.[env]?.fields?.[value[r]] ? serializeWhere(value[r], _serialize?.[env]?.relations?.[value[r]?.relation] || env, unvertualizeId, globalExp) : value[r];
-          }
         }
-      } else if (env === 'value') {
-        // if this is value
-        if (type === 'string' || type === 'number') {
-          setted = result[key] = { _eq: key === 'link_id' ? unvertualizeId(value) : value };
+      }
+
+      if (key === 'return') {
+        setted = result[key] = {};
+        for (let r in value) {
+          const relation = value[r]?.relation;
+          if (_serialize?.[env]?.relations?.[relation]) result[key][r] = serializeWhere(value[r], _serialize?.[env]?.relations?.[relation] || env, unvertualizeId, globalExp);
         }
       }
       if (type === 'object' && value?.hasOwnProperty('_type_of') && (
@@ -653,19 +674,31 @@ export type AsyncSerialParams = {
   silent?: boolean;
 };
 
+export function addIdsToRelationsIfSimple(exp, key, env) {
+  const type = typeof(exp[key]);
+  if (_serialize?.[env]?.relations?.[key] === 'links' && (type === 'string' || type === 'number')) {
+    if (exp[`${key}_id`]) throw new Error(`Cant work with ${key} and ${key}_id in one link`);
+    return key+'_id';
+  }
+  return key;
+}
+
 export function checkAndFillShorts(obj, table, containerId, Contain, field?: string) {
   if (obj.hasOwnProperty('containerId') && !obj.containerId) {
     throw new Error(`containerId is undefined`);
   }
   const cId = obj.containerId || containerId;
-  for (var i in obj) {
-      if (!obj.hasOwnProperty(i)) continue;
-      if ((typeof obj[i]) == 'object' && obj[i] !== null) {
-        if (typeof obj[i] === 'object' && i === 'object' && obj[i]?.data?.value === undefined) { obj[i] = { data: { value: obj[i] } }; continue; }
-        if (typeof obj[i] === 'object' && (i === 'to' || i === 'from' || i === 'in' || i === 'out' || i === 'typed' || i === 'type') && obj[i]?.data === undefined) obj[i] = { data: obj[i] };
-        checkAndFillShorts(obj[i], _serialize[table]?.relations?.[i] || table, cId, Contain, i);
-      }
-      else if (i === 'string' && typeof obj[i] === 'string' || i === 'number' && typeof obj[i] === 'number') obj[i] = { data: { value: obj[i] } }; 
+  for (var _key in obj) {
+    let key = _key;
+    const type = obj[key];
+    key = addIdsToRelationsIfSimple(obj, key, table)
+    if (!obj.hasOwnProperty(key)) continue;
+    if ((typeof obj[key]) == 'object' && obj[key] !== null) {
+      if (typeof obj[key] === 'object' && key === 'object' && obj[key]?.data?.value === undefined) { obj[key] = { data: { value: obj[key] } }; continue; }
+      if (typeof obj[key] === 'object' && (key === 'to' || key === 'from' || key === 'in' || key === 'out' || key === 'typed' || key === 'type') && obj[key]?.data === undefined) obj[key] = { data: obj[key] };
+      checkAndFillShorts(obj[key], _serialize[table]?.relations?.[key] || table, cId, Contain, key);
+    }
+    else if (key === 'string' && typeof obj[key] === 'string' || key === 'number' && typeof obj[key] === 'number') obj[key] = { data: { value: obj[key] } }; 
   }
   if (cId && !Array.isArray(obj) && !obj.data && table === 'links' && ((!field || [
     'to', 'from', 'in', 'out', 'type', 'typed'
@@ -990,6 +1023,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         ...query,
       },
     });
+
     return {
       query: generateQuery({
         operation: options?.subscription ? 'subscription' : 'query',
@@ -1362,15 +1396,20 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   async update<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, value: UpdateValue<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
+    const table = options?.table || this.table;
+
+    const _exp = {};
+    for (let key in value) {
+      _exp[addIdsToRelationsIfSimple(exp, key, table)] = value;
+    }
 
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
   
-    const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
-    const table = options?.table || this.table;
+    const query = serializeQuery(_exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
 
     const toUpdate: any = [];
     if (this.minilinks && local !== false) {
-      convertDeepUpdateToMinilinksApply(this.minilinks, exp, value, table, toUpdate);
+      convertDeepUpdateToMinilinksApply(this.minilinks, _exp, value, table, toUpdate);
       this.minilinks.update(toUpdate);
     }
 
