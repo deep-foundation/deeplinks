@@ -2402,6 +2402,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     ...result,
     originalData: generatedResult,
     data: generatedResult,
+    options: o,
     deep,
     links: [],
     // @ts-ignore
@@ -2447,6 +2448,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     ...result,
     originalData: generatedResult,
     data: generatedResult,
+    options: o,
     deep,
     links: [],
     // @ts-ignore
@@ -2454,9 +2456,8 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     name: miniName,
   };
   const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
-  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : minilinksResults;
+  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
   toReturn.links = minilinksResults;
-  console.log('useDeepSubscription', toReturn);
   return toReturn;
 }
 
