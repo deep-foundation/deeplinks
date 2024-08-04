@@ -2454,9 +2454,9 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     name: miniName,
   };
   const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
-  const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
   toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : minilinksResults;
   toReturn.links = minilinksResults;
+  console.log('useDeepSubscription', toReturn);
   return toReturn;
 }
 

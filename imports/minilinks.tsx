@@ -823,7 +823,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     return {
       errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors],
       anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies],
-      data: input.map(i => this.byId[i]),
+      data: input.map(i => this.byId[i?.id]),
     };
   }
   update(linksArray: any[]): {
