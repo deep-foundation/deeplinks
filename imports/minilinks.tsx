@@ -109,6 +109,7 @@ export interface MinilinksResult<L extends Link<Id>> {
   apply(linksArray: any[] | MinilinksApplyInput, applyName?: string, applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
+    data: L[];
   }
   update(linksArray: any[]): {
     errors?: MinilinkError[];
@@ -670,7 +671,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   apply(_input: any[] | MinilinksApplyInput, applyName: string = '', applyOptions?: ApplyOptions): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
+    data: L[];
   } {
+    const result = [];
     const input = Array.isArray(_input) ? _input : Array.isArray(_input?.data) ? _input?.data : [];
     const returning = (_input as any)?.return || {};
     const _applyOptions = { return: returning, ...applyOptions };
@@ -817,7 +820,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
     }
     this._updating = false;
-    return { errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors], anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies] };
+    return {
+      errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors],
+      anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies],
+      data: input.map(i => this.byId[i]),
+    };
   }
   update(linksArray: any[]): {
     errors?: MinilinkError[];
@@ -996,14 +1003,18 @@ export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldL
   }, []);
 };
 
-export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: Links<Id, L> | MinilinksApplyInput): any {
+export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: Links<Id, L> | MinilinksApplyInput): {
+  errors?: MinilinkError[];
+  anomalies?: MinilinkError[];
+  data: L[];
+} {
   const [strictName] = useState(name);
   useEffect(() => {
     return () => {
       if (ml) ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
     };
   }, []);
-  if (ml) ml.apply(data, strictName);
+  if (ml) return ml.apply(data, strictName);
 }
 
 /**

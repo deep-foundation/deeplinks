@@ -9,7 +9,7 @@ import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue,
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
 import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, MinilinksLink, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { Id, Link, MinilinkCollection, MinilinkError, MinilinksLink, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
@@ -458,6 +458,8 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
   error?: any;
+  data: any;
+  originalData?: any;
   subscribe?: (observer: Observer<any>) => Subscription;
 }
 
@@ -878,10 +880,18 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
-  useMinilinksApply: (data, name: string) => void;
+  useMinilinksApply: (data, name: string) => {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+    data: L[];
+  };
   useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
-  useLocalApply: (data, name: string) => void;
+  useLocalApply: (data, name: string) => {
+    errors?: MinilinkError[];
+    anomalies?: MinilinkError[];
+    data: L[];
+  };
   local?: boolean;
   remote?: boolean;
 
@@ -1123,11 +1133,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const queryData = this._generateQuery(exp, options);
     try {
       const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
-      return {
+      const results: DeepClientResult<LL[]> = {
         ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0),
         // @ts-ignore
         return: exp?.return,
       };
+      if (options.apply) {
+        results.originalData = results.data,
+        results.data = this.ml.apply(results.data, options.apply).data as L[];
+      }
+      return results;
     } catch (e) {
       // console.log({ typeName: this.nameLocal(163) });
       console.dir({ queryData }, { depth: null });
@@ -1152,12 +1167,17 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       const observable = new Observable((observer) => {
         const subscription = apolloObservable.subscribe({
           next: async (data: any) => {
-            observer.next(aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
+            const results = aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
             {
               ...(await this._generateResult(exp, options, data?.data?.q0)),
               // @ts-ignore
               return: exp?.return,
-            });
+            };
+            if (options.apply) {
+              results.originalData = results.data,
+              results.data = this.ml.apply(results.data, options.apply).data as L[];
+            }
+            observer.next(results);
           },
           error: (error) => observer.error(error),
         });
@@ -2361,7 +2381,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   const deep = options?.deep || _deep;
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
-    const obj = { query, options };
+    const obj = { query, options: { table: 'links' as Table, ...options } };
     if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
     else return obj;
   }, [query, options])
@@ -2388,10 +2408,9 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     return: q?.return,
     name: miniName,
   };
-  useMinilinksApply(deep.minilinks, miniName, toReturn);
-  const mini = deep.useMinilinksSubscription(o?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, o);
-  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : mini;
-  toReturn.links = mini;
+  const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
+  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
+  toReturn.links = minilinksResults;
   return toReturn;
 }
 
@@ -2405,7 +2424,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   const deep = options?.deep || _deep;
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
-    const obj = { query, options };
+    const obj = { query, options: { table: 'links' as Table, ...options } };
     if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
     else return obj;
   }, [query, options])
@@ -2434,10 +2453,10 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     return: q?.return,
     name: miniName,
   };
-  useMinilinksApply(deep.minilinks, miniName, toReturn);
+  const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
   const mini = deep.useMinilinksSubscription(options?.aggregate ? { limit: 0 } : { id: { _in: toReturn?.data?.map(l => l.id) } }, options);
-  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : mini;
-  toReturn.links = mini;
+  toReturn.data = options?.aggregate || options?.table !== 'links' ? toReturn.data || [] : minilinksResults;
+  toReturn.links = minilinksResults;
   return toReturn;
 }
 
@@ -2500,6 +2519,7 @@ export type Options<TTable extends Table = 'links'> = {
   mini?: string;
   deep?: DeepClient<Link<Id>>;
   subscription?: boolean;
+  apply?: string;
 };
 
 export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;
