@@ -1138,9 +1138,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         // @ts-ignore
         return: exp?.return,
       };
-      if (options.apply) {
+      if (options?.apply) {
         results.originalData = results.data,
-        results.data = this.ml.apply(results.data, options.apply).data as L[];
+        results.data = this.minilinks.apply(results.data, options.apply).data as L[];
       }
       return results;
     } catch (e) {
@@ -1173,9 +1173,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
               // @ts-ignore
               return: exp?.return,
             };
-            if (options.apply) {
+            if (options?.apply) {
               results.originalData = results.data,
-              results.data = this.ml.apply(results.data, options.apply).data as L[];
+              results.data = this.minilinks.apply(results.data, options.apply).data as L[];
             }
             observer.next(results);
           },
