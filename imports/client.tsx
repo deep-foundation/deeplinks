@@ -9,7 +9,7 @@ import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue,
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
 import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { Id, Link, MinilinkCollection, MinilinksLink, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
@@ -272,7 +272,7 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         key = type;
       }
       if (env === 'links' && (key === 'string' || key === 'number') && (type === key)) {
-        value = { value: value };
+        value = { value: { _eq: value } };
       }
       if (_serialize?.[env]?.fields?.[key] && (type === 'string' || type === 'number')) {
         value = { _eq: key.slice(-3) === '_id' ? unvertualizeId(value) : value };
@@ -579,6 +579,11 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
     error?: any;
     data?: any;
   }>;
+
+  isId(id: any): boolean;
+  isLink(link: any): boolean;
+  get(...id: Id[]): MinilinksLink<Id> | undefined;
+  getRemove(...id: Id[]): Promise<MinilinksLink<Id> | undefined>;
 }
 
 export interface DeepClientAuthResult {
@@ -1399,8 +1404,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const table = options?.table || this.table;
 
     const _exp = {};
-    for (let key in value) {
-      _exp[addIdsToRelationsIfSimple(exp, key, table)] = value;
+    const keys = Object.keys(exp);
+    for (let k in keys) {
+      const key = keys[k];
+      _exp[addIdsToRelationsIfSimple(exp, key, table)] = exp[key];
     }
 
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
@@ -2137,6 +2144,22 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return evalClientHandler({
       value: code, input, deep: this,
     });
+  }
+
+  isId(id: any): boolean {
+    return typeof(id) === 'string' || typeof(id) === 'number';
+  }
+  isLink(link: any): boolean {
+    return typeof(link) === 'object' && link instanceof MinilinksLink;
+  }
+
+  get(...id: Id[]): MinilinksLink<Id> | undefined {
+    const [founded] = this.minilinks.select({ id: { _id: id as any } });
+    return founded;
+  }
+
+  async getRemove(...id: Id[]): Promise<MinilinksLink<Id> | undefined> {
+    return (await this.select({ id: { _id: id as any } }))?.data?.[0] as any;
   }
 }
 
