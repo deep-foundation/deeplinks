@@ -51,7 +51,7 @@ jobs:
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       - name: docker init
-        run: cd local/actions && docker-compose -p deep up -d
+        run: cd local/actions && docker compose -p deep up -d
       - name: docker logs deep-links
         run: docker logs deep-links
       - name: migrate

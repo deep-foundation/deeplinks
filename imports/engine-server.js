@@ -122,9 +122,9 @@ const handleEnv = platform === "win32" ? handleEnvWindows : handleEnvUnix;
 
 export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
   const isGitpod = !!process.env['GITPOD_GIT_USER_EMAIL'] && !!process.env['GITPOD_TASKS'];
-  const hasuraPort = '8080';
-  const deeplinksPort = '3006';
-  const deepcasePort = '3007';
+  const hasuraPort = 8080;
+  const deeplinksPort = 3006;
+  const deepcasePort = 3007;
 
   envs['DEEPLINKS_PORT'] = envs['DEEPLINKS_PORT'] ? envs['DEEPLINKS_PORT'] : deeplinksPort;
   envs['DEEPCASE_PORT'] = envs['DEEPCASE_PORT'] ? envs['DEEPCASE_PORT'] : deepcasePort;
@@ -137,7 +137,7 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
 
   // <hasura>
 
-  envs['DEEP_HASURA_PORT'] = envs['DEEP_HASURA_PORT'] || 8080;
+  envs['DEEP_HASURA_PORT'] = envs['DEEP_HASURA_PORT'] || hasuraPort;
 
   envs['HASURA_GRAPHQL_DATABASE_URL'] = envs['HASURA_GRAPHQL_DATABASE_URL'] ? envs['HASURA_GRAPHQL_DATABASE_URL'] : `postgres://postgres:${envs['POSTGRES_PASSWORD'] ? envs['POSTGRES_PASSWORD'] : 'postgrespassword'}@host.docker.internal:5432/postgres?sslmode=disable`; // к удалению
   envs['DEEP_HASURA_GRAPHQL_DATABASE_URL'] = envs['HASURA_GRAPHQL_DATABASE_URL']; 
@@ -200,7 +200,7 @@ export const generateEnvs = ({ envs, isDeeplinksDocker }) => {
   envs['HASURA_METADATA'] = envs['HASURA_METADATA'] ? envs['HASURA_METADATA'] : '1'; // к удалению
   envs['DEEP_HASURA_STORAGE_HASURA_METADATA'] = envs['HASURA_METADATA'];
 
-  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : 'http://host.docker.internal:8080/v1'; // к удалению
+  envs['HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'] ? envs['HASURA_ENDPOINT'] : `http://host.docker.internal:${hasuraPort}/v1`; // к удалению
   envs['DEEP_HASURA_STORAGE_HASURA_ENDPOINT'] = envs['HASURA_ENDPOINT'];
 
   envs['S3_ENDPOINT'] = envs['S3_ENDPOINT'] ? envs['S3_ENDPOINT'] : 'http://host.docker.internal:9000'; // к удалению
@@ -297,7 +297,7 @@ export const _checkDeeplinksStatus = async () => {
   let err;
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
-    status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3006' : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
+    status = await axios.get(`${+DOCKER ? `http://host.docker.internal:${deeplinksPort}` : DEEPLINKS_PUBLIC_URL}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
   } catch(e){
     error(e)
     err = e;
@@ -311,7 +311,7 @@ export const _checkDeepcaseStatus = async () => {
   let err;
   try {
     // DL may be not in docker, when DC in docker, so we use host.docker.internal instead of docker-network link deep_links_1
-    status = await axios.get(`${+DOCKER ? 'http://host.docker.internal:3007' : NEXT_PUBLIC_DEEPLINKS_SERVER}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
+    status = await axios.get(`${+DOCKER ? `http://host.docker.internal:${deepcasePort}` : NEXT_PUBLIC_DEEPLINKS_SERVER}/api/healthz`, { validateStatus: status => true, timeout: 7000 });
   } catch(e){
     error(e)
     err = e;
@@ -324,17 +324,17 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
   let str;
   if (![ 'init', 'migrate', 'check', 'run', 'sleep', 'reset', 'dock', 'compose' ].includes(operation)) return ' echo "not valid operation"';
   if (operation === 'init') {
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker compose -p deep stop postgres hasura && docker volume create deep-db-data && docker pull deepf/deeplinks:main`;
   }
   if (operation === 'migrate') {
     str = ` cd "${path.normalize(`${_hasura}/local/`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
-    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:8080/healthz`;
+    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:${hasuraPort}/healthz`;
   }
   if (operation === 'run') {
     console.log('isDeepcaseDocker', isDeepcaseDocker);
-    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker-compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:8080/healthz && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker-compose pull && docker-compose -p deep up -d' : '' } ) ${+envs['MANUAL_MIGRATIONS'] ? `&& cd "${_deeplinks}" && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate` : ''}`;
+    str = ` cd "${path.normalize(`${_hasura}/local/`)}" && docker compose -p deep stop postgres hasura && docker volume create deep-db-data ${platform === "win32" ? '' : `&& mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker pull deepf/deeplinks:main && ${+envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ? `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` : '' } cd "${_deeplinks}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_hasura}/local/`)}" && npm run docker-local && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://host.docker.internal` : 'http-get://localhost'}:${hasuraPort}/healthz && ( cd ${_deeplinks}/local/deepcase ${ isDeepcaseDocker === undefined ? '&& docker compose pull && docker compose -p deep up -d' : '' } ) ${+envs['MANUAL_MIGRATIONS'] ? `&& cd "${_deeplinks}" && npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate` : ''}`;
   }
   if (operation === 'sleep') {
     if (platform === "win32") {
@@ -354,7 +354,7 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
     str = ` docker version -f ${platform === "win32" ? 'json' : "'{{json .}}'"}`;
   }
   if (operation === 'compose') {
-    str = ` docker-compose version --short`;
+    str = ` docker compose version --short`;
   }
   return str;
 }

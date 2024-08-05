@@ -1,8 +1,8 @@
-curl https://raw.githubusercontent.com/deep-foundation/deeplinks/main/docker-prod/deep/docker-compose.yml > ./docker-compose.yml
+curl https://raw.githubusercontent.com/deep-foundation/deeplinks/main/docker-prod/deep/docker compose.yml > ./docker compose.yml
 echo 'Clean and starting containers'
-docker-compose -p deep down -v --remove-orphans
-docker-compose pull
-docker-compose -p deep up -d
+docker compose -p deep down -v --remove-orphans
+docker compose pull
+docker compose -p deep up -d
 sleep 5
 echo 'Migrating data'
 sleep 5
