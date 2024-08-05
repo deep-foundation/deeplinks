@@ -12,8 +12,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = process.cwd();
 
 function generateRandomKey(length) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
