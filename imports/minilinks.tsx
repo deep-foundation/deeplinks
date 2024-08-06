@@ -110,6 +110,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
     data: L[];
+    plainLinks: L[];
   }
   update(linksArray: any[]): {
     errors?: MinilinkError[];
@@ -672,6 +673,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
     data: L[];
+    plainLinks: L[];
   } {
     const result = [];
     const input = Array.isArray(_input) ? _input : Array.isArray(_input?.data) ? _input?.data : [];
@@ -824,6 +826,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       errors: [...r1.errors, ...a1.errors, ...r2.errors, ...a2.errors],
       anomalies: [...r1.anomalies, ...a1.anomalies, ...r2.anomalies, ...a2.anomalies],
       data: input.map(i => this.byId[i?.id]),
+      plainLinks: linksArray,
     };
   }
   update(linksArray: any[]): {
@@ -1007,6 +1010,7 @@ export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L
   errors?: MinilinkError[];
   anomalies?: MinilinkError[];
   data: L[];
+  plainLinks: L[];
 } {
   const [strictName] = useState(name);
   useEffect(() => {

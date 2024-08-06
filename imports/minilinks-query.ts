@@ -72,7 +72,7 @@ export const minilinksQueryLevel = (
             break;
           }
         }
-        return oneOf;
+        if (!oneOf) return false;
       } else if (field === '_not') {
         if (minilinksQueryLevel(q[field], link, env)) {
           return false;
