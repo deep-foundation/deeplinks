@@ -18,6 +18,7 @@ import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
 import axios from 'axios';
+import EventEmitter from 'events';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -460,6 +461,7 @@ export interface DeepClientResult<R> extends ApolloQueryResult<R> {
   error?: any;
   data: any;
   originalData?: any;
+  plainLinks?: any;
   subscribe?: (observer: Observer<any>) => Subscription;
 }
 
@@ -586,6 +588,8 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   isLink(link: any): boolean;
   get(...id: Id[]): MinilinksLink<Id> | undefined;
   getRemove(...id: Id[]): Promise<MinilinksLink<Id> | undefined>;
+
+  emitter: EventEmitter;
 }
 
 export interface DeepClientAuthResult {
@@ -901,8 +905,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return typeof(options.silent) === 'boolean' ? options.silent : this.silent;
   }
 
+  emitter: EventEmitter;
+
   constructor(options: DeepClientOptions<L>) {
     this.namespace = options?.namespace || random();
+    this.emitter = new EventEmitter();
 
     this.local = typeof(options?.local) === 'boolean' ? options?.local : true;
     this.remote = typeof(options?.remote) === 'boolean' ? options?.remote : true;
@@ -1130,6 +1137,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   async select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[]>> {
     if (!exp) return { error: { message: '!exp' }, data: undefined, loading: false, networkStatus: undefined };
     const aggregate = options?.aggregate;
+    this.emitter.emit('select.before', { deep: this, query: exp, options, remote: true, local: false });
     const queryData = this._generateQuery(exp, options);
     try {
       const q = await this.apolloClient.query({ query: queryData.query.query, variables: queryData?.query?.variables });
@@ -1139,11 +1147,17 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         return: exp?.return,
       };
       if (options?.apply) {
-        results.originalData = results.data,
-        results.data = this.minilinks.apply(results.data, options.apply).data as L[];
+        results.originalData = results.data;
+        const { data: localData, plainLinks } = this.minilinks.apply(results.data, options.apply)
+        results.data = localData;
+        results.plainLinks = plainLinks;
+        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false });
+      } else {
+        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false });
       }
       return results;
     } catch (e) {
+      this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, error: e, remote: true, local: false });
       // console.log({ typeName: this.nameLocal(163) });
       console.dir({ queryData }, { depth: null });
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
@@ -1162,6 +1176,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const aggregate = options?.aggregate;
     const queryData = this._generateQuery(exp, { ...options, subscription: true });
 
+    this.emitter.emit('subscribe.before', { deep: this, query: exp, options, remote: true, local: false });
+
     try {
       const apolloObservable = this.apolloClient.subscribe({ query: queryData.query.query, variables: queryData?.query?.variables });
       const observable = new Observable((observer) => {
@@ -1174,12 +1190,20 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
               return: exp?.return,
             };
             if (options?.apply) {
-              results.originalData = results.data,
-              results.data = this.minilinks.apply(results.data, options.apply).data as L[];
+              results.originalData = results.data;
+              const { data: localData, plainLinks } = this.minilinks.apply(results.data, options.apply);
+              results.data = localData;
+              results.plainLinks = plainLinks;
+              this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false });
+            } else {
+              this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false });
             }
             observer.next(results);
           },
-          error: (error) => observer.error(error),
+          error: (error) => {
+            this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, error, remote: true, local: false });
+            observer.error(error);
+          },
         });
         return () => subscription.unsubscribe();
       });
@@ -1286,6 +1310,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
+    this.emitter.emit('insert.before', { deep: this, value: objects, options, remote, local });
 
     const table = options?.table || this.table;
     const returning = options?.returning || this.insertReturning;
@@ -1316,25 +1341,32 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.minilinks.add(toApply);
     }
 
+    let mutate;
+
     if (remote !== false) {
       try {
-        q = await this.apolloClient.mutate(generateSerial({
+        mutate = generateSerial({
           actions: [insertMutation(table, { ...variables, objects: _objects }, { tableName: table, operation: 'insert', returning })],
           name: name,
-        }));
+        });
+        q = await this.apolloClient.mutate(mutate);
       } catch(e) {
         const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
         if (sqlError?.message) e.message = sqlError.message;
         if (!this._silent(options)) throw new Error(`DeepClient Insert Error: ${e.message}`, { cause: e })
+        this.emitter.emit('insert', { deep: this, value: objects, options, remoteQuery: mutate, file, error: e, remote, local });
         return { ...q, data: (q)?.data?.m0?.returning, error: e };
       }
-    } else {
       if (file) {
         if (!toApply?.[0]?.id) throw new Error('Cannot insert file without link');
         await upload(toApply[0].id, file, this);
       };
+    } else {
+      this.emitter.emit('insert', { deep: this, value: objects, options, remoteQuery: mutate, file, remote, local });
       return { ...q, data: toApply.map(l => l.id), loading: false };
     }
+
+    this.emitter.emit('insert', { deep: this, value: objects, options, remoteQuery: mutate, remote, local });
 
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1422,15 +1454,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     if (exp === null) return this.insert( [value], options);
     if (value === null) return this.delete( exp, options );
     const table = options?.table || this.table;
-
+    
     const _exp = {};
     const keys = Object.keys(exp);
     for (let k in keys) {
       const key = keys[k];
       _exp[addIdsToRelationsIfSimple(exp, key, table)] = exp[key];
     }
-
+    
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
+    this.emitter.emit('update.before', { deep: this, query: exp, value, options, remote, local });
   
     const query = serializeQuery(_exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
 
@@ -1444,21 +1477,28 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const variables = options?.variables;
     const name = options?.name || this.defaultUpdateName;
     let q;
+
+    let mutate;
     if (remote !== false) {
       try {
-        q = await this.apolloClient.mutate(generateSerial({
+        mutate = generateSerial({
           actions: [updateMutation(table, { ...variables, ...query, _set: value }, { tableName: table, operation: 'update', returning })],
           name: name,
-        }));
+        });
+        q = await this.apolloClient.mutate(mutate);
       } catch(e) {
         const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
         if (sqlError?.message) e.message = sqlError.message;
         if (!this._silent(options)) throw new Error(`DeepClient Update Error: ${e.message}`, { cause: e });
+        this.emitter.emit('update', { deep: this, query: exp, value, options, remoteQuery: mutate, remote, error, local, toUpdate });
         return { ...q, data: (q)?.data?.m0?.returning, error: e };
       }
     } else {
+      this.emitter.emit('update', { deep: this, query: exp, value, options, remoteQuery: mutate, remote, local, toUpdate });
       return { ...q, data: toUpdate.map(l => l.id), loading: false };
     }
+
+    this.emitter.emit('update', { deep: this, query: exp, value, options, remoteQuery: mutate, remote, local, toUpdate });
 
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1574,6 +1614,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     if (!exp) throw new Error('!exp');
     const { local, remote } = { local: this.local, remote: this.remote, ...options };
+    this.emitter.emit('delete.before', { deep: this, query: exp, options, remote, local });
+    
 
     const query = serializeQuery(exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
     const table = options?.table || this.table;
@@ -1590,23 +1632,28 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.minilinks.remove(toDelete);
     }
 
+    let mutate;
     if (remote !== false) {
       try {
-        q = await this.apolloClient.mutate(generateSerial({
+        mutate = generateSerial({
           actions: [deleteMutation(table, { ...variables, ...query, returning }, { tableName: table, operation: 'delete', returning })],
           name: name,
-        }));
+        });
+        q = await this.apolloClient.mutate(mutate);
         // @ts-ignore
       } catch(e) {
         const sqlError = e?.graphQLErrors?.[0]?.extensions?.internal?.error;
         if (sqlError?.message) e.message = sqlError.message;
         if (!this._silent(options)) throw new Error(`DeepClient Delete Error: ${e.message}`, { cause: e });
+        this.emitter.emit('delete', { deep: this, query: exp, options, remoteQuery: mutate, error: e, remote, local, toUpdate });
         return { ...q, data: (q)?.data?.m0?.returning, error: e };
       }
     } else {
+      this.emitter.emit('delete', { deep: this, query: exp, options, remoteQuery: mutate, remote, local, toDelete });
       return { ...q, data: toDelete.map(l => l.id), loading: false };
     }
-
+    
+    this.emitter.emit('delete', { deep: this, query: exp, options, remoteQuery: mutate, remote, local, toDelete });
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
@@ -2375,10 +2422,13 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   error?: any;
   loading: boolean;
 } {
-  const [miniName] = useState(options?.mini || random());
+  const miniName = useMemo(() => options?.mini || random(), []);
   debug('useDeepQuery', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
+  useMemo(() => {
+    deep.emitter.emit('useQuery.mount', { deep, query, options });
+  }, []);
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
     const obj = { query, options: { table: 'links' as Table, ...options } };
@@ -2405,13 +2455,35 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     options: o,
     deep,
     links: [],
+    plainLinks: [],
     // @ts-ignore
     return: q?.return,
     name: miniName,
   };
-  const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
+  const { data: minilinksResults, plainLinks } = useMinilinksApply(deep.minilinks, miniName, toReturn);
   toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
   toReturn.links = minilinksResults;
+  toReturn.plainLinks = plainLinks;
+  useMemo(() => {
+    deep.emitter.emit('useQuery', {
+      deep, query, options: o,
+      remoteQuery: wq,
+      loading: result.loading,
+      remoteData: result.data,
+      localData: minilinksResults,
+      plainLinks,
+    });
+    return () => {
+      deep.emitter.emit('useQuery.unmount', {
+        deep, query, options: o,
+        remoteQuery: wq,
+        loading: result.loading,
+        remoteData: result.data,
+        localData: minilinksResults,
+        plainLinks,
+      });
+    };
+  }, [toReturn]);
   return toReturn;
 }
 
@@ -2419,10 +2491,13 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   query: Exp<Table>,
   options?: Options<Table>,
 ): UseDeepSubscriptionResult<LL> {
-  const [miniName] = useState(options?.mini || random());
+  const miniName = useMemo(() => options?.mini || random(), []);
   debug('useDeepSubscription', miniName, query, options);
   const _deep = useDeep();
   const deep = options?.deep || _deep;
+  useMemo(() => {
+    deep.emitter.emit('useSubscription.mount', { deep, query, options });
+  }, []);
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
     const obj = { query, options: { table: 'links' as Table, ...options } };
@@ -2451,13 +2526,35 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     options: o,
     deep,
     links: [],
+    plainLinks: [],
     // @ts-ignore
     return: q?.return,
     name: miniName,
   };
-  const { data: minilinksResults } = useMinilinksApply(deep.minilinks, miniName, toReturn);
+  const { data: minilinksResults, plainLinks } = useMinilinksApply(deep.minilinks, miniName, toReturn);
   toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
   toReturn.links = minilinksResults;
+  toReturn.plainLinks = plainLinks;
+  useMemo(() => {
+    deep.emitter.emit('useSubscription', {
+      deep, query, options: o,
+      remoteQuery: wq,
+      loading: result.loading,
+      remoteData: result.data,
+      localData: minilinksResults,
+      plainLinks,
+    });
+    return () => {
+      deep.emitter.emit('useSubscription.unmount', {
+        deep, query, options: o,
+        remoteQuery: wq,
+        loading: result.loading,
+        remoteData: result.data,
+        localData: minilinksResults,
+        plainLinks,
+      });
+    };
+  }, [toReturn]);
   return toReturn;
 }
 
@@ -2525,7 +2622,7 @@ export type Options<TTable extends Table = 'links'> = {
 
 export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;
 
-export type WriteOptions<TTable extends Table = 'links'>  = Options<TTable> & {
+export type WriteOptions<TTable extends Table = 'links'> = Options<TTable> & {
   silent?: boolean;
   remote?: boolean;
   local?: boolean;
