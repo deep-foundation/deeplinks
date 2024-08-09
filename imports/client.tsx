@@ -2427,7 +2427,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   const _deep = useDeep();
   const deep = options?.deep || _deep;
   useMemo(() => {
-    deep.emitter.emit('useQuery.mount', { deep, query, options });
+    deep.emitter.emit('useQuery.mount', { name: miniName, deep, query, options });
   }, []);
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
@@ -2466,7 +2466,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   toReturn.plainLinks = plainLinks;
   useMemo(() => {
     deep.emitter.emit('useQuery', {
-      deep, query, options: o,
+      name: miniName, deep, query, options: o,
       remoteQuery: wq,
       loading: result.loading,
       remoteData: result.data,
@@ -2475,7 +2475,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     });
     return () => {
       deep.emitter.emit('useQuery.unmount', {
-        deep, query, options: o,
+        name: miniName, deep, query, options: o,
         remoteQuery: wq,
         loading: result.loading,
         remoteData: result.data,
@@ -2496,7 +2496,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   const _deep = useDeep();
   const deep = options?.deep || _deep;
   useMemo(() => {
-    deep.emitter.emit('useSubscription.mount', { deep, query, options });
+    deep.emitter.emit('useSubscription.mount', { name: miniName, deep, query, options });
   }, []);
   const prevRef = useRef({ query, options });
   const { query: q, options: o } = useMemo(() => {
@@ -2537,7 +2537,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   toReturn.plainLinks = plainLinks;
   useMemo(() => {
     deep.emitter.emit('useSubscription', {
-      deep, query, options: o,
+      name: miniName, deep, query, options: o,
       remoteQuery: wq,
       loading: result.loading,
       remoteData: result.data,
@@ -2546,7 +2546,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     });
     return () => {
       deep.emitter.emit('useSubscription.unmount', {
-        deep, query, options: o,
+        name: miniName, deep, query, options: o,
         remoteQuery: wq,
         loading: result.loading,
         remoteData: result.data,

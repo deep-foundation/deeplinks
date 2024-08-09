@@ -14,7 +14,7 @@ import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { Observable } from '@apollo/client/index.js';
 import get from 'get-value';
-import { _ids, DeepClient, DeepClientPathItem, DeepClientStartItem } from './client.js';
+import { _ids, DeepClient, DeepClientPathItem, DeepClientStartItem, random } from './client.js';
 import { Traveler } from './traveler.js';
 
 const debug = Debug('deeplinks:minilinks');
@@ -329,6 +329,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   emitter: EventEmitter;
 
   query<A>(query: QueryLink | Id, options?: MinilinksQueryOptions<A>): A extends string ? any : Links<Id, L> {
+    this.emitter.emit('select.before', {
+      minilinks: this, query, options
+    });
     const result: Links<Id, L> = minilinksQuery<L>(query, this) as Links<Id, L>;
     if (options?.aggregate === 'count') return result?.length as any;
     if (options?.aggregate === 'avg') return _mean(result?.map(l => l?.value?.value)) as any;
@@ -336,6 +339,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     if (options?.aggregate === 'min') return _min(result?.map(l => l?.value?.value)) as any;
     if (options?.aggregate === 'max') return _max(result?.map(l => l?.value?.value)) as any;
     this._traveled(result);
+    this.emitter.emit('select', {
+      minilinks: this, query, options, localData: result,
+    });
     return result;
   }
   select(query: QueryLink | Id, options?: MinilinksQueryOptions): Links<Id, L> | any {
@@ -441,6 +447,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    */
   subscribe(query: QueryLink | Id, options?: MinilinksQueryOptions): Observable<Links<Id, L> | any> {
     const ml = this;
+    this.emitter.emit('subscribe.before', {
+      minilinks: this, query, options,
+    });
     return new Observable((observer) => {
       let prev = ml.query(query, options);
       let t;
@@ -451,6 +460,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
           const data = ml.query(query, options);
           if (!_isEqual(prev, data)) {
             prev = data;
+            this.emitter.emit('subscribe', {
+              minilinks: this, query, options, localData: data,
+            });
             observer.next(data);
           }
         }, 300);
@@ -1026,7 +1038,24 @@ export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L
  * Recalculates when query changes. (Take query into useMemo!).
  */
 export function useMinilinksQuery<L extends Link<Id>>(ml, query: QueryLink | Id, options?: MinilinksQueryOptions) {
-  return useMemo(() => ml.query(query, options), [ml, query]);
+  const miniName = useMemo(() => random(), []);
+  useMemo(() => {
+    ml.emitter.emit('useQuery.mount', { minilinks: ml, query, options });
+  }, []);
+  const results = useMemo(() => ml.query(query, options), [ml, query]);
+  useMemo(() => {
+    ml.emitter.emit('useQuery', {
+      minilinks: ml, query, options,
+      localData: results,
+    });
+    return () => {
+      ml.emitter.emit('useQuery.unmount', {
+        minilinks: ml, query, options,
+        localData: results,
+      });
+    };
+  }, [results]);
+  return results;
 };
 
 /**
@@ -1034,6 +1063,10 @@ export function useMinilinksQuery<L extends Link<Id>>(ml, query: QueryLink | Id,
  * Recalculates when data in minilinks changes. (Take query into useMemo!).
  */
 export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLink | Id, options?: MinilinksQueryOptions) {
+  const miniName = useMemo(() => random(), []);
+  useMemo(() => {
+    ml.emitter.emit('useSubscription.mount', { minilinks: ml, query, options });
+  }, []);
   const [d, setD] = useState();
   const sRef = useRef<any>();
   const qPrevRef = useRef<any>(query);
@@ -1055,7 +1088,20 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
       sub.unsubscribe();
     }
   }, [q]);
-  return d || ml.query(q);
+  let results = d || (ml ? ml.query(q) : []);
+  useMemo(() => {
+    ml.emitter.emit('useSubscription', {
+      minilinks: ml, query, options,
+      localData: results,
+    });
+    return () => {
+      ml.emitter.emit('useSubscription.unmount', {
+        minilinks: ml, query, options,
+        localData: results,
+      });
+    };
+  }, [results]);
+  return results;
 };
 
 export function useMinilinksGenerator(
