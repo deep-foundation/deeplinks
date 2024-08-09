@@ -101,7 +101,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   };
-  remove(idsArray: any[]): {
+  remove(idsArray: any[], applyName?: string): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   };
@@ -112,7 +112,7 @@ export interface MinilinksResult<L extends Link<Id>> {
     data: L[];
     plainLinks: L[];
   }
-  update(linksArray: any[]): {
+  update(linksArray: any[], applyName?: string): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   }
@@ -577,14 +577,14 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }
     for (let l = 0; l < newLinks.length; l++) {
       const link: L = newLinks[l];
-      if (!this._updating) this.emitter.emit('added', undefined, link);
+      if (!this._updating) this.emitter.emit('added', undefined, link, applyName);
     }
     return {
       anomalies,
       errors,
     };
   }
-  remove(idsArray: any[]): {
+  remove(idsArray: any[], applyName?: string): {
     anomalies?: MinilinkError[];
     errors?: MinilinkError[];
   } {
@@ -652,7 +652,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     for (let l = 0; l < oldLinksArray.length; l++) {
       const link = oldLinksArray[l];
       log('emit removed link', link, '_updating', this._updating);
-      if (!this._updating) this.emitter.emit('removed', link);
+      if (!this._updating) this.emitter.emit('removed', link, undefined, applyName);
     }
     return {
       anomalies,
@@ -771,13 +771,13 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       if (!old && !virtual) {
         link._applies = [applyName];
         if (namespace) link._namespaces = [namespace];
-        this.emitter.emit('apply', old, link);
+        this.emitter.emit('apply', old, link, applyName);
         this.emitter.emit('+apply', old, link, applyName);
         toAdd.push(link);
       } else {
         if (!~old._applies.indexOf(applyName)) {
           link._applies = old._applies = [...old._applies, applyName];
-          this.emitter.emit('apply', old, link);
+          this.emitter.emit('apply', old, link, applyName);
           this.emitter.emit('+apply', old, link, applyName);
         } else {
           link._applies = old._applies;
@@ -806,20 +806,20 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
             toRemove.push(link);
           } else {
             link._applies.splice(index, 1);
-            this.emitter.emit('apply', link, link);
+            this.emitter.emit('apply', link, link, applyName);
             this.emitter.emit('-apply', link, link, applyName);
           }
         }
       }
     }
-    const r1 = this.remove(toRemove.map(l => l[options.id]));
+    const r1 = this.remove(toRemove.map(l => l[options.id]), applyName);
     const a1 = this.add(toAdd);
     this._updating = true;
-    const r2 = this.remove(toUpdate.map(l => l[options.id]));
+    const r2 = this.remove(toUpdate.map(l => l[options.id]), applyName);
     const a2 = this.add(toUpdate);
     for (let i = 0; i < toUpdate.length; i++) {
       const l = toUpdate[i];
-      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
+      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id], applyName);
     }
     this._updating = false;
     return {
@@ -829,7 +829,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       plainLinks: linksArray,
     };
   }
-  update(linksArray: any[]): {
+  update(linksArray: any[], applyName?: string): {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
   } {
@@ -873,11 +873,11 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
       _byId[link.id] = link;
     }
     this._updating = true;
-    const r2 = this.remove(toUpdate.map(l => l[options.id]));
-    const a2 = this.add(toUpdate);
+    const r2 = this.remove(toUpdate.map(l => l[options.id]), applyName);
+    const a2 = this.add(toUpdate, applyName);
     for (let i = 0; i < toUpdate.length; i++) {
       const l = toUpdate[i];
-      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id]);
+      this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id], applyName);
     }
     this._updating = false;
     return { errors: [...r2.errors, ...a2.errors], anomalies: [...r2.anomalies, ...a2.anomalies] };
