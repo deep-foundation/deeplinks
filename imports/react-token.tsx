@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { TokenContext } from '@deep-foundation/react-hasura/token-context.js';
 import { useLocalStore } from '@deep-foundation/store/local.js';
 import { useCookiesStore } from '@deep-foundation/store/cookies.js'
@@ -14,8 +14,8 @@ export function useTokenController(defaultValue: string = '') : [string, (string
   }]
 }
 
-export function TokenProvider({ children }: { children?: any }) {
+export const TokenProvider = memo(function TokenProvider({ children }: { children?: any }) {
   const [token, setToken] = useTokenController();
   // @ts-ignore
   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>;
-}
+}, () => true);
