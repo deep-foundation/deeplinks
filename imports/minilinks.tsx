@@ -377,10 +377,6 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    */
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
     const paths = [start, ...path] as [Id, ...Array<Exclude<Id, boolean>>];
-    if (get(_ids, paths.join('.'))) {
-      return get(_ids, paths.join('.'));
-    }
-
     // let result: number;
     // if(paths.length === 1) {
       
@@ -399,6 +395,8 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const result = (link as Link<Id>)?.id;
     
     if(!result) {
+      const precached = get(_ids, paths.join('.'));
+      if (precached) return precached;
       throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
     } else {
       return result as number
@@ -419,8 +417,9 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return null;
     // @ts-ignore
-    if (this.byId[id]?.type_id === this.id('@deep-foundation/core', 'Package')) return this.byId[id]?.value?.value;
-    return (this.byType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => c?.to_id === id) as any)?.value?.value || id;
+    const it = this.byId[id];
+    if (it?.type_id === this.id('@deep-foundation/core', 'Package')) return it?.value?.value;
+    return (it?.inByType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => !!c?.value?.value) as any)?.value?.value || id;
   }
 
   /**

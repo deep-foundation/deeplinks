@@ -523,7 +523,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   await(id: Id): Promise<boolean>;
 
-  value(id: Id, value: string | number | Object): Promise<{
+  value(id: Id, value?: string | number | Object): Promise<{
     id: Id;
     link?: Link<Id>;
     Value?: Link<Id>;
@@ -556,6 +556,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useId: typeof useDeepId;
   useDeepId: typeof useDeepId;
   useLink: typeof useLink;
+  useLinks: typeof useLinks;
   useSubscription: typeof useDeepSubscription;
   useDeepSubscription: typeof useDeepSubscription;
   useQuery: typeof useDeepQuery;
@@ -880,6 +881,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useId: typeof useDeepId;
   useDeepId: typeof useDeepId;
   useLink: typeof useLink;
+  useLinks: typeof useLinks;
   useSubscription: typeof useDeepSubscription;
   useDeepSubscription: typeof useDeepSubscription;
   useQuery: typeof useDeepQuery;
@@ -1003,6 +1005,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     // @ts-ignore
     this.useDeepQuery = (query: Exp, options?: Options) => useDeepQuery(query, { ...(options || {}), deep: deep });
     this.useQuery = useDeepQuery;
+    this.useLink = useLink;
+    this.useLinks = useLinks;
     // @ts-ignore
     this.useMinilinksQuery = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksQuery(deep.minilinks, query, options);
     // @ts-ignore
@@ -1153,9 +1157,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         const { data: localData, plainLinks } = this.minilinks.apply(results.data, options.apply)
         results.data = localData;
         results.plainLinks = plainLinks;
-        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false });
+        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false, error: results.error });
       } else {
-        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false });
+        this.emitter.emit('select', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false, error: results.error });
       }
       return results;
     } catch (e) {
@@ -1178,11 +1182,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const aggregate = options?.aggregate;
     const queryData = this._generateQuery(exp, { ...options, subscription: true });
 
-    this.emitter.emit('subscribe.before', { deep: this, query: exp, options, remote: true, local: false });
+    const name = random();
+
+    this.emitter.emit('subscribe.before', { deep: this, name, query: exp, options, remote: true, local: false });
 
     try {
       const apolloObservable = this.apolloClient.subscribe({ query: queryData.query.query, variables: queryData?.query?.variables });
       const observable = new Observable((observer) => {
+        // @ts-ignore
+        observer.name = name;
         const subscription = apolloObservable.subscribe({
           next: async (data: any) => {
             const results = aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
@@ -1196,14 +1204,14 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
               const { data: localData, plainLinks } = this.minilinks.apply(results.data, options.apply);
               results.data = localData;
               results.plainLinks = plainLinks;
-              this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false });
+              this.emitter.emit('subscribe', { deep: this, name, query: exp, options, remoteQuery: queryData, remoteData: results.data, localData: results.data, plainLinks, remote: true, local: false, error: results.error });
             } else {
-              this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false });
+              this.emitter.emit('subscribe', { deep: this, name, query: exp, options, remoteQuery: queryData, remoteData: results.data, remote: true, local: false, error: results.error });
             }
             observer.next(results);
           },
           error: (error) => {
-            this.emitter.emit('subscribe', { deep: this, query: exp, options, remoteQuery: queryData, error, remote: true, local: false });
+            this.emitter.emit('subscribe', { deep: this, name, query: exp, options, remoteQuery: queryData, error, remote: true, local: false });
             observer.error(error);
           },
         });
@@ -1368,7 +1376,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       return { ...q, data: toApply.map(l => l.id), loading: false };
     }
 
-    this.emitter.emit('insert', { deep: this, value: objects, options, remoteQuery: mutate, remote, local });
+    this.emitter.emit('insert', { deep: this, value: objects, options, remoteQuery: mutate, remote, local, error: q.error });
 
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1502,7 +1510,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       return { ...q, data: toUpdate.map(l => l.id), loading: false };
     }
 
-    this.emitter.emit('update', { deep: this, query: _exp, value, options, remoteQuery: mutate, remote, local, toUpdate });
+    this.emitter.emit('update', { deep: this, query: _exp, value, options, remoteQuery: mutate, remote, local, toUpdate, error: q.error });
 
     // @ts-ignore
     return { ...q, data: (q)?.data?.m0?.returning };
@@ -1659,7 +1667,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       return { ...q, data: toDelete.map(l => l.id), loading: false };
     }
     
-    this.emitter.emit('delete', { deep: this, query: _exp, options, remoteQuery: mutate, remote, local, toDelete });
+    this.emitter.emit('delete', { deep: this, query: _exp, options, remoteQuery: mutate, remote, local, toDelete, error: q.error });
     return { ...q, data: (q)?.data?.m0?.returning };
   };
 
@@ -1763,7 +1771,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     });
   };
 
-  async value(id: Id, value: string | number | Object | Blob) {
+  async value(id: Id, value?: string | number | Object | Blob) {
     if (value === undefined) {
       if (arguments.length === 2) throw new Error(`Trying to set undefined as value for ${id} .`);
       return {
@@ -2477,6 +2485,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
       loading: result.loading,
       remoteData: result.data,
       localData: minilinksResults,
+      error: result.error,
       plainLinks,
     });
     return () => {
@@ -2486,6 +2495,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
         loading: result.loading,
         remoteData: result.data,
         localData: minilinksResults,
+        error: result.error,
         plainLinks,
       });
     };
@@ -2548,6 +2558,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
       loading: result.loading,
       remoteData: result.data,
       localData: minilinksResults,
+      error: result.error,
       plainLinks,
     });
     return () => {
@@ -2557,6 +2568,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
         loading: result.loading,
         remoteData: result.data,
         localData: minilinksResults,
+        error: result.error,
         plainLinks,
       });
     };
@@ -2569,6 +2581,16 @@ export function useLink(link: Id | Link<Id>) {
   return deep.useLocalSubscription({
     id: typeof(link) === 'object' ? link.id : link,
   })[0];
+}
+
+export function useLinks(...links: (Id | Link<Id>)[]): MinilinksLink<Id>[] {
+  const deep = useDeep();
+  const minilinks = deep.useLocalSubscription({
+    id: { _in: links.map(l => typeof(l) === 'object' ? l.id : l) },
+  });
+  return useMemo(() => {
+    return links.map(l => deep.get(typeof(l) === 'object' ? l.id : l));
+  }, [minilinks]);
 }
 
 export interface UseDeepSubscriptionResult<LL = Link<Id>> {
