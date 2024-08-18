@@ -36,6 +36,7 @@ const optionDefinitions = [
   { name: 'deeplinks', type: String },
   { name: 'deepcase', type: String },
   { name: 'ssl', type: Boolean },
+  { name: 'token', type: String },
 ];
 
 const options = commandLineArgs(optionDefinitions);
@@ -112,8 +113,9 @@ if (options.generate) {
       apolloClient: generateApolloClient({
         path: `${envs.NEXT_PUBLIC_GQL_PATH}`.replace(/(^\w+:|^)\/\//, ''),
         ssl: !!+envs.NEXT_PUBLIC_GQL_SSL,
-        secret: envs.DEEPLINKS_HASURA_SECRET,
+        secret: options.token ? undefined : envs.DEEPLINKS_HASURA_SECRET,
       }),
+      token: options.token
     })
     const r = repl.start('> ');
     r.context.config = config;

@@ -34,18 +34,68 @@ export const minilinksQueryIs = <L extends Link<Id>>(
   }
 };
 
+export const expToSets = (ml, exp, sets, list, toArray = false) => {
+  if (exp?._eq) sets.push(toArray ? [list[exp?._eq]] : list[exp?._eq]);
+  if (exp?._in) sets.push(...(toArray ? exp._in.map(id => [list[id]]) : exp._in.map(id => list[id])));
+};
+
+export const multiExpToSets = (ml, exp, sets, list, key, toArray = false) => {
+  if (typeof(exp) === 'object') {
+    if (Array.isArray(exp)) exp.map((exp) => multiExpToSets(ml, exp, sets, list, key));
+    else {
+      const links = minilinksQueryHandle(exp, ml);
+      for (let l in links) {
+        sets.push(toArray ? [list[links[l][key]]] : list[links[l][key]]);
+      }
+    }
+  }
+};
+
+export const findSets = (ml, q, sets) => {
+  if (typeof(q) === 'object') {
+    if (Array.isArray(q)) {
+      q.map((q) => findSets(ml, q, sets));
+    } else {
+      if (q?.id) expToSets(ml, q?.id, sets, ml.byId, true);
+      if (q?.type_id) expToSets(ml, q?.type_id, sets, ml.byType);
+      if (q?.from_id) expToSets(ml, q?.from_id, sets, ml.byFrom);
+      if (q?.to_id) expToSets(ml, q?.to_id, sets, ml.byTo);
+      
+      if (q._and) findSets(ml, q._and, sets);
+      if (!sets.length) {
+        if (q._or) findSets(ml, q._or, sets);
+  
+        if (q?.in) multiExpToSets(ml, q?.in, sets, ml.byId, 'to_id', true);
+        if (q?.out) multiExpToSets(ml, q?.out, sets, ml.byId, 'from_id', true);
+        if (q?.typed) multiExpToSets(ml, q?.typed, sets, ml.byId, 'type_id', true);
+
+        if (q?.to) multiExpToSets(ml, q?.to, sets, ml.byTo, 'id');
+        if (q?.from) multiExpToSets(ml, q?.from, sets, ml.byFrom, 'id');
+        if (q?.type) multiExpToSets(ml, q?.type, sets, ml.byType, 'id');
+      }
+    }
+  }
+};
+
 export const minilinksQueryHandle = <L extends Link<Id>>(
   q: BoolExpLinkMinilinks,
   ml: MinilinkCollection<MinilinksGeneratorOptions, L>,
 ): L[] => {
-  return ml.links.filter((link) => {
-    const r = minilinksQueryLevel(
-      q,
-      link,
-      'links',
-    );
-    return r;
-  });
+  let sets = [];
+  findSets(ml, q, sets);
+  if (!sets.length) sets = [ml.links];
+  const results = [];
+  const ids = {};
+  for (let s in sets) {
+    for (let l in sets[s]) {
+      const link = sets[s][l];
+      if (ids[link.id]) continue;
+      ids[link.id] = true;
+      const r = minilinksQueryLevel(q, link, 'links');
+      if (r) results.push(link);
+    }
+  }
+  return results;
 };
 
 export const minilinksQueryLevel = (

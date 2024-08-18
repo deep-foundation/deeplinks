@@ -588,7 +588,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }
     for (let l = 0; l < newLinks.length; l++) {
       const link: L = newLinks[l];
-      if (!this._updating) this.emitter.emit('added', undefined, link, applyName);
+      if (!this._updating) {
+        this.emitter.emit('added', undefined, link, applyName);
+        this.emitter.emit(`link.${link.id}`, undefined, link, applyName);
+      }
     }
     return {
       anomalies,
@@ -663,7 +666,10 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     for (let l = 0; l < oldLinksArray.length; l++) {
       const link = oldLinksArray[l];
       log('emit removed link', link, '_updating', this._updating);
-      if (!this._updating) this.emitter.emit('removed', link, undefined, applyName);
+      if (!this._updating) {
+        this.emitter.emit('removed', link, undefined, applyName);
+        this.emitter.emit(`link.${link.id}`, link, undefined, applyName);
+      }
     }
     return {
       anomalies,
@@ -831,6 +837,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     for (let i = 0; i < toUpdate.length; i++) {
       const l = toUpdate[i];
       this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id], applyName);
+      this.emitter.emit(`link.${l.id}`, beforeUpdate[l.id], byId[l.id], applyName);
     }
     this._updating = false;
     return {
@@ -889,6 +896,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     for (let i = 0; i < toUpdate.length; i++) {
       const l = toUpdate[i];
       this.emitter.emit('updated', beforeUpdate[l.id], byId[l.id], applyName);
+      this.emitter.emit(`link.${l.id}`, beforeUpdate[l.id], byId[l.id], applyName);
     }
     this._updating = false;
     return { errors: [...r2.errors, ...a2.errors], anomalies: [...r2.anomalies, ...a2.anomalies] };
