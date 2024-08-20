@@ -2317,6 +2317,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       else _or.push({ string: { value: { _ilike: `%${value}%` } } });
     };
     _or.push({ in: { type_id: this.idLocal('@deep-foundation/core', 'Contain'), string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } } });
+    _or.push({ type_id: this.idLocal('@deep-foundation/core', 'Package'), string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } });
     if (!o.contains) q._not = { type_id: this.idLocal('@deep-foundation/core', 'Contain') };
     else if (!o.values) q.type_id = this.idLocal('@deep-foundation/core', 'Contain');
     return q;
