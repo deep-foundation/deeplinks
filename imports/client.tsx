@@ -19,6 +19,7 @@ import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
 import axios from 'axios';
 import EventEmitter from 'events';
+import { matchSorter } from 'match-sorter';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -458,6 +459,7 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 }
 
 export interface DeepClientResult<R> extends ApolloQueryResult<R> {
+  query?: any;
   error?: any;
   data: any;
   originalData?: any;
@@ -470,6 +472,19 @@ export type DeepClientPackageContain = string;
 export type DeepClientLinkId = Id;
 export type DeepClientStartItem = DeepClientPackageSelector | DeepClientLinkId;
 export type DeepClientPathItem = DeepClientPackageContain | boolean;
+
+export interface DeepSearchOptions {
+  remote?: boolean;
+  regexp?: boolean;
+  query?: Exp;
+  values?: boolean;
+  contains?: boolean;
+  sort?: boolean;
+  skip?: boolean;
+  count?: boolean;
+  apply?: string;
+  subscription?: boolean;
+};
 
 export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   namespace?: string;
@@ -567,6 +582,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useLocalApply(data, name: string);
+  useSearch: typeof useSearch;
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -589,7 +605,18 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   isId(id: any): boolean;
   isLink(link: any): boolean;
   get(...id: Id[]): MinilinksLink<Id> | undefined;
-  getRemove(...id: Id[]): Promise<MinilinksLink<Id> | undefined>;
+  getRemote(...id: Id[]): Promise<MinilinksLink<Id> | undefined>;
+
+  search(value: string, options: DeepSearchOptions): Promise<DeepClientResult<L[] | number>>;
+
+  searchQuery(value: string, options: {
+    db: boolean;
+    regexp: boolean;
+    query: boolean;
+    values: boolean;
+    contains: boolean;
+    sort: boolean;
+  }): Exp;
 
   emitter: EventEmitter;
 }
@@ -900,6 +927,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     anomalies?: MinilinkError[];
     data: L[];
   };
+  useSearch: typeof useSearch;
   local?: boolean;
   remote?: boolean;
 
@@ -956,12 +984,6 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       }
     }
 
-    // @ts-ignore
-    this.minilinks = options.minilinks || new MinilinkCollection();
-    this.ml = this.minilinks;
-
-    if (!this.ml.deep) this.ml.deep = this;
-
     this.unvertualizeId = (id: Id): Id => {
       // @ts-ignore
       return this.minilinks.virtual.hasOwnProperty(id) ? this.minilinks.virtual[id] : id;
@@ -991,6 +1013,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();
+    this.ml = this.minilinks;
+
+    if (!this.ml.deep) this.ml.deep = this;
 
     this._generateHooks(this);
   }
@@ -1016,6 +1041,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useLocalQuery = this.useMinilinksQuery;
     this.useLocalSubscription = this.useMinilinksSubscription;
     this.useLocalApply = this.useMinilinksApply;
+    this.useSearch = useSearch;
   }
 
   stringify(any?: any): string {
@@ -1154,6 +1180,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         ...q, data: aggregate ? (q)?.data?.q0?.aggregate?.[aggregate] : await this._generateResult(exp, options, q?.data?.q0),
         // @ts-ignore
         return: exp?.return,
+        query: exp,
       };
       if (options?.apply) {
         results.originalData = results.data;
@@ -1201,6 +1228,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
               ...(await this._generateResult(exp, options, data?.data?.q0)),
               // @ts-ignore
               return: exp?.return,
+              query: exp,
             };
             if (options?.apply) {
               results.originalData = results.data;
@@ -2250,8 +2278,48 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return founded;
   }
 
-  async getRemove(...id: Id[]): Promise<MinilinksLink<Id> | undefined> {
+  async getRemote(...id: Id[]): Promise<MinilinksLink<Id> | undefined> {
     return (await this.select({ id: { _id: id as any } }))?.data?.[0] as any;
+  }
+
+  async search(value: string, options: DeepSearchOptions = {}) {
+    const o = { remote: true, count: false, sort: true, ...options };
+    const query = this.searchQuery(value, o);
+    let results;
+    if (o.remote) {
+      results = await this.select(query, { apply: o.apply, ...(o.count ? { aggregate: 'count' } : {}) });
+    } else {
+      results = { data: this.minilinks.select(query,  { ...(o.count ? { aggregate: 'count' } : {}) }), query };
+    }
+    if (o.sort) {
+      const sorted = sort(results.data, value);
+      results.data = sorted.data;
+      results.ids = sorted.ids;
+    } else {
+      const ids = results.ids = {};
+      if (results?.data?.length) for (let i in results.data) ids[results?.data?.[i]?.id];
+    }
+    return results;
+  }
+
+  searchQuery(value, options) {
+    const o = { values: false, contains: false, regexp: false, ...options };
+    const num = parseFloat(value);
+    const _q = o.query || {};
+    const q: any = { ..._q, _or: [...(_q?._or || [])] };
+    const _or = q._or;
+    if (!Number.isNaN(num)) {
+      _or.push({ id: num });
+      if (o.values) _or.push({ number: { value: num } });
+    }
+    if (o.values || o.contains) {
+      if (o.regexp) _or.push({ string: { value: { _iregex: value } } });
+      else _or.push({ string: { value: { _ilike: `%${value}%` } } });
+    };
+    _or.push({ in: { type_id: this.idLocal('@deep-foundation/core', 'Contain'), string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } } });
+    if (!o.contains) q._not = { type_id: this.idLocal('@deep-foundation/core', 'Contain') };
+    else if (!o.values) q.type_id = this.idLocal('@deep-foundation/core', 'Contain');
+    return q;
   }
 }
 
@@ -2494,7 +2562,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
       name: miniName, deep, query, options: o,
       remoteQuery: wq,
       loading: result.loading,
-      remoteData: result.data,
+      remoteData: result?.data?.q0,
       localData: minilinksResults,
       error: result.error,
       plainLinks,
@@ -2504,7 +2572,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
         name: miniName, deep, query, options: o,
         remoteQuery: wq,
         loading: result.loading,
-        remoteData: result.data,
+        remoteData: result?.data?.q0,
         localData: minilinksResults,
         error: result.error,
         plainLinks,
@@ -2557,6 +2625,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     // @ts-ignore
     return: q?.return,
     name: miniName,
+    query: query as any,
   };
   const { data: minilinksResults, plainLinks } = useMinilinksApply(deep.minilinks, miniName, toReturn);
   toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
@@ -2567,7 +2636,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
       name: miniName, deep, query, options: o,
       remoteQuery: wq,
       loading: result.loading,
-      remoteData: result.data,
+      remoteData: result?.data?.q0,
       localData: minilinksResults,
       error: result.error,
       plainLinks,
@@ -2577,7 +2646,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
         name: miniName, deep, query, options: o,
         remoteQuery: wq,
         loading: result.loading,
-        remoteData: result.data,
+        remoteData: result?.data?.q0,
         localData: minilinksResults,
         error: result.error,
         plainLinks,
@@ -2587,11 +2656,44 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   return toReturn;
 }
 
+export function sort(links, value) {
+  const ids: any = {};
+  return {
+    data: matchSorter((links || []).map(l => {
+      ids[l.id] = l;
+      return { id: l.id, name: l.name, value: l?.value?.value };
+    }), value, {keys: ['id','name','value']}).map((l: any) => ids[l.id]),
+    ids,
+  };
+}
+
+export function useSearch(value: string, options: DeepSearchOptions = {}) {
+  const deep = useDeep();
+  const o = useMemo(() => ({ skip: false, remote: true, count: false, sort: true, ...options }), [options]);
+  const query = useMemo(() => this.searchQuery(value, o), [value, o]);
+  const qo = useMemo(() => ({ ...(o.count ? { aggregate: 'count' } : {}), skip: o.skip }), [o.count]);
+  const useHook = useMemo(() => o.remote ? o.subscription ? deep.useSubscription : deep.useQuery : deep.useLocalQuery, [o.remote, o.subscription]);
+  const results: any = useHook(query, qo as any);
+  if (o.sort) {
+    const sorted = useMemo(() => sort(results.data, value), [results]);
+    results.data = sorted.data;
+    results.ids = sorted.ids;
+  } else {
+    results.ids = useMemo(() => {
+      const ids = {};
+      if (results?.data?.length) for (let i in results.data) ids[results?.data?.[i]?.id];
+      return ids;
+    }, [results]);
+  }
+  return results;
+}
+
 export function useLink(link: Id | Link<Id>) {
   const deep = useDeep();
-  const id = typeof(link) === 'object' ? link.id : link;
+  const id = typeof(link) === 'object' ? link?.id : link;
   const [actual, setActual] = useState(deep.get(id));
   useEffect(() => {
+    if (!id) return;
     const onLink = (o,n) => setActual(n || o);
     deep.minilinks.emitter.on(`link.${id}`, onLink);
     return () => {
@@ -2604,7 +2706,7 @@ export function useLink(link: Id | Link<Id>) {
 export function useLinks(...links: (Id | Link<Id>)[]): MinilinksLink<Id>[] {
   const deep = useDeep();
   const ids = useMemo(() => {
-    return links.map(l => typeof(l) === 'object' ? l.id : l);
+    return links.map(l => typeof(l) === 'object' ? l?.id : l);
   }, [links]);
   const [updated, setUpdated] = useState(0);
   useEffect(() => {
@@ -2615,7 +2717,7 @@ export function useLinks(...links: (Id | Link<Id>)[]): MinilinksLink<Id>[] {
     };
   }, []);
   return useMemo(() => {
-    return ids.map(id => deep.get(id));
+    return ids.map(id => id ? deep.get(id) : undefined);
   }, [updated]);
 }
 
@@ -2623,6 +2725,7 @@ export interface UseDeepSubscriptionResult<LL = Link<Id>> {
   data?: LL[];
   error?: any;
   loading: boolean;
+  query?: Exp;
 }
 
 export function useDeepId(start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): { data: Id; loading: boolean; error?: any } {

@@ -35,8 +35,8 @@ export const minilinksQueryIs = <L extends Link<Id>>(
 };
 
 export const expToSets = (ml, exp, sets, list, toArray = false) => {
-  if (exp?._eq) sets.push(toArray ? [list[exp?._eq]] : list[exp?._eq]);
-  if (exp?._in) sets.push(...(toArray ? exp._in.map(id => [list[id]]) : exp._in.map(id => list[id])));
+  if (exp?._eq && list?.[exp?._eq]) sets.push(toArray ? [list[exp?._eq]] : list[exp?._eq]);
+  if (exp?._in) sets.push(...(toArray ? exp._in.map(id => list?.[id] ? [list[id]] : []) : exp._in.map(id => list[id])));
 };
 
 export const multiExpToSets = (ml, exp, sets, list, key, toArray = false) => {
@@ -44,8 +44,8 @@ export const multiExpToSets = (ml, exp, sets, list, key, toArray = false) => {
     if (Array.isArray(exp)) exp.map((exp) => multiExpToSets(ml, exp, sets, list, key));
     else {
       const links = minilinksQueryHandle(exp, ml);
-      for (let l in links) {
-        sets.push(toArray ? [list[links[l][key]]] : list[links[l][key]]);
+      for (let l = 0; l < links.length; l++) {
+        sets.push(toArray ? (list?.[links?.[l]?.[key]] ? [list[links[l][key]]] : []) : list[links[l][key]]);
       }
     }
   }
@@ -87,7 +87,7 @@ export const minilinksQueryHandle = <L extends Link<Id>>(
   const results = [];
   const ids = {};
   for (let s in sets) {
-    for (let l in sets[s]) {
+    for (let l = 0; l < sets[s].length; l++) {
       const link = sets[s][l];
       if (ids[link.id]) continue;
       ids[link.id] = true;

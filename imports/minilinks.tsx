@@ -14,7 +14,7 @@ import { QueryLink } from './client_types.js';
 import { useDebounceCallback } from '@react-hook/debounce';
 import { Observable } from '@apollo/client/index.js';
 import get from 'get-value';
-import { _ids, DeepClient, DeepClientPathItem, DeepClientStartItem, random } from './client.js';
+import { _ids, DeepClient, DeepClientPathItem, DeepClientStartItem, Exp, random } from './client.js';
 import { Traveler } from './traveler.js';
 
 const debug = Debug('deeplinks:minilinks');
@@ -25,7 +25,7 @@ const error = debug.extend('error');
 export type Id = number | string;
 
 export interface Links<Ref extends Id, L extends Link<Ref>> extends Array<L> {
-  travel?: () => Traveler;
+  travel?: (query?: Exp) => Traveler;
   [key: number|string]: L | any;
 };
 
@@ -202,8 +202,8 @@ export class MinilinksLink<Ref extends Id> {
   get symbol(): string {
     return this.ml?.symbol(this.id);
   }
-  travel(): Traveler {
-    return this?.ml?.deep ? new Traveler(this.ml?.deep, [this] as any[], [], 'local') : undefined;
+  travel(query?: Exp): Traveler {
+    return this?.ml?.deep ? new Traveler(this.ml?.deep, [this] as any[], query ? [{ query }] : [], 'local') : undefined;
   }
   toString(): string {
     return `${this.symbol} ${this.id} ${this.name}`;
@@ -418,8 +418,8 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     if (!id) return null;
     // @ts-ignore
     const it = this.byId[id];
-    if (it?.type_id === this.id('@deep-foundation/core', 'Package')) return it?.value?.value;
-    return (it?.inByType[this.id('@deep-foundation/core', 'Contain')]?.find((c: any) => !!c?.value?.value) as any)?.value?.value || id;
+    if (it?.type_id === _ids['@deep-foundation/core']['Package']) return it?.value?.value;
+    return (it?.inByType[_ids['@deep-foundation/core']['Contain']]?.find((c: any) => !!c?.value?.value) as any)?.value?.value || id;
   }
 
   /**
@@ -436,7 +436,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return null;
     // @ts-ignore
-    return this.byId[id]?.type?.inByType?.[this.id('@deep-foundation/core', 'Symbol')]?.[0]?.value?.value || '📍';
+    return this.byId[id]?.type?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || '📍';
   }
 
   /**
@@ -914,7 +914,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   }
 
   _traveled(array: any[]): Links<Id, L> {
-    (array as Links<Id, L>).travel = () => this.deep ? new Traveler(this.deep, array, [], 'local') : undefined;
+    (array as Links<Id, L>).travel = (query?: Exp) => this.deep ? new Traveler(this.deep, array, query ? [{ query }] : [], 'local') : undefined;
     return (array as Links<Id, L>);
   }
 }
