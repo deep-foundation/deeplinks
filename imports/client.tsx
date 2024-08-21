@@ -17,6 +17,7 @@ import { Traveler as NativeTraveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
+import isNaN from 'lodash/isNaN.js';
 import axios from 'axios';
 import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
@@ -2267,7 +2268,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   isId(id: any): boolean {
-    return typeof(id) === 'string' || typeof(id) === 'number';
+    return typeof(id) === 'string' || (typeof(id) === 'number' && !isNaN(id));
   }
   isLink(link: any): boolean {
     return typeof(link) === 'object' && link instanceof MinilinksLink;
@@ -2443,8 +2444,8 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
         apolloClient, linkId, token,
         minilinks,
         handleAuth: (linkId, token) => {
-          setToken(token);
           setLinkId(linkId);
+          setToken(token);
         },
       });
     } catch(error) {
@@ -2672,20 +2673,23 @@ export function useSearch(value: string, options: DeepSearchOptions = {}) {
   const deep = useDeep();
   const o = useMemo(() => ({ skip: false, remote: true, count: false, sort: true, ...options }), [options]);
   const query = useMemo(() => this.searchQuery(value, o), [value, o]);
-  const qo = useMemo(() => ({ ...(o.count ? { aggregate: 'count' } : {}), skip: o.skip }), [o.count]);
+  const qo = useMemo(() => ({ ...(o.count ? { aggregate: 'count' } : {}), skip: o.skip }), [o.count, o.skip]);
   const useHook = useMemo(() => o.remote ? o.subscription ? deep.useSubscription : deep.useQuery : deep.useLocalQuery, [o.remote, o.subscription]);
-  const results: any = useHook(query, qo as any);
+  const _results: any = useHook(query, qo as any);
+  const results = o.remote ? _results : { data: _results };
   if (o.sort) {
-    const sorted = useMemo(() => sort(results.data, value), [results]);
+    const sorted = useMemo(() => sort(results.data, value), [results.data]);
     results.data = sorted.data;
     results.ids = sorted.ids;
   } else {
     results.ids = useMemo(() => {
       const ids = {};
-      if (results?.data?.length) for (let i in results.data) ids[results?.data?.[i]?.id];
+      if (results?.data?.length) for (let i = 0; i < results.data.length; i++) ids[results?.data?.[i]?.id] = results?.data?.[i];
       return ids;
-    }, [results]);
+    }, [results.data]);
   }
+  results.query = query;
+  results.options = qo;
   return results;
 }
 
