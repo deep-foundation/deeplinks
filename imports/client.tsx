@@ -2429,8 +2429,6 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
   const apolloClient: IApolloClient<any> = apolloClientProps || apolloClientHook;
   log({apolloClient})
 
-  const [linkId, setLinkId] = useAuthNode();
-  log({linkId, setLinkId})
   const [token, setToken] = useTokenController();
   log({token, setToken})
 
@@ -2441,10 +2439,9 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
     try {
       return new DeepClient({
         ...otherGeneratorOptions,
-        apolloClient, linkId, token,
+        apolloClient, token,
         minilinks,
         handleAuth: (linkId, token) => {
-          setLinkId(linkId);
           setToken(token);
         },
       });
