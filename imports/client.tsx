@@ -287,9 +287,13 @@ export const serializeWhere = (exp: any, env: string = 'links', unvertualizeId: 
         if (key === 'relation') {
           setted = result[key] = value;
         } else if (!_boolExpFields[key] && Object.prototype.toString.call(value) === '[object Array]') {
-          // if field is not boolExp (_and _or _not) but contain array
-          // @ts-ignore
-          setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
+          if (_serialize?.[env]?.relations?.[key]) {
+            setted = result[key] = serializeWhere(value, _serialize?.[env]?.relations?.[key], unvertualizeId, globalExp);
+          } else {
+            // if field is not boolExp (_and _or _not) but contain array
+            // @ts-ignore
+            setted = result[key] = serializeWhere(pathToWhere(...value), 'links', unvertualizeId, globalExp);
+          }
         }
       } else if (env === 'tree') {
         // if field contain primitive type - string/number
@@ -424,6 +428,7 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
+  handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
   deep?: DeepClientInstance<L>;
   self?: DeepClientInstance<L>;
@@ -493,6 +498,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
+  handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
   deep: DeepClientInstance<L>;
   DeepClient: typeof DeepClient;
@@ -874,6 +880,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   linkId?: Id;
   token?: string;
   handleAuth?: (linkId?: Id, token?: string) => any;
+  handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
   deep: DeepClientInstance<L>;
   DeepClient = DeepClient;
@@ -1012,6 +1019,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.unsafe = options.unsafe || {};
 
     this.handleAuth = options?.handleAuth || options?.deep?.handleAuth;
+    this.handleOperation = options?.handleOperation || options?.deep?.handleOperation;
     // @ts-ignore
     this.minilinks = options.minilinks || new MinilinkCollection();
     this.ml = this.minilinks;
@@ -1351,7 +1359,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Note: If a link already has value you should update its value, not insert 
    */
   async insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable>, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
-    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+    const o: any = { local: this.local, remote: this.remote, ...options };
+    const { local, remote } = o;
 
     const _name = random();
 
@@ -1367,6 +1376,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
     let _objects: any = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
     checkAndFillShorts(_objects, table, containerId, this.idLocal('@deep-foundation/core', 'Contain'));
+    
+    this.handleOperation && this.handleOperation('insert', null, _objects, o);
 
     let file;
     if (_objects?.[0]?.file) {
@@ -1511,8 +1522,11 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       _exp[addIdsToRelationsIfSimple(_exp, key, table)] = _exp[key];
     }
     
-    const { local, remote } = { local: this.local, remote: this.remote, ...options };
+    const o: any = { local: this.local, remote: this.remote, ...options };
+    this.handleOperation && this.handleOperation('update', _exp, value, o);
+    const { local, remote } = o;
     this.emitter.emit('update.before', { deep: this, name: _name, query: _exp, value, options, remote, local });
+
   
     const query = serializeQuery(_exp, options?.table === this.table || !options?.table ? 'links' : 'value', this.unvertualizeId);
 
@@ -1663,10 +1677,12 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   async delete<TTable extends 'links'|'numbers'|'strings'|'objects'>(exp: Exp<TTable> | Id, options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>> {
     const _exp: Exp<TTable> = typeof(exp) === 'number' ? { id: exp } as any : exp;
     if (!_exp) throw new Error('!exp');
-    const { local, remote } = { local: this.local, remote: this.remote, ...options };
-
+    const o: any = { local: this.local, remote: this.remote, ...options };
+    
     const _name = random();
-
+    
+    this.handleOperation && this.handleOperation('delete', _exp, null, o);
+    const { local, remote } = o;
     this.emitter.emit('delete.before', { deep: this, name: _name, query: _exp, options, remote, local });
 
     if (isEqual(_exp, {})) throw new Error('exp {} is wrong');
@@ -1677,6 +1693,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const variables = options?.variables;
     const name = options?.name || this.defaultDeleteName;
     let q;
+
 
     const toDelete: any = [];
     const toUpdate: any = [];
