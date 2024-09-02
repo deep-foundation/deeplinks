@@ -615,7 +615,9 @@ const handleRoutes = async () => {
               const container = imageContainers[image];
               routesDebugLog(`container`, JSON.stringify(container, null, 2));
 
-              const code = handler?.file?.code?.value;
+              const { data: [_handler] = [] } = await deep.select({ handler_id: handlerId }, { table: 'handlers', returning: 'dist { value }' });
+
+              const code = _handler?.dist?.value?.value || handler?.file?.code?.value;
               routesDebugLog(`code ${code}`);
 
               routesDebugLog('container', container);
