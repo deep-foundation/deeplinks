@@ -12,7 +12,8 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
 
-const __dirname = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function generateRandomKey(length) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -36,7 +37,6 @@ const optionDefinitions = [
   { name: 'deeplinks', type: String },
   { name: 'deepcase', type: String },
   { name: 'ssl', type: Boolean },
-  { name: 'token', type: String },
 ];
 
 const options = commandLineArgs(optionDefinitions);
@@ -46,7 +46,7 @@ if (options.generate) {
   const postgresKey = generateRandomKey(32);
   const minioAccess = generateRandomKey(32);
   const minioSecret = generateRandomKey(32);
-  // const jwt_secret = JSON.stringify(jwt({ secret: hasuraKey })).replace('"', '\"');
+  // const jwt_secret = JSON.stringify(jwt({ secret: hasuraKey })).replace('"', '\"'); 
   let publicIp;
   try {
     publicIp = await getPublicIP();
@@ -61,31 +61,31 @@ if (options.generate) {
       "DEEPLINKS_PUBLIC_URL": `${deeplinks}`,
       "NEXT_PUBLIC_DEEPLINKS_URL": `${deeplinks}`,
       "NEXT_PUBLIC_GQL_PATH": `${deeplinks}/gql`,
-      "NEXT_PUBLIC_GQL_SSL": options.ssl ? "1" : "0",
+      "NEXT_PUBLIC_GQL_SSL": "0",
       "NEXT_PUBLIC_DEEPLINKS_SERVER": `${deepcase}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
       "JWT_SECRET": jwtSecret,
       "HASURA_GRAPHQL_JWT_SECRET": jwtSecret,
       "DEEP_HASURA_GRAPHQL_JWT_SECRET": jwtSecret,
-      "DEEPLINKS_HASURA_STORAGE_URL": "http://host.docker.internal:8000/",
-      "HASURA_ENDPOINT": "http://host.docker.internal:8080/v1",
-      "DOCKER_DEEPLINKS_URL": "http://host.docker.internal:3006",
-      "MIGRATIONS_DEEPLINKS_URL": "http://host.docker.internal:3006",
+      "DEEPLINKS_HASURA_STORAGE_URL": "http://deep-hasura-storage:8000/",
+      "HASURA_ENDPOINT": "http://deep-hasura:8080/v1",
+      "DOCKER_DEEPLINKS_URL": "http://deep-links:3006",
+      "MIGRATIONS_DEEPLINKS_URL": "http://deep-links:3006",
       "HASURA_GRAPHQL_ADMIN_SECRET": hasuraKey,
       "MIGRATIONS_HASURA_SECRET": hasuraKey,
       "DEEPLINKS_HASURA_SECRET": hasuraKey,
       "POSTGRES_PASSWORD": postgresKey,
-      "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@host.docker.internal:5432/postgres?sslmode=disable`,
-      "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@host.docker.internal:5432/postgres?sslmode=disable`,
+      "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
+      "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       "RESTORE_VOLUME_FROM_SNAPSHOT": "0",
-      "MANUAL_MIGRATIONS": "0",
+      "MANUAL_MIGRATIONS": "1",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,
       "S3_ACCESS_KEY": minioAccess,
-      "S3_SECRET_KEY": minioSecret
+      "S3_SECRET_KEY": minioSecret,
     }
-  }
+  };
   console.log(generated);
   fs.writeFileSync(__dirname+'/deep.config.json', JSON.stringify(generated));
 }
@@ -111,11 +111,10 @@ if (options.generate) {
   if (options.exec) {
     const deep = new DeepClient({
       apolloClient: generateApolloClient({
-        path: `${envs.NEXT_PUBLIC_GQL_PATH}`.replace(/(^\w+:|^)\/\//, ''),
-        ssl: !!+envs.NEXT_PUBLIC_GQL_SSL,
-        secret: options.token ? undefined : envs.DEEPLINKS_HASURA_SECRET,
+        path: `${envs.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+        ssl: !!+envs.DEEPLINKS_HASURA_SSL,
+        secret: envs.DEEPLINKS_HASURA_SECRET,
       }),
-      token: options.token
     })
     const r = repl.start('> ');
     r.context.config = config;
