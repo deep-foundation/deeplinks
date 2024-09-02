@@ -1,4 +1,4 @@
-curl https://raw.githubusercontent.com/deep-foundation/deeplinks/main/docker-prod/deep/docker compose.yml > ./docker compose.yml
+curl https://raw.githubusercontent.com/deep-foundation/deeplinks/main/docker-prod/deep/docker-compose.yml > ./docker-compose.yml
 echo 'Clean and starting containers'
 docker compose -p deep down -v --remove-orphans
 docker compose pull
