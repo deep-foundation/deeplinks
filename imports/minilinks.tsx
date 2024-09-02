@@ -436,7 +436,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input?.id;
     if (!id) return null;
     // @ts-ignore
-    return this.byId[id]?.type?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || '📍';
+    return this.byId[id]?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || this.byId[id]?.type?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || '📍';
   }
 
   /**

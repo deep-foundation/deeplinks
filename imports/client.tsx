@@ -2122,12 +2122,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const id = typeof(input) === 'number' || typeof(input) === 'string' ? input : input.id;
 
     // if ((this.minilinks.byId[id] as Link<Id>)?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return (this.minilinks.byId[id] as Link<Id>)?.value?.value;
-    const {data: [symbol]} = await this.select({
-      type_id: { _id: ['@deep-foundation/core', 'Symbol'] },
-      to: { typed: { id } },
-    });
-    // @ts-ignore
-    return symbol?.value?.value || '📍';
+    return this.minilinks.byId[id]?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || this.minilinks.byId[id]?.type?.inByType?.[_ids['@deep-foundation/core']['Symbol']]?.[0]?.value?.value || '📍';
   };
 
   /**
@@ -2258,6 +2253,25 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       if (handlers?.[0]) return handlers?.[0];
     }
   }
+
+  _queryTypesNamesSymbols() {
+    const Contain = this.idLocal('Contain');
+    const Symbol = this.idLocal('Symbol');
+    return {
+      return: {
+        _contain: { relation: 'in', type_id: Contain },
+        _symbol: { relation: 'in', type_id: Symbol },
+        _type: {
+          relation: 'type',
+          return: {
+            _contain: { relation: 'in', type_id: Contain },
+            _symbol: { relation: 'in', type_id: Symbol },
+          },
+        },
+      },
+    };
+  }
+
   async eval({
     linkId, handlerId, value, context = [],
     input,
@@ -2559,7 +2573,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   }, [result]);
   const toReturn = {
     ...result,
-    originalData: generatedResult,
+    originalData: o?.aggregate ? result?.data?.q0?.aggregate : result?.data?.q0,
     data: generatedResult,
     options: o,
     deep,
@@ -2632,7 +2646,7 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   }, [result]);
   const toReturn = {
     ...result,
-    originalData: generatedResult,
+    originalData: o?.aggregate ? result?.data?.q0?.aggregate : result?.data?.q0,
     data: generatedResult,
     options: o,
     deep,
