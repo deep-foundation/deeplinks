@@ -914,6 +914,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   }
 
   _traveled(array: any[]): Links<Id, L> {
+    if (!array) return array;
     (array as Links<Id, L>).travel = (query?: Exp) => this.deep ? new Traveler(this.deep, array, query ? [{ query }] : [], 'local') : undefined;
     return (array as Links<Id, L>);
   }
