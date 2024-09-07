@@ -114,8 +114,6 @@ export class Packager<L extends Link<any>> {
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
     this.client = client;
-    // @ts-ignore
-    global.packager = this;
   }
 
   /**
@@ -381,6 +379,35 @@ export class Packager<L extends Link<any>> {
       await this.insertItems(pckg, global, counter, dependedLinks, errors, mutated);
       if (errors.length) return { errors };
       return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId] };
+    } catch (e) {
+      log('import error');
+      const serializedError = serializeError(e);
+;     errors.push(serializedError);
+    }
+    return { ids: [], errors };
+  }
+
+  async update(packageId: Id, pckg: Package) {
+    const errors = [];
+    try {
+      this.validate(pckg, errors);
+      if (errors.length) return { errors };
+      const { data, counter, dependedLinks, packageId, namespaceId } = await this.deserialize(pckg, errors); 
+      if (errors.length) return { errors };
+      const { sorted } = sort(pckg, data, errors, {
+        id: 'id',
+        from: 'from',
+        to: 'to',
+        type: 'type',
+      });
+      if (errors.length) return { errors };
+      const mutated = {};
+      const ids = await this.client.reserve(counter);
+      const { global, difference } = await this.globalizeIds(pckg, ids, sorted);
+      if (pckg.errors?.length) {
+        return { errors: pckg.errors };
+      }
+      console.log('update', { packageId, pckg, global, difference, ids, sorted, data });
     } catch (e) {
       log('import error');
       const serializedError = serializeError(e);
@@ -680,6 +707,8 @@ export class Packager<L extends Link<any>> {
       if (!!~alreadyIndex) {
         return alreadyIndex;
       } else {
+        if (!link?.contains?.[0]?.package?.value?.value) pckg.errors.push(`!link?.contains?.[0]?.package?.value?.value for ${link?.id}`);
+        if (!link?.contains?.[0]?.package?.versions?.[0]?.value?.value) pckg.errors.push(`!link?.contains?.[0]?.package?.versions?.[0]?.value?.value for ${link?.id}`);
         dependencies.push({ name: link?.contains?.[0]?.package?.value?.value, version: link?.contains?.[0]?.package?.versions?.[0]?.value?.value });
         return dependencies.length - 1;
       }
