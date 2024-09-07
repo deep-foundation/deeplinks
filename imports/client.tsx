@@ -2255,8 +2255,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   _queryTypesNamesSymbols() {
-    const Contain = this.idLocal('Contain');
-    const Symbol = this.idLocal('Symbol');
+    const Contain = _ids?.['@deep-foundation/core']?.Contain;
+    const Symbol = _ids?.['@deep-foundation/core']?.Symbol;
     return {
       return: {
         _contain: { relation: 'in', type_id: Contain },
@@ -2815,6 +2815,7 @@ export type Options<TTable extends Table = 'links'> = {
   deep?: DeepClient<Link<Id>>;
   subscription?: boolean;
   apply?: string;
+  skip?: boolean;
 };
 
 export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;

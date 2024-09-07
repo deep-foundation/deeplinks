@@ -570,7 +570,7 @@ const handleRoutes = async () => {
 
     // for each port
     for (const port of updatedOrAddedPorts) {
-      const portValue = port?.port?.value;
+      const portValue = port?.port?.value || PORT;
       
       if (currentServers.hasOwnProperty(portValue)) {
         currentServers[portValue].close();
