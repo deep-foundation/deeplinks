@@ -5,7 +5,6 @@ import router from './imports/router/index.js';
 import generateJwtServer from './imports/router/jwt.js';
 import generateGuestServer from './imports/router/guest.js';
 import generatePackagerServer from './imports/router/packager.js';
-import generateAuthorizationServer from './imports/router/authorization.js';
 import axios from 'axios';
 import http from 'http';
 import { createProxyMiddleware, fixRequestBody, responseInterceptor } from 'http-proxy-middleware';
@@ -267,16 +266,13 @@ app.use('/', router);
 
 const start = async () => {
   const jwtServer = generateJwtServer(httpServer);
-  const authorizationServer = generateAuthorizationServer(httpServer);
   const guestServer = generateGuestServer(httpServer);
   const packagerServer = generatePackagerServer(httpServer);
   await jwtServer.start();
   await guestServer.start();
-  await authorizationServer.start();
   await packagerServer.start();
   jwtServer.applyMiddleware({ path: '/api/jwt', app });
   guestServer.applyMiddleware({ path: '/api/guest', app });
-  authorizationServer.applyMiddleware({ path: '/api/authorization', app });
   packagerServer.applyMiddleware({ path: '/api/packager', app });
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   log(`Hello bugfixers! Listening ${process.env.PORT} port`);
