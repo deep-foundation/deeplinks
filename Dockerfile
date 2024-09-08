@@ -1,5 +1,5 @@
 FROM node:18-alpine3.17 AS node
-FROM docker:20.10.8-dind-alpine3.14
+FROM docker:27.2.0-dind-alpine3.20
 
 COPY --from=node /usr/lib /usr/lib
 COPY --from=node /usr/local/share /usr/local/share

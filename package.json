@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.456",
+  "version": "0.0.457",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -28,10 +28,8 @@
     "unmigrate-s-h": "npm run package:build && npx migrate@latest down 1693460330175-sync-handlers-update --matches '*.js'",
     "remigrate-s-h": "npm run unmigrate-s-h && npm run migrate",
     "start-engine-docker": "npm run start-engine-docker-core",
-    "start-engine-docker-core": "cd ./../../node_modules/@deep-foundation/hasura && npm run docker",
-    "stop-engine-docker": "cd ./../../node_modules/@deep-foundation/hasura/local && docker compose --project-name deep down",
-    "start-deeplinks-docker": "cd local && docker compose pull && docker compose -p deep up -d",
-    "stop-deeplinks-docker": "cd local && docker compose -p deep down",
+    "start-deeplinks-docker": "docker compose pull && docker compose -p deep up -d",
+    "stop-deeplinks-docker": "docker compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
     "snapshot:last": "node snapshots/last.js",
     "snapshot:dump": "node snapshots/dump.js",

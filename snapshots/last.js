@@ -16,7 +16,7 @@ const last = async () => {
   const files = await fs.readdir('./snapshots');
   const snapshots = files.filter(file => /^-?[0-9]+$/.test(file));
   const last = snapshots[snapshots.length - 1];
-  const { stdout, stderr } = await execP(`(docker compose -p deep -f docker-compose.yml -p deep stop || true ) && docker run -v ${_deeplinks}:/deeplinks -v deep-db-data:/data --rm --name links --entrypoint \"sh\" deepf/deeplinks:main -c \"cd / && tar xf deeplinks/snapshots/${last} --strip 1\" && (docker compose -p deep start || true) && cp snapshots/${last}.migrate .migrate`);
+  const { stdout, stderr } = await execP(`(docker compose -p deep stop || true ) && docker run -v ${_deeplinks}:/deeplinks -v deep-db-data:/data --rm --name links --entrypoint \"sh\" deepf/deeplinks:main -c \"cd / && tar xf deeplinks/snapshots/${last} --strip 1\" && (docker compose -p deep start || true) && cp snapshots/${last}.migrate .migrate`);
   console.log('stdout',stdout);
   console.log('stderr',stderr);
 }
