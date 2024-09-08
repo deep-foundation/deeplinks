@@ -141,7 +141,7 @@ app.get(['/file'], createProxyMiddleware((pathname, req) => {
         }
       }`
     })
-    console.log('/file get proxy', 'result', result)
+    // console.log('/file get proxy', 'result', result)
     const fileId = result?.data?.files?.[0]?.id;
     console.log('/file get proxy', 'fileId', fileId)
 
