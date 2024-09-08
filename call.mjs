@@ -37,6 +37,8 @@ const optionDefinitions = [
   { name: 'deeplinks', type: String },
   { name: 'deepcase', type: String },
   { name: 'ssl', type: Boolean },
+
+  { name: 'envs', type: Boolean },
 ];
 
 const options = commandLineArgs(optionDefinitions);
@@ -107,6 +109,11 @@ if (options.generate) {
   }
   const envs = generateEnvs({ envs: { ...(config?.envs || {}) }, isDeeplinksDocker: 0 });
   const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: 0 })
+
+  if (options.envs) {
+    console.log('envs', envs);
+    console.log('ENVS', envsStr);
+  }
 
   if (options.exec) {
     const deep = new DeepClient({
