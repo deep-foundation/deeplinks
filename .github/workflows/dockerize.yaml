@@ -19,16 +19,16 @@ env:
   JWT_SECRET: '{"type":"HS256","key":"6HZ/FHOibbfr6FsGaArmXVwY1JEO+l2lTVDJeibc2yj2T6OKmx5dIw3UtMFBdUkhd9Q="}'
   HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"6HZ/FHOibbfr6FsGaArmXVwY1JEO+l2lTVDJeibc2yj2T6OKmx5dIw3UtMFBdUkhd9Q="}'
   DEEP_HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"6HZ/FHOibbfr6FsGaArmXVwY1JEO+l2lTVDJeibc2yj2T6OKmx5dIw3UtMFBdUkhd9Q="}'
-  DEEPLINKS_HASURA_STORAGE_URL: http://deep-hasura-storage:8000/
-  HASURA_ENDPOINT: http://deep-hasura:8080/v1
-  DOCKER_DEEPLINKS_URL: http://deep-links:3006
+  DEEPLINKS_HASURA_STORAGE_URL: http://host.docker.internal:8000/
+  HASURA_ENDPOINT: http://host.docker.internal:8080/v1
+  DOCKER_DEEPLINKS_URL: http://host.docker.internal:3006
   MIGRATIONS_DEEPLINKS_URL: http://host.docker.internal:3006
   HASURA_GRAPHQL_ADMIN_SECRET: e9cd987d6c7dd8206a34f7790fed2a29
   MIGRATIONS_HASURA_SECRET: e9cd987d6c7dd8206a34f7790fed2a29
   DEEPLINKS_HASURA_SECRET: e9cd987d6c7dd8206a34f7790fed2a29
   POSTGRES_PASSWORD: d2ef4e87ecc262ff4615887006d8b7b4
-  HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@deep-postgres:5432/postgres?sslmode=disable
-  POSTGRES_MIGRATIONS_SOURCE: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@deep-postgres:5432/postgres?sslmode=disable
+  HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@host.docker.internal:5432/postgres?sslmode=disable
+  POSTGRES_MIGRATIONS_SOURCE: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@host.docker.internal:5432/postgres?sslmode=disable
   RESTORE_VOLUME_FROM_SNAPSHOT: 0
   MANUAL_MIGRATIONS: 1
   MINIO_ROOT_USER: ce790e9910e093881a2f88382ac18c47
@@ -39,7 +39,7 @@ env:
   DEEPCASE_PORT: 3007
   npm_config_yes: true
   DEEP_HASURA_PORT: 8080
-  DEEP_HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@deep-postgres:5432/postgres?sslmode=disable
+  DEEP_HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@host.docker.internal:5432/postgres?sslmode=disable
   HASURA_GRAPHQL_ENABLE_CONSOLE: true
   DEEP_HASURA_GRAPHQL_ENABLE_CONSOLE: true
   HASURA_GRAPHQL_DEV_MODE: true
@@ -69,9 +69,9 @@ env:
   DEEP_HASURA_STORAGE_DEBUG: true
   HASURA_METADATA: 1
   DEEP_HASURA_STORAGE_HASURA_METADATA: 1
-  DEEP_HASURA_STORAGE_HASURA_ENDPOINT: http://deep-hasura:8080/v1
-  S3_ENDPOINT: http://deep-minio:9000
-  DEEP_HASURA_STORAGE_S3_ENDPOINT: http://deep-minio:9000
+  DEEP_HASURA_STORAGE_HASURA_ENDPOINT: http://host.docker.internal:8080/v1
+  S3_ENDPOINT: http://host.docker.internal:9000
+  DEEP_HASURA_STORAGE_S3_ENDPOINT: http://host.docker.internal:9000
   DEEP_HASURA_STORAGE_S3_ACCESS_KEY: ce790e9910e093881a2f88382ac18c47
   DEEP_HASURA_STORAGE_S3_SECRET_KEY: 01f99f6095777953c9470ddecfe45931
   S3_BUCKET: default
@@ -80,7 +80,7 @@ env:
   DEEP_HASURA_STORAGE_S3_ROOT_FOLDER: default
   POSTGRES_MIGRATIONS: 0
   DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS: 0
-  DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS_SOURCE: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@deep-postgres:5432/postgres?sslmode=disable
+  DEEP_HASURA_STORAGE_POSTGRES_MIGRATIONS_SOURCE: postgres://postgres:d2ef4e87ecc262ff4615887006d8b7b4@host.docker.internal:5432/postgres?sslmode=disable
   DEEP_MINIO_PORT: 9000
   DEEP_MINIO_CONSOLE_PORT: 32765
   DEEP_MINIO_ROOT_USER: ce790e9910e093881a2f88382ac18c47
