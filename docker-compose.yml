@@ -129,4 +129,3 @@ networks:
   network:
     name: deep-network
     driver: bridge
-    external: true
