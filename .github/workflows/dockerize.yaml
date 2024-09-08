@@ -96,6 +96,7 @@ env:
   DEEPLINKS_HASURA_PATH: localhost:8080
   MIGRATIONS_HASURA_SSL: 0
   DEEPLINKS_HASURA_SSL: 0
+  DEBUG: deeplinks:*
 jobs:
   dockerize:
     name: dockerize

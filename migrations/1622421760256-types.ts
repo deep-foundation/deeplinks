@@ -1,14 +1,9 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { generateMutation, generateSerial, insertMutation } from '../imports/gql/index.js';
-import { TABLE_NAME as LINKS_TABLE_NAME } from './1616701513782-links.js';
-import times from 'lodash/times';
-import { time } from 'console';
-import { Packager, Package } from '../imports/packager.js';
-import { corePckg } from '../imports/core.js';
-import { DeepClient } from '../imports/client.js';
-import prompt from 'prompt';
 import { serializeError } from 'serialize-error';
+import { DeepClient } from '../imports/client.js';
+import { corePckg } from '../imports/core.js';
+import { Packager } from '../imports/packager.js';
 
 const debug = Debug('deeplinks:migrations:types');
 const log = debug.extend('log');
