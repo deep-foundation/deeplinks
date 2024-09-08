@@ -12,8 +12,9 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+const __dirname = process.cwd();
 
 function generateRandomKey(length) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -72,6 +73,7 @@ if (options.generate) {
       "DEEP_HASURA_GRAPHQL_JWT_SECRET": jwtSecret,
       "DEEPLINKS_HASURA_STORAGE_URL": "http://deep-hasura-storage:8000/",
       "HASURA_ENDPOINT": "http://deep-hasura:8080/v1",
+      "DEEPLINKS_HASURA_PATH": "deep-hasura:8080",
       "DOCKER_DEEPLINKS_URL": "http://deep-links:3006",
       "MIGRATIONS_DEEPLINKS_URL": "http://deep-links:3006",
       "HASURA_GRAPHQL_ADMIN_SECRET": hasuraKey,
@@ -79,6 +81,7 @@ if (options.generate) {
       "DEEPLINKS_HASURA_SECRET": hasuraKey,
       "POSTGRES_PASSWORD": postgresKey,
       "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
+      'DEEP_HASURA_GRAPHQL_LOG_LEVEL': 'error',
       "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       "RESTORE_VOLUME_FROM_SNAPSHOT": "0",
       "MANUAL_MIGRATIONS": "1",
