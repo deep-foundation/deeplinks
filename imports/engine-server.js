@@ -334,22 +334,19 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
   }
   if (operation === 'run') {
     console.log('isDeepcaseDocker', isDeepcaseDocker);
-    str = ` cd "${path.normalize(`${_deeplinks}/`)}" && docker compose -p deep down postgres hasura && docker volume create deep-db-data ${
+    str = ` cd "${path.normalize(`${_deeplinks}/`)}" && docker compose pull && docker compose -p deep up postgres hasura && docker volume create deep-db-data ${
       platform === "win32" ?
       '' :
       `&& mkdir -p ${envs['MIGRATIONS_DIR']}`
-    } && docker pull deepf/deeplinks:main && ${
-      +envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ?
-      `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` :
-      ''
-    } ${
-      isDeeplinksDocker===undefined ?
-      `${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1 && ' : ''} (docker compose -p deep up postgres hasura -d || true) && npx -q wait-on --timeout 10000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''
     } && npx -q wait-on --timeout 100000 ${
       +DOCKER ?
       `http-get://deep-hasura` :
       'http-get://localhost'
-    }:8080/healthz && docker compose pull && docker compose -p deep up -d ${
+    }:8080/healthz && ${
+      +envs['RESTORE_VOLUME_FROM_SNAPSHOT'] ?
+      `docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate" && ` :
+      ''
+    } && docker compose pull && docker compose -p deep up -d ${
       +envs['MANUAL_MIGRATIONS'] ?
       `&& npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate` :
       ''
