@@ -345,7 +345,8 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
       `http-get://deep-hasura` :
       'http-get://localhost'
     }:8080/healthz`);
-    if (+envs['RESTORE_VOLUME_FROM_SNAPSHOT']) arr.push(`docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`);
+    // if (+envs['RESTORE_VOLUME_FROM_SNAPSHOT']) arr.push(`docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`);
+    if (+envs['RESTORE_VOLUME_FROM_SNAPSHOT']) arr.push(`docker run --entrypoint "sh" deepf/deeplinks:main -c "node last.js"`);
     arr.push(`docker compose -p deep up -d`);
     if (+envs['MANUAL_MIGRATIONS']) arr.push(`npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate`);
     str = arr.join(' && ');
