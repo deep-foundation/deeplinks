@@ -662,22 +662,22 @@ const handleRoutes = async () => {
                           const handlingErrorTypeId = deep.idLocal('@deep-foundation/core', 'HandlingError');
                           routesDebugLog('handlingErrorTypeId', handlingErrorTypeId);
 
-                          const insertResult = await deep.insert({
-                            type_id: handlingErrorTypeId,
-                            object: { data: { value: data.rejected } },
-                            out: { data: [
-                              {
-                                type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
-                                to_id: route.id
-                              },
-                              {
-                                type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
-                                to_id: handleRoute.id
-                              }
-                            ]},
-                          }, {
-                            name: 'INSERT_HANDLING_ERROR',
-                          }) as any;
+                          // const insertResult = await deep.insert({
+                          //   type_id: handlingErrorTypeId,
+                          //   object: { data: { value: data.rejected } },
+                          //   out: { data: [
+                          //     {
+                          //       type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
+                          //       to_id: route.id
+                          //     },
+                          //     {
+                          //       type_id: deep.idLocal('@deep-foundation/core', 'HandlingErrorReason'),
+                          //       to_id: handleRoute.id
+                          //     }
+                          //   ]},
+                          // }, {
+                          //   name: 'INSERT_HANDLING_ERROR',
+                          // }) as any;
                         }
                       }
                     } catch (e) {
