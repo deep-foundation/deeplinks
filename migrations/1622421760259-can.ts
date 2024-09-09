@@ -49,8 +49,8 @@ export const up = async () => {
       ca."rule_action_id" != 0 AND
       ca."selector_include_id" != 0 AND
       mpa_include."path_item_id" = ca."link_id" AND
-      mpa_include."group_id" = ca."tree_id" ${/*AND
-      NOT EXISTS (
+      mpa_include."group_id" = ca."tree_id" AND
+      ${/*NOT EXISTS (
         SELECT mpa_exclude."id"
         FROM
         ${CACHE} as cache_exclude,
@@ -67,8 +67,8 @@ export const up = async () => {
       co."rule_object_id" != 0 AND
       co."selector_include_id" != 0 AND
       mpo_include."path_item_id" = co."link_id" AND
-      mpo_include."group_id" = co."tree_id" ${/*AND
-      NOT EXISTS (
+      mpo_include."group_id" = co."tree_id" AND
+      ${/*NOT EXISTS (
         SELECT mpo_exclude."id"
         FROM
         ${CACHE} as cache_exclude,
@@ -85,8 +85,8 @@ export const up = async () => {
       cs."rule_subject_id" != 0 AND
       cs."selector_include_id" != 0 AND
       mps_include."path_item_id" = cs."link_id" AND
-      mps_include."group_id" = cs."tree_id" ${/*AND
-      NOT EXISTS (
+      mps_include."group_id" = cs."tree_id" AND
+      ${/*NOT EXISTS (
         SELECT mps_exclude."id"
         FROM
         ${CACHE} as cache_exclude,
