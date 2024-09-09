@@ -41,9 +41,11 @@ const optionDefinitions = [
   { name: 'config', alias: 'c', type: String },
   { name: 'exec', alias: 'e', type: Boolean },
   { name: 'run', alias: 'r', type: Boolean },
+  { name: 'stop', alias: 's', type: Boolean },
   { name: 'bash', type: String },
 
   { name: 'last', alias: 'l', type: Boolean }, // restore
+  { name: 'migrate', alias: 'm', type: Boolean }, // migrate
 
   { name: 'generate', alias: 'g', type: Boolean },
   { name: 'deeplinks', type: String },
@@ -95,6 +97,7 @@ if (options.generate) {
       'DEEP_HASURA_GRAPHQL_LOG_LEVEL': 'error',
       "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       "RESTORE_VOLUME_FROM_SNAPSHOT": options.last || isGitpod ? '1': '0',
+      "MANUAL_MIGRATIONS": options.migrate ? '1': '0',
       "MANUAL_MIGRATIONS": "1",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,
