@@ -94,7 +94,7 @@ if (options.generate) {
       "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       'DEEP_HASURA_GRAPHQL_LOG_LEVEL': 'error',
       "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
-      "RESTORE_VOLUME_FROM_SNAPSHOT": options.last ? '1': '0',
+      "RESTORE_VOLUME_FROM_SNAPSHOT": options.last || isGitpod ? '1': '0',
       "MANUAL_MIGRATIONS": "1",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,

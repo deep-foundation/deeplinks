@@ -330,7 +330,7 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
     str = ` cd "${path.normalize(`${_deeplinks}`)}" ${platform === "win32" ? '' : ` && mkdir -p ${envs['MIGRATIONS_DIR']}`} && docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`;
   }
   if (operation === 'check') {
-    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${path.normalize(`${_deeplinks}/`)}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_deeplinks}/`)}" && docker compose -p deep up -d && npx -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz`;
+    str = ` ${ platform === "win32" && needNPX ? 'npm i -g npx &&' : ''} cd "${path.normalize(`${_deeplinks}/`)}" ${isDeeplinksDocker===undefined ? `&& ${ platform === "win32" ? 'set COMPOSE_CONVERT_WINDOWS_PATHS=1&& ' : ''} npm run start-deeplinks-docker && npx -y -q wait-on --timeout 100000 ${+DOCKER ? 'http-get://host.docker.internal:3006'  : DEEPLINKS_PUBLIC_URL}/api/healthz` : ''} && cd "${path.normalize(`${_deeplinks}/`)}" && docker compose -p deep up -d && npx -y -q wait-on --timeout 100000 ${+DOCKER ? `http-get://deep-hasura` : 'http-get://localhost'}:8080/healthz`;
   }
   if (operation === 'run') {
     console.log('isDeepcaseDocker', isDeepcaseDocker);
@@ -340,7 +340,7 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
     arr.push(`docker compose -p deep up postgres hasura`);
     arr.push(`docker volume create deep-db-data`);
     if (platform === "win32") arr.push(`mkdir -p ${envs['MIGRATIONS_DIR']}`);
-    arr.push(`npx -q wait-on --timeout 100000 ${
+    arr.push(`npx -y -q wait-on --timeout 100000 ${
       +DOCKER ?
       `http-get://deep-hasura` :
       'http-get://localhost'
@@ -359,9 +359,9 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
   }
   if (operation === 'reset') {
     if (platform === "win32") {
-      str = ` cd "${_deeplinks}" && ${needNPX ? 'npm i -g npx &&' : ''} npx rimraf ${envs['MIGRATIONS_DIR']}/.migrate && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
+      str = ` cd "${_deeplinks}" && ${needNPX ? 'npm i -g npx &&' : ''} npx -y rimraf ${envs['MIGRATIONS_DIR']}/.migrate && powershell -command docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ $name:= .Names }}{{ range $splited := (split .Names \`"-\`") }}{{ if eq \`"case\`" $splited }}{{$a = true}}{{ end }}{{end}}{{ if eq $a false }}{{ $name }}{{end}}'); docker volume rm $(docker volume ls -q --filter name=deep-)${ !+DOCKER ? `; docker network rm $(docker network ls -q -f name=deep-) ` : ''};`;
     } else {
-      str = ` cd "${_deeplinks}" && npx rimraf ${envs['MIGRATIONS_DIR']}/.migrate && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
+      str = ` cd "${_deeplinks}" && npx -y rimraf ${envs['MIGRATIONS_DIR']}/.migrate && (docker rm -fv $(docker ps -a --filter name=deep- -q --format '{{ $a:= false }}{{ range $splited := (split .Names "-") }}{{ if eq "case" $splited }}{{$a = true}}{{ end }}{{ end }}{{ if eq $a false }}{{.ID}}{{end}}') || true) && (docker volume rm $(docker volume ls -q --filter name=deep-) || true)${ !+DOCKER ? ` && (docker network rm $(docker network ls -q -f name=deep-) || true)` : ''}`;
     }
   }
   if (operation === 'dock') {
