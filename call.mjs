@@ -72,11 +72,11 @@ if (options.generate) {
   const generated = {
     "operation": "run",
     "envs": {
-      "DEEPLINKS_PUBLIC_URL": isGidpod ? gitpodUrl(3006) : `${deeplinks}`,
-      "NEXT_PUBLIC_DEEPLINKS_URL": isGidpod ? gitpodUrl(3006) : `${deeplinks}`,
-      "NEXT_PUBLIC_GQL_PATH": isGidpod ? gitpodUrl(3006)+'/gql' : `${deeplinks}/gql`,
+      "DEEPLINKS_PUBLIC_URL": isGitpod ? gitpodUrl(3006) : `${deeplinks}`,
+      "NEXT_PUBLIC_DEEPLINKS_URL": isGitpod ? gitpodUrl(3006) : `${deeplinks}`,
+      "NEXT_PUBLIC_GQL_PATH": isGitpod ? gitpodUrl(3006)+'/gql' : `${deeplinks}/gql`,
       "NEXT_PUBLIC_GQL_SSL": "0",
-      "NEXT_PUBLIC_DEEPLINKS_SERVER": isGidpod ? gitpodUrl(3007) : `${deepcase}`,
+      "NEXT_PUBLIC_DEEPLINKS_SERVER": isGitpod ? gitpodUrl(3007) : `${deepcase}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
       "JWT_SECRET": jwtSecret,
