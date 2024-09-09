@@ -4,7 +4,7 @@ import { DeepClient } from '../imports/client.js';
 import { installPackage } from './1678940577209-deepcase.js';
 import { packageExists, sharePermissions } from './1664940577200-tsx.js';
 
-const debug = Debug('deeplinks:migrations:perception');
+const debug = Debug('deeplinks:migrations:perception-links');
 const log = debug.extend('log');
 const error = debug.extend('error');
 
@@ -20,13 +20,13 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  const packageName = '@deep-foundation/perception';
+  const packageName = '@deep-foundation/perception-links';
   if (!await packageExists(packageName)) {
     const adminId = await root.id('deep', 'admin');
     const admin = await root.login({ linkId: adminId });
     const deep = new DeepClient({ deep: root, ...admin });
 
-    await installPackage(deep, '@deep-foundation/perception');
+    await installPackage(deep, '@deep-foundation/perception-links');
   }
 };
 
