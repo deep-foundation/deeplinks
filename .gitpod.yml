@@ -26,10 +26,8 @@ vscode:
 
 tasks:
   - init: |
-      ./ensure-node-version.sh
-      . ~/.nvm/nvm.sh && nvm use
-      ./prebuild.sh | tee gitpod-prebuild.log.txt
-  - command: |
-      ./ensure-node-version.sh
-      . ~/.nvm/nvm.sh && nvm use
-      ./wait-for-prebuild.sh && (npm run gitpod-start | tee gitpod-start.log.txt);
+      npm ci
+  # - command: |
+  #     ./ensure-node-version.sh
+  #     . ~/.nvm/nvm.sh && nvm use
+  #     ./wait-for-prebuild.sh && (npm run gitpod-start | tee gitpod-start.log.txt);
