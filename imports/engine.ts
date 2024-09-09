@@ -366,9 +366,6 @@ export async function call (options: ICallOptions) {
   envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   const engineStr = _generateEngineStr({ needNPX, operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
-
-  printLog(envs['MIGRATIONS_DIR'], engineStr, `engineStr`);
-  printLog(envs['MIGRATIONS_DIR'], engine, `engine`);
   
   return { ...options, user, homeDir, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }

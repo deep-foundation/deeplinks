@@ -377,8 +377,25 @@ const _execEngine = async ({ envsStr, envs, engineStr } ) => {
   try {
     const command = `${envsStr} ${engineStr}`;
     console.log(command);
-    const { stdout, stderr } = await execP(command);
-    return { result: { stdout, stderr } };
+    const bash = exec(command, (err, stdout, stderr) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log(stdout);
+    });
+  
+    bash.stdout.on('data', function (data) {
+      console.log(data.toString());
+    });
+
+    bash.stderr.on('data', function (data) {
+      console.error(data.toString());
+    });
+
+    bash.on('exit', function (code) {
+      console.log('child process exited with code: ' + code.toString());
+    });
   } catch(e) {
     error(e);
     return { error: e };
@@ -504,9 +521,6 @@ export const call = async (options) => {
   envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: isDeeplinksDocker.result });
   const engineStr = _generateEngineStr({ needNPX, operation: options.operation, isDeeplinksDocker: isDeeplinksDocker.result, isDeepcaseDocker: isDeepcaseDocker.result, envs} )
   const engine = await _execEngine({ envsStr, envs, engineStr });
-
-  printLog(envs['MIGRATIONS_DIR'], engineStr, `engineStr`);
-  printLog(envs['MIGRATIONS_DIR'], engine, `engine`);
   
   return { ...options, user, homeDir, platform, _hasura, _deeplinks, isDeeplinksDocker, isDeepcaseDocker, envs, engineStr, fullStr: `${envsStr} ${engineStr}`, ...engine };
 }
