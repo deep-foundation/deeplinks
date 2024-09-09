@@ -103,7 +103,7 @@ if (options.generate) {
     }
   };
   console.log(generated);
-  fs.writeFileSync(__dirname+'/deep.config.json', JSON.stringify(generated));
+  fs.writeFileSync(__dirname+'/deep.config.json', JSON.stringify(generated, null, 2));
 }
 
 (async() => {

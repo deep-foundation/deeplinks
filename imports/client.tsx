@@ -1204,7 +1204,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     } catch (e) {
       this.emitter.emit('select', { deep: this, name, query: exp, options, remoteQuery: queryData, error: e, remote: true, local: false });
       // console.log({ typeName: this.nameLocal(163) });
-      console.dir({ queryData }, { depth: null });
+      // console.dir({ queryData }, { depth: null });
       throw new Error(`DeepClient Select Error: ${e.message}`, { cause: e });
     }
   };
