@@ -42,7 +42,7 @@ export const up = async () => {
     WHERE
       cache_include."selector_include_id" != 0 AND
       mp_include."path_item_id" = cache_include."link_id" AND
-      mp_include."group_id" = cache_include."tree_id" AND
+      mp_include."group_id" = cache_include."tree_id" ${/*AND
       NOT EXISTS (
         SELECT mp_exclude."id"
         FROM
@@ -55,7 +55,7 @@ export const up = async () => {
           mp_exclude."item_id" = mp_include."item_id" AND
           mp_exclude."group_id" = cache_exclude."tree_id"
         )
-      );
+      )*/''};
   `);
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint, user_id bigint) RETURNS BOOL AS $trigger$ DECLARE

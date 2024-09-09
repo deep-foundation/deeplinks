@@ -49,7 +49,7 @@ export const up = async () => {
       ca."rule_action_id" != 0 AND
       ca."selector_include_id" != 0 AND
       mpa_include."path_item_id" = ca."link_id" AND
-      mpa_include."group_id" = ca."tree_id" AND
+      mpa_include."group_id" = ca."tree_id" ${/*AND
       NOT EXISTS (
         SELECT mpa_exclude."id"
         FROM
@@ -62,12 +62,12 @@ export const up = async () => {
           mpa_exclude."item_id" = mpa_include."item_id" AND
           mpa_exclude."group_id" = cache_exclude."tree_id"
         )
-      ) AND
+      ) AND*/''}
 
       co."rule_object_id" != 0 AND
       co."selector_include_id" != 0 AND
       mpo_include."path_item_id" = co."link_id" AND
-      mpo_include."group_id" = co."tree_id" AND
+      mpo_include."group_id" = co."tree_id" ${/*AND
       NOT EXISTS (
         SELECT mpo_exclude."id"
         FROM
@@ -80,12 +80,12 @@ export const up = async () => {
           mpo_exclude."item_id" = mpo_include."item_id" AND
           mpo_exclude."group_id" = cache_exclude."tree_id"
         )
-      ) AND
+      ) AND*/''}
 
       cs."rule_subject_id" != 0 AND
       cs."selector_include_id" != 0 AND
       mps_include."path_item_id" = cs."link_id" AND
-      mps_include."group_id" = cs."tree_id" AND
+      mps_include."group_id" = cs."tree_id" ${/*AND
       NOT EXISTS (
         SELECT mps_exclude."id"
         FROM
@@ -98,7 +98,7 @@ export const up = async () => {
           mps_exclude."item_id" = mps_include."item_id" AND
           mps_exclude."group_id" = cache_exclude."tree_id"
         )
-      )
+      )*/''}
     );
   `);
   await api.query({
