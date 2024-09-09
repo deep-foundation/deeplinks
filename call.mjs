@@ -11,6 +11,11 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
+import { promisify } from 'util';
+
+const isGitpod = !!process?.env?.GITPOD_WORKSPACE_ID;
+
+const execP = promisify(exec);
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = dirname(__filename);
@@ -24,6 +29,10 @@ async function getPublicIP() {
   return (await axios.get('https://api.ipify.org'))?.data;
 }
 
+async function gitpodUrl(port) {
+  const r = await execP(`echo $(gp url ${port})`);
+  return r.stdout.replace('\n','')
+}
 
 // const DEEPLINKS_CALL_OPTIONS = process.env.DEEPLINKS_CALL_OPTIONS || '{ "operation": "run" }';
 const DEEPLINKS_CALL_OPTIONS = process.env.DEEPLINKS_CALL_OPTIONS;
@@ -63,11 +72,11 @@ if (options.generate) {
   const generated = {
     "operation": "run",
     "envs": {
-      "DEEPLINKS_PUBLIC_URL": `${deeplinks}`,
-      "NEXT_PUBLIC_DEEPLINKS_URL": `${deeplinks}`,
-      "NEXT_PUBLIC_GQL_PATH": `${deeplinks}/gql`,
+      "DEEPLINKS_PUBLIC_URL": isGidpod ? gitpodUrl(3006) : `${deeplinks}`,
+      "NEXT_PUBLIC_DEEPLINKS_URL": isGidpod ? gitpodUrl(3006) : `${deeplinks}`,
+      "NEXT_PUBLIC_GQL_PATH": isGidpod ? gitpodUrl(3006)+'/gql' : `${deeplinks}/gql`,
       "NEXT_PUBLIC_GQL_SSL": "0",
-      "NEXT_PUBLIC_DEEPLINKS_SERVER": `${deepcase}`,
+      "NEXT_PUBLIC_DEEPLINKS_SERVER": isGidpod ? gitpodUrl(3007) : `${deepcase}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
       "JWT_SECRET": jwtSecret,
