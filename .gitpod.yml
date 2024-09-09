@@ -1,3 +1,35 @@
+image:
+  file: .gitpod.Dockerfile 
+
+ports:
+  - port: 3007
+    onOpen: open-preview
+    visibility: public
+  - port: 4000
+    onOpen: open-browser
+    visibility: public
+  - port: 3006
+    onOpen: ignore
+    visibility: public
+  - port: 8080
+    onOpen: ignore
+    visibility: public
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
+    - graphql.vscode-graphql
+    - yzhang.markdown-all-in-one
+    - ms-vscode.vscode-typescript-tslint-plugin
+    - hediet.vscode-drawio
+    - ms-azuretools.vscode-docker
+
 tasks:
-  - init: npm ci
-    command: echo "hello"
+  - init: |
+      ./ensure-node-version.sh
+      . ~/.nvm/nvm.sh && nvm use
+      ./prebuild.sh | tee gitpod-prebuild.log.txt
+  - command: |
+      ./ensure-node-version.sh
+      . ~/.nvm/nvm.sh && nvm use
+      ./wait-for-prebuild.sh && (npm run gitpod-start | tee gitpod-start.log.txt);
