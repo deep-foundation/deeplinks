@@ -40,71 +40,71 @@ export const isAdminBoolExp = async (subjectId = 'X-Hasura-User-Id') => ({
 export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id', role: string) => ({
   role,
   select: {
-    _or: [
-      {
-        type: {
-          can_object: {
-            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowSelectType') },
-            subject_id: { _eq: subjectId },
-          },
-        }
-      },
-      {
+    // _or: [
+      // {
+      //   type: {
+      //     can_object: {
+      //       action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowSelectType') },
+      //       subject_id: { _eq: subjectId },
+      //     },
+      //   }
+      // },
+      // {
         can_object: {
           action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowSelect') },
           subject_id: { _eq: subjectId },
         },
-      },
-    ],
+      // },
+    // ],
   },
   insert: {
-    type: {},
-    _or: [
-      {
-        type: {
+    // type: {},
+    // _or: [
+      // {
+        // type: {
           can_object: {
-            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowInsertType') },
+            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowInsert') },
             subject_id: { _eq: subjectId },
           },
-        },
-      },
-    ]
+        // },
+      // },
+    // ]
   },
   update: {
-    _or: [
-      {
+    // _or: [
+      // {
         can_object: {
           action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowUpdate') },
           subject_id: { _eq: subjectId },
         },
-      },
-      {
-        type: {
-          can_object: {
-            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowUpdateType') },
-            subject_id: { _eq: subjectId },
-          },
-        },
-      },
-    ]
+      // },
+    //   {
+    //     type: {
+    //       can_object: {
+    //         action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowUpdateType') },
+    //         subject_id: { _eq: subjectId },
+    //       },
+    //     },
+    //   },
+    // ]
   },
   delete: {
-    _or: [
-      {
+    // _or: [
+    //   {
         can_object: {
           action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowDelete') },
           subject_id: { _eq: subjectId },
         },
-      },
-      {
-        type: {
-          can_object: {
-            action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowDeleteType') },
-            subject_id: { _eq: subjectId },
-          },
-        },
-      },
-    ]
+      // },
+      // {
+      //   type: {
+      //     can_object: {
+      //       action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowDeleteType') },
+      //       subject_id: { _eq: subjectId },
+      //     },
+      //   },
+      // },
+    // ]
   },
 
   columns: ['id','from_id','to_id','type_id'],
@@ -416,9 +416,9 @@ export const up = async () => {
             "${TABLE_NAME}" as ro,
             "${SELECTORS_TABLE_NAME}" as sr
             WHERE
-            can."object_id" = NEW."type_id" AND
+            can."object_id" = NEW."id" AND
             can."subject_id" = user_id AND
-            can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowInsertType')} AND
+            can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowInsert')} AND
             ro."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')} AND
             ro."from_id" = can."rule_id" AND
             sr."selector_id" = ro."to_id" AND
@@ -480,9 +480,9 @@ export const up = async () => {
           "${TABLE_NAME}" as ro,
           "${SELECTORS_TABLE_NAME}" as sr
           WHERE
-          can."object_id" = OLD."type_id" AND
+          can."object_id" = OLD."id" AND
           can."subject_id" = user_id AND
-          can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowDeleteType')} AND
+          can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowDelete')} AND
           ro."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')} AND
           ro."from_id" = can."rule_id" AND
           sr."selector_id" = ro."to_id" AND

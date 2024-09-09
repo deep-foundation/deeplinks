@@ -213,7 +213,7 @@ export const up = async () => {
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
-                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                          to_id: await root.id('@deep-foundation/core', 'typesTree'),
                         },
                       },
                     },
@@ -223,7 +223,7 @@ export const up = async () => {
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
-                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                          to_id: await root.id('@deep-foundation/core', 'typesTree'),
                         },
                       },
                     },
@@ -233,7 +233,7 @@ export const up = async () => {
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
-                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                          to_id: await root.id('@deep-foundation/core', 'typesTree'),
                         },
                       },
                     },
@@ -243,7 +243,7 @@ export const up = async () => {
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
-                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                          to_id: await root.id('@deep-foundation/core', 'typesTree'),
                         },
                       },
                     },
@@ -253,7 +253,7 @@ export const up = async () => {
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),
-                          to_id: await root.id('@deep-foundation/core', 'containTree'),
+                          to_id: await root.id('@deep-foundation/core', 'typesTree'),
                         },
                       },
                     },
@@ -271,7 +271,7 @@ export const up = async () => {
                   data: [
                     {
                       type_id: await root.id('@deep-foundation/core', 'SelectorInclude'),
-                      to_id: await root.id('@deep-foundation/core', 'AllowSelectType'),
+                      to_id: await root.id('@deep-foundation/core', 'AllowSelect'),
                       out: {
                         data: {
                           type_id: await root.id('@deep-foundation/core', 'SelectorTree'),

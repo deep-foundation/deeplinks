@@ -42,6 +42,7 @@ const AllowAdminId = _ids?.['@deep-foundation/core']?.AllowAdmin // deep.idLocal
 const AllowInsertTypeId = _ids?.['@deep-foundation/core']?.AllowInsertType // deep.idLocal('@deep-foundation/core', 'AllowInsertType')
 const AllowUpdateTypeId = _ids?.['@deep-foundation/core']?.AllowUpdateType // deep.idLocal('@deep-foundation/core', 'AllowUpdateType')
 const AllowDeleteTypeId = _ids?.['@deep-foundation/core']?.AllowDeleteType // deep.idLocal('@deep-foundation/core', 'AllowDeleteType')
+const AllowInsertId = _ids?.['@deep-foundation/core']?.AllowInsert // deep.idLocal('@deep-foundation/core', 'AllowDelete');
 const AllowDeleteId = _ids?.['@deep-foundation/core']?.AllowDelete // deep.idLocal('@deep-foundation/core', 'AllowDelete');
 const AllowUpdateId = _ids?.['@deep-foundation/core']?.AllowUpdate // deep.idLocal('@deep-foundation/core', 'AllowUpdate');
 const decodeBase64urlCode = `select decode(rpad(translate($1, '-_', '+/'),4*((length($1)+3)/4),'='),'base64');`;
@@ -256,11 +257,11 @@ const mpMeCode = '`'.concat(sql`
 
 const checkAdmin = sql`\`SELECT exists(SELECT 1 FROM "public"."can" WHERE "action_id" = ${AllowAdminId}::bigint AND "subject_id" = $1::bigint )\``;
 
-const checkInsert = sql`\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertTypeId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkInsert = sql`\`SELECT exists(SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ("can"."action_id") = (${AllowInsertId} :: bigint) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
-const checkUpdate = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateTypeId} :: bigint) OR ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkUpdate = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowUpdateId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
-const checkDelete = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteTypeId} :: bigint) OR ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
+const checkDelete = sql`\`SELECT exists( SELECT "linkForCheck"."id" FROM "public"."can" AS "can", "public"."links" AS "linkForCheck", "public"."links" AS "typeLink" WHERE ( ("can"."action_id") = (${AllowDeleteId} :: bigint) ) AND ("can"."subject_id") = ($2 :: bigint) AND ("can"."object_id") = ("typeLink"."id") AND ("typeLink"."id") = ("linkForCheck"."type_id") AND ("linkForCheck"."id") = ($1 :: bigint))\``
 
 const checkInserted = `\`SELECT id from links where id = \${linkid}\``
 

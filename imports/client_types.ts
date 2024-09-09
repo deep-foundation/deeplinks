@@ -90,13 +90,13 @@ export interface BoolExpValue<T> extends BoolExp<BoolExpValue<T>> {
 export interface BoolExpCan extends BoolExp<BoolExpCan> {
   /** Link of current rule. */
   rule_id?: ComparasionType<Id>;
-  /** Id of link symbolizing action, as AllowSelect/AllowInsertType/AllowUpdat e/AllowDelete...*/
+  /** Id of link symbolizing action, as AllowSelect/AllowUpdate/AllowDelete...*/
   action_id?: ComparasionType<Id>;
   /** Id of link symbolizing object to which the rule applies. */
   object_id?: ComparasionType<Id>;
   /** Id of link for which, as an authorized link, the rule to action on the object i s granted.*/
   subject_id?: ComparasionType<Id>;
-  /** Relation to link symbolizing action, as AllowSelect/AllowInsertType/AllowUpdat e/AllowDelete...*/
+  /** Relation to link symbolizing action, as AllowSelect/AllowUpdate/AllowDelete...*/
   rule?: BoolExpLink | Id;
   /** Relation to link symbolizing object to which the rule applies. */
   action?: BoolExpLink | Id;

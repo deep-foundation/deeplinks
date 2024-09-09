@@ -271,10 +271,10 @@ export const up = async () => {
     action: [
       {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        to_id: deep.idLocal('@deep-foundation/core', 'AllowInsertType'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowInsert'),
         out: { data: {
           type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
         } },
       },
     ],
@@ -299,10 +299,10 @@ export const up = async () => {
     action: [
       {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        to_id: deep.idLocal('@deep-foundation/core', 'AllowUpdateType'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowUpdate'),
         out: { data: {
           type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
         } },
       },
     ],
@@ -327,10 +327,10 @@ export const up = async () => {
     action: [
       {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        to_id: deep.idLocal('@deep-foundation/core', 'AllowDeleteType'),
+        to_id: deep.idLocal('@deep-foundation/core', 'AllowDelete'),
         out: { data: {
           type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+          to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
         } },
       },
     ],
