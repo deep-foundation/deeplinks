@@ -4,7 +4,7 @@ import { DeepClient } from '../imports/client.js';
 import { installPackage } from './1678940577209-deepcase.js';
 import { packageExists, sharePermissions } from './1664940577200-tsx.js';
 
-const debug = Debug('deeplinks:migrations:npm-packager-ui');
+const debug = Debug('deeplinks:migrations:perception');
 const log = debug.extend('log');
 const error = debug.extend('error');
 
@@ -20,16 +20,14 @@ const root = new DeepClient({
 
 export const up = async () => {
   log('up');
-  // disable support deepcase and make migrations in gh-actions faster
-  // const packageName = '@deep-foundation/npm-packager-ui';
-  // if (!await packageExists(packageName)) {
-  //   const adminId = await root.id('deep', 'admin');
-  //   const admin = await root.login({ linkId: adminId });
-  //   const deep = new DeepClient({ deep: root, ...admin });
+  const packageName = '@deep-foundation/perception';
+  if (!await packageExists(packageName)) {
+    const adminId = await root.id('deep', 'admin');
+    const admin = await root.login({ linkId: adminId });
+    const deep = new DeepClient({ deep: root, ...admin });
 
-  //   const packageId = await installPackage(deep, packageName);
-  //   await sharePermissions(adminId, packageId);
-  // }
+    await installPackage(deep, '@deep-foundation/perception');
+  }
 };
 
 export const down = async () => {

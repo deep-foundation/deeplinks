@@ -46,60 +46,61 @@ export const installPackage = async (deep, packageName) => {
 
 export const up = async () => {
   log('up');
-  const packageName = '@deep-foundation/deepcase';
-  if (!await packageExists(packageName)) {
-    const adminId = await root.id('deep', 'admin');
+  // disable support deepcase and make migrations in gh-actions faster
+  // const packageName = '@deep-foundation/deepcase';
+  // if (!await packageExists(packageName)) {
+  //   const adminId = await root.id('deep', 'admin');
 
-    const admin = await root.login({ linkId: adminId });
-    const deep = new DeepClient({ deep: root, ...admin });
+  //   const admin = await root.login({ linkId: adminId });
+  //   const deep = new DeepClient({ deep: root, ...admin });
   
-    log('adminId', adminId);
-    const packageId = await installPackage(deep, packageName);
-    await sharePermissions(adminId, packageId);
+  //   log('adminId', adminId);
+  //   const packageId = await installPackage(deep, packageName);
+  //   await sharePermissions(adminId, packageId);
   
-    const usersCanInsertSafeLinks = await deep.id('deep', 'admin', 'usersCanInsertSafeLinks');
-    const usersCanUpdateSafeLinks = await deep.id('deep', 'admin', 'usersCanUpdateSafeLinks');
-    const usersCanDeleteSafeLinks = await deep.id('deep', 'admin', 'usersCanDeleteSafeLinks');
+  //   const usersCanInsertSafeLinks = await deep.id('deep', 'admin', 'usersCanInsertSafeLinks');
+  //   const usersCanUpdateSafeLinks = await deep.id('deep', 'admin', 'usersCanUpdateSafeLinks');
+  //   const usersCanDeleteSafeLinks = await deep.id('deep', 'admin', 'usersCanDeleteSafeLinks');
   
-    const { data: rules } = await deep.select({
-      'up': {
-        'parent_id': { _in: [usersCanInsertSafeLinks, usersCanUpdateSafeLinks, usersCanDeleteSafeLinks] },
-      }
-    });
-    deep.minilinks.apply([...rules]);
-    const insertSelector = deep.minilinks.byId[usersCanInsertSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
-    const updateSelector = deep.minilinks.byId[usersCanUpdateSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
-    const deleteSelector = deep.minilinks.byId[usersCanDeleteSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
-    await deep.insert([
-      {
-        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        from_id: insertSelector,
-        to_id: await deep.id(packageName, 'Traveler'),
-        out: { data: {
-          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        from_id: updateSelector,
-        to_id: await deep.id(packageName, 'Traveler'),
-        out: { data: {
-          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
-        } },
-      },
-      {
-        type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-        from_id: deleteSelector,
-        to_id: await deep.id(packageName, 'Traveler'),
-        out: { data: {
-          type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-          to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
-        } },
-      },
-    ]);
-  }
+  //   const { data: rules } = await deep.select({
+  //     'up': {
+  //       'parent_id': { _in: [usersCanInsertSafeLinks, usersCanUpdateSafeLinks, usersCanDeleteSafeLinks] },
+  //     }
+  //   });
+  //   deep.minilinks.apply([...rules]);
+  //   const insertSelector = deep.minilinks.byId[usersCanInsertSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  //   const updateSelector = deep.minilinks.byId[usersCanUpdateSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  //   const deleteSelector = deep.minilinks.byId[usersCanDeleteSafeLinks]?.outByType?.[deep.idLocal('@deep-foundation/core', 'RuleObject')]?.[0]?.to?.id;
+  //   await deep.insert([
+  //     {
+  //       type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+  //       from_id: insertSelector,
+  //       to_id: await deep.id(packageName, 'Traveler'),
+  //       out: { data: {
+  //         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+  //         to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+  //       } },
+  //     },
+  //     {
+  //       type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+  //       from_id: updateSelector,
+  //       to_id: await deep.id(packageName, 'Traveler'),
+  //       out: { data: {
+  //         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+  //         to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+  //       } },
+  //     },
+  //     {
+  //       type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+  //       from_id: deleteSelector,
+  //       to_id: await deep.id(packageName, 'Traveler'),
+  //       out: { data: {
+  //         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+  //         to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+  //       } },
+  //     },
+  //   ]);
+  // }
 };
 
 export const down = async () => {

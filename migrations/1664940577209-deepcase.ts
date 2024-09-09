@@ -6,6 +6,7 @@ const error = debug.extend('error');
 
 export const up = async () => {
   log('up');
+  // disable support deepcase and make migrations in gh-actions faster
   // moved to packages/deeplinks/migrations/1678940577209-deepcase.ts
 };
 
