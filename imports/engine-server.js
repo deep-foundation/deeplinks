@@ -337,7 +337,7 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
     const arr = []
     arr.push(`cd "${path.normalize(`${_deeplinks}/`)}"`);
     arr.push(`docker compose pull`);
-    arr.push(`docker compose -p deep up postgres hasura`);
+    arr.push(`docker compose -p deep up postgres hasura -d`);
     arr.push(`docker volume create deep-db-data`);
     if (platform === "win32") arr.push(`mkdir -p ${envs['MIGRATIONS_DIR']}`);
     arr.push(`npx -y -q wait-on --timeout 100000 ${
@@ -346,7 +346,7 @@ const _generateEngineStr = ({ needNPX, operation, isDeeplinksDocker, isDeepcaseD
       'http-get://localhost'
     }:8080/healthz`);
     if (+envs['RESTORE_VOLUME_FROM_SNAPSHOT']) arr.push(`docker run -v "${envs['MIGRATIONS_DIR']}":/migrations -v deep-db-data:/data --rm --name links --entrypoint "sh" deepf/deeplinks:main -c "cd / && tar xf /backup/volume.tar --strip 1 && cp /backup/.migrate /migrations/.migrate"`);
-    arr.push(`docker compose -p deep up`);
+    arr.push(`docker compose -p deep up -d`);
     if (+envs['MANUAL_MIGRATIONS']) arr.push(`npm run migrate -- -f ${envs['MIGRATIONS_DIR']}/.migrate`);
     str = arr.join(' && ');
   }
