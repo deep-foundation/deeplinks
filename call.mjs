@@ -59,7 +59,7 @@ const options = commandLineArgs(optionDefinitions);
 
 if (options.generate) {
   const hasuraKey = generateRandomKey(32);
-  const postgresKey = generateRandomKey(32);
+  const postgresKey = 'd2ef4e87ecc262ff4615887006d8b7b4'; // generateRandomKey(32);
   const minioAccess = generateRandomKey(32);
   const minioSecret = generateRandomKey(32);
   // const jwt_secret = JSON.stringify(jwt({ secret: hasuraKey })).replace('"', '\"'); 
