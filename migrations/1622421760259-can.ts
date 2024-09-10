@@ -85,7 +85,7 @@ export const up = async () => {
       cs."rule_subject_id" != 0 AND
       cs."selector_include_id" != 0 AND
       mps_include."path_item_id" = cs."link_id" AND
-      mps_include."group_id" = cs."tree_id" AND
+      mps_include."group_id" = cs."tree_id"
       ${/*NOT EXISTS (
         SELECT mps_exclude."id"
         FROM
