@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const  { promisify } = require('util');
 const { exec } = require('child_process');
-const { promises: fs } = require('fs');
+const fs = require('fs');
 const execP = promisify(exec);
 const path = require('path');
 
