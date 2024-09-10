@@ -13,13 +13,16 @@ import { dirname } from 'path';
 import axios from 'axios';
 import { promisify } from 'util';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const isGitpod = !!process?.env?.GITPOD_WORKSPACE_ID;
 
 const execP = promisify(exec);
 
 // const __filename = fileURLToPath(import.meta.url);
-// const __dirname = dirname(__filename);
-const __dirname = process.cwd();
+// const cwd = dirname(__filename);
+const cwd = process.cwd();
 
 function generateRandomKey(length) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -37,6 +40,28 @@ async function gitpodUrl(port) {
 // const DEEPLINKS_CALL_OPTIONS = process.env.DEEPLINKS_CALL_OPTIONS || '{ "operation": "run" }';
 const DEEPLINKS_CALL_OPTIONS = process.env.DEEPLINKS_CALL_OPTIONS;
 
+const _exec = (command) => {
+  const bash = exec(command, (err, stdout, stderr) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log(stdout);
+  });
+
+  bash.stdout.on('data', function (data) {
+    console.log(data.toString());
+  });
+
+  bash.stderr.on('data', function (data) {
+    console.log(data.toString());
+  });
+
+  bash.on('exit', function (code) {
+    console.log('child process exited with code: ' + code.toString());
+  });
+};
+
 const optionDefinitions = [
   { name: 'config', alias: 'c', type: String },
   { name: 'exec', alias: 'e', type: Boolean },
@@ -46,6 +71,7 @@ const optionDefinitions = [
 
   { name: 'last', alias: 'l', type: Boolean }, // restore
   { name: 'migrate', alias: 'm', type: Boolean }, // migrate
+  { name: 'unmigrate', alias: 'u', type: Boolean }, // unmigrate
 
   { name: 'generate', alias: 'g', type: Boolean },
   { name: 'deeplinks', type: String },
@@ -96,8 +122,10 @@ if (options.generate) {
       "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       'DEEP_HASURA_GRAPHQL_LOG_LEVEL': 'error',
       "POSTGRES_MIGRATIONS_SOURCE": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
-      "RESTORE_VOLUME_FROM_SNAPSHOT": options.last || isGitpod ? '1': '0',
-      "MANUAL_MIGRATIONS": options.migrate ? '1': '0',
+      "RESTORE_VOLUME_FROM_SNAPSHOT": '0',
+      "MANUAL_MIGRATIONS": '0',
+      // "RESTORE_VOLUME_FROM_SNAPSHOT": options.last || isGitpod ? '1': '0',
+      // "MANUAL_MIGRATIONS": options.migrate ? '1': '0',
       "MANUAL_MIGRATIONS": "1",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,
@@ -106,16 +134,16 @@ if (options.generate) {
     }
   };
   console.log(generated);
-  fs.writeFileSync(__dirname+'/deep.config.json', JSON.stringify(generated, null, 2));
+  fs.writeFileSync(cwd+'/deep.config.json', JSON.stringify(generated, null, 2));
 }
 
 (async() => {
   let deepConfig;
   try {
-    deepConfig = JSON.parse(fs.readFileSync(__dirname+'/deep.config.json', { encoding: 'utf8' }));
+    deepConfig = JSON.parse(fs.readFileSync(cwd+'/deep.config.json', { encoding: 'utf8' }));
   } catch(e) {}
   if (!options.config && !deepConfig) {
-    console.log(`${__dirname}/deep.config.json or -c "$(cat your/path/to/deep.config.json)" is not defined`);
+    console.log(`${cwd}/deep.config.json or -c "$(cat your/path/to/deep.config.json)" is not defined`);
     return;
   }
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
@@ -132,6 +160,18 @@ if (options.generate) {
     console.log('ENVS', envsStr);
   }
 
+  if (options.last) {
+    _exec(`${envsStr} docker exec -it deep-links sh -c "node snapshots/last.js"`);
+  }
+
+  if (options.migrate) {
+    _exec(`${envsStr} cd ${__dirname} && npm run migrate`);
+  }
+
+  if (options.unmigrate) {
+    _exec(`${envsStr} cd ${__dirname} && npm run unmigrate`);
+  }
+
   if (options.exec) {
     const deep = new DeepClient({
       apolloClient: generateApolloClient({
@@ -144,25 +184,8 @@ if (options.generate) {
     r.context.config = config;
     r.context.deep = deep;
   }
+
   if (options.bash) {
-    const bash = exec(`${envsStr} ${options.bash}`, (err, stdout, stderr) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      console.log(stdout);
-    });
-  
-    bash.stdout.on('data', function (data) {
-      console.log(data.toString());
-    });
-
-    bash.stderr.on('data', function (data) {
-      console.error(data.toString());
-    });
-
-    bash.on('exit', function (code) {
-      console.log('child process exited with code: ' + code.toString());
-    });
+    _exec(`${envsStr} ${options.bash}`);
   }
 })()
