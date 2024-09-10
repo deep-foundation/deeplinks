@@ -63,17 +63,17 @@ const _exec = (command) => {
 };
 
 const optionDefinitions = [
-  { name: 'config', alias: 'c', type: String },
-  { name: 'exec', alias: 'e', type: Boolean },
-  { name: 'run', alias: 'r', type: Boolean },
-  { name: 'stop', alias: 's', type: Boolean },
+  { name: 'config', type: String },
+  { name: 'exec', type: Boolean },
+  { name: 'up', type: Boolean },
+  { name: 'down', type: Boolean },
+  { name: 'snapshot', type: Boolean }, // restore from snapshot
   { name: 'bash', type: String },
 
-  { name: 'last', alias: 'l', type: Boolean }, // restore
-  { name: 'migrate', alias: 'm', type: Boolean }, // migrate
-  { name: 'unmigrate', alias: 'u', type: Boolean }, // unmigrate
+  { name: 'migrate', type: Boolean }, // migrate
+  { name: 'unmigrate', type: Boolean }, // unmigrate
 
-  { name: 'generate', alias: 'g', type: Boolean },
+  { name: 'generate', type: Boolean },
   { name: 'deeplinks', type: String },
   { name: 'deepcase', type: String },
   { name: 'ssl', type: Boolean },
@@ -148,10 +148,10 @@ if (options.generate) {
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
   console.log('config', config);
 
-  if (config && options.run) {
+  if (config && options.up) {
     await call(config);
   }
-  if (config && options.stop) {
+  if (config && options.down) {
     _exec(`cd ${__dirname} && docker compose -p deep down`);
   }
   const envs = generateEnvs({ envs: { ...(config?.envs || {}) }, isDeeplinksDocker: 0 });
@@ -162,8 +162,8 @@ if (options.generate) {
     console.log('ENVS', envsStr);
   }
 
-  if (options.last) {
-    _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres && (docker exec -it deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres`);
+  if (options.snapshot) {
+    _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres && (docker exec deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres`);
   }
 
   if (options.migrate) {
