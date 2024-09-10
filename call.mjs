@@ -181,11 +181,12 @@ if (options.generate) {
       }),
     })
     const r = repl.start('> ');
+    r.context.__dirname = __dirname;
     r.context.config = config;
     r.context.deep = deep;
   }
 
   if (options.bash) {
-    _exec(`${envsStr} ${options.bash}`);
+    _exec(`${envsStr} cd ${__dirname} && ${options.bash}`);
   }
 })()
