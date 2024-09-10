@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.486",
+  "version": "0.0.487",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -31,7 +31,7 @@
     "start-deeplinks-docker": "docker compose pull && docker compose -p deep up -d",
     "stop-deeplinks-docker": "docker compose -p deep down",
     "snapshot:create": "node snapshots/create.js",
-    "snapshot:last": "node snapshots/last.js",
+  "snapshot:last": "node snapshots/last.js",
     "snapshot:dump": "node snapshots/dump.js",
     "warmup": "node warmup.js"
   },

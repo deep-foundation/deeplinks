@@ -126,7 +126,6 @@ if (options.generate) {
       "MANUAL_MIGRATIONS": '0',
       // "RESTORE_VOLUME_FROM_SNAPSHOT": options.last || isGitpod ? '1': '0',
       // "MANUAL_MIGRATIONS": options.migrate ? '1': '0',
-      "MANUAL_MIGRATIONS": "1",
       "MINIO_ROOT_USER": minioAccess,
       "MINIO_ROOT_PASSWORD": minioSecret,
       "S3_ACCESS_KEY": minioAccess,
@@ -152,6 +151,9 @@ if (options.generate) {
   if (config && options.run) {
     await call(config);
   }
+  if (config && options.stop) {
+    _exec(`cd ${__dirname} && docker compose -p deep down`);
+  }
   const envs = generateEnvs({ envs: { ...(config?.envs || {}) }, isDeeplinksDocker: 0 });
   const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: 0 })
 
@@ -161,7 +163,7 @@ if (options.generate) {
   }
 
   if (options.last) {
-    _exec(`${envsStr} docker exec -it deep-links sh -c "node snapshots/last.js"`);
+    _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres && (docker exec -it deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres`);
   }
 
   if (options.migrate) {
