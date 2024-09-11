@@ -75,7 +75,7 @@ const optionDefinitions = [
 
   { name: 'generate', type: Boolean },
   { name: 'deeplinks', type: String },
-  { name: 'deepcase', type: String },
+  { name: 'perception', type: String },
   { name: 'ssl', type: Boolean },
 
   { name: 'envs', type: Boolean },
@@ -94,8 +94,8 @@ if (options.generate) {
     publicIp = await getPublicIP();
   } catch(e) {}
   const deeplinks = options.deeplinks || `http://${publicIp}:3006`;
-  const deepcase = options.deepcase || `http://${publicIp}:3007`;
-  if ((!options.deeplinks || !options.deepcase) && !publicIp) throw new Error(`--deepcase and --deeplinks must be defined, or publicIp available`);
+  const perception = options.perception || `http://${publicIp}:3007`;
+  if ((!options.deeplinks || !options.perception) && !publicIp) throw new Error(`--perception and --deeplinks must be defined, or publicIp available`);
   const jwtSecret = `'{\"type\":\"HS256\",\"key\":\"${crypto.randomBytes(50).toString('base64')}\"}'`;
   const generated = {
     "operation": "run",
@@ -104,7 +104,7 @@ if (options.generate) {
       "NEXT_PUBLIC_DEEPLINKS_URL": isGitpod ? await gitpodUrl(3006) : `${deeplinks}`,
       "NEXT_PUBLIC_GQL_PATH": isGitpod ? await gitpodUrl(3006)+'/gql' : `${deeplinks}/gql`,
       "NEXT_PUBLIC_GQL_SSL": "0",
-      "NEXT_PUBLIC_DEEPLINKS_SERVER": isGitpod ? await gitpodUrl(3007) : `${deepcase}`,
+      "NEXT_PUBLIC_DEEPLINKS_SERVER": isGitpod ? await gitpodUrl(3007) : `${perception}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
       "JWT_SECRET": jwtSecret,
