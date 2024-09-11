@@ -30,7 +30,11 @@ export const up = async () => {
   log('view');
   await api.sql(sql`
     CREATE VIEW ${CAN_TABLE_NAME} AS
-    SELECT DISTINCT ca."rule_id" as "rule_id", mpo_include."item_id" as "object_id", mps_include."item_id" as "subject_id", mpa_include."item_id" as "action_id"
+    SELECT DISTINCT ca."rule_id" as "rule_id",
+      mpo_include."item_id" as "object_id",
+      mps_include."item_id" as "subject_id",
+      mpa_include."item_id" as "action_id",
+      ca."selector_id" as "object_selector_id"
     FROM
       ${CACHE} co
     JOIN 

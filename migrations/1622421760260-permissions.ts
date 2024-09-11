@@ -476,19 +476,15 @@ export const up = async () => {
         IN (
           SELECT sr.*
           FROM
-          "${CAN_TABLE_NAME}" as can,
-          "${TABLE_NAME}" as ro,
-          "${SELECTORS_TABLE_NAME}" as sr
+            "${CAN_TABLE_NAME}" as can
+          JOIN
+            "${SELECTORS_TABLE_NAME}" as sr ON sr."selector_id" = can."object_selector_id"
           WHERE
-          can."object_id" = OLD."id" AND
-          can."subject_id" = user_id AND
-          can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowDelete')} AND
-          ro."type_id" = ${deep.idLocal('@deep-foundation/core', 'RuleObject')} AND
-          ro."from_id" = can."rule_id" AND
-          sr."selector_id" = ro."to_id" AND
-          sr."item_id" = OLD."type_id" AND
-          sr."query_id" IS NOT NULL AND
-          sr."query_id" != 0
+            can."object_id" = OLD."id" AND
+            can."subject_id" = user_id AND
+            can."action_id" = ${deep.idLocal('@deep-foundation/core', 'AllowDelete')} AND
+            sr."query_id" IS NOT NULL AND
+            sr."query_id" != 0
         )
         LOOP
           SELECT INTO sqlResult bool_exp_execute(OLD.id, boolExp."query_id", user_id);
