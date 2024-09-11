@@ -2544,6 +2544,7 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   data?: LL[];
   error?: any;
   loading: boolean;
+  refetch?: () => Promise<any>;
 } {
   const miniName = useMemo(() => options?.mini || random(), []);
   debug('useDeepQuery', miniName, query, options);
