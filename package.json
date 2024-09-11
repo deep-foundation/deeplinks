@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.488",
+  "version": "0.0.489",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
