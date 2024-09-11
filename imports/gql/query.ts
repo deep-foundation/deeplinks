@@ -152,7 +152,7 @@ export const generateQueryData = ({
     const generateCustomArgsAndVariables = (customReturn, prefix = '', tableName) => {
       let result = '';
       for (let r in customReturn) {
-        const { return: _return, relation, table, ...customWhere } = customReturn[r];
+        const { return: _return, relation, table, distinct_on, limit, offset, order_by, ...customWhere } = customReturn[r];
         const _table = _serialize[tableName]?.relations[relation];
         if (!_table) throw new Error(`relation ${relation} not found in table ${tableName}`);
         const postfix = `${prefix}_${r}`;
@@ -160,14 +160,28 @@ export const generateQueryData = ({
         if (_return) {
           customReturning += generateCustomArgsAndVariables(_return, postfix, _table);
         }
-        if (manyRelations[relation]) {
+        if (manyRelations?.[tableName]?.[relation]) {
           const { defs: _defs, args: _args } = generateDefs(fields, index, _table, postfix);
           defs.push(..._defs);
           const variable = customWhere;
           resultVariables['where' + index + postfix] = variable;
           result += ` ${r}: ${customReturn[r].relation}(${_args.join(',')}) { ${_serialize[_table].returning} ${customReturning} }`;
+          if (distinct_on) {
+            resultVariables['distinct_on' + index + postfix] = distinct_on;
+          }
+          if (limit) {
+            resultVariables['limit' + index + postfix] = limit;
+          }
+          if (offset) {
+            resultVariables['offset' + index + postfix] = offset;
+          }
+          if (order_by) {
+            resultVariables['order_by' + index + postfix] = order_by;
+          }
+          // console.log('generateCustomArgsAndVariables 1', { relation, resultVariables, result, _defs, _args });
         } else {
           result += ` ${r}: ${customReturn[r].relation} { ${_serialize[_table].returning} ${customReturning} }`;
+          // console.log('generateCustomArgsAndVariables 2', { relation, resultVariables, result });
         }
       }
       return result;
@@ -189,6 +203,7 @@ export const generateQueryData = ({
       resultAlias,
       resultVariables,
     };
+    // console.log('generateQueryResult 1', JSON.stringify(result, null, 2));
     log('generateQueryResult', result);
     return result;
   };
