@@ -117,7 +117,7 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-  links:
+  perception:
     container_name: deep-perception
     image: deepf/perception:main
     networks:
