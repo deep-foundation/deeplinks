@@ -51,7 +51,7 @@ export const up = async () => {
       ${MP} mps_include ON mps_include.path_item_id = cs.link_id
                     AND mps_include.group_id = cs.tree_id
     WHERE
-      ca."rule_id" != 0
+      ca."rule_id" != 0 AND (ca.rule_action_id != 0) AND (co.rule_object_id != 0) AND (cs.rule_subject_id != 0)
   `);
   await api.query({
     type: 'track_table',

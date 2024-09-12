@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.495",
+  "version": "0.0.496",
   "license": "Unlicense",
   "type": "module",
   "scripts": {
@@ -33,7 +33,8 @@
     "snapshot:create": "node snapshots/create.js",
   "snapshot:last": "node snapshots/last.js",
     "snapshot:dump": "node snapshots/dump.js",
-    "warmup": "node warmup.js"
+    "warmup": "node warmup.js",
+    "start": "node call.mjs"
   },
   "bin": {
     "deeplinks": "./call.mjs"

@@ -27,6 +27,8 @@ vscode:
 tasks:
   - init: |
       npm ci
+      npm run build
+      npm start -- --generate --up
   # - command: |
   #     ./ensure-node-version.sh
   #     . ~/.nvm/nvm.sh && nvm use

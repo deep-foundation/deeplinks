@@ -79,11 +79,13 @@ const optionDefinitions = [
   { name: 'ssl', type: Boolean },
 
   { name: 'envs', type: Boolean },
+
+  { name: 'force', type: Boolean },
 ];
 
 const options = commandLineArgs(optionDefinitions);
 
-if (options.generate) {
+if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.json`))) {
   const hasuraKey = generateRandomKey(32);
   const postgresKey = 'd2ef4e87ecc262ff4615887006d8b7b4'; // generateRandomKey(32);
   const minioAccess = generateRandomKey(32);
@@ -163,18 +165,22 @@ if (options.generate) {
   }
 
   if (options.snapshot) {
+    await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
     _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres && (docker exec deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres`);
   }
-
+  
   if (options.migrate) {
+    await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
     _exec(`${envsStr} cd ${__dirname} && npm run migrate`);
   }
-
+  
   if (options.unmigrate) {
+    await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
     _exec(`${envsStr} cd ${__dirname} && npm run unmigrate`);
   }
-
+  
   if (options.exec) {
+    await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
     const deep = new DeepClient({
       apolloClient: generateApolloClient({
         path: `${envs.DEEPLINKS_HASURA_PATH}/v1/graphql`,

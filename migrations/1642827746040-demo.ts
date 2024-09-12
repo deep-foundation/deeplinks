@@ -187,7 +187,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'Active'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -195,7 +195,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'Focus'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -203,7 +203,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'Contain'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -211,7 +211,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'Space'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -219,7 +219,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'Query'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -227,7 +227,7 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'SyncTextFile'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
       } },
     },
     {
@@ -235,9 +235,26 @@ export const up = async () => {
       to_id: deep.idLocal('@deep-foundation/core', 'AsyncFile'),
       out: { data: {
         type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
+      } },
+    },
+    {
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/core', 'Type'),
+      out: { data: {
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
         to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
+    {
+      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
+      to_id: deep.idLocal('@deep-foundation/tsx', 'TSX'),
+      out: { data: {
+        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
+        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
+      } },
+    },
+    
   ];
   await insertRule('usersCanInsertSafeLinks', admin, {
     subject: usersWhere,
@@ -256,12 +273,12 @@ export const up = async () => {
                   tree_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
                   parent_id: { _eq: 'X-Deep-User-Id' },
                 },
-                _not: {
-                  up: {
-                    tree_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
-                    parent: { type_id: 22 },
-                  },
-                },
+                // _not: {
+                //   up: {
+                //     tree_id: { _eq: deep.idLocal('@deep-foundation/core', 'containTree') },
+                //     parent: { type_id: 22 },
+                //   },
+                // },
               } },
             ],
           } } }
