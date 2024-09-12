@@ -534,6 +534,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   stringify(any?: any): string;
 
+  one(exp: Exp<'links'> | Id): Promise<L>;
   select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[] | number>>;
   subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[] | number>;
 
@@ -630,6 +631,8 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   }): Exp;
 
   emitter: EventEmitter;
+
+  url: (target: 'deeplinks' | 'gql') => string;
 }
 
 export interface DeepClientAuthResult {
@@ -1106,6 +1109,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   _generateResult<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers'>(exp: Exp<TTable>, options: Options<TTable>, data): any[] | Promise<any[]> {
     return data;
+  }
+
+  async one(exp) {
+    return (await this.select(exp))?.data?.[0];
   }
 
   /**
@@ -2358,6 +2365,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     if (!o.contains) q._not = { type_id: this.idLocal('@deep-foundation/core', 'Contain') };
     else if (!o.values) q.type_id = this.idLocal('@deep-foundation/core', 'Contain');
     return q;
+  }
+
+  url(target: 'deeplinks' | 'gql') {
+    return target === 'gql' ? this.client.path : `http${this.client.ssl ? 's' : ''}://${this.client.path.slice(0, this.client.path.indexOf('/gql'))}`
   }
 }
 
