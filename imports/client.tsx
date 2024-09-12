@@ -1062,7 +1062,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }
 
   stringify(any?: any): string {
-    if (typeof(any) === 'string') {
+    if (typeof(any) === 'object' && typeof(any?.message) === 'string') {
+      return any?.message;
+    } else if (typeof(any) === 'string') {
       let json;
       try { json = JSON.parse(any); } catch(e) {}
       return json ? JSON.stringify(json, null, 2) : any.toString();
