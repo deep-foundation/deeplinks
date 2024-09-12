@@ -35,33 +35,33 @@ export class Traveler {
     this.mode = mode;
   }
 
-  from(query: Exp<"links">) {
+  from(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'from' }], this.mode);
   }
-  to(query: Exp<"links">) {
+  to(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'to' }], this.mode);
   }
-  type(query: Exp<"links">) {
+  type(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'type' }], this.mode);
   }
-  out(query: Exp<"links">) {
+  out(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'out' }], this.mode);
   }
-  in(query: Exp<"links">) {
+  in(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'in' }], this.mode);
   }
-  typed(query: Exp<"links">) {
+  typed(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'typed' }], this.mode);
   }
   
-  up(query: Exp<"tree">) {
+  up(query?: Exp<"tree">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'up' }], this.mode);
   }
-  down(query: Exp<"tree">) {
+  down(query?: Exp<"tree">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query, direction: 'down' }], this.mode);
   }
 
-  and(query: Exp<"links">) {
+  and(query?: Exp<"links">) {
     return new Traveler(this.deep, this.links, [...this.travels, { query: query }], this.mode);
   }
 

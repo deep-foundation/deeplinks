@@ -13,7 +13,7 @@ import { Id, Link, MinilinkCollection, MinilinkError, MinilinksLink, MinilinksQu
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
-import { Traveler as NativeTraveler } from './traveler.js';
+import { Traveler as NativeTraveler, Traveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
@@ -471,6 +471,7 @@ export interface DeepClientResult<R> extends ApolloQueryResult<R> {
   originalData?: any;
   plainLinks?: any;
   subscribe?: (observer: Observer<any>) => Subscription;
+  travel?: (query?: Exp) => Traveler;
 }
 
 export type DeepClientPackageSelector = string;

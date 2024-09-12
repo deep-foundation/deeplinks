@@ -246,15 +246,6 @@ export const up = async () => {
         to_id: deep.idLocal('@deep-foundation/core', 'containTree'),
       } },
     },
-    {
-      type_id: deep.idLocal('@deep-foundation/core', 'SelectorInclude'),
-      to_id: deep.idLocal('@deep-foundation/tsx', 'TSX'),
-      out: { data: {
-        type_id: deep.idLocal('@deep-foundation/core', 'SelectorTree'),
-        to_id: deep.idLocal('@deep-foundation/core', 'typesTree'),
-      } },
-    },
-    
   ];
   await insertRule('usersCanInsertSafeLinks', admin, {
     subject: usersWhere,
