@@ -502,6 +502,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   deep: DeepClientInstance<L>;
   DeepClient: typeof DeepClient;
+  gql: typeof gql;
 
   apolloClient: IApolloClient<any>;
   minilinks: MinilinksResult<L>;
@@ -884,6 +885,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   deep: DeepClientInstance<L>;
   DeepClient = DeepClient;
+  gql: typeof gql = gql;
 
   client: IApolloClient<any>;
   apolloClient: IApolloClient<any>;
