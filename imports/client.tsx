@@ -21,6 +21,7 @@ import isNaN from 'lodash/isNaN.js';
 import axios from 'axios';
 import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
+import { useDebounce } from '@react-hook/debounce';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -491,6 +492,7 @@ export interface DeepSearchOptions {
   count?: boolean;
   apply?: string;
   subscription?: boolean;
+  debounce?: number | boolean;
 };
 
 export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
@@ -2540,6 +2542,19 @@ export function useDeep() {
   return useContext(DeepContext);
 }
 
+export function useTransparentState(value) {
+  return [value, (value: any) => {}];
+}
+
+export function useDebouncedInput(query: any, options: any, debounce: number | boolean) {
+  const _debounce = debounce === true ? 1000 : debounce;
+  const [{ _q, _o }, setTemp] = debounce ? useDebounce({ _q: query, _o: options }, _debounce || 1000) : useTransparentState({ _q: query, _o: options });
+  useEffect(() => {
+    if (debounce) setTemp({ _q: query, _o: options });
+  }, [debounce, query, options]);
+  return { _q, _o };
+}
+
 export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = Link<Id>>(
   query: Exp<Table>,
   options?: Options<Table>,
@@ -2557,11 +2572,12 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     deep.emitter.emit('useQuery.mount', { name: miniName, deep, query, options });
   }, []);
   const prevRef = useRef({ query, options });
+  const { _q, _o } = useDebouncedInput(query, options, options?.debounce);
   const { query: q, options: o } = useMemo(() => {
-    const obj = { query, options: { table: 'links' as Table, ...options } };
+    const obj = { query: _q, options: { table: 'links' as Table, ..._o } };
     if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
     else return obj;
-  }, [query, options])
+  }, [_q, _o])
   const wq = useMemo(() => {
     return deep._generateQuery<Table>(q, { ...o });
   }, [q, o]);
@@ -2628,11 +2644,12 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     deep.emitter.emit('useSubscription.mount', { name: miniName, deep, query, options });
   }, []);
   const prevRef = useRef({ query, options });
+  const { _q, _o } = useDebouncedInput(query, options, options?.debounce);
   const { query: q, options: o } = useMemo(() => {
-    const obj = { query, options: { table: 'links' as Table, ...options } };
+    const obj = { query: _q, options: { table: 'links' as Table, ..._o } };
     if (isEqual(obj, prevRef.current)) return prevRef.current = obj;
     else return obj;
-  }, [query, options])
+  }, [_q, _o])
   const wq = useMemo(() => {
     return deep._generateQuery(q, { ...o, subscription: true });
   }, [q, o]);
@@ -2707,7 +2724,8 @@ export function useSearch(value: string, options: DeepSearchOptions = {}) {
   const query = useMemo(() => this.searchQuery(value, o), [value, o]);
   const qo = useMemo(() => ({ ...(o.count ? { aggregate: 'count' } : {}), skip: o.skip }), [o.count, o.skip]);
   const useHook = useMemo(() => o.remote ? o.subscription ? deep.useSubscription : deep.useQuery : deep.useLocalQuery, [o.remote, o.subscription]);
-  const _results: any = useHook(query, qo as any);
+  const { _q, _o } = useDebouncedInput(query, qo, options?.debounce);
+  const _results: any = useHook(_q, _o as any);
   const results = o.remote ? _results : { data: _results };
   if (o.sort) {
     const sorted = useMemo(() => sort(results.data, value), [results.data]);
@@ -2720,8 +2738,8 @@ export function useSearch(value: string, options: DeepSearchOptions = {}) {
       return ids;
     }, [results.data]);
   }
-  results.query = query;
-  results.options = qo;
+  results.query = _q;
+  results.options = _q;
   return results;
 }
 
@@ -2820,6 +2838,7 @@ export type Options<TTable extends Table = 'links'> = {
   subscription?: boolean;
   apply?: string;
   skip?: boolean;
+  debounce?: number | boolean;
 };
 
 export type ReadOptions<TTable extends Table = 'links'> = Options<TTable>;
