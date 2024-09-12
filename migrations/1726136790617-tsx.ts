@@ -26,7 +26,7 @@ export const up = async () => {
   log('up');
   const TSX = await deep.id('@deep-foundation/tsx', 'TSX');
 
-  const { data: rules } = await deep.select({ from_id: deep.idLocal('deep', 'admin'), type_id: deep.idLocal(dc, 'Contain'), string: { value: { _in: demoRules } } }, { apply: 'rules' })
+  const { data: rules } = await deep.select({ from_id: await deep.id('deep', 'admin'), type_id: deep.idLocal(dc, 'Contain'), string: { value: { _in: demoRules } } }, { apply: 'rules' })
 
   const { data: selectors } = await rules.travel().to().out({ type_id: deep.idLocal(dc, 'RuleObject') }).to().select();
 
