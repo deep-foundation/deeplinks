@@ -181,9 +181,11 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
   
   if (options.exec) {
     await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
+    const start = envs.NEXT_PUBLIC_GQL_PATH.indexOf('://') + 3;
+    const path = envs.NEXT_PUBLIC_GQL_PATH.slice(start);
     const deep = new DeepClient({
       apolloClient: generateApolloClient({
-        path: `${envs.DEEPLINKS_HASURA_PATH}/v1/graphql`,
+        path: path,
         ssl: !!+envs.DEEPLINKS_HASURA_SSL,
         secret: envs.DEEPLINKS_HASURA_SECRET,
       }),
