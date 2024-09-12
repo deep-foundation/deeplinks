@@ -28,7 +28,7 @@ export const up = async () => {
 
   const { data: rules } = await deep.select({ from_id: await deep.id('deep', 'admin'), type_id: deep.idLocal(dc, 'Contain'), string: { value: { _in: demoRules } } }, { apply: 'rules' })
 
-  const { data: selectors } = await rules.travel().to().out({ type_id: deep.idLocal(dc, 'RuleObject') }).to().select();
+  const { data: selectors } = await deep.Traveler(rules).to().out({ type_id: deep.idLocal(dc, 'RuleObject') }).to().select();
 
   await deep.insert(selectors.map(s => ({
     from_id: s.id,
