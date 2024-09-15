@@ -597,6 +597,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useLocalId: (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => Id | void;
   useLocalApply(data, name: string);
   useSearch: typeof useSearch;
+  useCan: typeof useCan;
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -948,6 +949,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     data: L[];
   };
   useSearch: typeof useSearch;
+  useCan: typeof useCan;
   local?: boolean;
   remote?: boolean;
 
@@ -1065,6 +1067,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useLocalId = this.useMinilinksId;
     this.useLocalApply = this.useMinilinksApply;
     this.useSearch = useSearch;
+    this.useCan = useCan;
   }
 
   stringify(any?: any): string {
