@@ -2,107 +2,208 @@
 [![Gitpod](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/deep-foundation/deeplinks) 
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.gg/deep-foundation)
 
-# Usage
+# Documentation
 
-## Generate deep.config.json
-
-Automatically catch public ip of server.
-```
-npx @deep-foundation/deeplinks -g
-```
-
-Manual define domains.
-```
-npx @deep-foundation/deeplinks -g --ssl --deeplinks "https://deeplinks.deep.foundation" --deepcase "https://deepcase.deep.foundation"
-```
-
-## Deep Terminal
-
-```
-npx @deep-foundation/deeplinks -e
->
-```
-
-## Launch command envs based on config
-
-For example, let's run migrations. Don't forget to clear the timestamp keys in the .migrate file before migrating.
-```
-npm @deep-foundation/deeplinks --bash "npx migrate@latest up --matches '*.js'"
-```
-
-## Alternative deep.config.json
-
-By default, deep.config.json is taken from the folder in which the command is executed. You can set config alternatively.
-
-```
-npm @deep-foundation/deeplinks -c "$(cat ../../call-options.json)"
-```
-
-## Restart
-
-### Server
-
-```
-docker restart deep-links
-```
-
-### GitPod
-
-Deep.Links is started together with Deep.Case app and other services in GitPod. So to restart it from GitPod you should do the following:
-
-1. Find terminal there `npm run gitpod-start` command was executed.
-![IMG_1490](https://github.com/deep-foundation/deepcase-app/assets/1431904/81ecd4d4-f4d2-4812-8948-0a155347218d)
-
-2. Press `CTRL+C` in terminal to stop a Deep instance (Deep.Links and Deep.Case).
-![IMG_1491](https://github.com/deep-foundation/deepcase-app/assets/1431904/39966c49-b8fd-4030-bcac-d8a0e4ff4e17)
-
-3. Press `↑` button on your keyboard to get last executed command.
-![IMG_1492](https://github.com/deep-foundation/deepcase-app/assets/1431904/9ef60c58-ca70-43f3-be91-91966d85dddc)
-
-4. Press `Enter` to execute that command again, that will finish restart sequence.
-![IMG_1493](https://github.com/deep-foundation/deepcase-app/assets/1431904/56f48dad-d751-44c7-8871-164f824f122b)
-
-## Dignostics
-
-### Get all logs:
+## Container and CLI
 
 ```sh
-docker logs deep-links
+# generate deep. config json
+npx -y @deep-foundation/deeplinks --generate
+# by default auto detect public ip or gitpod urls (gitpod too)
+# manual config
+npx -y @deep-foundation/deeplinks --generate --deeplinks="https://links.my-domain.io" --perception="https://peception.my-domain.io"
+# update and running all containers empty, without links, available for migrations
+прх -y @deep-foundation/deeplinks --up
+# apply snapshot generated in gh-actions with basic links and packages
+npx -y @deep-foundation/deeplinks --snapshot
+# down all containers without removind data from values
+npx -y @deep-foundation/deeplinks --down
+# down and up with updating docker images in sequence
+npx -y @deep-foundation/deeplinks --down --up
+
+# exec js interactive terminal with deep in variables context
+npx -y @deep-foundation/deeplinks --exec
+> deep # DeepClient
+# instead of using snapshot, do manual migration
+npx -y @deep-foundation/deeplinks --migrate
+# unmigrate
+npx -y @deep-foundation/deeplinks --unmigrate
+# print all envs
+npx -y @deep-foundation/deeplinks --envs
+# exec bash script in envs based on deep.config json in deeplinks directory, for example stop all containers
+npx -y @deep-foundation/deeplinks --bash="docker compose -p deep down"
 ```
 
-### Get live logs:
+## Imports
 
-```sh
-docker logs -f deep-links
+```js
+import {
+    useDeep,
+    DeepProvider,
+    useDeepGenerator,
+    DeepClient,
+    DeepContext,
+    DeepNamespaceProvider,
+    DeepNamespaceContext,
+    useDeepNamespaces,
+    useDeepNamespace,
+    useTransparentState,
+    useDebouncedInput,
+    useDeepQuery,
+    useDeepSubscription,
+    useDeepId,
+    useSearch,
+    useAuthNode,
+    useLink,
+    useLinks,
+    random,
+    parseJwt,
+    serializeQuery,
+    serializeWhere,
+    pathToWhere,
+    MinilinksLink,
+    MinilinkCollection,
+    minilinks,
+    MinilinksContext,
+    toPlain,
+    Minilinks,
+    useMinilinksConstruct,
+    useMinilinksFilter,
+    useMinilinksHandle,
+    useMinilinksApply,
+    useMinilinksQuery,
+    useMinilinksSubscription,
+    useMinilinksGenerator,
+    MinilinksProvider,
+    useMinilinks,
+    useTokenController,
+    TokenProvider
+} from "@deep-foundation/deeplinks";
 ```
 
-### Enter the sh from inside the docker container:
-
-```sh
-docker exec -it deep-links sh
+```ts
+import {
+    Handler,
+    Subscription,
+    Observer,
+    DeepClientOptions,
+    DeepClientResult,
+    DeepSearchOptions,
+    DeepClientInstance,
+    DeepClientAuthResult,
+    DeepClientGuestOptions,
+    DeepClientJWTOptions,
+    UseDeepSubscriptionResult,
+    DeepClientPackageSelector,
+    DeepClientPackageContain,
+    DeepClientLinkId,
+    DeepClientStartItem,
+    DeepClientPathItem,
+    SelectTable,
+    InsertTable,
+    UpdateTable,
+    DeleteTable,
+    OperationType,
+    SerialOperationType,
+    Table,
+    ValueForTable,
+    ExpForTable,
+    SerialOperationDetails,
+    SerialOperation,
+    DeepSerialOperation,
+    AsyncSerialParams,
+    INamespaces,
+    Exp,
+    UpdateValue,
+    InsertObjects,
+    Options,
+    ReadOptions,
+    WriteOptions,
+    Links,
+    LinkPlain,
+    LinkRelations,
+    LinkHashFields,
+    Link,
+    MinilinksQueryOptions,
+    MinilinksResult,
+    MinilinksGeneratorOptions,
+    MinilinksInstance,
+    MinilinkError,
+    ApplyReturnOptions,
+    ApplyOptions,
+    MinilinksHookInstance,
+    Id,
+    MinilinksQueryOptionAggregate,
+    MinilinksApplyInput,
+    Handler,
+    Subscription,
+    Observer,
+    DeepClientOptions,
+    DeepClientResult,
+    DeepSearchOptions,
+    DeepClientInstance,
+    DeepClientAuthResult,
+    DeepClientGuestOptions,
+    DeepClientJWTOptions,
+    UseDeepSubscriptionResult,
+    DeepClientPackageSelector,
+    DeepClientPackageContain,
+    DeepClientLinkId,
+    DeepClientStartItem,
+    DeepClientPathItem,
+    SelectTable,
+    InsertTable,
+    UpdateTable,
+    DeleteTable,
+    OperationType,
+    SerialOperationType,
+    Table,
+    ValueForTable,
+    ExpForTable,
+    SerialOperationDetails,
+    SerialOperation,
+    DeepSerialOperation,
+    AsyncSerialParams,
+    INamespaces,
+    Exp,
+    UpdateValue,
+    InsertObjects,
+    Options,
+    ReadOptions,
+    WriteOptions,
+    Links,
+    LinkPlain,
+    LinkRelations,
+    LinkHashFields,
+    Link,
+    MinilinksQueryOptions,
+    MinilinksResult,
+    MinilinksGeneratorOptions,
+    MinilinksInstance,
+    MinilinkError,
+    ApplyReturnOptions,
+    ApplyOptions,
+    MinilinksHookInstance,
+    Id,
+    MinilinksQueryOptionAggregate,
+    MinilinksApplyInput,
+    QueryLink,
+    QueryLinkReturn,
+    BoolExp,
+    ReturnBoolExp,
+    BoolExpLink,
+    BoolExpValue,
+    BoolExpCan,
+    BoolExpSelector,
+    BoolExpTree,
+    BoolExpHandler,
+    ComparasionExp,
+    MutationInput,
+    MutationInputLinkPlain,
+    MutationInputLink,
+    MutationInputValue,
+    Query,
+    LinkToLinksRelations,
+    ComparasionType,
+} from "@deep-foundation/deeplinks";
 ```
-
-## Library
-See [Documentation] for examples and API
-
-[Documentation]: https://deep-foundation.github.io/deeplinks/
-
-## Maintenance
-
-### Refresh package-lock.json
-
-This command deletes `node_modules`, `package-lock.json` and runs `npm i`. So everything is refreshed.
-
-```bash
-npm run package:refresh
-```
-
-### Release a new version
-
-```bash
-npm run package:release
-```
-
-After that it might be required to release new versions of:
-1. https://github.com/deep-foundation/deepcase
-2. https://github.com/deep-foundation/deepcase-app
