@@ -1118,7 +1118,7 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
 };
 
 export function useMinilinksId(ml, start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Id | void {
-  const result = ml.useQuery({ id: { _id: [start, ...path] } });
+  const result = useMinilinksQuery(ml, { id: { _id: [start, ...path] } });
   return result?.[0]?.id;
 }
 
