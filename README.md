@@ -157,3 +157,21 @@ import {
     ClientHandlerProps, 
 } from "@deep-foundation/deeplinks";
 ```
+
+## Manual export/import packages from admin, without using npm
+```js
+const dc = '@deep-foundation/core';
+const myPackageId = 1850;
+// If you just created Package without PackageVersion and PackageNamespace
+await deep.insert({
+    type_id: deep.idLocal(dc, 'PackageVersion'),
+    from: { type_id: deep.idLocal(dc, 'PackageNamespace') },
+    to_id: myPackageId,
+    string: '0.0.1',
+});
+const pckg = await packager.export({ packageLinkId: myPackageId });
+// Save it manually for example JSON.stringify(pckg);
+// Import again in other system
+await packager.import(pckg);
+// Coming soon packager.update({ packageLinkId: myPackageId, pckg });
+```

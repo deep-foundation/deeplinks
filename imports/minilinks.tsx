@@ -80,6 +80,7 @@ export interface MinilinksResult<L extends Link<Id>> {
   useMinilinksFilter: typeof useMinilinksFilter;
   useMinilinksApply: typeof useMinilinksApply;
   useMinilinksSubscription: typeof useMinilinksSubscription;
+  useMinilinksId: typeof useMinilinksId;
   useMinilinksHandle: typeof useMinilinksHandle;
 
   virtual: { [id: Id]: Id };
@@ -314,6 +315,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
   useMinilinksFilter = useMinilinksFilter;
   useMinilinksApply = useMinilinksApply;
   useMinilinksSubscription = useMinilinksSubscription;
+  useMinilinksId = useMinilinksId;
   useMinilinksHandle = useMinilinksHandle;
   toPlain = toPlain;
 
@@ -1114,6 +1116,11 @@ export function useMinilinksSubscription<L extends Link<Id>>(ml, query: QueryLin
   }, [results]);
   return results;
 };
+
+export function useMinilinksId(ml, start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]): Id | void {
+  const result = ml.useQuery({ id: { _id: [start, ...path] } });
+  return result?.[0]?.id;
+}
 
 export function useMinilinksGenerator(
   minilinks?: MinilinkCollection,

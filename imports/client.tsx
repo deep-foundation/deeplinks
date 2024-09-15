@@ -9,7 +9,7 @@ import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue,
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
 import { IGenerateMutationBuilder, deleteMutation, generateQuery, generateQueryData, generateSerial, insertMutation, updateMutation } from './gql/index.js';
-import { Id, Link, MinilinkCollection, MinilinkError, MinilinksLink, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
+import { Id, Link, MinilinkCollection, MinilinkError, MinilinksLink, MinilinksQueryOptions, MinilinksResult, useMinilinks, useMinilinksApply, useMinilinksId, useMinilinksQuery, useMinilinksSubscription } from './minilinks.js';
 import { awaitPromise } from './promise.js';
 import { useTokenController } from './react-token.js';
 import { reserve } from './reserve.js';
@@ -590,9 +590,11 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useMinilinksId: (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => Id | void;
   useMinilinksApply(data, name: string);
   useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalId: (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => Id | void;
   useLocalApply(data, name: string);
   useSearch: typeof useSearch;
   useDeep: typeof useDeep;
@@ -931,6 +933,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   useDeepQuery: typeof useDeepQuery;
   useMinilinksQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useMinilinksSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useMinilinksId: (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => Id | void;
   useMinilinksApply: (data, name: string) => {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
@@ -938,6 +941,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
   useLocalQuery: (query: Exp, options?: MinilinksQueryOptions) => L[];
   useLocalSubscription: (query: Exp, options?: MinilinksQueryOptions) => L[];
+  useLocalId: (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => Id | void;
   useLocalApply: (data, name: string) => {
     errors?: MinilinkError[];
     anomalies?: MinilinkError[];
@@ -1052,11 +1056,13 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     // @ts-ignore
     this.useMinilinksQuery = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksQuery(deep.minilinks, query, options);
     // @ts-ignore
-    this.useMinilinksSubscription = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksSubscription(deep.minilinks, query, options)
+    this.useMinilinksSubscription = (query: Exp, options?: MinilinksQueryOptions) => useMinilinksSubscription(deep.minilinks, query, options);
+    this.useMinilinksId = (start: DeepClientStartItem | QueryLink, ...path: DeepClientPathItem[]) => useMinilinksId(deep.minilinks, start, ...path);
     // @ts-ignore
     this.useMinilinksApply = (data, name: string) => useMinilinksApply(deep.minilinks, name, data)
     this.useLocalQuery = this.useMinilinksQuery;
     this.useLocalSubscription = this.useMinilinksSubscription;
+    this.useLocalId = this.useMinilinksId;
     this.useLocalApply = this.useMinilinksApply;
     this.useSearch = useSearch;
   }
