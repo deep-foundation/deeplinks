@@ -4,7 +4,7 @@ import { IApolloClient, generateApolloClient } from '@deep-foundation/hasura/cli
 import { useLocalStore } from '@deep-foundation/store/local.js';
 import atob from 'atob';
 import get from 'get-value';
-import React, { createContext, memo, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { BoolExpCan, BoolExpHandler, BoolExpSelector, BoolExpTree, BoolExpValue, MutationInputLink, MutationInputLinkPlain, MutationInputValue, QueryLink } from './client_types.js';
 import { corePckg } from './core.js';
 import { debug } from './debug.js';
@@ -2760,6 +2760,24 @@ export function useSearch(value: string, options: DeepSearchOptions = {}) {
   results.query = _q;
   results.options = _q;
   return results;
+}
+
+export function useCan(objectId: null | Id | Id[], subjectId: null | Id | Id[], actionId: null | Id | Id[]): {
+  data: boolean | void;
+  loading: boolean;
+  refetch: () => Promise<boolean>;
+} {
+  const deep = useDeep();
+  const [can, setCan] = useState(undefined);
+  const refetch = useCallback(async () => {
+    const can = await deep.can(objectId, subjectId, actionId);
+    setCan(can);
+    return can;
+  }, []);
+  useEffect(() => {
+    refetch()
+  }, []);
+  return { data: can, loading: typeof(can) === 'undefined', refetch: refetch };
 }
 
 export function useLink(link: Id | Link<Id>) {
