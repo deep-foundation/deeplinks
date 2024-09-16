@@ -1,9 +1,10 @@
-import { Box } from '@chakra-ui/react';
-import { Id, useDeep } from '@deep-foundation/deeplinks';
+import { useDeep } from './client.js';
+import { Id } from './minilinks.js';
 import React from 'react';
 import { useDropzone } from 'react-dropzone';
 
 export const Files = React.memo(function Files({
+    Component = 'div',
     render = ({
         getRootProps,
         input,
@@ -13,11 +14,12 @@ export const Files = React.memo(function Files({
         children,
         deep,
         Props,
+        Component,
     }) => (
-        <Box {...getRootProps({})} bg={isDragActive ? 'deepBgDark' : isDragAccept ? 'deepBgActive' : isDragReject ? 'deepBgDanger' : 'transparent'} {...Props}>
+        <Component {...getRootProps({})} bg={isDragActive ? 'deepBgDark' : isDragAccept ? 'deepBgActive' : isDragReject ? 'deepBgDanger' : 'transparent'} {...Props}>
             {input}
             {children}
-        </Box>
+        </Component>
     ),
     children,
     prevent = false,
@@ -69,6 +71,7 @@ export const Files = React.memo(function Files({
         children,
         deep,
         Props,
+        Component,
     });
 });
 
