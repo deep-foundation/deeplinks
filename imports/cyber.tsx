@@ -25,10 +25,10 @@ import str2Buff from '@stdlib/buffer-from-string';
 
 const moduleLog = debug.extend('cyberclient');
 import { 
-  Subscription,
-  Observer,
+  SubscriptionI,
+  ObserverI,
   AsyncSerialParams, SerialOperation, SerialOperationType, Table,
-  DeepClientOptions, DeepClientResult, DeepClientPackageSelector, DeepClientPackageContain, DeepClientLinkId, DeepClientStartItem, DeepClientPathItem,
+  DeepClientOptionsI, DeepClientResult, DeepClientPackageSelector, DeepClientPackageContain, DeepClientLinkId, DeepClientStartItem, DeepClientPathItem,
   _serialize, _ids, _boolExpFields, pathToWhere, serializeWhere, serializeQuery, parseJwt,
   DeepClient, DeepClientAuthResult, DeepClientGuestOptions, DeepClientInstance,
   DeepClientJWTOptions, Exp, GUEST, InsertObjects, JWT, ReadOptions, UpdateValue, WHOISME, WriteOptions, useAuthNode, useDeepNamespace, useDeepSubscription, useDeepQuery, Options,
@@ -162,7 +162,7 @@ export async function generateCyberDeepClient(options: {
 export interface CyberDeepClientInstance<L extends Link<Id> = Link<Id>> extends DeepClientInstance<L> {
 }
 
-export interface CyberDeepClientOptions<L extends Link<Id>> extends DeepClientOptions<L> {
+export interface CyberDeepClientOptions<L extends Link<Id>> extends DeepClientOptionsI<L> {
   cyberClient: CyberClient;
   config: CONFIG;
   helia: Helia;

@@ -17,12 +17,14 @@ import { Traveler as NativeTraveler, Traveler } from './traveler.js';
 import { evalClientHandler } from './client-handler.js';
 import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
+import _ from 'lodash';
 import isNaN from 'lodash/isNaN.js';
 import axios from 'axios';
 import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
 import { useDebounce } from '@react-hook/debounce';
 import { Packages } from './packages.js';
+import { useFiles, Files } from './files.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -38,7 +40,7 @@ export const random = () => Math.random().toString(36).slice(2, 7);
 export async function upload(linkId, file: Blob | string, deep) {
   var formData = new FormData();
   formData.append("file", file);
-  console.log('drop-zone formData', formData);
+  console.log('upload formData', formData);
   await axios.post(`http${deep.client.ssl ? 's' : ''}://${deep.client.path.slice(0, -4)}/file`, formData, {
     headers: {
       'linkId': linkId,
@@ -407,13 +409,13 @@ export interface Handler {
   src_id: number;
 }
 
-export interface Subscription {
+export interface SubscriptionI {
   closed: boolean;
   unsubscribe(): void;
 }
 
 export interface Observer<T> {
-  start?(subscription: Subscription): any;
+  start?(subscription: SubscriptionI): any;
   next?(value: T): void;
   error?(errorValue: any): void;
   complete?(): void;
@@ -472,7 +474,7 @@ export interface DeepClientResult<R> extends ApolloQueryResult<R> {
   data: any;
   originalData?: any;
   plainLinks?: any;
-  subscribe?: (observer: Observer<any>) => Subscription;
+  subscribe?: (observer: Observer<any>) => SubscriptionI;
   travel?: (query?: Exp) => Traveler;
 }
 
@@ -599,6 +601,10 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useLocalApply(data, name: string);
   useSearch: typeof useSearch;
   useCan: typeof useCan;
+  useFiles: typeof useFiles;
+  Files: typeof Files;
+  Subscription: typeof Subscription;
+  Query: typeof Query;
   useDeep: typeof useDeep;
   DeepProvider: typeof DeepProvider;
   DeepContext: typeof DeepContext;
@@ -952,6 +958,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
   useSearch: typeof useSearch;
   useCan: typeof useCan;
+  useFiles: typeof useFiles;
+  Files: typeof Files;
+  Subscription: typeof Subscription;
+  Query: typeof Query;
   local?: boolean;
   remote?: boolean;
 
@@ -1070,6 +1080,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useLocalApply = this.useMinilinksApply;
     this.useSearch = useSearch;
     this.useCan = useCan;
+    this.useFiles = useFiles;
+    this.Files = Files;
+    this.Subscription = Subscription;
+    this.Query = Query;
   }
 
   stringify(any?: any): string {
@@ -1132,7 +1146,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Gets a value from the database. By default gets a link from the links table
    * @param exp A filter expression to filter the objects to get
    * @param options An object with options for the select operation
-   * @returns A promise that resolves to the selected object or an array of selected objects with the fields configured by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the selected object or an array of selected objects with the fields configured by options.returning which is by default 'id'
    * 
    * @example
    * #### Select by id
@@ -1294,7 +1308,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Inserts a value into the database. By default inserts a link to the links table
    * @param objects An object or array of objects to insert to the database
    * @param options An object with options for the insert operation
-   * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the inserted object or an array of inserted objects with the fields configured by options.returning which is by default 'id'
    * 
    * @remarks
    * If a link already has value you should update its value, not insert 
@@ -1458,7 +1472,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * @param _exp An expression to filter the objects to update
    * @param value A value to update the objects with
    * @param options An object with options for the update operation
-   * @returns A promise that resolves to the updated object or an array of updated objects with the fields configured by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the updated object or an array of updated objects with the fields configured by options.returning which is by default 'id'
    * 
    * @example
    * #### Update from by id
@@ -1596,7 +1610,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Deletes a value in the database. By default deletes a link in the links table
    * @param _exp An expression to filter the objects to delete
    * @param options An object with options for the delete operation
-   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by options.returning which is by default 'id'
    * 
    * @example
    * #### Delete by id
@@ -1756,7 +1770,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   /**
    * Performs write operations to the database in a serial manner
    * @param options An object with data for the serial operation
-   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by {@link options.returning} which is by default 'id'
+   * @returns A promise that resolves to the deleted object or an array of deleted objects with the fields configured by options.returning which is by default 'id'
    */
   async serial(options: AsyncSerialParams): Promise<DeepClientResult<{ id: Id }[]>> {
     const {
@@ -2895,3 +2909,43 @@ export type WriteOptions<TTable extends Table = 'links'> = Options<TTable> & {
   containerId?: Id;
 }
 
+const Subscription = memo(function Subscription({ query, options, interval, onChange }: any) {
+  const deep = useDeep();
+  const result: any = deep[interval ? 'useQuery' : 'useSubscription'](query, options);
+  useEffect(() => {
+    if (!interval) return;
+    const i = setInterval(() => result.refetch(), interval);
+    return () => clearInterval(i);
+  }, []);
+  if (result?.error?.message) console.error(result.error.message);
+  if (result?.error) console.log(result.error);
+  // const change = useDebounceCallback((result: any) => {
+  //   onChange && onChange(result)
+  // }, 100);
+  const prevRef = useRef();
+  useEffect(() => {
+    if (!result.loading && !!result?.data?.length) {
+      if (!_.isEqual(result.data, prevRef.current)) {
+        onChange && onChange(result);
+        prevRef.current = result?.data;
+      }
+    }
+  }, [result]);
+  // if (result?.error?.message) throw new Error(result?.error?.message);
+  return null;
+}, isEqual);
+
+const Query = memo(function Query({ query, options, onChange }: any) {
+  const deep = useDeep();
+  const result: any = deep.useQuery(query, options);
+  if (result?.error?.message) console.error(result.error.message);
+  if (result?.error) console.log(result.error);
+  // if (result?.error?.message) throw new Error(result?.error?.message);
+  const once = useMemo(() => {
+    return _.once((result) => onChange && onChange(result));
+  }, []);
+  useMemo(() => {
+    if (!result.loading && !!result?.data?.length) once(result);
+  }, [result]);
+  return null;
+}, isEqual);

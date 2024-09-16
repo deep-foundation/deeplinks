@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.525",
+  "version": "0.0.526",
   "license": "Unlicense",
   "type": "module",
   "main": "import.js",
@@ -104,6 +104,7 @@
     "ramda": "^0.29.1",
     "react-apollo-network-status": "^5.2.1",
     "react-dom": "^18.2.0",
+    "react-dropzone": "^14.2.3",
     "react-infinite-scroller": "^1.2.6",
     "react-redux": "^8.1.3",
     "redux": "^4.2.1",
