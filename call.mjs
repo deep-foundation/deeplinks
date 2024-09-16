@@ -156,11 +156,11 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
   console.log('config', config);
 
-  if (config && options.up) {
-    await call(config);
-  }
   if (config && options.down) {
     _exec(`cd ${__dirname} && docker compose -p deep down`);
+  }
+  if (config && options.up) {
+    await call(config);
   }
   const envs = generateEnvs({ envs: { ...(config?.envs || {}) }, isDeeplinksDocker: 0 });
   const envsStr = _generateAndFillEnvs({ envs, isDeeplinksDocker: 0 })
