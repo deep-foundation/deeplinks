@@ -28,6 +28,7 @@ export class Packages {
       console.log('export package', `${p.id} ${p?.value?.value}`);
       const pckg = await packager.export({ packageLinkId: p.id });
       console.log('exported package', `${pckg.package.name} ${pckg.package.version}`);
+      if (pckg.errors) console.log(JSON.stringify(pckg.errors, null, 2));
       results[_.camelCase(`${pckg.package.name}@${pckg.package.version}`)] = pckg;
     }
     return results;
@@ -39,7 +40,7 @@ export class Packages {
     for (let i = 0; i < packages.length; i++) {
       const p = packages[i];
       fs.writeFileSync(
-        path.join(address, _.camelCase(`${p?.package?.name}@${p.package.version}.json`)),
+        path.join(address, _.camelCase(`${p?.package?.name}@${p.package.version}`))+'.json',
         JSON.stringify(p, null, 2),
         { encoding: 'utf-8' },
       );
