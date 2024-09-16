@@ -43,7 +43,13 @@ export const Files = React.memo(function Files({
     [key: string]: any;
 }) {
     const deep = useDeep();
-    const dropzone = useFiles({
+    const {
+        getInputProps,
+        getRootProps,
+        isDragActive,
+        isDragAccept,
+        isDragReject,
+    } = useFiles({
         prevent,
         onDrop,
         insert,
