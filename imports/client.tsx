@@ -2909,7 +2909,7 @@ export type WriteOptions<TTable extends Table = 'links'> = Options<TTable> & {
   containerId?: Id;
 }
 
-const Subscription = memo(function Subscription({ query, options, interval, onChange }: any) {
+export const Subscription = memo(function Subscription({ query, options, interval, onChange }: any) {
   const deep = useDeep();
   const result: any = deep[interval ? 'useQuery' : 'useSubscription'](query, options);
   useEffect(() => {
@@ -2935,7 +2935,7 @@ const Subscription = memo(function Subscription({ query, options, interval, onCh
   return null;
 }, isEqual);
 
-const Query = memo(function Query({ query, options, onChange }: any) {
+export const Query = memo(function Query({ query, options, onChange }: any) {
   const deep = useDeep();
   const result: any = deep.useQuery(query, options);
   if (result?.error?.message) console.error(result.error.message);
