@@ -81,6 +81,7 @@ const optionDefinitions = [
   { name: 'envs', type: Boolean },
 
   { name: 'force', type: Boolean },
+  { name: 'localhost', type: Boolean },
 ];
 
 const options = commandLineArgs(optionDefinitions);
@@ -146,6 +147,11 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
   if (!options.config && !deepConfig) {
     console.log(`${cwd}/deep.config.json or -c "$(cat your/path/to/deep.config.json)" is not defined`);
     return;
+  }
+  if (options.localhost) {
+    deepConfig.DEEPLINKS_PUBLIC_URL = 'http://localhost:3006'
+    deepConfig.NEXT_PUBLIC_DEEPLINKS_URL = 'http://localhost:3006'
+    deepConfig.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
   }
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
   console.log('config', config);

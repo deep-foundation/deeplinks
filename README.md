@@ -169,6 +169,7 @@ await deep.insert({
     to_id: myPackageId,
     string: '0.0.1',
 });
+const packager = deep.Packager();
 const pckg = await packager.export({ packageLinkId: myPackageId });
 // Save it manually for example JSON.stringify(pckg);
 // Import again in other system

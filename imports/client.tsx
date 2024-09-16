@@ -22,6 +22,7 @@ import axios from 'axios';
 import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
 import { useDebounce } from '@react-hook/debounce';
+import { Packages } from './packages.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -604,6 +605,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   Traveler(links: Link<Id>[]): NativeTraveler;
   Packager(): Packager<L>;
+  Packages(): Packages;
 
   eval: (options: {
     linkId?: Id; // if only setted, auto find handlerId by context
@@ -2240,6 +2242,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
   Packager() {
     return new Packager(this);
+  }
+  Packages() {
+    return new Packages(this);
   }
 
   async _findHandler({
