@@ -176,3 +176,20 @@ const pckg = await packager.export({ packageLinkId: myPackageId });
 await packager.import(pckg);
 // Coming soon packager.update({ packageLinkId: myPackageId, pckg });
 ```
+
+## Write and read packages locally for example on server
+```bash
+npx @deep-foundation/deeplinks --exec --localhost
+```
+```js
+const packages = deep.Packages();
+// export and write
+const exported = await packages.export();
+// { [name@version]: Package } // possible Package.errors
+await packages.write(process.cwd(), exported);
+// read and import
+const readed = await packages.read(process.cwd());
+// { [name@version]: Package }
+const imported = await packages.import(readed);
+// { [name@version]: Package } // possible Package.errors
+```

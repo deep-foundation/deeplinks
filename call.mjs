@@ -148,12 +148,12 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
     console.log(`${cwd}/deep.config.json or -c "$(cat your/path/to/deep.config.json)" is not defined`);
     return;
   }
-  if (options.localhost) {
-    deepConfig.DEEPLINKS_PUBLIC_URL = 'http://localhost:3006'
-    deepConfig.NEXT_PUBLIC_DEEPLINKS_URL = 'http://localhost:3006'
-    deepConfig.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
-  }
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
+  if (options.localhost) {
+    config.DEEPLINKS_PUBLIC_URL = 'http://localhost:3006'
+    config.NEXT_PUBLIC_DEEPLINKS_URL = 'http://localhost:3006'
+    config.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
+  }
   console.log('config', config);
 
   if (config && options.down) {
