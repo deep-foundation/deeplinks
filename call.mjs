@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
 import { promisify } from 'util';
+const pckg = require('./package.json');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -86,6 +87,8 @@ const optionDefinitions = [
 
 const options = commandLineArgs(optionDefinitions);
 
+console.log(pckg.version, pckg.version);
+
 if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.json`))) {
   const hasuraKey = generateRandomKey(32);
   const postgresKey = 'd2ef4e87ecc262ff4615887006d8b7b4'; // generateRandomKey(32);
@@ -155,6 +158,7 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
     config.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
   }
   console.log('config', config);
+
 
   if (config && options.down) {
     _exec(`cd ${__dirname} && docker compose -p deep down`);
