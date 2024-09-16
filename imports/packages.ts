@@ -38,7 +38,7 @@ export class Packages {
     for (let i = 0; i < packages.length; i++) {
       const p = packages[i];
       fs.writeFileSync(
-        path.join(address, `${p?.package?.name}@${p.package.version}.json`),
+        path.join(address, `${p?.package?.name}@${p.package.version}.json`.replace('/','@')),
         JSON.stringify(p, null, 2),
         { encoding: 'utf-8' },
       );

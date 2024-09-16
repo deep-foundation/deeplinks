@@ -154,7 +154,8 @@ import {
     ClientHandler, 
     ClientHandlerRenderer, 
     ClientHandlerRendererProps, 
-    ClientHandlerProps, 
+    ClientHandlerProps,
+    Packages,
 } from "@deep-foundation/deeplinks";
 ```
 
