@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import axios from 'axios';
 import { promisify } from 'util';
-const pckg = require('./package.json');
+import pckg from './package.json' with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -87,7 +87,7 @@ const optionDefinitions = [
 
 const options = commandLineArgs(optionDefinitions);
 
-console.log(pckg.version, pckg.version);
+console.log(pckg.name, pckg.version);
 
 if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.json`))) {
   const hasuraKey = generateRandomKey(32);
