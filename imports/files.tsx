@@ -1,7 +1,7 @@
 import { useDeep } from './client.js';
 import { Id } from './minilinks.js';
 import React from 'react';
-import { useDropzone } from 'react-dropzone';
+import * as dz from 'react-dropzone';
 
 export const Files = React.memo(function Files({
     Component = 'div',
@@ -110,7 +110,7 @@ export function useFiles({
             onInsert && onInsert(result?.data?.[0]?.id, files, a, event);
         }
     };
-    const dropzone = useDropzone({
+    const dropzone = dz.useDropzone({
         onDrop,
         ...props,
     });
