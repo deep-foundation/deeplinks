@@ -153,9 +153,9 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
   }
   const config = deepConfig || JSON.parse(options.config || DEEPLINKS_CALL_OPTIONS);
   if (options.localhost) {
-    config.DEEPLINKS_PUBLIC_URL = 'http://localhost:3006'
-    config.NEXT_PUBLIC_DEEPLINKS_URL = 'http://localhost:3006'
-    config.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
+    config.envs.DEEPLINKS_PUBLIC_URL = 'http://localhost:3006'
+    config.envs.NEXT_PUBLIC_DEEPLINKS_URL = 'http://localhost:3006'
+    config.envs.NEXT_PUBLIC_GQL_PATH = 'http://localhost:3006/gql'
   }
   console.log('config', config);
 
