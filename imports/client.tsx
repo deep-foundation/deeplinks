@@ -1453,8 +1453,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         return { ...q, data: (q)?.data?.m0?.returning, error: e };
       }
       if (file) {
-        if (!toApply?.[0]?.id) throw new Error('Cannot insert file without link');
-        await upload(toApply[0].id, file, this);
+        const id = (q)?.data?.m0?.returning?.[0]?.id;
+        if (!id) throw new Error('Cannot insert file without link');
+        await upload(id, file, this);
       };
     } else {
       this.emitter.emit('insert', { deep: this, name: _name, value: objects, options, remoteQuery: mutate, file, remote, local });
