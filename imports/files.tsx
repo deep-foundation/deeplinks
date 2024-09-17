@@ -92,7 +92,7 @@ export function useFiles({
 
     insert?: any;
     containerId: Id;
-    onInsert: (id, files, a, event) => void;
+    onInsert: (id, file, a, event) => void;
 
     [key: string]: any;
 }) {
