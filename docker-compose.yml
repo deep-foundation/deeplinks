@@ -131,7 +131,8 @@ services:
     environment:
       - 'NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GQL_PATH}'
       - 'SECRET=${DEEPLINKS_HASURA_SECRET}'
-      - 'DEEPLINKS=${DOCKER_DEEPLINKS_URL}'
+      - 'DEEPLINKS=${DEEPLINKS_PUBLIC_URL}'
+      - 'SSL=${NEXT_PUBLIC_GQL_SSL}'
     logging:
       driver: "json-file"
       options:
