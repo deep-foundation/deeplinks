@@ -1,6 +1,6 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import Debug from 'debug';
-import { DeepClient } from '../imports/client.jsx';
+import { DeepClient } from '../imports/client.js';
 import { installPackage } from './1678940577209-deepcase.js';
 import { containWithin, packageExists, sharePermissions } from './1664940577200-tsx.js';
 
