@@ -16,7 +16,7 @@ export const Files = React.memo(function Files({
         Props,
         Component,
     }) => (
-        <Component {...getRootProps({})} bg={isDragActive ? 'deepBgDark' : isDragAccept ? 'deepBgActive' : isDragReject ? 'deepBgDanger' : 'transparent'} {...Props}>
+        <Component {...getRootProps({})} bg={isDragActive ? 'deepBgDark' : isDragAccept ? 'deepBgActive' : isDragReject ? 'deepBgDanger' : 'transparent'} cursor={isDragActive ? 'drag' : undefined} {...Props}>
             {input}
             {children}
         </Component>
@@ -40,7 +40,7 @@ export const Files = React.memo(function Files({
 
     insert?: any;
     containerId: Id;
-    onInsert: (id, files, a, event) => void;
+    onInsert: (id, file, a, event) => void;
     Props?: any;
     [key: string]: any;
 }) {
@@ -107,7 +107,7 @@ export function useFiles({
                 containerId,
                 ...insert,
             });
-            onInsert && onInsert(result?.data?.[0]?.id, files, a, event);
+            onInsert && onInsert(result?.data?.[0]?.id, file, a, event);
         }
     };
     const dropzone = dz.useDropzone({
