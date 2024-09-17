@@ -539,7 +539,7 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   one(exp: Exp<'links'> | Id): Promise<L>;
   select<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Promise<DeepClientResult<LL[] | number>>;
-  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[] | number>;
+  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<DeepClientResult<LL[] | number>>;
 
   insert<TTable extends 'links'|'numbers'|'strings'|'objects', LL = L>(objects: InsertObjects<TTable> , options?: WriteOptions<TTable>):Promise<DeepClientResult<{ id }[]>>;
 
@@ -1255,7 +1255,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * deep.subscribe({ up: { link_id: deep.linkId } }).subscribe({ next: (links) => {}, error: (err) => {} });
    * ```
    */
-  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<LL[]> {
+  subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<DeepClientResult<LL[] | number>> {
     if (!exp) return new Observable((observer) => observer.error('!exp'));
     const aggregate = options?.aggregate;
     const queryData = this._generateQuery(exp, { ...options, subscription: true });

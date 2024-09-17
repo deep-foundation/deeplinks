@@ -130,6 +130,8 @@ services:
     extra_hosts: ['host.docker.internal:host-gateway']
     environment:
       - 'NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GQL_PATH}'
+      - 'SECRET=${DEEPLINKS_HASURA_SECRET}'
+      - 'DEEPLINKS=${DOCKER_DEEPLINKS_URL}'
     logging:
       driver: "json-file"
       options:
