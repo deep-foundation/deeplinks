@@ -749,7 +749,7 @@ export function addIdsToRelationsIfSimple(exp, key, env) {
 }
 
 export function checkAndFillShorts(obj, table, containerId, Contain, field?: string) {
-  if (obj.hasOwnProperty('containerId') && !obj.containerId) {
+  if (obj.hasOwnProperty('containerId') && !obj.containerId && obj.containerId != 0) {
     throw new Error(`containerId is undefined`);
   }
   const cId = obj.containerId || containerId;

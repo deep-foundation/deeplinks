@@ -213,7 +213,7 @@ export const useRunner = async ({
   const { token: jwt, linkId: ownerId } = await getJwt(handlerId, useRunnerDebug);
   let secret;
   try {
-    const Unsafe = await deep.id('@deep-foundation/unsafe', 'Unsafe');
+    const Unsafe = await deep.id('@deep-foundation/unsafe', 'AllowUnsafe');
     const isUnsafe = await deep.can(ownerId, ownerId, Unsafe);
     if (isUnsafe) secret = process.env.DEEPLINKS_HASURA_SECRET; // TODO: check jwt's permissions (unsafe permission must be granted)
   } catch(error) {}
