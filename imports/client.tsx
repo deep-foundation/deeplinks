@@ -1252,7 +1252,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
    * Subscribes to data in the database
    * @example
    * ```
-   * deep.subscribe({ up: { link_id: deep.linkId } }).subscribe({ next: (links) => {}, error: (err) => {} });
+   * deep.subscribe({ up: { link_id: deep.linkId } }).subscribe({ next: ({ data: Link[], plainLinks?: Link[], originalData?: Link[] }) => {}, error: (err) => {} });
    * ```
    */
   subscribe<TTable extends 'links'|'numbers'|'strings'|'objects'|'can'|'selectors'|'tree'|'handlers', LL = L>(exp: Exp<TTable>, options?: ReadOptions<TTable>): Observable<DeepClientResult<LL[] | number>> {
@@ -1271,9 +1271,8 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         observer.name = name;
         const subscription = apolloObservable.subscribe({
           next: async (data: any) => {
-            const results = aggregate ? data?.data?.q0?.aggregate?.[aggregate] : 
-            {
-              ...(await this._generateResult(exp, options, data?.data?.q0)),
+            const results: any = {
+              data: (aggregate ? data?.data?.q0?.aggregate?.[aggregate] : (await this._generateResult(exp, options, data?.data?.q0))),
               // @ts-ignore
               return: exp?.return,
               query: exp,
@@ -2910,7 +2909,7 @@ export type WriteOptions<TTable extends Table = 'links'> = Options<TTable> & {
   containerId?: Id;
 }
 
-export const Subscription = memo(function Subscription({ query, options, interval, onChange }: any) {
+export const Subscription = memo(function Subscription({ query, options, interval, onChange }: any): any {
   const deep = useDeep();
   const result: any = deep[interval ? 'useQuery' : 'useSubscription'](query, options);
   useEffect(() => {
@@ -2936,7 +2935,7 @@ export const Subscription = memo(function Subscription({ query, options, interva
   return null;
 }, isEqual);
 
-export const Query = memo(function Query({ query, options, onChange }: any) {
+export const Query = memo(function Query({ query, options, onChange }: any): any {
   const deep = useDeep();
   const result: any = deep.useQuery(query, options);
   if (result?.error?.message) console.error(result.error.message);
