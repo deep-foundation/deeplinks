@@ -506,6 +506,9 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
 
   linkId?: Id;
   token?: string;
+  secret?: string;
+  ssl?: boolean;
+  ws?: boolean;
   handleAuth?: (linkId?: Id, token?: string) => any;
   handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
@@ -900,6 +903,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   linkId?: Id;
   token?: string;
+  secret?: string;
+  ssl?: boolean;
+  ws?: boolean;
   handleAuth?: (linkId?: Id, token?: string) => any;
   handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
