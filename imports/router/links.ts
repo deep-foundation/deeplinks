@@ -30,7 +30,7 @@ const error = debug.extend('error');
 const PORT = process.env.PORT || 3006;
 const DOCKER_DEEPLINKS_URL = process.env.DOCKER_DEEPLINKS_URL || 'http://host.docker.internal:3006';
 const DEEPLINKS_ROUTE_HANDLERS_HOST = process.env.DEEPLINKS_ROUTE_HANDLERS_HOST || 'host.docker.internal';
-const deeplinksUrl = process.env.NEXT_PUBLIC_DEEPLINKS_URL;
+const deeplinksUrl = process.env.DEEPLINKS_PUBLIC_URL;
 export const DOCKER = process.env.DOCKER || '0';
 
 const delay = time => new Promise(res => setTimeout(res, time));

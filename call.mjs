@@ -109,7 +109,7 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
       "DEEPLINKS_PUBLIC_URL": isGitpod ? await gitpodUrl(3006) : `${deeplinks}`,
       "NEXT_PUBLIC_DEEPLINKS_URL": isGitpod ? await gitpodUrl(3006) : `${deeplinks}`,
       "NEXT_PUBLIC_GQL_PATH": isGitpod ? await gitpodUrl(3006)+'/gql' : `${deeplinks}/gql`,
-      "NEXT_PUBLIC_GQL_SSL": "0",
+      "NEXT_PUBLIC_GQL_SSL": isGitpod ? "1" : "0",
       "NEXT_PUBLIC_DEEPLINKS_SERVER": isGitpod ? await gitpodUrl(3007) : `${perception}`,
       "NEXT_PUBLIC_ENGINES_ROUTE": "0",
       "NEXT_PUBLIC_DISABLE_CONNECTOR": "1",
