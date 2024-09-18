@@ -431,6 +431,9 @@ export interface DeepClientOptions<L extends Link<Id> = Link<Id>> {
 
   linkId?: Id;
   token?: string;
+  secret?: string;
+  ws?: boolean;
+
   handleAuth?: (linkId?: Id, token?: string) => any;
   handleOperation?: (operation: string, query?: any, value?: any, options?: any) => any;
 
@@ -984,6 +987,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.deep = options?.deep;
       this.apolloClient = options?.apolloClient;
       this.token = options?.token;
+      this.secret = options?.secret;
+      this.ssl = options?.ssl;
+      this.ws = options?.ws;
       this.client = this.apolloClient;
       this.table = options?.table || 'links';
 
@@ -994,10 +1000,12 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         }
         this.apolloClient = generateApolloClient({
           // @ts-ignore
-          path: this.deep?.apolloClient?.path || options.path,
+          path: options.path || this.deep?.apolloClient?.path,
           // @ts-ignore
-          ssl: this.deep?.apolloClient?.ssl || options.ssl,
+          ssl: options.ssl || this.deep?.apolloClient?.ssl,
           token: token,
+          secret: options.secret,
+          ws: options.ws,
         });
       }
 
