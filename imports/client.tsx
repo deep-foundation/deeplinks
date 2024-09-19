@@ -1000,9 +1000,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.table = options?.table || 'links';
 
       if ((this.deep && !this.apolloClient) || (!!options.path && typeof(options.ssl) === 'boolean')) {
-        const token = this?.deep?.token || options.token;
-        if (!token) {
-          throw new Error('token for apolloClient is invalid or not provided');
+        const token = options.token || this?.deep?.token;
+        const secret = options.secret || this?.deep?.secret;
+        if (!token && !secret) {
+          throw new Error('!token && !secret - invalid auth');
         }
         this.apolloClient = generateApolloClient({
           // @ts-ignore
@@ -1010,7 +1011,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
           // @ts-ignore
           ssl: options.ssl || this.deep?.apolloClient?.ssl,
           token: token,
-          secret: options.secret,
+          secret: secret,
           ws: options.ws,
         });
       }
