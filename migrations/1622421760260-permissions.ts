@@ -61,12 +61,12 @@ export const linksPermissions = async (self, subjectId: any = 'X-Hasura-User-Id'
     // type: {},
     // _or: [
       // {
-        // type: {
+        type: {
           can_object: {
             action_id: { _eq: deep.idLocal('@deep-foundation/core', 'AllowInsert') },
             subject_id: { _eq: subjectId },
           },
-        // },
+        },
       // },
     // ]
   },
