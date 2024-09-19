@@ -13,7 +13,7 @@ npx -y @deep-foundation/deeplinks --generate
 # manual config
 npx -y @deep-foundation/deeplinks --generate --deeplinks="https://links.my-domain.io" --perception="https://peception.my-domain.io"
 # update and running all containers empty, without links, available for migrations
-прх -y @deep-foundation/deeplinks --up
+nрх -y @deep-foundation/deeplinks --up
 # apply snapshot generated in gh-actions with basic links and packages
 npx -y @deep-foundation/deeplinks --snapshot
 # down all containers without removind data from values
@@ -195,5 +195,5 @@ const imported = await packages.import(readed);
 // { [name@version]: Package } // possible Package.errors
 
 // shorthand
-await deep.Packages().write(process.cwd(), await deep.Packages().export());
+await deep.Packages().write(process.cwd()+'/../', await deep.Packages().export());
 ```
