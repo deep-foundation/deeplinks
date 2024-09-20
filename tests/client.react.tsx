@@ -229,7 +229,7 @@ describe('client-react', () => {
       }
 
       render(
-        <QueryStoreProvider>
+        <QueryStoreProvider useRouter={useRouter}>
           <LocalStoreProvider>
             <ApolloClientTokenizedProvider options={{
               path: graphQlPath,
