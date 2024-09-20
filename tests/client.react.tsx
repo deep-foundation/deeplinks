@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { DeepClient, SerialOperation, useDeepSubscription } from "../imports/client";
 import { assert } from 'chai';
@@ -182,7 +183,7 @@ describe('client-react', () => {
 
       render(
           <CapacitorStoreProvider>
-            <QueryStoreProvider>
+            <QueryStoreProvider useRouter={useRouter}>
               <CookiesStoreProvider>
                 <LocalStoreProvider>
                   <TokenProvider>

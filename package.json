@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.548",
+  "version": "0.0.549",
   "license": "Unlicense",
   "type": "module",
   "main": "import.js",
@@ -128,7 +128,7 @@
     "@apollo/client": "^3.7.14",
     "@deep-foundation/materialized-path": "0.0.x",
     "@deep-foundation/react-hasura": "0.0.x",
-    "@deep-foundation/store": "0.0.x",
+    "@deep-foundation/store": "^0.0.32",
     "apollo-server": "^3.13.0",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",
