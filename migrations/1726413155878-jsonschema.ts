@@ -34,7 +34,10 @@ export const up = async () => {
     await sharePermissions(adminId, packageId);
     await containWithin(adminId, packageId);
     await deep.insert({
-      containerId: adminId,
+      in: {
+        type_id: deep.idLocal(dc, 'Contain'),
+        from_id: adminId,
+      },
       type_id: deep.idLocal(dc, 'Rule'),
       out: { data: [
         {
