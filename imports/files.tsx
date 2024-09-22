@@ -1,6 +1,6 @@
 import { useDeep } from './client.js';
 import { Id } from './minilinks.js';
-import React from 'react';
+import React, { useMemo } from 'react';
 import * as dz from 'react-dropzone';
 
 export const Files = React.memo(function Files({
@@ -81,6 +81,7 @@ export function useFiles({
     onDrop: _onDrop,
 
     insert = {},
+    type_id: _type_id,
     containerId,
     onInsert,
 
@@ -91,19 +92,21 @@ export function useFiles({
     onDrop: (files, a, event, prevent) => void;
 
     insert?: any;
+    type_id?: Id;
     containerId: Id;
     onInsert: (id, file, a, event) => void;
 
     [key: string]: any;
 }) {
     const deep = useDeep();
+    const type_id = useMemo(() => _type_id || deep.idLocal('@deep-foundation/core', 'AsyncFile'), [_type_id]);
     const onDrop = async (files, a, event) => {
         let _prevent = prevent;
         _onDrop && _onDrop(files, a, event, () => _prevent = true);
         if (!_prevent) for (const file of files) {
             const result = await deep.insert({
                 file,
-                type_id: deep.idLocal('@deep-foundation/core', 'AsyncFile'),
+                type_id,
                 containerId,
                 ...insert,
             });
