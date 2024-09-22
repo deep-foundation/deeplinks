@@ -1007,7 +1007,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         }
         this.apolloClient = generateApolloClient({
           // @ts-ignore
-          path: options.path || this.deep?.apolloClient?.path,
+          path: (options.path || this.deep?.apolloClient?.path || '').replace(/(^\w+:|^)\/\//, ''),
           // @ts-ignore
           ssl: options.ssl || this.deep?.apolloClient?.ssl,
           token: token,
