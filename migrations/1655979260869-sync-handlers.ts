@@ -502,7 +502,7 @@ const objectGet = `\`select value\${pathStr} as value from objects where link_id
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
   const unsafe = { plv8 };
-  const deep {
+  const deep = {
     linkId: Number(ownerId),
     id: (start, ...path) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
