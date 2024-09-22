@@ -18,6 +18,9 @@ const root = new DeepClient({
   apolloClient: rootClient,
 });
 
+const dc = '@deep-foundation/core';
+const du = '@deep-foundation/unsafe';
+
 export const up = async () => {
   log('up');
   const packageName = '@deep-foundation/jsonschema';
@@ -30,6 +33,54 @@ export const up = async () => {
     const packageId = await root.id('@deep-foundation/jsonschema');
     await sharePermissions(adminId, packageId);
     await containWithin(adminId, packageId);
+    await deep.insert({
+      containerId: adminId,
+      type_id: deep.idLocal(dc, 'Rule'),
+      out: { data: [
+        {
+          type_id: deep.idLocal(dc, 'RuleObject'),
+          to: {
+            type_id: deep.idLocal(dc, 'Selector'),
+            out: {
+              type_id: deep.idLocal(dc, 'SelectorInclude'),
+              to_id: await deep.id(packageName),
+              out: {
+                type_id: deep.idLocal(dc, 'SelectorTree'),
+                to_id: deep.idLocal(dc, 'joinTree'),
+              },
+            },
+          },
+        },
+        {
+          type_id: deep.idLocal(dc, 'RuleSubject'),
+          to: {
+            type_id: deep.idLocal(dc, 'Selector'),
+            out: {
+              type_id: deep.idLocal(dc, 'SelectorInclude'),
+              to_id: await deep.id(packageName),
+              out: {
+                type_id: deep.idLocal(dc, 'SelectorTree'),
+                to_id: deep.idLocal(dc, 'joinTree'),
+              },
+            },
+          },
+        },
+        {
+          type_id: deep.idLocal(dc, 'RuleAction'),
+          to: {
+            type_id: deep.idLocal(dc, 'Selector'),
+            out: {
+              type_id: deep.idLocal(dc, 'SelectorInclude'),
+              to_id: await deep.id(du, 'AllowUnsafe'),
+              out: {
+                type_id: deep.idLocal(dc, 'SelectorTree'),
+                to_id: deep.idLocal(dc, 'typesTree'),
+              },
+            },
+          },
+        },
+      ] },
+    });
   }
 };
 
