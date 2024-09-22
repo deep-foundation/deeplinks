@@ -124,6 +124,7 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
       "HASURA_GRAPHQL_ADMIN_SECRET": hasuraKey,
       "MIGRATIONS_HASURA_SECRET": hasuraKey,
       "DEEPLINKS_HASURA_SECRET": hasuraKey,
+      "POSTGRES_USER": 'postgres',
       "POSTGRES_PASSWORD": postgresKey,
       "HASURA_GRAPHQL_DATABASE_URL": `postgres://postgres:${postgresKey}@deep-postgres:5432/postgres?sslmode=disable`,
       'DEEP_HASURA_GRAPHQL_LOG_LEVEL': 'error',
