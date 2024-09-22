@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.555",
+  "version": "0.0.554",
   "license": "Unlicense",
   "type": "module",
   "main": "import.js",
@@ -55,6 +55,7 @@
     "axios": "^1.4.0",
     "buffer": "^6.0.3",
     "chai": "^4.3.7",
+    "command-line-args": "^6.0.0",
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",
     "debug": "^4.3.4",
