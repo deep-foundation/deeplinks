@@ -501,9 +501,9 @@ const objectGet = `\`select value\${pathStr} as value from objects where link_id
 
 const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
   hasura_session['x-hasura-role'] = 'link';
-  return {
+  const unsafe = { plv8 };
+  const deep {
     linkId: Number(ownerId),
-    unsafe: { plv8 },
     id: (start, ...path) => {
       plv8.execute('SELECT set_config($1, $2, $3)', [ 'hasura.user', JSON.stringify({...hasura_session, 'x-hasura-user-id': this.linkId}), true]);
       hasura_session['x-hasura-user-id'] = this.linkId;
@@ -707,7 +707,11 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       const result = this.select(where, { table: 'can', returning: 'rule_id' });
       return !!result?.data?.length;
     }
+  };
+  if (deep.can(deep.linkId, deep.linkId, deep.id('@deep-foundation/unsafe', 'AllowUnsafe'))) {
+    deep.unsafe = unsafe;
   }
+  return deep;
 }`;
 
 const triggerFunctionFabric = (handleOperationTypeId, valueTrigger) => /*javascript*/`
