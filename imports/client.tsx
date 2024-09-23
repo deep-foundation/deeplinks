@@ -2640,6 +2640,9 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
   const result = useQuery(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient, ...o });
   const [generated, setGenerated] = useState({ loading: true, data: [] });
   useEffect(() => {
+    if (result.loading && !generated.loading) setGenerated({ data: generated.data, loading: result.loading });
+  }, [result.loading, generated]);
+  useEffect(() => {
     if (o?.aggregate) setGenerated({ loading: false, data: (result)?.data?.q0?.aggregate?.[o.aggregate] });
     else {
       (async () => {
@@ -2712,6 +2715,9 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   }, [q, o]);
   const result = useSubscription(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient, ...o });
   const [generated, setGenerated] = useState({ loading: true, data: [] });
+  useEffect(() => {
+    if (result.loading && !generated.loading) setGenerated({ data: generated.data, loading: result.loading });
+  }, [result.loading, generated]);
   useEffect(() => {
     if (o?.aggregate) setGenerated({ loading: false, data: (result)?.data?.q0?.aggregate?.[o.aggregate] });
     else {
