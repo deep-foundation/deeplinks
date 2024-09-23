@@ -2638,19 +2638,20 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     return deep._generateQuery<Table>(q, { ...o });
   }, [q, o]);
   const result = useQuery(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient, ...o });
-  const [generatedResult, setGeneratedResult] = useState([]);
+  const [generated, setGenerated] = useState({ loading: true, data: [] });
   useEffect(() => {
-    if (o?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[o.aggregate]);
+    if (o?.aggregate) setGenerated({ loading: false, data: (result)?.data?.q0?.aggregate?.[o.aggregate] });
     else {
       (async () => {
-        setGeneratedResult(await deep._generateResult(q, o, result?.data?.q0));
+        setGenerated({ loading: false, data: await deep._generateResult(q, o, result?.data?.q0) });
       })();
     }
   }, [result]);
   const toReturn = {
     ...result,
     originalData: o?.aggregate ? result?.data?.q0?.aggregate : result?.data?.q0,
-    data: generatedResult,
+    data: generated.data,
+    loading: generated.loading,
     options: o,
     deep,
     links: [],
@@ -2710,13 +2711,13 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
     return deep._generateQuery(q, { ...o, subscription: true });
   }, [q, o]);
   const result = useSubscription(wq?.query?.query, { variables: wq?.query?.variables, client: deep.apolloClient, ...o });
-  const [generatedResult, setGeneratedResult] = useState([]);
+  const [generated, setGenerated] = useState({ loading: true, data: [] });
   useEffect(() => {
-    if (o?.aggregate) setGeneratedResult((result)?.data?.q0?.aggregate?.[o.aggregate]);
+    if (o?.aggregate) setGenerated({ loading: false, data: (result)?.data?.q0?.aggregate?.[o.aggregate] });
     else {
       if (!result.loading) {
         (async () => {
-          setGeneratedResult(await deep._generateResult(q, o, result?.data?.q0));
+          setGenerated({ loading: false, data: await deep._generateResult(q, o, result?.data?.q0) });
         })();
       }
     }
@@ -2724,7 +2725,8 @@ export function useDeepSubscription<Table extends 'links'|'numbers'|'strings'|'o
   const toReturn = {
     ...result,
     originalData: o?.aggregate ? result?.data?.q0?.aggregate : result?.data?.q0,
-    data: generatedResult,
+    data: generated.data,
+    loading: generated.loading,
     options: o,
     deep,
     links: [],
