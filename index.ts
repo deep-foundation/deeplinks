@@ -108,6 +108,7 @@ app.get(['/file'], createProxyMiddleware((pathname, req) => {
     console.log('/file get proxy', 'req.hostname', req.hostname);
     console.log('/file get proxy', 'req.url', req.url);
     console.log('/file get proxy', 'req.query.linkId', req.query.linkId)
+    console.log('/file get proxy', 'req.query.token', req.query.token)
     req.params
     const headers = req.headers;
     console.log('/file get proxy', 'headers', headers);
@@ -124,11 +125,13 @@ app.get(['/file'], createProxyMiddleware((pathname, req) => {
       if (tokenCookie) {
         token = JSON.parse(tokenCookie)?.value;
         console.log('/file get proxy', 'cookie token', token);
-        if (token) {
-          req.headers.authorization = `Bearer ${token}`;
-        }
         console.log('/file get proxy', 'cookie token is set as header token');
+      } else {
+        if (req.query.token) token = req.query.token as string;
       }
+    }
+    if (token) {
+      req.headers.authorization = `Bearer ${token}`;
     }
     console.log('/file get proxy', 'result token', token);
 
@@ -161,17 +164,22 @@ app.post('/file', async (req, res, next) => {
   const cookies = req.cookies;
   console.log('/file post proxy', 'cookies', JSON.stringify(cookies, null, 2));
   let userId;
-  let linkId;
+  let linkId = +(headers['linkId'] || headers['linkid']) || +req.query?.linkId;
+  console.log('/file post proxy', 'req.query.linkId', req.query.linkId)
+  console.log('/file post proxy', 'req.query.token', req.query.token)
+  if (headers.authorization) {
   try {
-    const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
-    userId = +(JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id']);
-    linkId = +(headers['linkId'] || headers['linkid']);
-    console.log('/file post proxy','linkId',linkId);
-  } catch (e) {
-    const serializedError = serializeError(e);
-    console.log('/file post proxy','error: ', JSON.stringify(serializedError, null, 2));
+      const claims = atob(`${headers['authorization'] ? headers['authorization'] : headers['Authorization']}`.split(' ')[1].split('.')[1]);
+      userId = +(JSON.parse(claims)['https://hasura.io/jwt/claims']['x-hasura-user-id']);
+      console.log('/file post proxy','linkId',linkId);
+    } catch (e) {
+      const serializedError = serializeError(e);
+      console.log('/file post proxy','error: ', JSON.stringify(serializedError, null, 2));
+    }
+  } else if (req.query.token) {
+    userId = +(await deep.jwt({ token: req.query.token as string })).linkId
   }
-  if (!userId) res.status(403).send('Update CAN NOT be processes');
+  if (!userId) res.status(403).send('!user (req.query.token || headers.authorization)');
   const canResult = await deep.can(linkId, userId, deep.idLocal('@deep-foundation/core', 'AllowUpdate')) || await deep.can(null, userId, deep.idLocal('@deep-foundation/core', 'AllowAdmin'));
   console.log('/file post proxy','can', await deep.can(linkId, userId, deep.idLocal('@deep-foundation/core', 'AllowUpdate')), 'isAdmin', await deep.can(null, userId, deep.idLocal('@deep-foundation/core', 'AllowAdmin')));
   console.log('/file post proxy','userId', userId, typeof(userId));

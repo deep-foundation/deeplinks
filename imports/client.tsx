@@ -2412,8 +2412,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     return q;
   }
 
-  url(target: 'deeplinks' | 'gql') {
-    return target === 'gql' ? this.client.path : `http${this.client.ssl ? 's' : ''}://${this.client.path.slice(0, this.client.path.indexOf('/gql'))}`
+  url(target: 'deeplinks' | 'gql' | Id) {
+    return target === 'gql' ? this.client.path : // gql
+    (target !== 'deeplinks' && typeof(target) === 'number') ? `${this.url('deeplinks')}/file?linkId=${target}` : // file
+    `http${this.client.ssl ? 's' : ''}://${this.client.path.slice(0, this.client.path.indexOf('/gql'))}`; // deeplinks
   }
 }
 

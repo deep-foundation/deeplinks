@@ -102,15 +102,17 @@ export function useFiles({
     const type_id = useMemo(() => _type_id || deep.idLocal('@deep-foundation/core', 'AsyncFile'), [_type_id]);
     const onDrop = async (files, a, event) => {
         let _prevent = prevent;
-        _onDrop && _onDrop(files, a, event, () => _prevent = true);
-        if (!_prevent) for (const file of files) {
-            const result = await deep.insert({
-                file,
-                type_id,
-                containerId,
-                ...insert,
-            });
-            onInsert && onInsert(result?.data?.[0]?.id, file, a, event);
+        _onDrop && _onDrop(files, a, event, () => { _prevent = true });
+        if (!_prevent) {
+            for (const file of files) {
+                const result = await deep.insert({
+                    file,
+                    type_id,
+                    containerId,
+                    ...insert,
+                });
+                onInsert && onInsert(result?.data?.[0]?.id, file, a, event);
+            }
         }
     };
     const dropzone = dz.useDropzone({
@@ -120,7 +122,7 @@ export function useFiles({
     return dropzone;
 }
 
-export function base64ToFile(dataurl, filename) {
+export async function base64ToFile(dataurl, filename): Promise<File> {
     var arr = dataurl.split(','),
         mime = arr[0].match(/:(.*?);/)[1],
         bstr = atob(arr[arr.length - 1]),
@@ -132,13 +134,15 @@ export function base64ToFile(dataurl, filename) {
     return new File([u8arr], filename, { type: mime });
 }
 
-export function fileToBase64(file) {
-    var reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function () {
-        console.log(reader.result);
-    };
-    reader.onerror = function (error) {
-        console.log('Error: ', error);
-    };
+export async function fileToBase64(file): Promise<string> {
+    return new Promise((res, rej) => {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            res(String(reader.result));
+        };
+        reader.onerror = function (error) {
+            rej(error);
+        };
+    });
 }
