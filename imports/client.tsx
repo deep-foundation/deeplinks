@@ -41,7 +41,7 @@ export async function upload(linkId, file: Blob | string, deep) {
   var formData = new FormData();
   formData.append("file", file);
   console.log('upload formData', formData);
-  await axios.post(`http${deep.client.ssl ? 's' : ''}://${deep.client.path.slice(0, -4)}/file`, formData, {
+  await axios.post(`http${deep.client.ssl ? 's' : ''}://${deep.client.path.slice(0, -4)}/file?linkId=${linkId}&token=${deep.token}`, formData, {
     headers: {
       'linkId': linkId,
       "Authorization": `Bearer ${deep.token}`,
