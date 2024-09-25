@@ -3,6 +3,7 @@ import { DeepClient } from './client.js';
 import type { DeepSerialOperation } from './client.js';
 import { Id, Link, minilinks, MinilinksResult } from './minilinks.js';
 import { serializeError } from 'serialize-error';
+import { delay } from './promise.js';
 
 const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');
