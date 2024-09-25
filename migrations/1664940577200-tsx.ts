@@ -23,7 +23,6 @@ export const importPackage = async (pckg) => {
   const importResult = await packager.import(pckg);
   const { errors, packageId, namespaceId } = importResult;
   if (errors?.length) {
-    console.log(JSON.stringify(errors, null, 2));
     const error = errors[0]?.graphQLErrors?.[0]?.extensions?.internal?.error;
     throw new Error(`Import error: ${String(errors[0]?.graphQLErrors?.[0]?.message || errors?.[0])}${error?.message ? ` ${error?.message} ${error?.request?.method} ${error?.request?.host}:${error?.request?.port}${error?.request?.path}` : ''}`);
   }
