@@ -708,9 +708,9 @@ const deepFabric =  /*javascript*/`(ownerId, hasura_session) => {
       return !!result?.data?.length;
     }
   };
-  if (deep.can(deep.linkId, deep.linkId, deep.id('@deep-foundation/unsafe', 'AllowUnsafe'))) {
+  // if (deep.can(deep.linkId, deep.linkId, deep.id('@deep-foundation/unsafe', 'AllowUnsafe'))) {
     deep.unsafe = unsafe;
-  }
+  // }
   return deep;
 }`;
 
