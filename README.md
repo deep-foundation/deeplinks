@@ -195,5 +195,5 @@ const imported = await packages.import(readed);
 // { [name@version]: Package } // possible Package.errors
 
 // shorthand
-await deep.Packages().write(process.cwd()+'/../', await deep.Packages().export());
+await deep.Packages().write(process.cwd(), await deep.Packages().export());
 ```
