@@ -19,6 +19,7 @@ const root = new DeepClient({
 
 export const installPackage = async (deep, packageName) => {
   const adminId = await deep.id('deep', 'admin');
+  const promiseTree = deep.idLocal('@deep-foundation/core', 'promiseTree');
   
   log('adminId', adminId);
   const packageQueryTypeId = deep.idLocal('@deep-foundation/core', 'PackageQuery');
@@ -38,6 +39,9 @@ export const installPackage = async (deep, packageName) => {
   });
 
   await deep.await(installId);
+  console.log(JSON.stringify((await deep.select({
+    up: { tree_id: promiseTree, parent_id: installId },
+  })).data, null, 2));
   
   const packageId = await deep.id(packageName);
   log(`${packageName} package is installed as ${packageId} link.`)
