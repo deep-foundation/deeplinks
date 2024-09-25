@@ -1951,7 +1951,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     if (typeof(start) === 'object') {
       return ((await this.select(start)) as any)?.data?.[0]?.id;
     }
-    if (_ids?.[start]?.[path[0]]) {
+    if (path.length === 2 && _ids?.[start]?.[path[0]]) {
       return _ids[start][path[0]];
     }
     const q = await this.select(pathToWhere(start, ...path));

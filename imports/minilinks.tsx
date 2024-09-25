@@ -379,7 +379,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
    * ```
    */
   id(start: DeepClientStartItem, ...path: DeepClientPathItem[]): Id {
-    const paths = [start, ...path] as [Id, ...Array<Exclude<Id, boolean>>];
+    const paths = [start, ...(path[path.length - 1] === true ? path.slice(0, -1) : path)] as [Id, ...Array<Exclude<Id, boolean>>];
     // let result: number;
     // if(paths.length === 1) {
       
@@ -397,7 +397,7 @@ export class MinilinkCollection<MGO extends MinilinksGeneratorOptions = typeof M
     }) 
     const result = (link as Link<Id>)?.id;
     
-    if(!result) {
+    if(!result && path[path.length - 1] !== true) {
       const precached = get(_ids, paths.join('.'));
       if (precached) return precached;
       throw new Error(`Id not found by ${JSON.stringify([start, ...path])}`);
