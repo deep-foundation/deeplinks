@@ -177,7 +177,7 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
 
   if (options.snapshot) {
     await execP(`npx -y -q wait-on --timeout 100000 ${envs.NEXT_PUBLIC_GQL_PATH}`);
-    _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres && (docker exec deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres`);
+    _exec(`${envsStr} cd ${__dirname} && docker compose -p deep stop hasura postgres storage minio && (docker exec deep-links sh -c "npm run snapshot:last" || true) && docker compose -p deep start hasura postgres storage minio`);
   }
   
   if (options.migrate) {
