@@ -33,7 +33,7 @@ export const up = async () => {
 
     const Pckg = await deep.id('@deep-foundation/core', 'Package');
     const Preload = await deep.id('@deep-foundation/preload', 'Preload');
-    const { data: packages } = await deep.select({ type_id: Pckg });
+    const { data: packages } = await deep.select({ type_id: Pckg, string: { value: { _neq: 'deep' } } });
     await deep.insert(packages.map(p => ({ type_id: Preload, from_id: p.id, to_id: p.id })));
   }
 };
