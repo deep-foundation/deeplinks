@@ -10,17 +10,21 @@ export class Packages {
   constructor(deep) {
     this.deep = deep;
   }
-  async select() {
+  async select(query) {
     const deep = this.deep;
-    return await deep.select({
+    const _or = [{
       type_id: deep.idLocal('@deep-foundation/core', 'Package'),
       string: { value: { _neq: 'deep' } },
+    }];
+    if (query) _or.push(query);
+    return await deep.select({
+      _or,
     });
   }
-  async export(): Promise<{ [name: string]: Package }> {
+  async export(query): Promise<{ [name: string]: Package }> {
     const deep = this.deep;
     const packager = deep.Packager();
-    const { data: packages } = await this.select();
+    const { data: packages } = await this.select(query);
     console.log('export packages', packages.map(p => p.id).join(', '));
     const results = {};
     for (let i = 0; i < packages.length; i++) {
