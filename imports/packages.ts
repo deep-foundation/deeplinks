@@ -12,13 +12,13 @@ export class Packages {
   }
   async select(query) {
     const deep = this.deep;
-    const _or = [{
+    const _and = [{
       type_id: deep.idLocal('@deep-foundation/core', 'Package'),
       string: { value: { _neq: 'deep' } },
     }];
-    if (query) _or.push(query);
+    if (query) _and.push(query);
     return await deep.select({
-      _or,
+      _and,
     });
   }
   async export(query): Promise<{ [name: string]: Package }> {
