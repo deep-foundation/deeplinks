@@ -4,6 +4,7 @@ import type { DeepSerialOperation } from './client.js';
 import { Id, Link, minilinks, MinilinksResult } from './minilinks.js';
 import { serializeError } from 'serialize-error';
 import { delay } from './promise.js';
+import isEqual from 'lodash/isEqual.js';
 
 const debug = Debug('deeplinks:packager');
 const log = debug.extend('log');
@@ -272,9 +273,56 @@ export class Packager<L extends Link<any>> {
     return;
   }
 
-  async globalizeIds(pckg: Package, ids: Id[], links: PackageItem[]): Promise<{ global: PackageItem[], difference: { [id:Id]:Id; } }> {
+  async updateItems(
+    pckg: Package,
+    _data: PackageItem[],
+    counter: number,
+    dependedLinks: PackageItem[],
+    updating: PackageItem[],
+    inserting: PackageItem[],
+    errors: PackagerError[] = [],
+    mutated: { [index: number]: boolean } = {},
+  ): Promise<any> {
+    const data = inserting;
+    try {
+      for (let i = 0; i < dependedLinks.length; i++) {
+        const item = dependedLinks[i];
+        // await this.insertItem(data, item, errors, mutated);
+        console.log('insertItem', data, item, errors, mutated);
+        if (errors.length) return { ids: [] };
+      }
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        if (!item.package) {
+          // await this.insertItem(data, item, errors, mutated);
+          console.log('insertItem', data, item, errors, mutated);
+          if (errors.length) return { ids: [] };
+        }
+      }
+      for (let item of updating) {
+        // await this.client.update(item.id, { from_id: item.from, to_id: item.to });
+        console.log('await deep.update', item.id, { from_id: item.from, to_id: item.to });
+        // if (item?.value?.value) await this.client.value(item.id, item?.value?.value)
+        if (item?.value?.value) console.log('await deep.value', item.id, item?.value?.value)
+      }
+      return;
+    } catch (e) {
+      log('updateItems error');
+      const serializedError = serializeError(e);
+      error(JSON.stringify(serializedError, null, 2));
+      errors.push(serializedError);
+    }
+    return;
+  }
+
+  async globalizeIds(pckg: Package, ids: Id[], links: PackageItem[]): Promise<{
+    global: PackageItem[]; difference: { [id:Id]:Id; };
+    updating: PackageItem[]; inserting: PackageItem[];
+  }> {
     const difference = {};
     const global = links.map(l => ({ ...l }));
+    const updating = [];
+    const inserting = [];
     let idsIndex = 0;
     for (let l = 0; l < links.length; l++) {
       const item = links[l];
@@ -284,7 +332,14 @@ export class Packager<L extends Link<any>> {
         newId = await this.client.id(pckg?.dependencies?.[item?.package?.dependencyId]?.name, item.package.containValue, true);
         if (!newId) pckg.errors.push(`${pckg.package.name} package depends on link with path ['${pckg?.dependencies?.[item?.package?.dependencyId]?.name}', '${item.package.containValue}'], but ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package does not have a link with that name (no 'Contain' type instance with value ' ${item.package.containValue}'). It might mean that ${pckg?.dependencies?.[item?.package?.dependencyId]?.name} package have a breaking change in its new version.`);
       } else if (item.type) {
+        const exists = await this.client.id(pckg.package.name, item.id as any, true);
+      if (!exists) {
         newId = ids[idsIndex++];
+        inserting.push(item);
+      } else {
+        newId = exists;
+        updating.push(item);
+      }
       }
       if (oldId && newId) difference[oldId] = newId;
       // type - link, package - ref to exists link, but may be will add new standards
@@ -308,7 +363,7 @@ export class Packager<L extends Link<any>> {
       // log(item, global[l]);
     }
     const resultGlobal = global.filter(l => !l.package);
-    return { global: resultGlobal, difference };
+    return { global: resultGlobal, difference, updating, inserting };
   }
 
   validate(pckg: Package, errors: any[]) {
@@ -403,12 +458,18 @@ export class Packager<L extends Link<any>> {
       });
       if (errors.length) return { errors };
       const mutated = {};
-      const ids = await this.client.reserve(counter);
-      const { global, difference } = await this.globalizeIds(pckg, ids, sorted);
+      
       if (pckg.errors?.length) {
         return { errors: pckg.errors };
       }
-      console.log('update', { packageId, pckg, global, difference, ids, sorted, data });
+      const ids = await this.client.reserve(counter);
+      const { global, difference, updating, inserting } = await this.globalizeIds(pckg, ids, sorted);
+      if (pckg.errors?.length) {
+        return { errors: pckg.errors };
+      }
+      await this.updateItems(pckg, global, counter, dependedLinks, updating, inserting, errors, mutated);
+      if (errors.length) return { errors };
+      return { ids, errors, namespaceId: difference[namespaceId], packageId: difference[packageId], updating, inserting };
     } catch (e) {
       log('import error');
       const serializedError = serializeError(e);
