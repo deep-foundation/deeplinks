@@ -116,7 +116,7 @@ export function sort(
   return { sorted };
 }
 
-export class Packager<L extends Link<any>> {
+export class Packager1<L extends Link<any>> {
   pckg: Package;
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
@@ -905,7 +905,7 @@ export class Packager<L extends Link<any>> {
   }
 }
 
-export class Packager2<L extends Link<any>> {
+export class Packager<L extends Link<any>> {
   pckg: Package;
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
