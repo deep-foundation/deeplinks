@@ -14,3 +14,5 @@ export type { ClientHandlerRendererProps, ClientHandlerProps } from "./imports/c
 export { Packages } from "./imports/packages.js";
 
 export { Files, useFiles, base64ToFile, fileToBase64 } from "./imports/files.js";
+
+export { Packager } from './imports/packager.js';

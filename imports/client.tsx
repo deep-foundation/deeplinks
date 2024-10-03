@@ -25,6 +25,7 @@ import { matchSorter } from 'match-sorter';
 import { useDebounce } from '@react-hook/debounce';
 import { Packages } from './packages.js';
 import { useFiles, Files } from './files.js';
+import { serializeError } from 'serialize-error';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -994,14 +995,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       this.apolloClient = options?.apolloClient;
       this.token = options?.token;
       this.secret = options?.secret;
-      this.ssl = options?.ssl;
+      this.ssl = options?.ssl || false;
       this.ws = options?.ws;
       this.client = this.apolloClient;
       this.table = options?.table || 'links';
 
-      if ((this.deep && !this.apolloClient) || (!!options.path && typeof(options.ssl) === 'boolean')) {
-        const token = options.token || this?.deep?.token;
-        const secret = options.secret || this?.deep?.secret;
+      if ((this.deep && !this.apolloClient) || (!!options.path)) {
+        const token = this.token || this?.deep?.token;
+        const secret = this.secret || this?.deep?.secret;
+        const ssl = this.ssl || this?.deep?.ssl;
+        const ws = this.ws || this?.deep?.ws;
         if (!token && !secret) {
           throw new Error('!token && !secret - invalid auth');
         }
@@ -1009,10 +1012,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
           // @ts-ignore
           path: (options.path || this.deep?.apolloClient?.path || '').replace(/(^\w+:|^)\/\//, ''),
           // @ts-ignore
-          ssl: options.ssl || this.deep?.apolloClient?.ssl,
+          ssl: ssl || this.deep?.apolloClient?.ssl,
           token: token,
           secret: secret,
-          ws: options.ws,
+          ws: ws,
         });
       }
 
@@ -1103,7 +1106,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
 
   stringify(any?: any): string {
     if (typeof(any) === 'object' && typeof(any?.message) === 'string') {
-      return any?.message;
+      return serializeError(any);
     } else if (typeof(any) === 'string') {
       let json;
       try { json = JSON.parse(any); } catch(e) {}
