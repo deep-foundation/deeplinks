@@ -116,7 +116,7 @@ export function sort(
   return { sorted };
 }
 
-export class Packager<L extends Link<any>> {
+export class Packager1<L extends Link<any>> {
   pckg: Package;
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
@@ -995,12 +995,12 @@ export class Packager2<L extends Link<any>> {
     const errors = [];
 
     let idI = 0;
-    const ids = Array.from(Array(pckg.data.length).keys()).map(id => id+99999999);
-    // const ids = await deep.reserve(pckg.data.length);
+    // const ids = Array.from(Array(pckg.data.length).keys()).map(id => id+99999999);
+    const ids = await deep.reserve(pckg.data.length);
 
     const dc = '@deep-foundation/core';
 
-    const packageId = _packageId || ids[idI++];
+    const packageId = _packageId || ids[ids.length];
     const inserting = [];
     const updating = [];
     const remembered: any = {};
@@ -1011,7 +1011,7 @@ export class Packager2<L extends Link<any>> {
       console.log('remind', itemId);
       if (!itemId) return 0;
       if (pckg.strict) return ids[pckg.data.findIndex(l => l.id === itemId)];
-      if (remembered[itemId]) return remembered[itemId];
+      else if (remembered[itemId]) return remembered[itemId];
       else {
         const item = pckg.data.find(i => i.id == itemId);
         await fill(item);
@@ -1241,3 +1241,5 @@ export class Packager2<L extends Link<any>> {
     }  
   }
 }
+
+export const Packager = Packager2;
