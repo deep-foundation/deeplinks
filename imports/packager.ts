@@ -1,5 +1,5 @@
 import Debug from 'debug';
-import { DeepClient } from './client.js';
+import { _ids, DeepClient } from './client.js';
 import type { DeepSerialOperation } from './client.js';
 import { Id, Link, minilinks, MinilinksResult } from './minilinks.js';
 import { serializeError } from 'serialize-error';
@@ -1090,8 +1090,13 @@ export class Packager<L extends Link<any>> {
   }) {
     const deep = this.client;
     if (!deep.isId(packageId)) throw new Error('!packageId');
-    console.log(inserting);
-    await deep.insert(inserting.map(i => ({ ...i, containerId: packageId })));
+    const contains = inserting.map((l, i) => {
+      const r = { type_id: _ids['@deep-foundation/core']['Contain'], from_id: packageId, to_id: l.id, string: l.name };
+      delete inserting[i].containerId;
+      delete inserting[i].name;
+      return r;
+    });
+    await deep.insert([...inserting, ...contains]);
     for (let u of updating) {
       if (u.value) await deep.value(u.id, u.value);
       else await deep.update(u.id, { from_id: u.from_id, to_id: u.to_id })
