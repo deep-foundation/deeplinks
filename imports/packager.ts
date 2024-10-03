@@ -1098,7 +1098,7 @@ export class Packager<L extends Link<any>> {
     const _inserting = [...inserting];
     if (insertPackage) _inserting.push({ type_id: _ids['@deep-foundation/core']['Package'], id: packageId, string: pckg.package.name });
     _inserting.push(...contains);
-    console.log(_inserting);
+    _inserting.forEach(l => console.log(l))
     await deep.insert(_inserting);
     for (let u of updating) {
       if (u.value) await deep.value(u.id, u.value);
