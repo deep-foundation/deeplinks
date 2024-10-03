@@ -14,8 +14,8 @@ export function useTokenController(defaultValue: string = '') : [string, (string
   }]
 }
 
-export const TokenProvider = memo(function TokenProvider({ children }: { children?: any }) {
+export const TokenProvider = function TokenProvider({ children }: { children?: any }) {
   const [token, setToken] = useTokenController();
   // @ts-ignore
   return <TokenContext.Provider value={token}>{children}</TokenContext.Provider>;
-}, () => true);
+};
