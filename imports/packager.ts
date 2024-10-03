@@ -177,7 +177,7 @@ export class Packager<L extends Link<any>> {
    * Import into system pckg.
    */
   async import(pckg: Package): Promise<PackagerImportResult> {
-    if (typeof(pckg) === 'object') return { errors: ['!pckg'] };
+    if (typeof(pckg) !== 'object') return { errors: ['!pckg'] };
     const { ids, inserting, updating, errors } = await this.apply(pckg);
     if (errors.length) return { errors };
     const dc = '@deep-foundation/core';
