@@ -1008,7 +1008,7 @@ export class Packager<L extends Link<any>> {
       remembered[itemId] = linkId;
     }
     const remind = async (itemId: Id) => {
-      console.log('remind', itemId);
+      // console.log('remind', itemId);
       if (!itemId) return 0;
       if (pckg.strict) return ids[pckg.data.findIndex(l => l.id === itemId)];
       else if (remembered[itemId]) return remembered[itemId];
@@ -1018,22 +1018,22 @@ export class Packager<L extends Link<any>> {
       }
     }
     const fill = async (item: PackageItem) => {
-      console.log('fill', item);
+      // console.log('fill', item);
       if (item.package) {
         const pId = await deep.id(
           pckg.dependencies[item.package.dependencyId].name,
           item.package.containValue,
         );
-        console.log('fill', 'package', pId, 
-          pckg.dependencies[item.package.dependencyId].name,
-          item.package.containValue,
-        );
+        // console.log('fill', 'package', pId, 
+        //   pckg.dependencies[item.package.dependencyId].name,
+        //   item.package.containValue,
+        // );
         remember(item.id, pId);
       } else if (item.alias) {
         const linkId = await remind(item.alias);
         const ins = { type_id: await deep.id(dc, 'Contain'), from_id: packageId, to_id: linkId, string: item.id };
         inserting.push(ins);
-        console.log('fill', 'inserting alias', ins);
+        // console.log('fill', 'inserting alias', ins);
         remember(item.id, linkId);
       } else {
         let exists;
@@ -1052,11 +1052,11 @@ export class Packager<L extends Link<any>> {
             ...(!!value ? { [v]: { value } } : {})
           };
           inserting.push(ins);
-          console.log('fill', 'inserting !exists', ins);
+          // console.log('fill', 'inserting !exists', ins);
           remember(item.id, linkId);
         } else {
           const linkId = exists.id;
-          console.log('fill', 'inserting exists', exists);
+          // console.log('fill', 'inserting exists', exists);
           remember(item.id, linkId);
           const value = item?.value?.value;
           if (!isEqual(exists?.value?.value, value)) updating.push({ id: linkId, value });
@@ -1180,7 +1180,7 @@ export class Packager<L extends Link<any>> {
       const find = async (id) => {
         if (!ids[id]) {
           ids[id] = await load(id);
-          console.log('find', 'id', id, 'loaded', ids[id]?.value?.value, ids[id]?._package?.value?.value);
+          // console.log('find', 'id', id, 'loaded', ids[id]?.value?.value, ids[id]?._package?.value?.value);
           if (!ids[id]?.value?.value) errors.push(`!${id}.name`);
           if (!ids[id]?._package?.id) error(`!${id}.package`);
           if (!dependencies.hasOwnProperty(`${ids[id]?._package?.id}`)) {
@@ -1191,7 +1191,7 @@ export class Packager<L extends Link<any>> {
               name: ids[id]?._package?.value?.value,
               version: ids[id]?._package?._version?.[0]?.value?.value
             });
-            console.log('find', 'id', id, 'add dependency', dependencies[ids[id]?._package?.id], '=', ids[id]?._package?.value?.value);
+            // console.log('find', 'id', id, 'add dependency', dependencies[ids[id]?._package?.id], '=', ids[id]?._package?.value?.value);
           }
           if (!depended.hasOwnProperty(id)) {
             depended[id] = { id: dependId++, package: {
@@ -1199,10 +1199,10 @@ export class Packager<L extends Link<any>> {
               containValue: ids[id]?.value?.value,
             } };
             pckg.data.push(depended[id]);
-            console.log('find', 'id', id, 'add depended', dependId);
+            // console.log('find', 'id', id, 'add depended', dependId);
           }
         } else {
-          console.log('find', 'id', id, 'exists', ids[id]?.value?.value, ids[id]?._package?.value?.value);
+          // console.log('find', 'id', id, 'exists', ids[id]?.value?.value, ids[id]?._package?.value?.value);
         }
         if (!ids[id]) {
           error(`!${id}`);
@@ -1211,7 +1211,7 @@ export class Packager<L extends Link<any>> {
       };
       const pack = async (contain) => {
         const link = contain._item;
-        console.log('pack', 'contain', contain.id, 'link', link.id);
+        // console.log('pack', 'contain', contain.id, 'link', link.id);
         if (packed[link.id]) return packed[link.id];
         let _type, _from, _to;
         _type = await find(link.type_id);
