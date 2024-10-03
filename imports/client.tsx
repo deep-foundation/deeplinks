@@ -1431,7 +1431,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const containerId = options?.containerId;
 
     let _objects: any = Object.prototype.toString.call(objects) === '[object Array]' ? objects : [objects];
-    checkAndFillShorts(_objects, table, containerId, this.idLocal('@deep-foundation/core', 'Contain'));
+    checkAndFillShorts(_objects, table, containerId, _ids['@deep-foundation/core']['Contain']);
     
     this.handleOperation && this.handleOperation('insert', null, _objects, o);
 
@@ -1896,15 +1896,15 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       const { data: [link] } = await this.select(id);
       if (!link) throw new Error(`The link ##${id} not founded`);
       const { data: [Value] } = await this.select({
-        type_id: this.idLocal('@deep-foundation/core', 'Value'),
+        type_id: _ids['@deep-foundation/core']['Value'],
         from_id: link.type_id,
       });
       if (!Value) throw new Error(`The link ##${id} cannot have a value, its type is not bound |-Value-> String|Number|Object|File`);
-      const type = Value.to_id ===  this.idLocal('@deep-foundation/core', 'String') ? 'string' : Value.to_id ===  this.idLocal('@deep-foundation/core', 'Number') ? 'number' : Value.to_id ===  this.idLocal('@deep-foundation/core', 'Object') ? 'object' : undefined;
+      const type = Value.to_id ===  _ids['@deep-foundation/core']['String'] ? 'string' : Value.to_id ===  _ids['@deep-foundation/core']['Number'] ? 'number' : Value.to_id ===  _ids['@deep-foundation/core']['Object'] ? 'object' : undefined;
       if (!type) throw new Error(`Type of ##${id}- - > ##${Value.from_id} |-Value-> ##${Value.id} is not compatable with .value()`);
       const table: any = type+'s';
       let result;
-      if (Value?.to_id === this.idLocal('@deep-foundation/core', 'File')) {
+      if (Value?.to_id === _ids['@deep-foundation/core']['File']) {
         if (typeof(value) !== 'string' && !(value instanceof Blob)) throw new Error('File must be a string or Blob');
         await upload(id, value, this);
       } else {
@@ -2214,7 +2214,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     });
     if (!containLink?.value?.value) {
       const {data: [packageLink]} = await this.select(id);
-      if (packageLink?.type_id === this.idLocal('@deep-foundation/core', 'Package')) return packageLink?.value?.value;
+      if (packageLink?.type_id === _ids['@deep-foundation/core']['Package']) return packageLink?.value?.value;
     }
     // @ts-ignore
     return containLink?.value?.value;
@@ -2290,7 +2290,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   }): Promise<void | Handler> {
     if (handlerId) {
       const { data: handlers }: { data: Handler[] } = await this.select(({
-        execution_provider_id: { _eq: execution_provider_id || this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
+        execution_provider_id: { _eq: execution_provider_id || _ids['@deep-foundation/core']['JSExecutionProvider'], },
         ...(isolation_provider_id ? { isolation_provider_id: { _eq: isolation_provider_id, } } : {}),
         _or: [
           { handler_id: { _eq: handlerId } },
@@ -2301,7 +2301,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       if (handlers?.[0]) return handlers?.[0];
     } else {
       const { data: handlers }: { data: Handler[] } = await this.select({
-        execution_provider_id: { _eq: this.idLocal('@deep-foundation/core', 'JSExecutionProvider'), },
+        execution_provider_id: { _eq: _ids['@deep-foundation/core']['JSExecutionProvider'], },
         ...(isolation_provider_id ? { isolation_provider_id: { _eq: isolation_provider_id, } } : {}),
         handler: {
           in: {
@@ -2408,10 +2408,10 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       if (o.regexp) _or.push({ string: { value: { _iregex: value } } });
       else _or.push({ string: { value: { _ilike: `%${value}%` } } });
     };
-    _or.push({ in: { type_id: this.idLocal('@deep-foundation/core', 'Contain'), string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } } });
-    _or.push({ type_id: this.idLocal('@deep-foundation/core', 'Package'), string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } });
-    if (!o.contains) q._not = { type_id: this.idLocal('@deep-foundation/core', 'Contain') };
-    else if (!o.values) q.type_id = this.idLocal('@deep-foundation/core', 'Contain');
+    _or.push({ in: { type_id: _ids['@deep-foundation/core']['Contain'], string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } } });
+    _or.push({ type_id: _ids['@deep-foundation/core']['Package'], string: { value: o.regexp ? { _iregex: value } : { _ilike: `%${value}%` } } });
+    if (!o.contains) q._not = { type_id: _ids['@deep-foundation/core']['Contain'] };
+    else if (!o.values) q.type_id = _ids['@deep-foundation/core']['Contain'];
     return q;
   }
 

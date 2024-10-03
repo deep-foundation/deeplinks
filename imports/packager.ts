@@ -116,7 +116,7 @@ export function sort(
   return { sorted };
 }
 
-export class Packager1<L extends Link<any>> {
+export class Packager<L extends Link<any>> {
   pckg: Package;
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
@@ -905,7 +905,7 @@ export class Packager1<L extends Link<any>> {
   }
 }
 
-export class Packager<L extends Link<any>> {
+export class Packager2<L extends Link<any>> {
   pckg: Package;
   client: DeepClient<any>;
   constructor(client: DeepClient<L>) {
@@ -1049,7 +1049,7 @@ export class Packager<L extends Link<any>> {
             ...(item.from ? { from_id: await remind(item.from) } : {}),
             ...(item.to ? { to_id: await remind(item.to) } : {}),
             ...(item.to ? { to_id: await remind(item.to) } : {}),
-            ...(!!value ? { [v]: { value } } : {})
+            ...(!!value ? { [v]: value } : {})
           };
           inserting.push(ins);
           // console.log('fill', 'inserting !exists', ins);
