@@ -995,11 +995,11 @@ export class Packager<L extends Link<any>> {
 
     let idI = 0;
     // const ids = Array.from(Array(pckg.data.length).keys()).map(id => id+99999999);
-    const ids = await deep.reserve(pckg.data.length);
+    const ids = await deep.reserve(pckg.data.length + 1);
 
     const dc = '@deep-foundation/core';
 
-    const packageId = _packageId || ids[ids.length];
+    const packageId = _packageId || ids[ids.length - 1];
     const inserting = [];
     const updating = [];
     const remembered: any = {};
