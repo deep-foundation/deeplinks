@@ -1091,6 +1091,7 @@ export class Packager<L extends Link<any>> {
     const deep = this.client;
     if (!deep.isId(packageId)) throw new Error('!packageId');
     await deep.insert(inserting.map(i => ({ ...i, containerId: packageId })));
+    console.log(inserting);
     for (let u of updating) {
       if (u.value) await deep.value(u.id, u.value);
       else await deep.update(u.id, { from_id: u.from_id, to_id: u.to_id })
