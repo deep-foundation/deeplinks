@@ -975,9 +975,7 @@ export class Packager<L extends Link<any>> {
     const { ids, inserting, updating, errors } = await this.apply(pckg);
     if (errors.length) return { errors };
     const dc = '@deep-foundation/core';
-    const Package = await this.client.id(dc, 'Package');
-    const { data: [{ id: packageId }] } = await this.client.insert({ type_id: Package, string: (pckg as Package)?.package?.name });
-    const { namespaceId } = await this.exec({ inserting, updating, packageId, pckg });
+    const { packageId, namespaceId } = await this.exec({ inserting, updating, insertPackage: true, pckg });
     return { ids, inserting, updating, errors, pckg, packageId, namespaceId };
   }
 
@@ -1084,9 +1082,9 @@ export class Packager<L extends Link<any>> {
   }
 
   async exec({
-    pckg, packageId, inserting, updating
+    pckg, packageId, inserting, updating, insertPackage = false
   }: {
-    pckg: Package; packageId?: Id; inserting?: any[]; updating?: any[];
+    pckg: Package; packageId?: Id; inserting?: any[]; updating?: any[]; insertPackage?: boolean;
   }) {
     const deep = this.client;
     if (!deep.isId(packageId)) throw new Error('!packageId');
@@ -1096,7 +1094,11 @@ export class Packager<L extends Link<any>> {
       delete inserting[i].name;
       return r;
     });
-    await deep.insert([...inserting, ...contains]);
+    const _inserting = [...inserting];
+    if (insertPackage) _inserting.push({ type_id: _ids['@deep-foundation/core']['Package'], id: packageId, string: pckg.package.name });
+    _inserting.push(...contains);
+    console.log(_inserting);
+    await deep.insert(_inserting);
     for (let u of updating) {
       if (u.value) await deep.value(u.id, u.value);
       else await deep.update(u.id, { from_id: u.from_id, to_id: u.to_id })
