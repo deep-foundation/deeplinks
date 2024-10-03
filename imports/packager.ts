@@ -972,10 +972,10 @@ export class Packager<L extends Link<any>> {
    */
   async import(pckg: Package): Promise<PackagerImportResult> {
     if (typeof(pckg) !== 'object') return { errors: ['!pckg'] };
-    const { ids, inserting, updating, errors } = await this.apply(pckg);
+    const { ids, inserting, updating, errors, packageId } = await this.apply(pckg);
     if (errors.length) return { errors };
     const dc = '@deep-foundation/core';
-    const { packageId, namespaceId } = await this.exec({ inserting, updating, insertPackage: true, pckg });
+    const { namespaceId } = await this.exec({ inserting, updating, packageId, insertPackage: true, pckg });
     return { ids, inserting, updating, errors, pckg, packageId, namespaceId };
   }
 
@@ -986,6 +986,7 @@ export class Packager<L extends Link<any>> {
     inserting?: any[];
     updating?: any[];
     package?: PackageIdentifier,
+    packageId?: Id;
     ids?: Id[];
     errors?: any[];
   }> {
@@ -1074,7 +1075,7 @@ export class Packager<L extends Link<any>> {
       }
 
       if (errors.length) return { errors };
-      return { ids, errors, inserting, updating, package: pckg.package };
+      return { ids, errors, inserting, updating, package: pckg.package, packageId };
     } catch(e) {
       errors.push(deep.stringify(e));
     }
