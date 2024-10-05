@@ -3071,5 +3071,5 @@ export function getServerSidePropsDeep(arg, result: any = {}) {
 }
 
 export function getPath(path?: string) {
-  return path || process?.env?.NEXT_PUBLIC_GRAPHQL_URL || process?.env?.GQL;
+  return path || process?.env?.NEXT_PUBLIC_GRAPHQL_URL || process?.env?.GQL || 'https://links.deep.foundation/gql';
 }
