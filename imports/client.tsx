@@ -26,6 +26,7 @@ import { useDebounce } from '@react-hook/debounce';
 import { Packages } from './packages.js';
 import { useFiles, Files } from './files.js';
 import { serializeError } from 'serialize-error';
+import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider.js';
 const moduleLog = debug.extend('client');
 
 const log = debug.extend('log');
@@ -1005,9 +1006,9 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
         const secret = this.secret || this?.deep?.secret;
         const ssl = this.ssl || this?.deep?.ssl;
         const ws = this.ws || this?.deep?.ws;
-        if (!token && !secret) {
-          throw new Error('!token && !secret - invalid auth');
-        }
+        // if (!token && !secret) {
+        //   throw new Error('!token && !secret - invalid auth');
+        // }
         this.apolloClient = generateApolloClient({
           // @ts-ignore
           path: (options.path || this.deep?.apolloClient?.path || '').replace(/(^\w+:|^)\/\//, ''),
@@ -2519,6 +2520,7 @@ export function DeepNamespaceProvider({ children }: { children: any }) {
 export const DeepContext = createContext<DeepClient<Link<Id>>>(undefined);
 
 export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>) {
+  // console.log('useDeepGenerator', generatorOptions);
   const { apolloClient: apolloClientProps, minilinks, ...otherGeneratorOptions } = generatorOptions;
   const log = debug.extend(useDeepGenerator.name)
   const apolloClientHook = useApolloClient();
@@ -2576,27 +2578,100 @@ export function useDeepGenerator(generatorOptions?: DeepClientOptions<Link<Id>>)
 //   return <DeepQueriesActionsContext.Provider value={nextQ}>children</DeepQueriesActionsContext.Provider>;
 // }, () => true)
 
-export function DeepProvider({
-  apolloClient: apolloClientProps,
+export function DeepProviderCore({
+  path,
+  token,
+  secret,
+  ws,
+  ssl,
   minilinks: inputMinilinks,
   namespace,
   children,
 }: {
-  apolloClient?: IApolloClient<any>,
-  minilinks?: MinilinkCollection,
+  path?: string;
+  token?: string;
+  secret?: string;
+  ws?: boolean;
+  ssl?: boolean;
+  minilinks?: MinilinkCollection;
   namespace?: string;
   children?: any;
-}) {
+})  {
   const providedMinilinks = useMinilinks();
   const deep = useDeepGenerator({
-    apolloClient: apolloClientProps,
+    path, token, secret, ssl, ws,
     minilinks: inputMinilinks || providedMinilinks,
     namespace,
   });
+
   useDeepNamespace(namespace, deep);
-  return <DeepContext.Provider value={deep}>
-    {children}
-  </DeepContext.Provider>;
+  return <>
+    <DeepContext.Provider value={deep}>
+      {children}
+    </DeepContext.Provider>
+  </>;
+};
+
+export function prepareOptions(o: {
+  path: string;
+  token?: string;
+  secret?: string;
+  ws?: boolean;
+  ssl?: boolean;
+}) {
+  const _path = getPath(o.path);
+  const path = (_path || '').replace(/(^\w+:|^)\/\//, '');
+  const token = o.token;
+  const secret = o.secret;
+  const ws = typeof(o.ws) === 'boolean' ? o.ws : typeof(window) == 'object';
+  const ssl = typeof(o.ssl) === 'boolean' ? o.ssl : !!_path.includes('https');
+  return {
+    path, token, secret, ws, ssl,
+  };
+}
+
+export function DeepProvider({
+  path,
+  token,
+  secret,
+  ws,
+  ssl,
+  minilinks,
+  namespace,
+  children,
+}: {
+  path?: string;
+  token?: string;
+  secret?: string;
+  ws?: boolean;
+  ssl?: boolean;
+  apolloClient?: IApolloClient<any>;
+  minilinks?: MinilinkCollection;
+  namespace?: string;
+  children?: any;
+}) {
+  const __path = getPath(path);
+
+  const [_path] = useDeepPath(__path);
+  const [_token] = useDeepToken(token);
+
+  const options = useMemo(() => prepareOptions({
+    path: _path,
+    token: _token,
+    secret,
+    ws,
+    ssl,
+  }), [_path, _token, secret, ws, ssl]);
+
+  return <>
+    {!!_path ? (
+      <ApolloClientTokenizedProvider options={options}>
+        <DeepProviderCore {...options} minilinks={minilinks} namespace={namespace}>
+          {children}
+        </DeepProviderCore>
+      </ApolloClientTokenizedProvider>
+    ) : <>{children}</>}
+  </>;
 }
 
 export function useDeep() {
@@ -2977,3 +3052,24 @@ export const Query = memo(function Query({ query, options, onChange }: any): any
   }, [result]);
   return null;
 }, isEqual);
+
+export function useDeepPath(defaultValue: string | undefined = process?.env?.NEXT_PUBLIC_GRAPHQL_URL) {
+    const r = useLocalStore('dc-dg-path', defaultValue);
+    // console.log('useDeepPath', 'defaultValue', defaultValue, 'result', r[0]);
+    return r;
+}
+
+export function useDeepToken(defaultValue: string | undefined = process?.env?.NEXT_PUBLIC_DEEP_TOKEN) {
+    return useTokenController(defaultValue);
+}
+
+export function getServerSidePropsDeep(arg, result: any = {}) {
+  result.props = result.props || {};
+  result.props.path = getPath();
+  // console.log('getServerSidePropsDeep', result.props);
+  return result;
+}
+
+export function getPath(path?: string) {
+  return path || process?.env?.NEXT_PUBLIC_GRAPHQL_URL || process?.env?.GQL;
+}
