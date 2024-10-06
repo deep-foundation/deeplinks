@@ -24,7 +24,6 @@ import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
 import { useDebounce } from '@react-hook/debounce';
 import { Packages } from './packages.js';
-import { useFiles, Files } from './files.js';
 import { serializeError } from 'serialize-error';
 import { ApolloClientTokenizedProvider } from '@deep-foundation/react-hasura/apollo-client-tokenized-provider.js';
 const moduleLog = debug.extend('client');
@@ -609,8 +608,6 @@ export interface DeepClientInstance<L extends Link<Id> = Link<Id>> {
   useLocalApply(data, name: string);
   useSearch: typeof useSearch;
   useCan: typeof useCan;
-  useFiles: typeof useFiles;
-  Files: typeof Files;
   Subscription: typeof Subscription;
   Query: typeof Query;
   useDeep: typeof useDeep;
@@ -1099,8 +1096,6 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     this.useLocalApply = this.useMinilinksApply;
     this.useSearch = useSearch;
     this.useCan = useCan;
-    this.useFiles = useFiles;
-    this.Files = Files;
     this.Subscription = Subscription;
     this.Query = Query;
   }
