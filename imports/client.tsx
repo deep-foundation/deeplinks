@@ -966,8 +966,6 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
   };
   useSearch: typeof useSearch;
   useCan: typeof useCan;
-  useFiles: typeof useFiles;
-  Files: typeof Files;
   Subscription: typeof Subscription;
   Query: typeof Query;
   local?: boolean;
