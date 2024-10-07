@@ -19,6 +19,7 @@ import { Packager } from './packager.js';
 import isEqual from 'lodash/isEqual.js';
 import _ from 'lodash';
 import isNaN from 'lodash/isNaN.js';
+import JSON5 from 'json5';
 import axios from 'axios';
 import EventEmitter from 'events';
 import { matchSorter } from 'match-sorter';
@@ -1103,7 +1104,7 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
       return serializeError(any);
     } else if (typeof(any) === 'string') {
       let json;
-      try { json = JSON.parse(any); } catch(e) {}
+      try { json = JSON5.parse(any); } catch(e) {}
       return json ? JSON.stringify(json, null, 2) : any.toString();
     } else if (typeof(any) === 'object') {
       return JSON.stringify(any, null, 2);
