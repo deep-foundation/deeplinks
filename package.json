@@ -1,6 +1,6 @@
 {
   "name": "@deep-foundation/deeplinks",
-  "version": "0.0.612",
+  "version": "0.0.613",
   "license": "Unlicense",
   "type": "module",
   "main": "import.js",
@@ -66,6 +66,7 @@
     "gists": "^2.0.0",
     "helia": "^2.1.0",
     "internal-ip": "^6.2.0",
+    "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.0",
     "match-sorter": "^6.3.4",
     "moesif-nodejs": "^3.3.3",
