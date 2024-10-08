@@ -1029,6 +1029,7 @@ export function useMinilinksHandle<L extends Link<Id>>(ml, handler: (event, oldL
   }, []);
 };
 
+const defaultMinilinksApplyResult = { errors: [],  anomalies: [], data: [], plainLinks: [] };
 export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: Links<Id, L> | MinilinksApplyInput): {
   errors?: MinilinkError[];
   anomalies?: MinilinkError[];
@@ -1041,7 +1042,11 @@ export function useMinilinksApply<L extends Link<Id>>(ml, name: string, data?: L
       if (ml) ml.apply(Array.isArray(data) ? [] : { ...data, data: [] }, strictName);
     };
   }, []);
-  if (ml) return ml.apply(data, strictName);
+  const results = useMemo(() => {
+    if (ml) return ml.apply(data, strictName);
+    return defaultMinilinksApplyResult;
+  }, [data]);
+  return results;
 }
 
 /**

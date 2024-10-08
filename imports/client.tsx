@@ -2373,12 +2373,16 @@ export class DeepClient<L extends Link<Id> = Link<Id>> implements DeepClientInst
     const o = { remote: true, count: false, sort: true, ...options };
     const query = this.searchQuery(value, o);
     let results;
-    if (o.remote) {
+    if (o.skip) {
+      results = { data: [] };
+    } if (o.remote) { 
       results = await this.select(query, { apply: o.apply, ...(o.count ? { aggregate: 'count' } : {}) });
     } else {
       results = { data: this.minilinks.select(query,  { ...(o.count ? { aggregate: 'count' } : {}) }), query };
     }
-    if (o.sort) {
+    if (o.skip) {
+      results.ids = {};
+    } if (o.sort) {
       const sorted = sort(results.data, value);
       results.data = sorted.data;
       results.ids = sorted.ids;
@@ -2729,16 +2733,16 @@ export function useDeepQuery<Table extends 'links'|'numbers'|'strings'|'objects'
     originalData: o?.aggregate ? result?.data?.q0?.aggregate : result?.data?.q0,
     data: generated.data,
     loading: generated.loading,
-    options: o,
+    options: o, //
     deep,
-    links: [],
-    plainLinks: [],
+    links: [], // 
+    plainLinks: [], //
     // @ts-ignore
     return: q?.return,
     name: miniName,
   };
   const { data: minilinksResults, plainLinks } = useMinilinksApply(deep.minilinks, miniName, toReturn);
-  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults;
+  toReturn.data = o?.aggregate || o?.table !== 'links' ? toReturn.data || [] : minilinksResults; //
   toReturn.links = minilinksResults;
   toReturn.plainLinks = plainLinks;
   useMemo(() => {
@@ -2856,23 +2860,29 @@ export function sort(links, value) {
   };
 }
 
+const defaultEmptyResults = { ids: {}, data: [] };
 export function useSearch(value: string, options: DeepSearchOptions = {}) {
   const deep = useDeep();
-  const o = useMemo(() => ({ skip: false, remote: true, count: false, sort: true, ...options }), [options]);
+  const prevOptionsRef = useRef<any>();
+  const o = useMemo(() => {
+    const newPrev = { skip: false, remote: true, count: false, sort: true, ...options };
+    if (!isEqual(prevOptionsRef.current, newPrev)) prevOptionsRef.current = newPrev;
+    return prevOptionsRef.current;
+  }, [options]);
   const query = useMemo(() => this.searchQuery(value, o), [value, o]);
   const qo = useMemo(() => ({ ...(o.count ? { aggregate: 'count' } : {}), skip: o.skip }), [o.count, o.skip]);
   const useHook = useMemo(() => o.remote ? o.subscription ? deep.useSubscription : deep.useQuery : deep.useLocalQuery, [o.remote, o.subscription]);
   const { _q, _o } = useDebouncedInput(query, qo, options?.debounce);
   const _results: any = useHook(_q, _o as any);
-  const results = o.remote ? _results : { data: _results };
+  const results = useMemo(() => o.remote ? _results : { data: _results }, [_results]);
   if (o.sort) {
-    const sorted = useMemo(() => sort(results.data, value), [results.data]);
+    const sorted = useMemo(() => o.skip ? defaultEmptyResults : sort(results.data, value), [results.data]);
     results.data = sorted.data;
     results.ids = sorted.ids;
   } else {
     results.ids = useMemo(() => {
       const ids = {};
-      if (results?.data?.length) for (let i = 0; i < results.data.length; i++) ids[results?.data?.[i]?.id] = results?.data?.[i];
+      if (o.skip && results?.data?.length) for (let i = 0; i < results.data.length; i++) ids[results?.data?.[i]?.id] = results?.data?.[i];
       return ids;
     }, [results.data]);
   }
