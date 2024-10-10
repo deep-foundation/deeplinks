@@ -1,7 +1,7 @@
 import { generateApolloClient } from '@deep-foundation/hasura/client.js';
 import { sql } from '@deep-foundation/hasura/sql.js';
 import Debug from 'debug';
-import { itemReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql.js';
+import { fromReplaceSymbol, itemReplaceSymbol, toReplaceSymbol, typeReplaceSymbol, userReplaceSymbol } from '../imports/bool_exp_to_sql.js';
 import { DeepClient, _ids } from '../imports/client.js';
 import { api, SCHEMA } from './1616701513782-links.js';
 import { MP_TABLE_NAME } from './1621815803572-materialized-path.js';
@@ -63,17 +63,23 @@ export const up = async () => {
   await api.sql(sql`
     CREATE OR REPLACE FUNCTION bool_exp_execute(target_link_id bigint, bool_exp_link_id bigint, user_id bigint) RETURNS BOOL AS $trigger$ DECLARE
       boolExp RECORD;
+      link RECORD;
       sqlResult INT;
       query TEXT;
     BEGIN
       SELECT be.* into boolExp
       FROM "${BOOL_EXP_TABLE_NAME}" as be
       WHERE be.link_id=bool_exp_link_id;
+      
+      SELECT * into link
+      FROM "links"
+      WHERE id=target_link_id;
+
       IF boolExp IS NOT NULL THEN
         IF (user_id IS NULL) THEN
           user_id := ${_ids?.['@deep-foundation/core']?.Any};
         END IF;
-        SELECT REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text) INTO query;
+        SELECT REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(boolExp.value, ${itemReplaceSymbol}::text, target_link_id::text), ${userReplaceSymbol}::text, user_id::text), ${fromReplaceSymbol}::text, user_id::text), ${toReplaceSymbol}::text, user_id::text), ${typeReplaceSymbol}::text, user_id::text) INTO query;
         EXECUTE query INTO sqlResult;
         IF sqlResult = 0 THEN
           RETURN FALSE;

@@ -29,8 +29,14 @@ const deep = new DeepClient({
 
 export const itemReplaceSymbol = 777777777777;
 export const userReplaceSymbol = 777777777778;
+export const fromReplaceSymbol = 777777777779;
+export const toReplaceSymbol = 777777777780;
+export const typeReplaceSymbol = 777777777781;
 export const itemPublicSymbol = 'X-Deep-Item-Id';
 export const userPublicSymbol = 'X-Deep-User-Id';
+export const fromPublicSymbol = 'X-Deep-From-Id';
+export const toPublicSymbol = 'X-Deep-To-Id';
+export const typePublicSymbol = 'X-Deep-Type-Id';
 
 export const applyBoolExpToLink = (sql: string, linkId: Id) => {
   return sql.replace(`${itemReplaceSymbol}`, `${linkId}`);
@@ -48,7 +54,9 @@ export const boolExpToSQL = async (boolExpId: Id, boolExpValue: any) => {
     gql = gql.replace(new RegExp(`'${userPublicSymbol}'`, 'g'), userReplaceSymbol);
     gql = gql.replace(new RegExp(`"${userPublicSymbol}"`, 'g'), userReplaceSymbol);
     gql = gql.replace(new RegExp(`'${itemPublicSymbol}'`, 'g'), itemReplaceSymbol);
-    gql = gql.replace(new RegExp(`"${itemPublicSymbol}"`, 'g'), itemReplaceSymbol);
+    gql = gql.replace(new RegExp(`"${fromPublicSymbol}"`, 'g'), fromReplaceSymbol);
+    gql = gql.replace(new RegExp(`"${toPublicSymbol}"`, 'g'), toReplaceSymbol);
+    gql = gql.replace(new RegExp(`"${typePublicSymbol}"`, 'g'), typeReplaceSymbol);
     explained = await api.explain(`{ links(where: { _and: [{ id: { _eq: ${itemReplaceSymbol} } }, ${gql}] }, limit: 1) { id } }`);
     sql = explained?.data?.[0]?.sql;
     if (sql) {
