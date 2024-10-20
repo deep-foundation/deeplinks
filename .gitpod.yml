@@ -28,4 +28,6 @@ tasks:
   - init: |
       npm ci
       npm run build
-      npm start -- --generate --up --snapshot
+      npm start -- --generate
+      npm start -- --up
+      npm start -- --snapshot
