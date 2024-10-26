@@ -1,5 +1,6 @@
 deep.config.json
 log.txt
+perception-app
 
 # Logs
 *.log
@@ -150,3 +151,4 @@ projects/app/electron/app
 
 # webpack
 !webpack.config.js
+
