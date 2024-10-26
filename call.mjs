@@ -119,6 +119,7 @@ if (options.generate && (options.force || !fs.existsSync(`${cwd}/deep.config.jso
       "DEEPLINKS_HASURA_STORAGE_URL": "http://deep-hasura-storage:8000/",
       "HASURA_ENDPOINT": "http://deep-hasura:8080/v1",
       "DEEPLINKS_HASURA_PATH": "deep-hasura:8080",
+      "DOCKER_GQL_URL": "http://deep-links:3006/gql",
       "DOCKER_DEEPLINKS_URL": "http://deep-links:3006",
       "MIGRATIONS_DEEPLINKS_URL": "http://deep-links:3006",
       "HASURA_GRAPHQL_ADMIN_SECRET": hasuraKey,
